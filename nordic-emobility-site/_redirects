@@ -1,0 +1,2 @@
+# SPA fallback — Netlify serves index.html for clean URLs
+/book-online  /book-online/index.html  200

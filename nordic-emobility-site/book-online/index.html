@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boka Service — Nordic E-Mobility Örebro</title>
+<meta name="description" content="Boka reparation eller service för din elscooter eller elcykel. Fasta priser, snabba ledtider, 20% rabatt vid onlinebokning. Nordic E-Mobility Örebro.">
+<meta name="robots" content="index, follow">
+<link rel="canonical" href="https://www.nordicemobility.se/book-online/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Boka Service — Nordic E-Mobility">
+<meta property="og:description" content="Boka reparation eller service för din elscooter. Fasta priser, 20% rabatt vid onlinebokning.">
+<meta property="og:url" content="https://www.nordicemobility.se/book-online/">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"Service","provider":{"@type":"LocalBusiness","name":"Nordic E-Mobility","telephone":"+46700243319"},"name":"Elscooter reparation och service","areaServed":"Örebro","url":"https://www.nordicemobility.se/book-online/"}
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',sans-serif;background:#000;color:#fff;min-height:100vh}
+.container{max-width:900px;margin:0 auto;padding:0 24px}
+a{color:#00C853;text-decoration:none}
+a:hover{text-decoration:underline}
+
+header{background:rgba(0,0,0,.95);border-bottom:1px solid rgba(255,255,255,.08);padding:0}
+header .container{display:flex;align-items:center;justify-content:space-between;height:72px}
+.logo-img{height:52px;width:auto}
+.back-link{color:#aaa;font-size:14px;font-weight:500;text-decoration:none;display:flex;align-items:center;gap:6px}
+.back-link:hover{color:#fff;text-decoration:none}
+
+.page-hero{padding:80px 0 40px;text-align:center;background:linear-gradient(135deg,#000 0%,#071a0d 50%,#000 100%)}
+.page-hero h1{font-size:38px;font-weight:900;margin-bottom:12px}
+.page-hero p{font-size:18px;color:#aaa;max-width:520px;margin:0 auto;line-height:1.6}
+.badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.3);padding:8px 16px;border-radius:100px;font-size:14px;font-weight:600;color:#00C853;margin-bottom:20px}
+
+.booking-options{padding:48px 0 80px}
+.options-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:48px}
+.option-card{background:#111;border:1px solid #222;border-radius:16px;padding:36px;text-align:center;transition:border-color .2s}
+.option-card:hover{border-color:#00C853}
+.option-icon{font-size:48px;margin-bottom:16px}
+.option-title{font-size:20px;font-weight:700;margin-bottom:8px}
+.option-desc{font-size:14px;color:#888;line-height:1.6;margin-bottom:20px}
+.option-btn{display:inline-flex;align-items:center;gap:8px;background:#00C853;color:#000;font-weight:700;font-size:16px;padding:14px 32px;border-radius:8px;text-decoration:none;transition:all .2s}
+.option-btn:hover{background:#00E676;transform:translateY(-1px);text-decoration:none}
+.option-btn-secondary{background:transparent;color:#fff;border:2px solid #fff}
+.option-btn-secondary:hover{background:rgba(255,255,255,.1)}
+.option-detail{font-size:12px;color:#666;margin-top:10px}
+
+.services-section{margin-bottom:48px}
+.services-title{font-size:12px;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:#00C853;margin-bottom:20px}
+.services-list{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.service-item{background:#111;border:1px solid #222;border-radius:12px;padding:20px;text-align:center;transition:border-color .2s}
+.service-item:hover{border-color:#00C853}
+.service-icon{font-size:28px;margin-bottom:8px}
+.service-name{font-size:14px;font-weight:600;margin-bottom:4px}
+.service-price{font-size:13px;color:#00C853;font-weight:700}
+
+.contact-form{background:#111;border:1px solid #222;border-radius:16px;padding:40px;margin-bottom:48px}
+.form-title{font-size:22px;font-weight:700;margin-bottom:8px}
+.form-sub{font-size:14px;color:#888;margin-bottom:28px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.form-group{display:flex;flex-direction:column;gap:6px}
+.form-group.full{grid-column:1/-1}
+.form-label{font-size:12px;font-weight:600;color:#aaa;text-transform:uppercase;letter-spacing:1px}
+.form-input,.form-select,.form-textarea{padding:14px 16px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#fff;font-size:15px;font-family:inherit;transition:border-color .2s}
+.form-input:focus,.form-select:focus,.form-textarea:focus{outline:none;border-color:#00C853}
+.form-textarea{min-height:100px;resize:vertical}
+.form-submit{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#00C853;color:#000;font-weight:700;font-size:17px;padding:16px 36px;border-radius:8px;border:none;cursor:pointer;width:100%;margin-top:8px;transition:all .2s}
+.form-submit:hover{background:#00E676}
+.form-note{font-size:12px;color:#666;margin-top:12px;text-align:center}
+
+.info-bar{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;padding:24px 0;border-top:1px solid #1a1a1a;margin-top:40px}
+.info-item{display:flex;align-items:center;gap:8px;font-size:14px;color:#aaa}
+.info-item .check{color:#00C853;font-weight:700}
+
+footer{padding:32px 0;background:#050505;border-top:1px solid #1a1a1a;text-align:center}
+footer p{font-size:13px;color:#555}
+footer a{color:#888}
+
+@media(max-width:768px){
+  .options-grid{grid-template-columns:1fr}
+  .services-list{grid-template-columns:1fr 1fr}
+  .form-grid{grid-template-columns:1fr}
+  .page-hero h1{font-size:28px}
+  .page-hero{padding:60px 0 30px}
+}
+</style>
+</head>
+<body>
+
+<header>
+<div class="container">
+  <a href="/"><img src="https://static.wixstatic.com/media/c1c83f_0c560c92e27c4b2fb0fbb3c91e4aa6ac~mv2.png" alt="Nordic E-Mobility" class="logo-img" onerror="this.outerHTML='<div style=&quot;font-size:18px;font-weight:800&quot;>NORDIC <span style=&quot;color:#00C853&quot;>E-MOBILITY</span></div>'"></a>
+  <a href="/" class="back-link">&#8592; Tillbaka till startsidan</a>
+</div>
+</header>
+
+<section class="page-hero">
+<div class="container">
+  <div class="badge">20% rabatt vid bokning via hemsidan</div>
+  <h1>Boka service</h1>
+  <p>Välj hur du vill boka. Vi återkommer inom ett par timmar med bekräftelse och tidsförslag.</p>
+</div>
+</section>
+
+<section class="booking-options">
+<div class="container">
+  <div class="options-grid">
+    <div class="option-card">
+      <div class="option-icon">&#128222;</div>
+      <div class="option-title">Ring oss direkt</div>
+      <div class="option-desc">Snabbaste sättet att boka. Vi svarar vardagar 9-17.</div>
+      <a href="tel:0700243319" class="option-btn">Ring 070-024 33 19</a>
+      <div class="option-detail">Lennart: 072-260 77 53</div>
+    </div>
+    <div class="option-card">
+      <div class="option-icon">&#128231;</div>
+      <div class="option-title">Maila oss</div>
+      <div class="option-desc">Beskriv problemet — vi svarar med pris och tidsförslag.</div>
+      <a href="mailto:info@nordicemobility.se?subject=Bokning%20-%20Service&body=Hej!%0A%0AJag%20vill%20boka%20service%20f%C3%B6r%20min%20elscooter.%0A%0AModell%3A%20%0AProblem%3A%20%0A%0AMvh" class="option-btn">Skicka mail</a>
+      <div class="option-detail">info@nordicemobility.se</div>
+    </div>
+  </div>
+
+  <div class="services-title">Vanliga tjänster</div>
+  <div class="services-list">
+    <div class="service-item"><div class="service-icon">&#128295;</div><div class="service-name">Felsökning</div><div class="service-price">349 kr</div></div>
+    <div class="service-item"><div class="service-icon">&#128710;</div><div class="service-name">Punktering</div><div class="service-price">fr. 349 kr</div></div>
+    <div class="service-item"><div class="service-icon">&#128267;</div><div class="service-name">Batteridiagnos</div><div class="service-price">349 kr</div></div>
+    <div class="service-item"><div class="service-icon">&#9881;&#65039;</div><div class="service-name">Service</div><div class="service-price">399 kr</div></div>
+    <div class="service-item"><div class="service-icon">&#9889;</div><div class="service-name">Batterireparation</div><div class="service-price">fr. 999 kr</div></div>
+    <div class="service-item"><div class="service-icon">&#128666;</div><div class="service-name">Hämtning & leverans</div><div class="service-price">150 kr</div></div>
+  </div>
+
+  <div class="contact-form" id="form">
+    <div class="form-title">Skicka bokningsförfrågan</div>
+    <div class="form-sub">Fyll i formuläret — vi återkommer med prisförslag och tid inom 2 timmar (vardagar).</div>
+    <form name="booking" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+      <p style="display:none"><label>Fyll inte i detta: <input name="bot-field"></label></p>
+      <div class="form-grid">
+        <div class="form-group">
+          <label class="form-label" for="name">Namn</label>
+          <input class="form-input" type="text" id="name" name="name" required placeholder="Ditt namn">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="phone">Telefon</label>
+          <input class="form-input" type="tel" id="phone" name="phone" required placeholder="07X-XXX XX XX">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="email">E-post</label>
+          <input class="form-input" type="email" id="email" name="email" placeholder="din@email.se">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="service">Tjänst</label>
+          <select class="form-select" id="service" name="service">
+            <option value="">Välj tjänst...</option>
+            <option value="Felsökning (349 kr)">Felsökning (349 kr)</option>
+            <option value="Avancerad felsökning (699 kr)">Avancerad felsökning (699 kr)</option>
+            <option value="Punktering (349 kr)">Punktering (349 kr)</option>
+            <option value="Batteridiagnos (349 kr)">Batteridiagnos (349 kr)</option>
+            <option value="Batterireparation (fr. 999 kr)">Batterireparation (fr. 999 kr)</option>
+            <option value="Service (399 kr)">Service (399 kr)</option>
+            <option value="Controller/elsystem">Controller / elsystem</option>
+            <option value="Annat">Annat / Vet ej</option>
+          </select>
+        </div>
+        <div class="form-group full">
+          <label class="form-label" for="scooter">Scootermodell</label>
+          <input class="form-input" type="text" id="scooter" name="scooter" placeholder="T.ex. Xiaomi Pro 2, NAVEE ST3, Ninebot Max...">
+        </div>
+        <div class="form-group full">
+          <label class="form-label" for="message">Beskriv problemet</label>
+          <textarea class="form-textarea" id="message" name="message" placeholder="Berätta vad som är fel — ju mer info, desto snabbare kan vi ge dig ett pris."></textarea>
+        </div>
+      </div>
+      <button type="submit" class="form-submit">Skicka bokningsförfrågan &#8594;</button>
+      <div class="form-note">Du binder dig inte till något. Vi svarar med prisförslag och tidsbokning.</div>
+    </form>
+  </div>
+
+  <div class="info-bar">
+    <div class="info-item"><span class="check">&#10003;</span> Fasta priser</div>
+    <div class="info-item"><span class="check">&#10003;</span> 20% rabatt online</div>
+    <div class="info-item"><span class="check">&#10003;</span> Gratis hämtning i Örebro</div>
+    <div class="info-item"><span class="check">&#10003;</span> 5/5 Google-betyg</div>
+  </div>
+</div>
+</section>
+
+<footer>
+<div class="container">
+  <p>&copy; 2026 Nordic E-Mobility &mdash; <a href="/">Startsidan</a> &mdash; Pistolvägen 6, Örebro &mdash; <a href="tel:0700243319">070-024 33 19</a></p>
+</div>
+</footer>
+
+</body>
+</html>
