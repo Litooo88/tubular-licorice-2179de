@@ -84,6 +84,28 @@ nav a:hover{color:#fff}
 .usp-stat{font-size:72px;font-weight:900;color:#00C853;line-height:1}
 .usp-stat-label{font-size:18px;color:#888;margin-top:8px}
 
+/* SUSTAINABILITY */
+.sustain{padding:100px 0;background:linear-gradient(180deg,#000 0%,#071a0d 50%,#000 100%);position:relative}
+.sustain::before{content:'';position:absolute;top:0;left:0;right:0;bottom:0;background:radial-gradient(ellipse at 30% 40%,rgba(0,200,83,.06) 0%,transparent 60%)}
+.sustain .container{position:relative;z-index:1}
+.sustain-grid{display:grid;grid-template-columns:1fr 1fr;gap:60px;align-items:center;margin-top:44px}
+.sustain-visual{text-align:center;padding:48px 32px;background:rgba(0,200,83,.04);border:1px solid rgba(0,200,83,.12);border-radius:20px}
+.sustain-big{font-size:96px;font-weight:900;color:#00C853;line-height:1}
+.sustain-big-lbl{font-size:20px;color:#aaa;margin-top:8px;font-weight:600}
+.sustain-stats{display:flex;justify-content:center;gap:32px;margin-top:28px;padding-top:24px;border-top:1px solid rgba(0,200,83,.1)}
+.sustain-stat{text-align:center}
+.sustain-stat-num{font-size:28px;font-weight:800;color:#fff}
+.sustain-stat-lbl{font-size:12px;color:#666;margin-top:2px}
+.sustain-points{display:flex;flex-direction:column;gap:18px}
+.sustain-point{display:flex;align-items:start;gap:16px;padding:20px 24px;background:rgba(0,200,83,.05);border:1px solid rgba(0,200,83,.1);border-radius:14px;transition:border-color .2s}
+.sustain-point:hover{border-color:rgba(0,200,83,.3)}
+.sustain-point-icon{font-size:28px;flex-shrink:0;margin-top:2px}
+.sustain-point h4{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
+.sustain-point p{font-size:14px;color:#aaa;line-height:1.5}
+.sustain-cta{margin-top:36px;padding:24px 28px;background:rgba(0,200,83,.08);border:1px solid rgba(0,200,83,.2);border-radius:14px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.sustain-cta p{font-size:15px;color:#fff;font-weight:600}
+.sustain-cta span{font-size:13px;color:#aaa;display:block;margin-top:4px;font-weight:400}
+
 /* PROBLEMS */
 .problems{padding:80px 0;background:#000}
 .problems-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:40px;max-width:820px}
@@ -130,9 +152,21 @@ nav a:hover{color:#fff}
 .calc-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#00C853;cursor:pointer}
 .calc-val{text-align:right;font-size:14px;font-weight:700;color:#00C853;margin-top:6px}
 .calc-sel{width:100%;padding:12px 14px;background:#1a1a1a;border:1px solid #333;border-radius:8px;color:#fff;font-size:14px;font-family:inherit;-webkit-appearance:none}
-.calc-res{text-align:center;padding:36px;position:sticky;top:100px}
-.calc-num{font-size:88px;font-weight:900;color:#00C853;line-height:1}
-.calc-unit{font-size:22px;font-weight:600;color:#888;margin-top:6px}
+.calc-res{text-align:center;padding:28px}
+.calc-compare{display:grid;grid-template-columns:1fr auto 1fr;gap:16px;align-items:center;margin-bottom:24px}
+.calc-col{text-align:center;padding:24px 16px;border-radius:14px}
+.calc-col-orig{background:#111;border:1px solid #222}
+.calc-col-upgrade{background:rgba(0,200,83,.06);border:1px solid rgba(0,200,83,.2)}
+.calc-col-label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:10px}
+.calc-col-orig .calc-col-label{color:#666}
+.calc-col-upgrade .calc-col-label{color:#00C853}
+.calc-col-num{font-size:56px;font-weight:900;line-height:1}
+.calc-col-orig .calc-col-num{color:#555}
+.calc-col-upgrade .calc-col-num{color:#00C853}
+.calc-col-unit{font-size:14px;font-weight:600;color:#888;margin-top:4px}
+.calc-col-wh{font-size:12px;color:#555;margin-top:8px}
+.calc-arrow{font-size:32px;color:#00C853;font-weight:900}
+.calc-diff{display:inline-block;padding:10px 22px;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.2);border-radius:100px;font-size:18px;font-weight:800;color:#00C853;margin-bottom:16px}
 .calc-note{font-size:13px;color:#666;margin-top:16px;line-height:1.6}
 .calc-match{margin-top:28px;background:#111;border:1px solid #222;border-radius:12px;padding:18px;text-align:left}
 .calc-match-hd{font-size:13px;font-weight:700;color:#00C853;margin-bottom:10px}
@@ -215,6 +249,9 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   .f-grid{grid-template-columns:1fr 1fr}
   .steps-grid{grid-template-columns:1fr 1fr}
   .usp-grid{grid-template-columns:1fr}
+  .sustain-grid{grid-template-columns:1fr}
+  .calc-compare{grid-template-columns:1fr auto 1fr}
+  .calc-col-num{font-size:40px}
   .hero-proof{flex-direction:column;gap:10px}
   nav{display:none}
   .hamburger{display:block}
@@ -232,6 +269,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   <img src="https://static.wixstatic.com/media/c1c83f_0c560c92e27c4b2fb0fbb3c91e4aa6ac~mv2.png" alt="Nordic E-Mobility" class="logo-img" onerror="this.outerHTML='<div style=&quot;font-size:18px;font-weight:800&quot;>NORDIC <span style=&quot;color:#00C853&quot;>E-MOBILITY</span></div>'">
   <nav>
     <a href="#prislista">Prislista</a>
+    <a href="#hallbarhet">H&#229;llbarhet</a>
     <a href="#batteri">Batteri</a>
     <a href="#produkter">Produkter</a>
     <a href="#blogg">Blogg</a>
@@ -245,6 +283,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 </header>
 <div class="mobile-nav" id="mobileNav">
   <a href="#prislista" onclick="closeMobileNav()">Prislista</a>
+  <a href="#hallbarhet" onclick="closeMobileNav()">H&#229;llbarhet</a>
   <a href="#batteri" onclick="closeMobileNav()">Batteri</a>
   <a href="#produkter" onclick="closeMobileNav()">Produkter</a>
   <a href="#blogg" onclick="closeMobileNav()">Blogg</a>
@@ -315,6 +354,48 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
       <div class="usp-stat">50-70%</div>
       <div class="usp-stat-label">billigare än nytt batteri</div>
       <div style="margin-top:28px"><a href="/book-online" class="btn-primary">Boka batteridiagnos — 349 kr &#8594;</a></div>
+    </div>
+  </div>
+</div>
+</section>
+
+<!-- HÅLLBARHET / SUSTAINABILITY -->
+<section class="sustain" id="hallbarhet">
+<div class="container">
+  <span class="section-label">H&#229;llbarhet</span>
+  <h2 class="section-title">Premium batteripaket &#8212; fr&#229;n <span class="accent">&#229;teranv&#228;nda celler</span></h2>
+  <p class="section-sub">Vi bygger batteripaket med premiumceller fr&#229;n begagnade batterier. Varje cell kvalitetss&#228;kras till minst 90% h&#228;lsa. Resultatet? Premium prestanda till halva nypriset.</p>
+  <div class="sustain-grid">
+    <div class="sustain-points">
+      <div class="sustain-point">
+        <div class="sustain-point-icon">&#128267;</div>
+        <div><h4>Varje cell testad individuellt</h4><p>Vi m&#228;ter kapacitet, inre resistans och sj&#228;lvurladdning p&#229; varje enskild cell. Bara celler med &#8805;90% h&#228;lsa anv&#228;nds i v&#229;ra batteripaket.</p></div>
+      </div>
+      <div class="sustain-point">
+        <div class="sustain-point-icon">&#9889;</div>
+        <div><h4>Premium prestanda &#8212; halva priset</h4><p>Genom att &#229;teranv&#228;nda kvalitetss&#228;krade celler kan vi bygga kraftfulla batteripaket till runt 50% av nypriset. Samma kapacitet, l&#228;gre kostnad.</p></div>
+      </div>
+      <div class="sustain-point">
+        <div class="sustain-point-icon">&#127793;</div>
+        <div><h4>Cirkulär e-mobilitet</h4><p>Istället f&#246;r att kassera batterier med gott om liv kvar, ger vi dem ett andra liv. Bra f&#246;r din plånbok &#8212; och f&#246;r planeten.</p></div>
+      </div>
+      <div class="sustain-point">
+        <div class="sustain-point-icon">&#128293;</div>
+        <div><h4>S&#228;kerhet utan kompromisser</h4><p>Alla paket byggs med BMS (Battery Management System), balansering och s&#228;kerhetsskydd. Vi f&#246;ljer branschstandarder f&#246;r cellsortering och spotsvetsning.</p></div>
+      </div>
+    </div>
+    <div class="sustain-visual">
+      <div class="sustain-big">90%+</div>
+      <div class="sustain-big-lbl">Minsta cellh&#228;lsa vi accepterar</div>
+      <div class="sustain-stats">
+        <div class="sustain-stat"><div class="sustain-stat-num">50%</div><div class="sustain-stat-lbl">Lägre pris &#228;n nytt</div></div>
+        <div class="sustain-stat"><div class="sustain-stat-num">100%</div><div class="sustain-stat-lbl">Kvalitetstestat</div></div>
+        <div class="sustain-stat"><div class="sustain-stat-num">&#9889;</div><div class="sustain-stat-lbl">Full effekt</div></div>
+      </div>
+      <div class="sustain-cta">
+        <div><p>Vill du uppgradera ditt batteri?</p><span>Vi bygger custom batteripaket f&#246;r din scooter eller elcykel.</span></div>
+        <a href="/book-online" class="btn-primary" style="padding:12px 24px;font-size:14px;white-space:nowrap">Boka r&#229;dgivning &#8594;</a>
+      </div>
     </div>
   </div>
 </div>
@@ -414,102 +495,132 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 <!-- RÄCKVIDDSRÄKNARE -->
 <section class="battery-calc" id="batteri">
 <div class="container">
-  <span class="section-label">Räckviddsräknare</span>
-  <h2 class="section-title">Hur långt kommer din elscooter?</h2>
-  <p class="section-sub">Välj din scooter eller ange batterikapacitet — vi beräknar räckvidden.</p>
+  <span class="section-label">R&#228;ckviddsj&#228;mf&#246;relse</span>
+  <h2 class="section-title">Se vad ett <span class="accent">st&#228;rkare batteri</span> g&#246;r f&#246;r r&#228;ckvidden</h2>
+  <p class="section-sub">V&#228;lj din scooter f&#246;r att se original-r&#228;ckvidden. Testa sen ett st&#228;rkare batteri och j&#228;mf&#246;r skillnaden direkt.</p>
   <div class="calc-wrap">
     <div class="calc-form">
+      <!-- STEP 1: Scooter model -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px"><div style="width:28px;height:28px;border-radius:50%;background:rgba(0,200,83,.15);border:2px solid #00C853;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#00C853;flex-shrink:0">1</div><span style="font-size:14px;font-weight:700;color:#fff">V&#228;lj din scooter</span></div>
       <div class="calc-grp">
-        <label class="calc-lbl">Välj scooter / batteri</label>
-        <select class="calc-sel" id="scooterModel" onchange="updateModel()">
-          <optgroup label="&#9889; NAVEE (officiell &aring;terf&ouml;rs&auml;ljare)">
-            <option value="1284">NAVEE UT5 Ultra X &mdash; 2&times;1200W (1284 Wh)</option>
-            <option value="899">NAVEE XT5 Ultra &mdash; 2&times;500W (899 Wh)</option>
-            <option value="899">NAVEE NT5 Ultra X &mdash; 2&times;500W (899 Wh)</option>
-            <option value="597">NAVEE ST3 Pro &mdash; 250W SE (597 Wh)</option>
-            <option value="477" selected>NAVEE ST3 &mdash; 250W SE (477 Wh)</option>
-            <option value="275">NAVEE N65i &mdash; 400W (275 Wh)</option>
-            <option value="275">NAVEE G5 &mdash; 400W (275 Wh)</option>
-            <option value="184">NAVEE V25i Pro II &mdash; 300W (184 Wh)</option>
-            <option value="110">NAVEE K100 Max &mdash; 150W (110 Wh)</option>
+        <label class="calc-lbl">Scootermodell (visar originalbatteri)</label>
+        <select class="calc-sel" id="scooterModel" onchange="calcCompare()">
+          <optgroup label="&#9889; NAVEE (officiell &#229;terf&#246;rs&#228;ljare)">
+            <option value="1284" data-watts="2400" data-name="NAVEE UT5 Ultra X">NAVEE UT5 Ultra X &#8212; 2&#215;1200W (1284 Wh)</option>
+            <option value="899" data-watts="1000" data-name="NAVEE XT5 Ultra">NAVEE XT5 Ultra &#8212; 2&#215;500W (899 Wh)</option>
+            <option value="899" data-watts="1000" data-name="NAVEE NT5 Ultra X">NAVEE NT5 Ultra X &#8212; 2&#215;500W (899 Wh)</option>
+            <option value="597" data-watts="250" data-name="NAVEE ST3 Pro">NAVEE ST3 Pro &#8212; 250W SE (597 Wh)</option>
+            <option value="477" data-watts="250" data-name="NAVEE ST3" selected>NAVEE ST3 &#8212; 250W SE (477 Wh)</option>
+            <option value="275" data-watts="400" data-name="NAVEE N65i">NAVEE N65i &#8212; 400W (275 Wh)</option>
+            <option value="275" data-watts="400" data-name="NAVEE G5">NAVEE G5 &#8212; 400W (275 Wh)</option>
+            <option value="184" data-watts="300" data-name="NAVEE V25i Pro II">NAVEE V25i Pro II &#8212; 300W (184 Wh)</option>
           </optgroup>
           <optgroup label="Xiaomi">
-            <option value="275">Xiaomi Mi Pro 2 (275 Wh)</option>
-            <option value="460">Xiaomi Mi 4 Ultra (460 Wh)</option>
+            <option value="275" data-watts="300" data-name="Xiaomi Mi Pro 2">Xiaomi Mi Pro 2 (275 Wh)</option>
+            <option value="460" data-watts="500" data-name="Xiaomi Mi 4 Ultra">Xiaomi Mi 4 Ultra (460 Wh)</option>
           </optgroup>
           <optgroup label="Ninebot / Segway">
-            <option value="367">Ninebot Max G30 (367 Wh)</option>
-            <option value="551">Ninebot Max G2 (551 Wh)</option>
+            <option value="367" data-watts="350" data-name="Ninebot Max G30">Ninebot Max G30 (367 Wh)</option>
+            <option value="551" data-watts="450" data-name="Ninebot Max G2">Ninebot Max G2 (551 Wh)</option>
           </optgroup>
           <optgroup label="Vsett">
-            <option value="633">Vsett 10+ (633 Wh)</option>
-            <option value="1560">Vsett 11+ (1560 Wh)</option>
+            <option value="633" data-watts="1300" data-name="Vsett 10+">Vsett 10+ (633 Wh)</option>
+            <option value="1560" data-watts="3000" data-name="Vsett 11+">Vsett 11+ (1560 Wh)</option>
           </optgroup>
           <optgroup label="&#128293; Teverun (samarbetspartner)">
-            <option value="936">Teverun Space Lite (52V 18Ah — 936 Wh)</option>
-            <option value="998">Teverun Blade Mini Pro (48V 20.8Ah — 998 Wh)</option>
-            <option value="1620">Teverun Blade Mini Ultra (60V 27Ah — 1620 Wh)</option>
-            <option value="1560">Teverun Blade GT II (60V 26Ah — 1560 Wh)</option>
-            <option value="1890">Teverun Blade GT+ II (60V 31.5Ah — 1890 Wh)</option>
-            <option value="1082">Teverun Fighter Mini Eco (52V 20.8Ah — 1082 Wh)</option>
-            <option value="1500">Teverun Fighter Mini Pro (60V 25Ah — 1500 Wh)</option>
-            <option value="1560">Teverun Fighter Eleven (60V 26Ah — 1560 Wh)</option>
-            <option value="2100">Teverun Fighter Eleven+ (60V 35Ah — 2100 Wh)</option>
-            <option value="4320">Teverun Supreme Ultra (72V 60Ah — 4320 Wh)</option>
-            <option value="4320">Teverun Supreme 7260R (72V 60Ah — 4320 Wh)</option>
+            <option value="936" data-watts="800" data-name="Teverun Space Lite">Teverun Space Lite (52V 18Ah &#8212; 936 Wh)</option>
+            <option value="998" data-watts="1000" data-name="Teverun Blade Mini Pro">Teverun Blade Mini Pro (48V 20.8Ah &#8212; 998 Wh)</option>
+            <option value="1620" data-watts="2000" data-name="Teverun Blade Mini Ultra">Teverun Blade Mini Ultra (60V 27Ah &#8212; 1620 Wh)</option>
+            <option value="1560" data-watts="3000" data-name="Teverun Blade GT II">Teverun Blade GT II (60V 26Ah &#8212; 1560 Wh)</option>
+            <option value="1890" data-watts="3000" data-name="Teverun Blade GT+ II">Teverun Blade GT+ II (60V 31.5Ah &#8212; 1890 Wh)</option>
+            <option value="1082" data-watts="2000" data-name="Teverun Fighter Mini Eco">Teverun Fighter Mini Eco (52V 20.8Ah &#8212; 1082 Wh)</option>
+            <option value="1500" data-watts="2000" data-name="Teverun Fighter Mini Pro">Teverun Fighter Mini Pro (60V 25Ah &#8212; 1500 Wh)</option>
+            <option value="1560" data-watts="3200" data-name="Teverun Fighter Eleven">Teverun Fighter Eleven (60V 26Ah &#8212; 1560 Wh)</option>
+            <option value="2100" data-watts="3200" data-name="Teverun Fighter Eleven+">Teverun Fighter Eleven+ (60V 35Ah &#8212; 2100 Wh)</option>
+            <option value="4320" data-watts="5000" data-name="Teverun Supreme Ultra">Teverun Supreme Ultra (72V 60Ah &#8212; 4320 Wh)</option>
           </optgroup>
           <optgroup label="Dualtron">
-            <option value="1008">Dualtron Thunder 2 (1008 Wh)</option>
-            <option value="2072">Dualtron X2 (2072 Wh)</option>
+            <option value="1008" data-watts="2000" data-name="Dualtron Thunder 2">Dualtron Thunder 2 (1008 Wh)</option>
+            <option value="2072" data-watts="3600" data-name="Dualtron X2">Dualtron X2 (2072 Wh)</option>
           </optgroup>
-          <optgroup label="KuKirin (auktoriserad &aring;terf&ouml;rs&auml;ljare)">
-            <option value="374">KuKirin S1 Max &mdash; 350W (374 Wh)</option>
-            <option value="720">KuKirin G2 &mdash; 800W (720 Wh)</option>
-            <option value="874">KuKirin M4 Max &mdash; 800W (874 Wh)</option>
-            <option value="960">KuKirin G4 Special Edition &mdash; 2&times;1000W (960 Wh)</option>
-            <option value="864">KuKirin G3 &mdash; 1200W (864 Wh)</option>
-            <option value="960">KuKirin G2 Max &mdash; 1000W (960 Wh)</option>
-            <option value="1196">KuKirin G3 Pro &mdash; 2&times;1200W (1196 Wh)</option>
-            <option value="2112">KuKirin G4 Max &mdash; 2&times;1600W (2112 Wh)</option>
+          <optgroup label="KuKirin (auktoriserad &#229;terf&#246;rs&#228;ljare)">
+            <option value="374" data-watts="350" data-name="KuKirin S1 Max">KuKirin S1 Max &#8212; 350W (374 Wh)</option>
+            <option value="720" data-watts="800" data-name="KuKirin G2">KuKirin G2 &#8212; 800W (720 Wh)</option>
+            <option value="874" data-watts="800" data-name="KuKirin M4 Max">KuKirin M4 Max &#8212; 800W (874 Wh)</option>
+            <option value="960" data-watts="2000" data-name="KuKirin G4 SE">KuKirin G4 Special Edition &#8212; 2&#215;1000W (960 Wh)</option>
+            <option value="864" data-watts="1200" data-name="KuKirin G3">KuKirin G3 &#8212; 1200W (864 Wh)</option>
+            <option value="960" data-watts="1000" data-name="KuKirin G2 Max">KuKirin G2 Max &#8212; 1000W (960 Wh)</option>
+            <option value="1196" data-watts="2400" data-name="KuKirin G3 Pro">KuKirin G3 Pro &#8212; 2&#215;1200W (1196 Wh)</option>
+            <option value="2112" data-watts="3200" data-name="KuKirin G4 Max">KuKirin G4 Max &#8212; 2&#215;1600W (2112 Wh)</option>
           </optgroup>
-          <option value="custom">&#128295; Ange egen batterikapacitet...</option>
         </select>
       </div>
-      <div class="calc-grp" id="customGrp" style="display:none">
-        <label class="calc-lbl">Batterikapacitet (Wh)</label>
-        <input type="range" class="calc-slider" id="battery" min="100" max="2500" value="500" step="10">
-        <div class="calc-val" id="batteryVal">500 Wh</div>
-        <div style="margin-top:10px">
-          <label class="calc-lbl">Eller ange Volt x Ah:</label>
-          <div style="display:flex;gap:8px;align-items:center">
-            <input type="number" id="vIn" placeholder="48" value="48" style="flex:1;padding:10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#fff;font-size:14px;font-family:inherit" onchange="vaTowh()">
-            <span style="color:#555">&#215;</span>
-            <input type="number" id="aIn" placeholder="15" value="15" style="flex:1;padding:10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#fff;font-size:14px;font-family:inherit" onchange="vaTowh()">
-            <span style="color:#555;font-size:13px">= <span id="whR" style="color:#00C853;font-weight:700">720</span> Wh</span>
-          </div>
+
+      <!-- STEP 2: Upgrade battery -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;margin-top:28px"><div style="width:28px;height:28px;border-radius:50%;background:rgba(0,200,83,.15);border:2px solid #00C853;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#00C853;flex-shrink:0">2</div><span style="font-size:14px;font-weight:700;color:#fff">V&#228;lj uppgraderat batteri</span></div>
+      <div class="calc-grp">
+        <label class="calc-lbl">Batterikapacitet (Wh) &#8212; dra f&#246;r att &#246;ka</label>
+        <input type="range" class="calc-slider" id="upgradeBat" min="100" max="4500" value="700" step="10" oninput="calcCompare()">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+          <span style="font-size:12px;color:#555">100 Wh</span>
+          <div class="calc-val" id="upgradeVal">700 Wh</div>
+          <span style="font-size:12px;color:#555">4500 Wh</span>
         </div>
       </div>
       <div class="calc-grp">
+        <label class="calc-lbl">Eller ange Volt &#215; Ah:</label>
+        <div style="display:flex;gap:8px;align-items:center">
+          <input type="number" id="vIn" placeholder="48" value="48" style="flex:1;padding:10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#fff;font-size:14px;font-family:inherit" oninput="vaTowh()">
+          <span style="color:#555;font-size:16px">&#215;</span>
+          <input type="number" id="aIn" placeholder="15" value="15" style="flex:1;padding:10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#fff;font-size:14px;font-family:inherit" oninput="vaTowh()">
+          <span style="color:#555;font-size:13px">= <span id="whR" style="color:#00C853;font-weight:700">720</span> Wh</span>
+        </div>
+      </div>
+
+      <!-- STEP 3: Conditions -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:20px;margin-top:28px"><div style="width:28px;height:28px;border-radius:50%;background:rgba(0,200,83,.15);border:2px solid #00C853;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;color:#00C853;flex-shrink:0">3</div><span style="font-size:14px;font-weight:700;color:#fff">F&#246;ruts&#228;ttningar</span></div>
+      <div class="calc-grp">
         <label class="calc-lbl">Din vikt (kg)</label>
-        <input type="range" class="calc-slider" id="weight" min="40" max="130" value="80">
+        <input type="range" class="calc-slider" id="weight" min="40" max="130" value="80" oninput="calcCompare()">
         <div class="calc-val" id="weightVal">80 kg</div>
       </div>
       <div class="calc-grp">
         <label class="calc-lbl">Underlag</label>
-        <select class="calc-sel" id="terrain" onchange="calc()">
-          <option value="1.0">Asfalt (plan väg)</option>
-          <option value="0.8">Grus / ojämnt</option>
-          <option value="0.65">Kuperad terräng / backar</option>
+        <select class="calc-sel" id="terrain" onchange="calcCompare()">
+          <option value="1.0">Asfalt (plan v&#228;g)</option>
+          <option value="0.8">Grus / oj&#228;mnt</option>
+          <option value="0.65">Kuperad terr&#228;ng / backar</option>
         </select>
       </div>
-      <button class="btn-primary" onclick="calc()" style="width:100%;justify-content:center;margin-top:6px">Beräkna räckvidd</button>
     </div>
+
     <div class="calc-res">
-      <div class="calc-num" id="rangeR">~35</div>
-      <div class="calc-unit">km beräknad räckvidd</div>
-      <p class="calc-note">Verklig räckvidd påverkas av temperatur, hastighet, vindmotstånd och batteriålder.</p>
-      <div class="calc-match" id="matchP"></div>
-      <div style="margin-top:20px"><a href="/book-online" class="btn-primary" style="width:100%;justify-content:center">Boka batteridiagnos — 349 kr &#8594;</a><span class="btn-hint">Stämmer inte räckvidden? Vi kollar batteriet.</span></div>
+      <div id="modelLabel" style="font-size:15px;font-weight:700;color:#fff;margin-bottom:18px">NAVEE ST3</div>
+      <div class="calc-compare">
+        <div class="calc-col calc-col-orig">
+          <div class="calc-col-label">Original</div>
+          <div class="calc-col-num" id="origRange">~35</div>
+          <div class="calc-col-unit">km</div>
+          <div class="calc-col-wh" id="origWh">477 Wh</div>
+        </div>
+        <div class="calc-arrow">&#8594;</div>
+        <div class="calc-col calc-col-upgrade">
+          <div class="calc-col-label">Uppgraderat</div>
+          <div class="calc-col-num" id="upRange">~51</div>
+          <div class="calc-col-unit">km</div>
+          <div class="calc-col-wh" id="upWh">700 Wh</div>
+        </div>
+      </div>
+      <div class="calc-diff" id="calcDiff">+16 km l&#228;ngre r&#228;ckvidd</div>
+      <p class="calc-note">Verklig r&#228;ckvidd p&#229;verkas av temperatur, hastighet, vindmotst&#229;nd och batteri&#229;lder.</p>
+
+      <div class="calc-match" id="matchP" style="margin-top:20px"></div>
+
+      <div style="margin-top:20px;display:flex;flex-direction:column;gap:10px">
+        <a href="#hallbarhet" class="btn-primary" style="width:100%;justify-content:center">Se v&#229;ra premium batteripaket &#8594;</a>
+        <span class="btn-hint">Vi bygger custom batteripaket fr&#229;n &#229;teranv&#228;nda premiumceller &#8212; halva nypriset.</span>
+        <a href="/book-online" style="display:block;text-align:center;color:#00C853;font-size:14px;font-weight:600;text-decoration:none;padding:10px">Boka batterir&#229;dgivning &#8212; 349 kr</a>
+      </div>
     </div>
   </div>
 </div>
@@ -518,15 +629,15 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 <!-- PARTNERS -->
 <section class="partners">
 <div class="container">
-  <div class="partners-lbl">Samarbetspartners & märken vi servar</div>
+  <div class="partners-lbl">Samarbetspartners &amp; m&#228;rken vi servar</div>
   <div class="partners-row">
-    <div class="partner-logo" style="background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.25);color:#00C853">NAVEE</div>
-    <div class="partner-logo" style="padding:6px 12px"><img src="/teverun-logo.jpg" alt="TEVERUN" style="height:22px;filter:invert(1) brightness(0.7);width:auto" onerror="this.outerHTML='TEVERUN'"></div>
-    <div class="partner-logo">XIAOMI</div>
-    <div class="partner-logo">NINEBOT</div>
-    <div class="partner-logo">VSETT</div>
-    <div class="partner-logo" style="padding:6px 12px"><img src="/dualtron-logo.png" alt="DUALTRON" style="height:22px;filter:brightness(0.7);width:auto" onerror="this.outerHTML='DUALTRON'"></div>
-    <div class="partner-logo" style="background:rgba(255,109,0,.08);border-color:rgba(255,109,0,.25);color:#ff6d00">KUKIRIN</div>
+    <div class="partner-logo" style="background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.25);color:#00C853;font-weight:800">NAVEE</div>
+    <div class="partner-logo" style="background:rgba(255,50,50,.06);border-color:rgba(255,50,50,.2);color:#ff4444;font-weight:800;letter-spacing:2px">TEVERUN</div>
+    <div class="partner-logo" style="color:#aaa;font-weight:700">XIAOMI</div>
+    <div class="partner-logo" style="color:#aaa;font-weight:700">NINEBOT</div>
+    <div class="partner-logo" style="color:#aaa;font-weight:700">VSETT</div>
+    <div class="partner-logo" style="color:#aaa;font-weight:700;font-size:10px">DUALTRON</div>
+    <div class="partner-logo" style="background:rgba(255,109,0,.08);border-color:rgba(255,109,0,.25);color:#ff6d00;font-weight:800">KUKIRIN</div>
   </div>
 </div>
 </section>
@@ -741,7 +852,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 <div class="sticky-cta"><div class="sticky-inner"><a href="/book-online" class="btn-primary">Boka nu</a><a href="tel:0700243319" class="btn-secondary">Ring</a></div></div>
 
 <script>
-const w=document.getElementById('weight'),b=document.getElementById('battery'),wV=document.getElementById('weightVal'),bV=document.getElementById('batteryVal'),rR=document.getElementById('rangeR'),t=document.getElementById('terrain'),sm=document.getElementById('scooterModel'),cg=document.getElementById('customGrp');
+const w=document.getElementById('weight'),wV=document.getElementById('weightVal'),t=document.getElementById('terrain'),sm=document.getElementById('scooterModel'),ub=document.getElementById('upgradeBat'),uV=document.getElementById('upgradeVal');
 const products=[
   {name:'NAVEE UT5 Ultra X',wh:1284,price:'23 490 kr',brand:'NAVEE'},
   {name:'NAVEE XT5 Ultra',wh:899,price:'16 990 kr',brand:'NAVEE'},
@@ -765,24 +876,37 @@ const products=[
   {name:'KuKirin G3 Pro',wh:1196,price:'18 990 kr',brand:'KUKIRIN'},
   {name:'KuKirin G4 Max',wh:2112,price:'26 990 kr',brand:'KUKIRIN'}
 ];
-w.addEventListener('input',()=>{wV.textContent=w.value+' kg';calc()});
-b.addEventListener('input',()=>{bV.textContent=b.value+' Wh';calc()});
-function updateModel(){const v=sm.value;if(v==='custom'){cg.style.display='block'}else{cg.style.display='none'}calc()}
-function vaTowh(){const v=parseFloat(document.getElementById('vIn').value)||0,a=parseFloat(document.getElementById('aIn').value)||0,wh=Math.round(v*a);document.getElementById('whR').textContent=wh;b.value=Math.min(2500,wh);bV.textContent=wh+' Wh';calc()}
-function getBat(){const v=sm.value;return v==='custom'?parseInt(b.value):parseInt(v)}
-function calc(){
-  const weight=parseInt(w.value),bat=getBat(),ter=parseFloat(t.value);
-  const cons=15*(0.7+weight/250);
-  const range=Math.round((bat/cons)*ter);
-  rR.textContent='~'+range;
+w.addEventListener('input',()=>{wV.textContent=w.value+' kg'});
+function vaTowh(){const v=parseFloat(document.getElementById('vIn').value)||0,a=parseFloat(document.getElementById('aIn').value)||0,wh=Math.round(v*a);document.getElementById('whR').textContent=wh;ub.value=Math.min(4500,wh);uV.textContent=wh+' Wh';calcCompare()}
+function calcRange(bat,weight,ter){const cons=15*(0.7+weight/250);return Math.round((bat/cons)*ter)}
+function calcCompare(){
+  const weight=parseInt(w.value);wV.textContent=weight+' kg';
+  const ter=parseFloat(t.value);
+  const opt=sm.options[sm.selectedIndex];
+  const origWh=parseInt(opt.value);
+  const modelName=opt.dataset.name||opt.textContent;
+  const upWh=parseInt(ub.value);
+  uV.textContent=upWh+' Wh';
+  const origR=calcRange(origWh,weight,ter);
+  const upR=calcRange(upWh,weight,ter);
+  const diff=upR-origR;
+  document.getElementById('modelLabel').textContent=modelName;
+  document.getElementById('origRange').textContent='~'+origR;
+  document.getElementById('origWh').textContent=origWh+' Wh';
+  document.getElementById('upRange').textContent='~'+upR;
+  document.getElementById('upWh').textContent=upWh+' Wh';
+  const diffEl=document.getElementById('calcDiff');
+  if(diff>0){diffEl.textContent='+'+diff+' km l\u00e4ngre r\u00e4ckvidd';diffEl.style.background='rgba(0,200,83,.1)';diffEl.style.borderColor='rgba(0,200,83,.2)';diffEl.style.color='#00C853'}
+  else if(diff<0){diffEl.textContent=diff+' km kortare r\u00e4ckvidd';diffEl.style.background='rgba(255,60,60,.1)';diffEl.style.borderColor='rgba(255,60,60,.2)';diffEl.style.color='#ff4444'}
+  else{diffEl.textContent='Samma r\u00e4ckvidd';diffEl.style.background='rgba(255,255,255,.05)';diffEl.style.borderColor='rgba(255,255,255,.1)';diffEl.style.color='#888'}
   const mp=document.getElementById('matchP');
-  const sim=products.filter(p=>Math.abs(p.wh-bat)<200);
-  let h='<div class="calc-match-hd">Scootrar med liknande batteri i vårt utbud:</div>';
-  if(sim.length>0){sim.forEach(p=>{h+=`<div class="calc-mi"><span>${p.name} (${p.wh} Wh) — ${p.price}</span><a href="#produkter">Köp &#8594;</a></div>`})}
-  else{h+='<div style="font-size:13px;color:#888;padding:6px 0">Inget matchande batteri i sortimentet — <a href="/book-online" style="color:#00C853">kontakta oss</a> för custom-bygge.</div>'}
+  const sim=products.filter(p=>Math.abs(p.wh-upWh)<250).sort((a,b)=>Math.abs(a.wh-upWh)-Math.abs(b.wh-upWh)).slice(0,4);
+  let h='<div class="calc-match-hd">Scootrar med liknande batteri i v\u00e5rt sortiment:</div>';
+  if(sim.length>0){sim.forEach(p=>{h+=`<div class="calc-mi"><span>${p.name} (${p.wh} Wh) \u2014 ${p.price}</span><a href="#produkter">Se \u2192</a></div>`})}
+  else{h+='<div style="font-size:13px;color:#888;padding:6px 0">Inget matchande i sortimentet \u2014 <a href="/book-online" style="color:#00C853">kontakta oss</a> f\u00f6r custom batteripaket.</div>'}
   mp.innerHTML=h;
 }
-calc();
+calcCompare();
 
 // === MOBILE NAV ===
 function closeMobileNav(){document.getElementById('mobileNav').classList.remove('open');document.querySelector('.hamburger').classList.remove('active')}
