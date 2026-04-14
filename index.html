@@ -5,21 +5,21 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Nordic E-Mobility — Elscooter Reparation & Service Örebro</title>
 <meta name="description" content="Örebros specialistverkstad för elscootrar och elcyklar. Reparation, batteridiagnostik och service. Boka online — fasta priser, snabba ledtider. 5/5 på Google.">
-<meta name="keywords" content="elscooter reparation Örebro, elscooter service, batterireparation, elcykel service, punktering elscooter, NAVEE återförsäljare Sverige">
+<meta name="keywords" content="elscooter reparation Örebro, elscooter service Örebro, batterireparation elscooter, elcykel service Örebro, punktering elscooter Örebro, batteritest elscooter, verkstad elscooter Örebro, däckbyte elscooter Örebro, NAVEE återförsäljare Sverige, KuKirin Sverige, Teverun Sverige">
 <meta name="author" content="Nordic E-Mobility">
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="https://www.nordicemobility.com/">
+<link rel="canonical" href="https://www.nordicemobility.se/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Nordic E-Mobility — Elscooter & Elcykel Reparation i Örebro">
 <meta property="og:description" content="Specialistverkstad för elscootrar och elcyklar. Batterireparation på cell-nivå, fasta priser, 5/5 på Google. Boka online — 20% rabatt.">
-<meta property="og:url" content="https://www.nordicemobility.com/">
+<meta property="og:url" content="https://www.nordicemobility.se/">
 <meta property="og:site_name" content="Nordic E-Mobility">
 <meta property="og:locale" content="sv_SE">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Nordic E-Mobility — Elscooter Reparation Örebro">
 <meta name="twitter:description" content="Specialistverkstad för elscootrar. Batterireparation, service, fasta priser. 5/5 på Google.">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"LocalBusiness","name":"Nordic E-Mobility","description":"Specialistverkstad för elscootrar, elcyklar och batterisystem i Örebro. Reparation, diagnostik, batterireparation på cell-nivå.","url":"https://www.nordicemobility.com","telephone":"+46700243319","email":"info@nordicemobility.se","address":{"@type":"PostalAddress","streetAddress":"Pistolvägen 6","addressLocality":"Örebro","postalCode":"703 48","addressCountry":"SE"},"geo":{"@type":"GeoCoordinates","latitude":59.2753,"longitude":15.2134},"aggregateRating":{"@type":"AggregateRating","ratingValue":"5.0","reviewCount":"12","bestRating":"5"},"priceRange":"349-1800 SEK","openingHours":"Mo-Fr 09:00-17:00","areaServed":{"@type":"City","name":"Örebro"},"hasOfferCatalog":{"@type":"OfferCatalog","name":"Tjänster","itemListElement":[{"@type":"Offer","itemOffered":{"@type":"Service","name":"Felsökning elscooter"},"price":"349","priceCurrency":"SEK"},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Batteridiagnos"},"price":"349","priceCurrency":"SEK"},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Punktering elscooter"},"price":"349","priceCurrency":"SEK"},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Batterireparation"},"price":"999","priceCurrency":"SEK"}]}}
+{"@context":"https://schema.org","@type":"LocalBusiness","name":"Nordic E-Mobility","description":"Specialistverkstad för elscootrar, elcyklar och batterisystem i Örebro. Reparation, diagnostik, batterireparation på cell-nivå.","url":"https://www.nordicemobility.se","telephone":"+46700243319","email":"info@nordicemobility.se","address":{"@type":"PostalAddress","streetAddress":"Pistolvägen 6","addressLocality":"Örebro","postalCode":"702 21","addressCountry":"SE"},"geo":{"@type":"GeoCoordinates","latitude":59.2753,"longitude":15.2134},"aggregateRating":{"@type":"AggregateRating","ratingValue":"5.0","reviewCount":"12","bestRating":"5"},"priceRange":"349-1800 SEK","openingHours":"Mo-Fr 09:00-17:00","areaServed":{"@type":"City","name":"Örebro"},"hasOfferCatalog":{"@type":"OfferCatalog","name":"Tjänster","itemListElement":[{"@type":"Offer","itemOffered":{"@type":"Service","name":"Felsökning elscooter"},"price":"349","priceCurrency":"SEK"},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Batteridiagnos"},"price":"349","priceCurrency":"SEK"},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Punktering elscooter"},"price":"349","priceCurrency":"SEK"},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Batterireparation"},"price":"999","priceCurrency":"SEK"}]}}
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -187,6 +187,18 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 .f-links a:hover{color:#00C853}
 .f-bottom{border-top:1px solid #1a1a1a;padding-top:20px;display:flex;justify-content:space-between;font-size:12px;color:#555}
 
+/* HAMBURGER */
+.hamburger{display:none;background:none;border:none;cursor:pointer;padding:8px;z-index:101}
+.hamburger span{display:block;width:24px;height:2px;background:#fff;margin:5px 0;transition:all .3s}
+.hamburger.active span:nth-child(1){transform:rotate(45deg) translate(5px,5px)}
+.hamburger.active span:nth-child(2){opacity:0}
+.hamburger.active span:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}
+.mobile-nav{display:none;position:fixed;top:72px;left:0;right:0;bottom:0;background:rgba(0,0,0,.97);backdrop-filter:blur(20px);z-index:99;flex-direction:column;align-items:center;justify-content:center;gap:24px}
+.mobile-nav.open{display:flex}
+.mobile-nav a{color:#fff;text-decoration:none;font-size:20px;font-weight:600;padding:12px 24px;transition:color .2s}
+.mobile-nav a:hover{color:#00C853}
+.mobile-nav .nav-cta{background:#00C853;color:#000!important;padding:14px 32px;border-radius:8px;font-weight:700;font-size:18px;margin-top:12px}
+
 /* STICKY MOBILE */
 .sticky-cta{display:none;position:fixed;bottom:0;left:0;right:0;z-index:99;background:rgba(0,0,0,.95);backdrop-filter:blur(12px);border-top:1px solid #222;padding:10px 16px}
 .sticky-inner{display:flex;gap:10px;max-width:500px;margin:0 auto}
@@ -205,6 +217,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   .usp-grid{grid-template-columns:1fr}
   .hero-proof{flex-direction:column;gap:10px}
   nav{display:none}
+  .hamburger{display:block}
   .sticky-cta{display:block}
   body{padding-bottom:68px}
   .section-title{font-size:28px}
@@ -225,8 +238,20 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
     <a href="#kontakt">Kontakt</a>
     <a href="/book-online" class="nav-cta">Boka nu</a>
   </nav>
+  <button class="hamburger" onclick="this.classList.toggle('active');document.getElementById('mobileNav').classList.toggle('open')" aria-label="Meny">
+    <span></span><span></span><span></span>
+  </button>
 </div>
 </header>
+<div class="mobile-nav" id="mobileNav">
+  <a href="#prislista" onclick="closeMobileNav()">Prislista</a>
+  <a href="#batteri" onclick="closeMobileNav()">Batteri</a>
+  <a href="#produkter" onclick="closeMobileNav()">Produkter</a>
+  <a href="#blogg" onclick="closeMobileNav()">Blogg</a>
+  <a href="#kontakt" onclick="closeMobileNav()">Kontakt</a>
+  <a href="tel:0700243319" style="color:#aaa;font-size:16px">070-024 33 19</a>
+  <a href="/book-online" class="nav-cta">Boka service nu</a>
+</div>
 
 <!-- HERO -->
 <section class="hero" id="boka">
@@ -397,12 +422,16 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
       <div class="calc-grp">
         <label class="calc-lbl">Välj scooter / batteri</label>
         <select class="calc-sel" id="scooterModel" onchange="updateModel()">
-          <optgroup label="&#9889; NAVEE (samarbetspartner)">
-            <option value="504">NAVEE ST3 Pro — 1000W (504 Wh)</option>
-            <option value="480">NAVEE N65i — 500W (480 Wh)</option>
-            <option value="470">NAVEE ST3 — 700W (470 Wh)</option>
-            <option value="345">NAVEE G5 — 350W (345 Wh)</option>
-            <option value="500" selected>NAVEE V50i Pro — 500W (500 Wh)</option>
+          <optgroup label="&#9889; NAVEE (officiell &aring;terf&ouml;rs&auml;ljare)">
+            <option value="1284">NAVEE UT5 Ultra X &mdash; 2&times;1200W (1284 Wh)</option>
+            <option value="899">NAVEE XT5 Ultra &mdash; 2&times;500W (899 Wh)</option>
+            <option value="899">NAVEE NT5 Ultra X &mdash; 2&times;500W (899 Wh)</option>
+            <option value="597">NAVEE ST3 Pro &mdash; 250W SE (597 Wh)</option>
+            <option value="477" selected>NAVEE ST3 &mdash; 250W SE (477 Wh)</option>
+            <option value="275">NAVEE N65i &mdash; 400W (275 Wh)</option>
+            <option value="275">NAVEE G5 &mdash; 400W (275 Wh)</option>
+            <option value="184">NAVEE V25i Pro II &mdash; 300W (184 Wh)</option>
+            <option value="110">NAVEE K100 Max &mdash; 150W (110 Wh)</option>
           </optgroup>
           <optgroup label="Xiaomi">
             <option value="275">Xiaomi Mi Pro 2 (275 Wh)</option>
@@ -432,6 +461,16 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
           <optgroup label="Dualtron">
             <option value="1008">Dualtron Thunder 2 (1008 Wh)</option>
             <option value="2072">Dualtron X2 (2072 Wh)</option>
+          </optgroup>
+          <optgroup label="KuKirin (auktoriserad &aring;terf&ouml;rs&auml;ljare)">
+            <option value="374">KuKirin S1 Max &mdash; 350W (374 Wh)</option>
+            <option value="720">KuKirin G2 &mdash; 800W (720 Wh)</option>
+            <option value="874">KuKirin M4 Max &mdash; 800W (874 Wh)</option>
+            <option value="960">KuKirin G4 Special Edition &mdash; 2&times;1000W (960 Wh)</option>
+            <option value="864">KuKirin G3 &mdash; 1200W (864 Wh)</option>
+            <option value="960">KuKirin G2 Max &mdash; 1000W (960 Wh)</option>
+            <option value="1196">KuKirin G3 Pro &mdash; 2&times;1200W (1196 Wh)</option>
+            <option value="2112">KuKirin G4 Max &mdash; 2&times;1600W (2112 Wh)</option>
           </optgroup>
           <option value="custom">&#128295; Ange egen batterikapacitet...</option>
         </select>
@@ -482,11 +521,12 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   <div class="partners-lbl">Samarbetspartners & märken vi servar</div>
   <div class="partners-row">
     <div class="partner-logo" style="background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.25);color:#00C853">NAVEE</div>
-    <div class="partner-logo"><img src="https://teverun.com/wp-content/uploads/2025/08/teverun-logo-black-transparent-01.webp" alt="TEVERUN" style="height:18px;filter:invert(1) brightness(0.6);width:auto" onerror="this.outerHTML='TEVERUN'"></div>
+    <div class="partner-logo" style="padding:6px 12px"><img src="/teverun-logo.jpg" alt="TEVERUN" style="height:22px;filter:invert(1) brightness(0.7);width:auto" onerror="this.outerHTML='TEVERUN'"></div>
     <div class="partner-logo">XIAOMI</div>
     <div class="partner-logo">NINEBOT</div>
     <div class="partner-logo">VSETT</div>
-    <div class="partner-logo">DUALTRON</div>
+    <div class="partner-logo" style="padding:6px 12px"><img src="/dualtron-logo.png" alt="DUALTRON" style="height:22px;filter:brightness(0.7);width:auto" onerror="this.outerHTML='DUALTRON'"></div>
+    <div class="partner-logo" style="background:rgba(255,109,0,.08);border-color:rgba(255,109,0,.25);color:#ff6d00">KUKIRIN</div>
   </div>
 </div>
 </section>
@@ -499,16 +539,34 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   <p class="section-sub">Alla scootrar levereras inspekterade och redo att köra. Vi är auktoriserade återförsäljare för NAVEE och TEVERUN.</p>
 
   <!-- NAVEE -->
-  <div style="display:flex;align-items:center;gap:12px;margin:40px 0 20px">
+  <div style="display:flex;align-items:center;gap:12px;margin:40px 0 8px">
     <span style="font-size:20px;font-weight:800;letter-spacing:2px;color:#fff">NAVEE</span>
-    <span style="font-size:12px;color:#00C853;font-weight:600;background:rgba(0,200,83,.12);padding:4px 10px;border-radius:4px">Samarbetspartner</span>
+    <span style="font-size:12px;color:#00C853;font-weight:600;background:rgba(0,200,83,.12);padding:4px 10px;border-radius:4px">Officiell &Aring;terf&ouml;rs&auml;ljare Sverige</span>
   </div>
-  <div class="products-grid">
-    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a2a1f,#111);font-size:32px">&#9889;</div><div class="prod-body"><div class="prod-name">NAVEE ST3 Pro — 1000W</div><div style="font-size:11px;color:#888;margin:4px 0">504 Wh &bull; 25 km/h</div><div class="prod-price">9 499 kr</div><a href="/book-online" class="prod-btn">Fråga om denna</a></div></div>
-    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a2a1f,#111);font-size:32px">&#9889;</div><div class="prod-body"><div class="prod-name">NAVEE N65i — 500W</div><div style="font-size:11px;color:#888;margin:4px 0">480 Wh &bull; 25 km/h</div><div class="prod-price">7 499 kr</div><a href="/book-online" class="prod-btn">Fråga om denna</a></div></div>
-    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a2a1f,#111);font-size:32px">&#9889;</div><div class="prod-body"><div class="prod-name">NAVEE ST3 — 700W</div><div style="font-size:11px;color:#888;margin:4px 0">470 Wh &bull; 25 km/h</div><div class="prod-price">7 999 kr</div><a href="/book-online" class="prod-btn">Fråga om denna</a></div></div>
-    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a2a1f,#111);font-size:32px">&#9889;</div><div class="prod-body"><div class="prod-name">NAVEE G5 — 350W</div><div style="font-size:11px;color:#888;margin:4px 0">345 Wh &bull; 25 km/h</div><div class="prod-price">4 999 kr</div><a href="/book-online" class="prod-btn">Fråga om denna</a></div></div>
-    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a2a1f,#111);font-size:32px">&#9889;</div><div class="prod-body"><div class="prod-name">NAVEE V50i Pro — 500W</div><div style="font-size:11px;color:#888;margin:4px 0">500 Wh &bull; 25 km/h</div><div class="prod-price">4 499 kr</div><a href="/book-online" class="prod-btn">Fråga om denna</a></div></div>
+  <p style="font-size:13px;color:#888;margin-bottom:20px;max-width:600px">Smarta elscootrar fr&aring;n NAVEE &mdash; fr&aring;n kompakta pendlare till kraftfulla 12&Prime;-modeller. Alla priser inkl. moms. Fri frakt i &Ouml;rebro.</p>
+
+  <!-- NAVEE Flaggskepp -->
+  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Flaggskepp &mdash; 12&Prime; Terrängdäck</div>
+  <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;left:8px;background:#555;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">KOMMER SNART</div><img src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png" alt="NAVEE UT5 Ultra X" style="max-height:100%;max-width:100%;object-fit:contain;filter:brightness(0.9)" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">UT5 Ultra X</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1200W &bull; 60V 22.3Ah &bull; 1284 Wh &bull; 120 km</div><div class="prod-price">23 490 kr</div><a href="/book-online" class="prod-btn">F&ouml;rboka</a></div></div>
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">I LAGER</div><img src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png" alt="NAVEE XT5 Ultra" style="max-height:100%;max-width:100%;object-fit:contain;filter:brightness(0.9)" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">XT5 Ultra</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;500W &bull; 46.8V 19.2Ah &bull; 899 Wh &bull; 90 km</div><div class="prod-price">16 990 kr</div><a class="prod-btn stripe-buy" data-product="navee-xt5-ultra" data-price="16990">K&ouml;p nu</a></div></div>
+    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;left:8px;background:#555;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">KOMMER SNART</div><img src="https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1-500x500.png" alt="NAVEE NT5 Ultra X" style="max-height:100%;max-width:100%;object-fit:contain;filter:brightness(0.9)" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">NT5 Ultra X</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;500W &bull; 46.8V 19.2Ah &bull; 899 Wh &bull; 90 km</div><div class="prod-price">13 490 kr</div><a href="/book-online" class="prod-btn">F&ouml;rboka</a></div></div>
+  </div>
+
+  <!-- NAVEE City -->
+  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">City &mdash; Kraftfulla vardagsscootrar</div>
+  <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">I LAGER</div><img src="https://www.naveetech.com/wp-content/uploads/2025/07/St3pro-500x500.png" alt="NAVEE ST3 Pro" style="max-height:100%;max-width:100%;object-fit:contain;filter:brightness(0.9)" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">ST3 Pro <span style="font-size:9px;color:#00C853">SE</span></div><div style="font-size:11px;color:#888;margin:4px 0">250W &bull; 46.8V 12.75Ah &bull; 597 Wh &bull; 75 km</div><div class="prod-price">10 990 kr</div><a class="prod-btn stripe-buy" data-product="navee-st3-pro" data-price="10990">K&ouml;p nu</a></div></div>
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">I LAGER</div><img src="https://www.naveetech.com/wp-content/uploads/2025/07/st3-2.png" alt="NAVEE ST3" style="max-height:100%;max-width:100%;object-fit:contain;filter:brightness(0.9)" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">ST3 <span style="font-size:9px;color:#00C853">SE</span></div><div style="font-size:11px;color:#888;margin:4px 0">250W &bull; 46.8V 10.2Ah &bull; 477 Wh &bull; 60 km</div><div class="prod-price">8 990 kr</div><a class="prod-btn stripe-buy" data-product="navee-st3" data-price="8990">K&ouml;p nu</a></div></div>
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">I LAGER</div><img src="https://www.naveetech.com/wp-content/uploads/2025/07/N65i-500x500.png" alt="NAVEE N65i" style="max-height:100%;max-width:100%;object-fit:contain;filter:brightness(0.9)" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">N65i</div><div style="font-size:11px;color:#888;margin:4px 0">400W &bull; 36V 7.65Ah &bull; 275 Wh &bull; 45 km</div><div class="prod-price">8 499 kr</div><a class="prod-btn stripe-buy" data-product="navee-n65i" data-price="8499">K&ouml;p nu</a></div></div>
+  </div>
+
+  <!-- NAVEE Kompakt -->
+  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Kompakt &mdash; Pendlare & Nybörjare</div>
+  <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">I LAGER</div><img src="https://www.naveetech.com/wp-content/uploads/2025/07/v25i-II-1-1.png" alt="NAVEE G5" style="max-height:100%;max-width:100%;object-fit:contain;filter:brightness(0.9)" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">G5</div><div style="font-size:11px;color:#888;margin:4px 0">400W &bull; 36V &bull; 275 Wh &bull; Tubeless</div><div class="prod-price">5 490 kr</div><a class="prod-btn stripe-buy" data-product="navee-g5" data-price="5490">K&ouml;p nu</a></div></div>
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">I LAGER</div><img src="https://www.naveetech.com/wp-content/uploads/2025/07/v25i-II-1-500x500.png" alt="NAVEE V25i Pro II" style="max-height:100%;max-width:100%;object-fit:contain;filter:brightness(0.9)" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">V25i Pro II</div><div style="font-size:11px;color:#888;margin:4px 0">300W &bull; 36V &bull; 184 Wh &bull; 25 km</div><div class="prod-price">4 490 kr</div><a class="prod-btn stripe-buy" data-product="navee-v25i-pro-ii" data-price="4490">K&ouml;p nu</a></div></div>
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">I LAGER</div><img src="https://www.naveetech.com/wp-content/uploads/2025/09/k100-com1.png" alt="NAVEE K100 Max" style="max-height:100%;max-width:100%;object-fit:contain;filter:brightness(0.9)" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">K100 Max</div><div style="font-size:11px;color:#888;margin:4px 0">150W &bull; 21.6V &bull; 110 Wh &bull; Barn/ungdom</div><div class="prod-price">3 499 kr</div><a class="prod-btn stripe-buy" data-product="navee-k100-max" data-price="3499">K&ouml;p nu</a></div></div>
   </div>
 
   <!-- TEVERUN -->
@@ -516,48 +574,78 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
     <img src="https://teverun.com/wp-content/uploads/2025/08/teverun-logo-black-transparent-01.webp" alt="TEVERUN" style="height:28px;filter:invert(1);width:auto" onerror="this.outerHTML='<span style=&quot;font-size:20px;font-weight:800;letter-spacing:2px;color:#fff&quot;>TEVERUN</span>'">
     <span style="font-size:12px;color:#00C853;font-weight:600;background:rgba(0,200,83,.12);padding:4px 10px;border-radius:4px">Auktoriserad Partner</span>
   </div>
-  <p style="font-size:13px;color:#888;margin-bottom:20px;max-width:600px">Elsparkcyklar för alla behov — från pendlare till extremprestanda. Kontakta oss för aktuella priser och leveranstider.</p>
+  <p style="font-size:13px;color:#888;margin-bottom:20px;max-width:600px">Prestanda-elsparkcyklar fr&aring;n Teverun &mdash; fr&aring;n smarta pendlare till extremmaskiner. Alla priser inkl. moms. Kontakta oss f&ouml;r leveranstider.</p>
 
-  <!-- Space -->
-  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Space — Pendlaren</div>
+  <!-- Space (Entry) -->
+  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Entry &mdash; Pendlaren</div>
   <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
-    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);font-size:28px">&#9889;<div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">I LAGER</div></div><div class="prod-body"><div class="prod-name">Space Lite</div><div style="font-size:11px;color:#888;margin:4px 0">800W &bull; 52V 18Ah &bull; NFC &bull; APP</div><div class="prod-price">Kontakta oss</div><a href="/book-online" class="prod-btn">Fråga om pris</a></div></div>
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);font-size:28px;position:relative">&#9889;<div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">I LAGER</div></div><div class="prod-body"><div class="prod-name">Space Lite</div><div style="font-size:11px;color:#888;margin:4px 0">800W &bull; 52V 18Ah &bull; 936 Wh &bull; NFC &bull; APP</div><div class="prod-price">12 990 kr</div><a class="prod-btn stripe-buy" data-product="teverun-space-lite" data-price="12990">K&ouml;p nu</a></div></div>
   </div>
 
   <!-- Blade Mini -->
-  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Blade Mini — Kompakt kraft</div>
+  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Blade Mini &mdash; Kompakt kraft</div>
   <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
-    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#128293;</div><div class="prod-body"><div class="prod-name">Blade Mini Pro</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;500W &bull; 48V 20.8Ah &bull; 10"</div><div class="prod-price">Kontakta oss</div><a href="/book-online" class="prod-btn">Fråga om pris</a></div></div>
-    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#128293;</div><div class="prod-body"><div class="prod-name">Blade Mini Ultra <span style="font-size:9px;color:#00C853">&#9733;</span></div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1000W &bull; 60V 27Ah &bull; 10"</div><div class="prod-price">Kontakta oss</div><a href="/book-online" class="prod-btn">Fråga om pris</a></div></div>
+    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#128293;<div style="position:absolute;top:8px;left:8px;background:#555;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">SLUT</div></div><div class="prod-body"><div class="prod-name">Blade Mini Pro</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;500W &bull; 48V 20.8Ah &bull; 998 Wh &bull; 10&Prime;</div><div class="prod-price">12 990 kr</div><a href="/book-online" class="prod-btn">Bevaka</a></div></div>
+    <div class="prod" style="border-color:rgba(0,200,83,.15)"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#128293;<div style="position:absolute;top:8px;left:8px;background:#555;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">V&Auml;NTAS JUNI</div></div><div class="prod-body"><div class="prod-name">Blade Mini Ultra <span style="font-size:9px;color:#00C853">&#9733;</span></div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1000W &bull; 60V 27Ah &bull; 1 620 Wh &bull; 10&Prime;</div><div class="prod-price">17 990 kr</div><a href="/book-online" class="prod-btn">F&ouml;rboka</a></div></div>
   </div>
 
-  <!-- Blade GT -->
-  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Blade GT — Nästa nivå</div>
+  <!-- Blade GT (Core) -->
+  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Core &mdash; Stors&auml;ljare</div>
   <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
-    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px">&#9889;</div><div class="prod-body"><div class="prod-name">Blade GT II <span style="font-size:9px;color:#00C853">&#9733;</span></div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1500W &bull; 60V 26Ah &bull; NFC &bull; TFT</div><div class="prod-price">Kontakta oss</div><a href="/book-online" class="prod-btn">Fråga om pris</a></div></div>
-    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px">&#9889;</div><div class="prod-body"><div class="prod-name">Blade GT+ II</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1500W &bull; 60V 31.5Ah &bull; KKE</div><div class="prod-price">Kontakta oss</div><a href="/book-online" class="prod-btn">Fråga om pris</a></div></div>
+    <div class="prod" style="border-color:rgba(0,200,83,.15)"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#9889;<div style="position:absolute;top:8px;left:8px;background:#555;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">V&Auml;NTAS JUNI</div></div><div class="prod-body"><div class="prod-name">Blade GT II <span style="font-size:9px;color:#00C853">&#9733;</span></div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1500W &bull; 60V 26Ah &bull; 1 560 Wh &bull; NFC &bull; TFT</div><div class="prod-price">24 990 kr</div><a href="/book-online" class="prod-btn">F&ouml;rboka</a></div></div>
+    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#9889;<div style="position:absolute;top:8px;left:8px;background:#555;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">SLUT</div></div><div class="prod-body"><div class="prod-name">Blade GT+ II</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1500W &bull; 60V 31.5Ah &bull; 1 890 Wh &bull; KKE</div><div class="prod-price">Kontakta oss</div><a href="/book-online" class="prod-btn">Bevaka</a></div></div>
   </div>
 
-  <!-- Fighter Mini -->
-  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Fighter Mini — Legendaren</div>
+  <!-- Fighter Mini (Premium) -->
+  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Premium &mdash; Fighter-serien</div>
   <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
-    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px">&#128293;</div><div class="prod-body"><div class="prod-name">Fighter Mini Eco <span style="font-size:9px;color:#00C853">&#9733;</span></div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1000W &bull; 52V 20.8Ah &bull; NFC &bull; APP</div><div class="prod-price">Kontakta oss</div><a href="/book-online" class="prod-btn">Fråga om pris</a></div></div>
-    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#128293;<div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">I LAGER</div></div><div class="prod-body"><div class="prod-name">Fighter Mini Pro eKFV</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;250W Bosch &bull; 52V 30.8Ah Samsung</div><div class="prod-price">Kontakta oss</div><a href="/book-online" class="prod-btn">Fråga om pris</a></div></div>
-    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px">&#128293;</div><div class="prod-body"><div class="prod-name">Fighter Mini Pro <span style="font-size:9px;color:#00C853">&#9733;</span></div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1000W Bosch &bull; 60V 25Ah &bull; Kolfiber</div><div class="prod-price">Kontakta oss</div><a href="/book-online" class="prod-btn">Fråga om pris</a></div></div>
+    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#128293;<div style="position:absolute;top:8px;left:8px;background:#555;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">SLUT</div></div><div class="prod-body"><div class="prod-name">Fighter Mini Eco <span style="font-size:9px;color:#00C853">&#9733;</span></div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1000W &bull; 52V 20.8Ah &bull; 1 082 Wh &bull; NFC</div><div class="prod-price">18 990 kr</div><a href="/book-online" class="prod-btn">Bevaka</a></div></div>
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#128293;<div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">I LAGER</div></div><div class="prod-body"><div class="prod-name">Fighter Mini Pro eKFV</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;250W Bosch &bull; 52V 30.8Ah Samsung &bull; TFT</div><div class="prod-price">27 990 kr</div><a class="prod-btn stripe-buy" data-product="teverun-fighter-mini-pro-ekfv" data-price="27990">K&ouml;p nu</a></div></div>
+    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#128293;<div style="position:absolute;top:8px;left:8px;background:#555;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">SLUT</div></div><div class="prod-body"><div class="prod-name">Fighter Mini Pro 60V <span style="font-size:9px;color:#00C853">&#9733;</span></div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1000W Bosch &bull; 60V 25Ah &bull; 1 500 Wh &bull; Kolfiber</div><div class="prod-price">27 990 kr</div><a href="/book-online" class="prod-btn">Bevaka</a></div></div>
   </div>
 
-  <!-- Fighter Eleven -->
-  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Fighter Eleven — Lyx-SUV</div>
+  <!-- Fighter Eleven (Premium) -->
+  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Premium &mdash; Fighter Eleven</div>
   <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
-    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px">&#128165;</div><div class="prod-body"><div class="prod-name">Fighter Eleven</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1600W &bull; 60V 26Ah &bull; NFC &bull; TFT</div><div class="prod-price">Kontakta oss</div><a href="/book-online" class="prod-btn">Fråga om pris</a></div></div>
-    <div class="prod" style="border-color:#ff6d00"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#128165;<div style="position:absolute;top:8px;right:8px;background:#ff6d00;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">SISTA EX.</div></div><div class="prod-body"><div class="prod-name">Fighter Eleven+</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1600W &bull; 60V 35Ah LG</div><div class="prod-price">Kontakta oss</div><a href="/book-online" class="prod-btn">Fråga om pris</a></div></div>
+    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#128165;<div style="position:absolute;top:8px;left:8px;background:#555;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">SLUT</div></div><div class="prod-body"><div class="prod-name">Fighter Eleven</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1600W &bull; 60V 26Ah &bull; 1 560 Wh &bull; NFC &bull; TFT</div><div class="prod-price">Kontakta oss</div><a href="/book-online" class="prod-btn">Bevaka</a></div></div>
+    <div class="prod" style="border-color:#ff6d00"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#128165;<div style="position:absolute;top:8px;right:8px;background:#ff6d00;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">SISTA EX.</div></div><div class="prod-body"><div class="prod-name">Fighter Eleven+</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1600W &bull; 60V 35Ah LG &bull; 2 100 Wh</div><div class="prod-price">39 990 kr</div><a class="prod-btn stripe-buy" data-product="teverun-fighter-eleven-plus" data-price="39990">K&ouml;p nu</a></div></div>
   </div>
 
-  <!-- Fighter Supreme -->
-  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Fighter Supreme — Extremprestanda</div>
+  <!-- Fighter Supreme (Flagship) -->
+  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Flagship &mdash; Fighter Supreme</div>
   <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
-    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px">&#128165;</div><div class="prod-body"><div class="prod-name">Supreme Ultra</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;2500W &bull; 72V 60Ah &bull; 4" TFT</div><div class="prod-price">Kontakta oss</div><a href="/book-online" class="prod-btn">Fråga om pris</a></div></div>
-    <div class="prod" style="border-color:#ff6d00"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#128165;<div style="position:absolute;top:8px;right:8px;background:#ff6d00;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">SISTA EX.</div></div><div class="prod-body"><div class="prod-name">Supreme 7260R</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;2500W &bull; 72V 60Ah &bull; Blade-däck</div><div class="prod-price">Kontakta oss</div><a href="/book-online" class="prod-btn">Fråga om pris</a></div></div>
+    <div class="prod"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#128165;<div style="position:absolute;top:8px;left:8px;background:#555;color:#fff;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">SLUT</div></div><div class="prod-body"><div class="prod-name">Supreme Ultra</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;2500W &bull; 72V 60Ah &bull; 4 320 Wh &bull; 4&Prime; TFT</div><div class="prod-price">54 990 kr</div><a href="/book-online" class="prod-btn">Bevaka</a></div></div>
+    <div class="prod" style="border-color:#ff6d00"><div class="prod-img" style="background:linear-gradient(135deg,#1a0a0a,#111);font-size:28px;position:relative">&#128165;<div style="position:absolute;top:8px;right:8px;background:#ff6d00;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px">SISTA EX.</div></div><div class="prod-body"><div class="prod-name">Supreme 7260R</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;2500W &bull; 72V 60Ah &bull; 4 320 Wh</div><div class="prod-price">54 990 kr</div><a class="prod-btn stripe-buy" data-product="teverun-supreme-7260r" data-price="54990">K&ouml;p nu</a></div></div>
+  </div>
+
+  <!-- KUKIRIN -->
+  <div style="display:flex;align-items:center;gap:12px;margin:48px 0 8px">
+    <span style="font-size:20px;font-weight:800;letter-spacing:2px;color:#fff">KUKIRIN</span>
+    <span style="font-size:12px;color:#00C853;font-weight:600;background:rgba(0,200,83,.12);padding:4px 10px;border-radius:4px">Auktoriserad &Aring;terf&ouml;rs&auml;ljare</span>
+  </div>
+  <p style="font-size:13px;color:#888;margin-bottom:20px;max-width:600px">Prisvärda elscootrar fr&aring;n KuKirin &mdash; fr&aring;n budgetpendlare till kraftfulla dual motor-maskiner. Alla priser inkl. moms. Fri frakt i &Ouml;rebro.</p>
+
+  <!-- KuKirin Budget -->
+  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Budget &mdash; Pendlare &amp; Nyb&ouml;rjare</div>
+  <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">I LAGER</div><img src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/S1_Max-1.jpg?v=1740030144" alt="KuKirin S1 Max" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">S1 Max</div><div style="font-size:11px;color:#888;margin:4px 0">350W &bull; 36V 10.4Ah &bull; 374 Wh &bull; 39 km</div><div class="prod-price">4 990 kr</div><a class="prod-btn stripe-buy" data-product="kukirin-s1-max" data-price="4990">K&ouml;p nu</a></div></div>
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">I LAGER</div><img src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/M4_Max-A1.jpg?v=1749530336" alt="KuKirin M4 Max" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">M4 Max</div><div style="font-size:11px;color:#888;margin:4px 0">800W &bull; 48V 18.2Ah &bull; 874 Wh &bull; 64 km</div><div class="prod-price">7 490 kr</div><a class="prod-btn stripe-buy" data-product="kukirin-m4-max" data-price="7490">K&ouml;p nu</a></div></div>
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">I LAGER</div><img src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2-1104.jpg?v=1741748721" alt="KuKirin G2" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">G2</div><div style="font-size:11px;color:#888;margin:4px 0">800W &bull; 48V 15Ah &bull; 720 Wh &bull; 55 km</div><div class="prod-price">7 990 kr</div><a class="prod-btn stripe-buy" data-product="kukirin-g2" data-price="7990">K&ouml;p nu</a></div></div>
+  </div>
+
+  <!-- KuKirin Mellanklass -->
+  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Mellanklass &mdash; Kraft &amp; r&auml;ckvidd</div>
+  <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="prod" style="border-color:#ff6d00"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#ff6d00;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">SPECIAL EDITION</div><img src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272" alt="KuKirin G4 Special Edition" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#128293;'"></div><div class="prod-body"><div class="prod-name">G4 <span style="font-size:9px;color:#ff6d00">SPECIAL EDITION</span></div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1000W &bull; 48V 20Ah &bull; 960 Wh &bull; 75 km</div><div class="prod-price">9 950 kr</div><a class="prod-btn stripe-buy" data-product="kukirin-g4-special" data-price="9950" style="background:rgba(255,109,0,.15);border-color:rgba(255,109,0,.4);color:#ff6d00">K&ouml;p nu &mdash; Special Edition</a></div></div>
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">I LAGER</div><img src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/1_7da8cb39-a62d-45ec-ba6c-326fde3ce614.jpg?v=1718356445" alt="KuKirin G3" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">G3</div><div style="font-size:11px;color:#888;margin:4px 0">1200W &bull; 48V 18Ah &bull; 864 Wh &bull; 70 km</div><div class="prod-price">10 490 kr</div><a class="prod-btn stripe-buy" data-product="kukirin-g3" data-price="10490">K&ouml;p nu</a></div></div>
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">I LAGER</div><img src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2_Max_29.jpg?v=1774526365" alt="KuKirin G2 Max" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">G2 Max</div><div style="font-size:11px;color:#888;margin:4px 0">1000W &bull; 48V 20Ah &bull; 960 Wh &bull; 80 km</div><div class="prod-price">10 990 kr</div><a class="prod-btn stripe-buy" data-product="kukirin-g2-max" data-price="10990">K&ouml;p nu</a></div></div>
+  </div>
+
+  <!-- KuKirin Premium -->
+  <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Premium &mdash; Dual Motor Prestanda</div>
+  <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">I LAGER</div><img src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/KuKirin_G3_Pro_36.jpg?v=1774524745" alt="KuKirin G3 Pro" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#128293;'"></div><div class="prod-body"><div class="prod-name">G3 Pro</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1200W &bull; 52V 23Ah &bull; 1 196 Wh &bull; 80 km</div><div class="prod-price">18 990 kr</div><a class="prod-btn stripe-buy" data-product="kukirin-g3-pro" data-price="18990">K&ouml;p nu</a></div></div>
+    <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">I LAGER</div><img src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/74b96dbb2d19db9758ba306fc55ad040.jpg?v=1708069782" alt="KuKirin G4 Max" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#128293;'"></div><div class="prod-body"><div class="prod-name">G4 Max</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1600W &bull; 60V 35.2Ah &bull; 2 112 Wh &bull; 95 km</div><div class="prod-price">26 990 kr</div><a class="prod-btn stripe-buy" data-product="kukirin-g4-max" data-price="26990">K&ouml;p nu</a></div></div>
   </div>
 </div>
 </section>
@@ -592,16 +680,39 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 </section>
 
 <!-- KAMPANJ REPEAT -->
-<section class="campaign"><div class="container"><p>Begränsat antal tider per vecka. <a href="/book-online" style="color:#000;text-decoration:underline;font-weight:800">Boka din tid nu &#8594;</a></p></div></section>
+<section class="campaign"><div class="container"><p>Begr&auml;nsat antal tider per vecka. <a href="/book-online" style="color:#000;text-decoration:underline;font-weight:800">Boka din tid nu &#8594;</a></p></div></section>
+
+<!-- LOKAL SEKTION -->
+<section style="padding:60px 0;background:#0a0a0a;border-top:1px solid #1a1a1a">
+<div class="container">
+  <div style="text-align:center;margin-bottom:32px">
+    <span class="section-label">Lokalt i &Ouml;rebro l&auml;n</span>
+    <h2 class="section-title" style="margin:0 auto">Vi servar hela l&auml;net</h2>
+    <p class="section-sub" style="margin:12px auto 0">Nordic E-Mobility &auml;r specialistverkstaden f&ouml;r elscootrar och elcyklar i &Ouml;rebro l&auml;n. Vi tar emot kunder fr&aring;n hela regionen &mdash; med gratis upph&auml;mtning inom 10 km fr&aring;n verkstaden p&aring; Pistolv&auml;gen 6.</p>
+  </div>
+  <div style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center">
+    <span style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;color:#aaa">&#128205; &Ouml;rebro</span>
+    <span style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;color:#aaa">Kumla</span>
+    <span style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;color:#aaa">Hallsberg</span>
+    <span style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;color:#aaa">Lindesberg</span>
+    <span style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;color:#aaa">Karlskoga</span>
+    <span style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;color:#aaa">Degerfors</span>
+    <span style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;color:#aaa">Askersund</span>
+    <span style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;color:#aaa">Nora</span>
+    <span style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;color:#aaa">Lax&aring;</span>
+  </div>
+  <p style="text-align:center;margin-top:20px;font-size:14px;color:#666">Skicka in din scooter med post eller bes&ouml;k oss p&aring; Pistolv&auml;gen 6, 702 21 &Ouml;rebro. <a href="tel:0700243319" style="color:#00C853;text-decoration:none;font-weight:600">Ring 070-024 33 19</a> f&ouml;r transport&ouml;verenskommelse.</p>
+</div>
+</section>
 
 <!-- FOOTER -->
 <footer id="kontakt">
 <div class="container">
   <div class="f-grid">
     <div>
-      <img src="https://static.wixstatic.com/media/c1c83f_0c560c92e27c4b2fb0fbb3c91e4aa6ac~mv2.png" alt="Nordic E-Mobility" style="height:48px;margin-bottom:6px" onerror="this.outerHTML='<div style=&quot;font-size:18px;font-weight:800;margin-bottom:6px&quot;>NORDIC <span style=&quot;color:#00C853&quot;>E-MOBILITY</span></div>'">
+      <img src="/logo.png" alt="Nordic E-Mobility" class="logo-img" style="height:48px;margin-bottom:6px" onerror="this.outerHTML='<div style=&quot;font-size:18px;font-weight:800;margin-bottom:6px&quot;>NORDIC <span style=&quot;color:#00C853&quot;>E-MOBILITY</span></div>'">
       <p class="f-brand">Örebros specialistverkstad för elscootrar, elcyklar och batterisystem.</p>
-      <p style="color:#555;font-size:12px;margin-top:12px">Org.nr: 880809-6658</p>
+      <p style="color:#555;font-size:12px;margin-top:12px">Nordic E-Mobility AB &mdash; Pistolv&auml;gen 6, 702 21 &Ouml;rebro<br>Org.nr: 880809-6658</p>
     </div>
     <div>
       <div class="f-hd">Tjänster</div>
@@ -617,8 +728,8 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
         <li><a href="mailto:info@nordicemobility.se">info@nordicemobility.se</a></li>
         <li><a href="tel:0700243319">070-024 33 19</a></li>
         <li><a href="tel:0722607753">Lennart: 072-260 77 53</a></li>
-        <li style="margin-top:10px"><a href="#">Besök: Pistolvägen 6, Örebro</a></li>
-        <li><a href="#">Bolag: Östra Vintergatan 18, 703 48</a></li>
+        <li style="margin-top:10px"><a href="https://maps.google.com/?q=Pistolvägen+6+702+21+Örebro" target="_blank">Pistolvägen 6, 702 21 Örebro</a></li>
+        <li><a href="#">Org.nr: 880809-6658</a></li>
       </ul>
     </div>
   </div>
@@ -632,11 +743,27 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 <script>
 const w=document.getElementById('weight'),b=document.getElementById('battery'),wV=document.getElementById('weightVal'),bV=document.getElementById('batteryVal'),rR=document.getElementById('rangeR'),t=document.getElementById('terrain'),sm=document.getElementById('scooterModel'),cg=document.getElementById('customGrp');
 const products=[
-  {name:'NAVEE ST3 Pro — 1000W',wh:504,price:'9 499 kr',brand:'NAVEE'},
-  {name:'NAVEE N65i — 500W',wh:480,price:'7 499 kr',brand:'NAVEE'},
-  {name:'NAVEE ST3 — 700W',wh:470,price:'7 999 kr',brand:'NAVEE'},
-  {name:'NAVEE G5 — 350W',wh:345,price:'4 999 kr',brand:'NAVEE'},
-  {name:'NAVEE V50i Pro — 500W',wh:500,price:'4 499 kr',brand:'NAVEE'}
+  {name:'NAVEE UT5 Ultra X',wh:1284,price:'23 490 kr',brand:'NAVEE'},
+  {name:'NAVEE XT5 Ultra',wh:899,price:'16 990 kr',brand:'NAVEE'},
+  {name:'NAVEE NT5 Ultra X',wh:899,price:'13 490 kr',brand:'NAVEE'},
+  {name:'NAVEE ST3 Pro SE',wh:597,price:'10 990 kr',brand:'NAVEE'},
+  {name:'NAVEE ST3 SE',wh:477,price:'8 990 kr',brand:'NAVEE'},
+  {name:'NAVEE N65i',wh:275,price:'8 499 kr',brand:'NAVEE'},
+  {name:'NAVEE G5',wh:275,price:'5 490 kr',brand:'NAVEE'},
+  {name:'NAVEE V25i Pro II',wh:184,price:'4 490 kr',brand:'NAVEE'},
+  {name:'Teverun Space Lite',wh:936,price:'12 990 kr',brand:'TEVERUN'},
+  {name:'Teverun Blade Mini Ultra',wh:1620,price:'17 990 kr',brand:'TEVERUN'},
+  {name:'Teverun Blade GT II',wh:1560,price:'24 990 kr',brand:'TEVERUN'},
+  {name:'Teverun Fighter Mini Eco',wh:1082,price:'18 990 kr',brand:'TEVERUN'},
+  {name:'Teverun Fighter Eleven+',wh:2100,price:'39 990 kr',brand:'TEVERUN'},
+  {name:'KuKirin S1 Max',wh:374,price:'4 990 kr',brand:'KUKIRIN'},
+  {name:'KuKirin G2',wh:720,price:'7 990 kr',brand:'KUKIRIN'},
+  {name:'KuKirin M4 Max',wh:874,price:'7 490 kr',brand:'KUKIRIN'},
+  {name:'KuKirin G4 Special Edition',wh:960,price:'9 950 kr',brand:'KUKIRIN'},
+  {name:'KuKirin G3',wh:864,price:'10 490 kr',brand:'KUKIRIN'},
+  {name:'KuKirin G2 Max',wh:960,price:'10 990 kr',brand:'KUKIRIN'},
+  {name:'KuKirin G3 Pro',wh:1196,price:'18 990 kr',brand:'KUKIRIN'},
+  {name:'KuKirin G4 Max',wh:2112,price:'26 990 kr',brand:'KUKIRIN'}
 ];
 w.addEventListener('input',()=>{wV.textContent=w.value+' kg';calc()});
 b.addEventListener('input',()=>{bV.textContent=b.value+' Wh';calc()});
@@ -656,6 +783,40 @@ function calc(){
   mp.innerHTML=h;
 }
 calc();
+
+// === MOBILE NAV ===
+function closeMobileNav(){document.getElementById('mobileNav').classList.remove('open');document.querySelector('.hamburger').classList.remove('active')}
+
+// === STRIPE CHECKOUT ===
+document.querySelectorAll('.stripe-buy').forEach(btn=>{
+  btn.addEventListener('click',async function(e){
+    e.preventDefault();
+    const pid=this.dataset.product;
+    if(!pid)return;
+    const orig=this.textContent;
+    this.textContent='Laddar...';
+    this.style.pointerEvents='none';
+    try{
+      const res=await fetch('/.netlify/functions/create-checkout',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({productId:pid})
+      });
+      const data=await res.json();
+      if(data.url){window.location.href=data.url}
+      else{alert('Kunde inte starta betalning. Ring oss på 070-024 33 19.');this.textContent=orig;this.style.pointerEvents='auto'}
+    }catch(err){alert('Något gick fel. Ring oss på 070-024 33 19.');this.textContent=orig;this.style.pointerEvents='auto'}
+  });
+});
+
+// === SUCCESS MESSAGE ===
+if(window.location.search.includes('purchase=success')){
+  const d=document.createElement('div');
+  d.style.cssText='position:fixed;top:0;left:0;right:0;z-index:9999;background:#00C853;color:#000;padding:16px;text-align:center;font-weight:700;font-size:16px';
+  d.innerHTML='Tack f&ouml;r din best&auml;llning! Vi kontaktar dig inom 24h med leveransinformation. <span style="cursor:pointer;margin-left:16px;text-decoration:underline" onclick="this.parentElement.remove()">&times; St&auml;ng</span>';
+  document.body.prepend(d);
+  history.replaceState(null,'','/');
+}
 </script>
 </body>
 </html>
