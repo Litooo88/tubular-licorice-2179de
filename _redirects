@@ -1,2 +1,4 @@
-# SPA fallback — Netlify serves index.html for clean URLs
-/book-online  /book-online/index.html  200
+# Clean URLs and legacy Wix-style paths
+/book-online  /book-online/  301
+/product-page/*  /#produkter  301
+/bookings-checkout/*  /book-online/  301

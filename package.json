@@ -1,0 +1,12 @@
+{
+  "name": "nordic-emobility-site",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo Static site ready"
+  },
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0",
+    "stripe": "^14.0.0"
+  }
+}

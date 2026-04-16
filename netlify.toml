@@ -1,7 +1,47 @@
 [build]
   publish = "."
   functions = "netlify/functions"
-  command = "cd netlify/functions && npm install && cd ../.."
+  command = "npm run build"
+
+[build.environment]
+  NPM_FLAGS = "--no-audit --no-fund"
+
+[functions]
+  node_bundler = "esbuild"
+  external_node_modules = ["@netlify/blobs", "stripe"]
+
+[[redirects]]
+  from = "https://nordicemobility.com/*"
+  to = "https://www.nordicemobility.se/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://www.nordicemobility.com/*"
+  to = "https://www.nordicemobility.se/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "https://nordicemobility.se/*"
+  to = "https://www.nordicemobility.se/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/product-page/*"
+  to = "/#produkter"
+  status = 301
+
+[[redirects]]
+  from = "/bookings-checkout/*"
+  to = "/book-online/"
+  status = 301
+
+[[redirects]]
+  from = "/book-online"
+  to = "/book-online/"
+  status = 301
 
 [[headers]]
   for = "/*"
@@ -9,6 +49,29 @@
     X-Frame-Options = "SAMEORIGIN"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"
 
-[[plugins]]
-  package = "@netlify/plugin-functions-install-core"
+[[headers]]
+  for = "/*.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.jpg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"

@@ -6,13 +6,15 @@
 <title>Boka Service — Nordic E-Mobility Örebro</title>
 <meta name="description" content="Boka reparation eller service för din elscooter eller elcykel. Fasta priser, snabba ledtider, 20% rabatt vid onlinebokning. Nordic E-Mobility Örebro.">
 <meta name="robots" content="index, follow">
-<link rel="canonical" href="https://www.nordicemobility.com/book-online/">
+<link rel="canonical" href="https://www.nordicemobility.se/book-online/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Boka Service — Nordic E-Mobility">
 <meta property="og:description" content="Boka reparation eller service för din elscooter. Fasta priser, 20% rabatt vid onlinebokning.">
-<meta property="og:url" content="https://www.nordicemobility.com/book-online/">
+<meta property="og:url" content="https://www.nordicemobility.se/book-online/">
+<meta property="og:image" content="https://www.nordicemobility.se/assets/workshop/workshop-hero.jpg">
+<meta name="theme-color" content="#00C853">
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"Service","provider":{"@type":"LocalBusiness","name":"Nordic E-Mobility","telephone":"+46700243319"},"name":"Elscooter reparation och service","areaServed":"Örebro","url":"https://www.nordicemobility.com/book-online/"}
+{"@context":"https://schema.org","@type":"Service","provider":{"@type":"LocalBusiness","name":"Nordic E-Mobility","telephone":"+46700243319"},"name":"Elscooter reparation och service","areaServed":"Örebro","url":"https://www.nordicemobility.se/book-online/"}
 </script>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
@@ -68,6 +70,13 @@ header .container{display:flex;align-items:center;justify-content:space-between;
 .form-submit{display:inline-flex;align-items:center;justify-content:center;gap:10px;background:#00C853;color:#000;font-weight:700;font-size:17px;padding:16px 36px;border-radius:8px;border:none;cursor:pointer;width:100%;margin-top:8px;transition:all .2s}
 .form-submit:hover{background:#00E676}
 .form-note{font-size:12px;color:#666;margin-top:12px;text-align:center}
+.service-links{display:flex;gap:10px;flex-wrap:wrap;margin:18px 0 36px}
+.service-links a{background:#111;border:1px solid #222;border-radius:8px;padding:10px 14px;color:#aaa;text-decoration:none;font-size:13px;font-weight:700}
+.service-links a:hover{border-color:#00C853;color:#fff;text-decoration:none}
+.trust-note{background:rgba(0,200,83,.07);border:1px solid rgba(0,200,83,.22);border-radius:8px;padding:16px 18px;color:#aaa;font-size:13px;line-height:1.55;margin:18px 0}
+.booking-status{display:none;margin-top:14px;padding:14px 16px;border-radius:8px;font-size:14px;line-height:1.5}
+.booking-status.ok{display:block;background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.35);color:#d8ffe5}
+.booking-status.err{display:block;background:rgba(255,90,95,.1);border:1px solid rgba(255,90,95,.35);color:#ffd6d8}
 
 .info-bar{display:flex;gap:24px;justify-content:center;flex-wrap:wrap;padding:24px 0;border-top:1px solid #1a1a1a;margin-top:40px}
 .info-item{display:flex;align-items:center;gap:8px;font-size:14px;color:#aaa}
@@ -123,6 +132,13 @@ footer a{color:#888}
   </div>
 
   <div class="services-title">Vanliga tjänster</div>
+  <div class="service-links">
+    <a href="/elscooter-reparation-orebro/">Elscooter reparation</a>
+    <a href="/punktering-elscooter-orebro/">Punktering</a>
+    <a href="/batterireparation-elscooter/">Batteridiagnos</a>
+    <a href="/elcykel-service-orebro/">Elcykel service</a>
+    <a href="/regler-elscooter/">Regelfråga innan köp</a>
+  </div>
   <div class="services-list">
     <div class="service-item"><div class="service-icon">&#128295;</div><div class="service-name">Felsökning</div><div class="service-price">349 kr</div></div>
     <div class="service-item"><div class="service-icon">&#128710;</div><div class="service-name">Punktering</div><div class="service-price">fr. 349 kr</div></div>
@@ -135,7 +151,9 @@ footer a{color:#888}
   <div class="contact-form" id="form">
     <div class="form-title">Skicka bokningsförfrågan</div>
     <div class="form-sub">Fyll i formuläret — vi återkommer med prisförslag och tid inom 2 timmar (vardagar).</div>
+    <div class="trust-note">Du binder dig inte till reparation genom att skicka formuläret. Vi bekräftar tid, pris och nästa steg innan arbetet utförs.</div>
     <form name="booking" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+      <input type="hidden" name="form-name" value="booking">
       <p style="display:none"><label>Fyll inte i detta: <input name="bot-field"></label></p>
       <div class="form-grid">
         <div class="form-group">
@@ -161,6 +179,7 @@ footer a{color:#888}
             <option value="Batterireparation (fr. 999 kr)">Batterireparation (fr. 999 kr)</option>
             <option value="Service (399 kr)">Service (399 kr)</option>
             <option value="Controller/elsystem">Controller / elsystem</option>
+            <option value="Regelrådgivning innan köp">Regelrådgivning innan köp</option>
             <option value="Annat">Annat / Vet ej</option>
           </select>
         </div>
@@ -174,7 +193,8 @@ footer a{color:#888}
         </div>
       </div>
       <button type="submit" class="form-submit">Skicka bokningsförfrågan &#8594;</button>
-      <div class="form-note">Du binder dig inte till något. Vi svarar med prisförslag och tidsbokning.</div>
+      <div class="booking-status" id="bookingStatus" aria-live="polite"></div>
+      <div class="form-note">Genom att skicka formuläret godkänner du att vi behandlar uppgifterna för att hantera ditt ärende. Se <a href="/integritet/">integritetspolicy</a> och <a href="/villkor/">villkor</a>.</div>
     </form>
   </div>
 
@@ -189,9 +209,43 @@ footer a{color:#888}
 
 <footer>
 <div class="container">
-  <p>&copy; 2026 Nordic E-Mobility &mdash; <a href="/">Startsidan</a> &mdash; Pistolvägen 6, Örebro &mdash; <a href="tel:0700243319">070-024 33 19</a></p>
+  <p>&copy; 2026 Nordic E-Mobility &mdash; <a href="/">Startsidan</a> &mdash; <a href="/villkor/">Villkor</a> &mdash; <a href="/integritet/">Integritet</a> &mdash; Pistolvägen 6, Örebro &mdash; <a href="tel:0700243319">070-024 33 19</a></p>
 </div>
 </footer>
 
+<script>
+const bookingForm=document.querySelector('form[name="booking"]');
+const bookingStatus=document.getElementById('bookingStatus');
+if(bookingForm){
+  bookingForm.addEventListener('submit',async(event)=>{
+    event.preventDefault();
+    const submit=bookingForm.querySelector('.form-submit');
+    const original=submit.textContent;
+    bookingStatus.className='booking-status';
+    bookingStatus.textContent='';
+    submit.disabled=true;
+    submit.textContent='Skapar verkstadsärende...';
+    const data=Object.fromEntries(new FormData(bookingForm).entries());
+    try{
+      const response=await fetch('/api/bookings',{
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify(data)
+      });
+      const result=await response.json();
+      if(!response.ok) throw new Error(result.error||'Kunde inte skapa ärendet.');
+      bookingStatus.className='booking-status ok';
+      bookingStatus.textContent='Klart. Bokningen är registrerad som aktivt verkstadsärende: '+result.id+'. Vi kontaktar dig med tid och nästa steg.';
+      bookingForm.reset();
+    }catch(error){
+      bookingStatus.className='booking-status err';
+      bookingStatus.textContent='Bokningen kunde inte registreras automatiskt just nu. Ring 070-024 33 19 eller skicka mail till info@nordicemobility.se.';
+    }finally{
+      submit.disabled=false;
+      submit.textContent=original;
+    }
+  });
+}
+</script>
 </body>
 </html>

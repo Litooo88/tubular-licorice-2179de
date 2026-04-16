@@ -15,9 +15,12 @@
 <meta property="og:url" content="https://www.nordicemobility.se/">
 <meta property="og:site_name" content="Nordic E-Mobility">
 <meta property="og:locale" content="sv_SE">
+<meta property="og:image" content="https://www.nordicemobility.se/assets/workshop/workshop-hero.jpg">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Nordic E-Mobility — Elscooter Reparation Örebro">
 <meta name="twitter:description" content="Specialistverkstad för elscootrar. Batterireparation, service, fasta priser. 5/5 på Google.">
+<meta name="twitter:image" content="https://www.nordicemobility.se/assets/workshop/workshop-hero.jpg">
+<meta name="theme-color" content="#00C853">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"LocalBusiness","name":"Nordic E-Mobility","description":"Specialistverkstad för elscootrar, elcyklar och batterisystem i Örebro. Reparation, diagnostik, batterireparation på cell-nivå.","url":"https://www.nordicemobility.se","telephone":"+46700243319","email":"info@nordicemobility.se","address":{"@type":"PostalAddress","streetAddress":"Pistolvägen 6","addressLocality":"Örebro","postalCode":"702 21","addressCountry":"SE"},"geo":{"@type":"GeoCoordinates","latitude":59.2753,"longitude":15.2134},"aggregateRating":{"@type":"AggregateRating","ratingValue":"5.0","reviewCount":"12","bestRating":"5"},"priceRange":"349-1800 SEK","openingHours":"Mo-Fr 09:00-17:00","areaServed":{"@type":"City","name":"Örebro"},"hasOfferCatalog":{"@type":"OfferCatalog","name":"Tjänster","itemListElement":[{"@type":"Offer","itemOffered":{"@type":"Service","name":"Felsökning elscooter"},"price":"349","priceCurrency":"SEK"},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Batteridiagnos"},"price":"349","priceCurrency":"SEK"},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Punktering elscooter"},"price":"349","priceCurrency":"SEK"},{"@type":"Offer","itemOffered":{"@type":"Service","name":"Batterireparation"},"price":"999","priceCurrency":"SEK"}]}}
 </script>
@@ -46,7 +49,7 @@ nav a:hover{color:#fff}
 .nav-cta{background:#00C853;color:#000!important;padding:10px 20px;border-radius:6px;font-weight:700;font-size:14px}
 
 /* HERO */
-.hero{padding:150px 0 80px;position:relative;background:linear-gradient(135deg,#000 0%,#071a0d 50%,#000 100%);overflow:hidden}
+.hero{padding:150px 0 80px;position:relative;background:linear-gradient(90deg,rgba(0,0,0,.94),rgba(0,0,0,.76),rgba(0,0,0,.5)),url('/assets/workshop/workshop-hero.jpg');background-size:cover;background-position:center;overflow:hidden}
 .hero::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,200,83,.08) 0%,transparent 70%)}
 .hero h1{font-size:50px;font-weight:900;line-height:1.1;max-width:720px;margin-bottom:20px}
 .hero .subtitle{font-size:19px;color:#bbb;max-width:540px;line-height:1.6;margin-bottom:32px}
@@ -259,6 +262,28 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   body{padding-bottom:68px}
   .section-title{font-size:28px}
 }
+.seo-quick{padding:70px 0;background:#050505;border-top:1px solid #1a1a1a;border-bottom:1px solid #1a1a1a}
+.seo-quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:34px}
+.seo-card{display:block;background:#111;border:1px solid #222;border-radius:8px;padding:20px;text-decoration:none;color:#fff;transition:all .2s}
+.seo-card:hover{border-color:#00C853;transform:translateY(-2px)}
+.seo-card small{display:block;color:#00C853;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
+.seo-card strong{display:block;font-size:17px;line-height:1.25;margin-bottom:8px}
+.seo-card span{display:block;font-size:13px;color:#888;line-height:1.5}
+.case-section{padding:80px 0;background:#000}
+.case-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:36px}
+.case-card{background:#111;border:1px solid #222;border-radius:8px;padding:24px}
+.case-card img{width:100%;height:190px;object-fit:cover;border-radius:8px;border:1px solid #222;margin-bottom:16px;display:block}
+.case-card h3{font-size:18px;margin-bottom:10px}
+.case-card p{font-size:14px;color:#aaa;line-height:1.55}
+.legal-note{padding:28px;background:rgba(255,176,32,.08);border:1px solid rgba(255,176,32,.28);border-radius:8px;margin-top:28px;color:#ddd;line-height:1.6}
+.legal-note a{color:#00C853;font-weight:700;text-decoration:none}
+.faq-section{padding:80px 0;background:#0a0a0a;border-top:1px solid #1a1a1a}
+.faq-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-top:34px}
+.faq-item{background:#111;border:1px solid #222;border-radius:8px;padding:22px}
+.faq-item h3{font-size:16px;margin-bottom:8px}
+.faq-item p{font-size:14px;color:#aaa;line-height:1.55}
+.pc,.tc,.calc-form,.price-guarantee,.prod,.bc,.prob,.usp-point,.sustain-point,.sustain-visual,.sustain-cta,.calc-match,.calc-col{border-radius:8px}
+@media(max-width:900px){.seo-quick-grid,.case-grid,.faq-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -268,10 +293,12 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 <div class="container">
   <img src="https://static.wixstatic.com/media/c1c83f_0c560c92e27c4b2fb0fbb3c91e4aa6ac~mv2.png" alt="Nordic E-Mobility" class="logo-img" onerror="this.outerHTML='<div style=&quot;font-size:18px;font-weight:800&quot;>NORDIC <span style=&quot;color:#00C853&quot;>E-MOBILITY</span></div>'">
   <nav>
+    <a href="/elscooter-reparation-orebro/">Service</a>
     <a href="#prislista">Prislista</a>
     <a href="#hallbarhet">H&#229;llbarhet</a>
     <a href="#batteri">Batteri</a>
     <a href="#produkter">Produkter</a>
+    <a href="/regler-elscooter/">Regler</a>
     <a href="#blogg">Blogg</a>
     <a href="#kontakt">Kontakt</a>
     <a href="/book-online" class="nav-cta">Boka nu</a>
@@ -282,10 +309,12 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 </div>
 </header>
 <div class="mobile-nav" id="mobileNav">
+  <a href="/elscooter-reparation-orebro/" onclick="closeMobileNav()">Service</a>
   <a href="#prislista" onclick="closeMobileNav()">Prislista</a>
   <a href="#hallbarhet" onclick="closeMobileNav()">H&#229;llbarhet</a>
   <a href="#batteri" onclick="closeMobileNav()">Batteri</a>
   <a href="#produkter" onclick="closeMobileNav()">Produkter</a>
+  <a href="/regler-elscooter/" onclick="closeMobileNav()">Regler</a>
   <a href="#blogg" onclick="closeMobileNav()">Blogg</a>
   <a href="#kontakt" onclick="closeMobileNav()">Kontakt</a>
   <a href="tel:0700243319" style="color:#aaa;font-size:16px">070-024 33 19</a>
@@ -300,7 +329,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   <p class="subtitle">Boka online på 30 sekunder. Vi hämtar, felsöker och ger dig fast pris innan vi gör något.</p>
   <div class="hero-buttons">
     <div>
-      <a href="/book-online" class="btn-primary">Boka felsökning — 20% rabatt idag &#8594;</a>
+      <a href="/book-online" class="btn-primary">Boka felsökning — 20% rabatt via hemsidan &#8594;</a>
       <span class="btn-hint">Tar 30 sek &#183; Inget bindande &#183; Pris innan arbete</span>
     </div>
     <a href="tel:0700243319" class="btn-secondary">Ring nu — få hjälp direkt</a>
@@ -480,6 +509,36 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 </div>
 </section>
 
+<!-- SEO QUICK LINKS -->
+<section class="seo-quick" id="tjanster">
+<div class="container">
+  <span class="section-label">Verkstaden</span>
+  <h2 class="section-title">B&ouml;rja med r&auml;tt hj&auml;lp</h2>
+  <p class="section-sub">Kunder s&ouml;ker ofta efter ett specifikt problem. De h&auml;r sidorna g&ouml;r det l&auml;ttare f&ouml;r Google och f&ouml;r kunden att hitta r&auml;tt direkt.</p>
+  <div class="seo-quick-grid">
+    <a class="seo-card" href="/elscooter-reparation-orebro/"><small>Reparation</small><strong>Elscooter reparation i &Ouml;rebro</strong><span>Fels&ouml;kning, diagnosrapport, broms, motor och elsystem.</span></a>
+    <a class="seo-card" href="/punktering-elscooter-orebro/"><small>D&auml;ck</small><strong>Punktering och d&auml;ckbyte</strong><span>Slang, tubeless, ventil och hjulkontroll fr&aring;n 349 kr.</span></a>
+    <a class="seo-card" href="/batterireparation-elscooter/"><small>Batterilabb</small><strong>Batteritest och reparation</strong><span>Kapacitet, BMS, laddport, cellbalans och s&auml;kerhetsbed&ouml;mning.</span></a>
+    <a class="seo-card" href="/elcykel-service-orebro/"><small>Elcykel</small><strong>Elcykel service i &Ouml;rebro</strong><span>Batteri, bromsar, d&auml;ck och enklare fels&ouml;kning.</span></a>
+  </div>
+</div>
+</section>
+
+<!-- CASES -->
+<section class="case-section">
+<div class="container">
+  <span class="section-label">Bevis f&ouml;re buzzwords</span>
+  <h2 class="section-title">Diagnosrapport ist&auml;llet f&ouml;r gissningar</h2>
+  <p class="section-sub">Det som ska g&ouml;ra Nordic starkare &auml;n konkurrenterna &auml;r inte bara priset, utan att kunden f&aring;r f&ouml;rst&aring; vad som faktiskt &auml;r fel.</p>
+  <div class="case-grid">
+    <div class="case-card"><img src="/assets/workshop/repair-before-after.jpg" alt="F&ouml;re och efter vid elscooterdiagnos"><h3>Scooter startar inte</h3><p>Vi kontrollerar batteri, BMS, display, controller och kablage innan vi rekommenderar delbyte.</p></div>
+    <div class="case-card"><img src="/assets/workshop/battery-pack.jpg" alt="Batteripack f&ouml;r elscooter"><h3>R&auml;ckvidden har rasat</h3><p>Batteridiagnos visar om problemet &auml;r cellh&auml;lsa, balans, temperatur, laddare eller k&ouml;rm&ouml;nster.</p></div>
+    <div class="case-card"><img src="/assets/workshop/tools-bench.jpg" alt="Verktyg p&aring; Nordic E-Mobilitys arbetsb&auml;nk"><h3>K&ouml;p tryggare begagnat</h3><p>Vi kan g&ouml;ra statuskontroll p&aring; batteri, bromsar och elsystem innan kunden k&ouml;per eller s&auml;ljer.</p></div>
+  </div>
+  <div class="legal-note"><strong>Regelkoll:</strong> Alla elscootrar passar inte p&aring; allm&auml;n v&auml;g. En elsparkcykel som ska r&auml;knas som cykel beh&ouml;ver normalt vara konstruerad f&ouml;r max 20 km/h och max 250 W kontinuerlig m&auml;rkeffekt. L&auml;s v&aring;r <a href="/regler-elscooter/">guide om regler f&ouml;r elscooter</a> innan du k&ouml;per en prestandamodell.</div>
+</div>
+</section>
+
 <!-- MID CTA -->
 <section class="cta-sec">
 <div class="container">
@@ -648,6 +707,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   <span class="section-label">Produkter</span>
   <h2 class="section-title">Vårt sortiment</h2>
   <p class="section-sub">Alla scootrar levereras inspekterade och redo att köra. Vi är auktoriserade återförsäljare för NAVEE och TEVERUN.</p>
+  <div class="legal-note">Produktinfo ska l&auml;sas tillsammans med anv&auml;ndningsomr&aring;de. Modeller med h&ouml;g effekt eller h&ouml;g hastighet kan vara avsedda f&ouml;r privat mark eller inh&auml;gnat omr&aring;de, inte vanlig trafik. <a href="/regler-elscooter/">L&auml;s regelguiden innan k&ouml;p</a>.</div>
 
   <!-- NAVEE -->
   <div style="display:flex;align-items:center;gap:12px;margin:40px 0 8px">
@@ -767,9 +827,9 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   <span class="section-label">Blogg</span>
   <h2 class="section-title">Tips, guider & nyheter</h2>
   <div class="blog-grid">
-    <div class="bc"><div class="bc-thumb">&#128267;</div><div class="bc-body"><div class="bc-tag">Guide</div><div class="bc-title">Batterilivslängd 101 — Så håller batteriet längre</div><p class="bc-ex">Laddning, förvaring och temperatur — allt som påverkar batterihälsan.</p><a href="#" class="bc-link">Läs mer &#8594;</a></div></div>
-    <div class="bc"><div class="bc-thumb">&#10052;&#65039;</div><div class="bc-body"><div class="bc-tag">Säsong</div><div class="bc-title">Vinterförvaring — checklista för Örebro</div><p class="bc-ex">Ställa av scooten? Så undviker du skador på batteri och elektronik.</p><a href="#" class="bc-link">Läs mer &#8594;</a></div></div>
-    <div class="bc"><div class="bc-thumb">&#128220;</div><div class="bc-body"><div class="bc-tag">Regler</div><div class="bc-title">Nya regler för elscootrar 2026</div><p class="bc-ex">Hastighet, försäkring och var du får köra. Uppdaterad guide.</p><a href="#" class="bc-link">Läs mer &#8594;</a></div></div>
+    <div class="bc"><div class="bc-thumb">&#128267;</div><div class="bc-body"><div class="bc-tag">Guide</div><div class="bc-title">Batterilivslängd 101 — Så håller batteriet längre</div><p class="bc-ex">Laddning, förvaring och temperatur — allt som påverkar batterihälsan.</p><a href="/guider/batterilivslangd/" class="bc-link">Läs mer &#8594;</a></div></div>
+    <div class="bc"><div class="bc-thumb">&#10052;&#65039;</div><div class="bc-body"><div class="bc-tag">Säsong</div><div class="bc-title">Vinterförvaring — checklista för Örebro</div><p class="bc-ex">Ställa av scooten? Så undviker du skador på batteri och elektronik.</p><a href="/guider/vinterforvaring/" class="bc-link">Läs mer &#8594;</a></div></div>
+    <div class="bc"><div class="bc-thumb">&#128220;</div><div class="bc-body"><div class="bc-tag">Regler</div><div class="bc-title">Regler för elscootrar i Sverige</div><p class="bc-ex">Hastighet, försäkring och var du får köra. Uppdaterad guide.</p><a href="/regler-elscooter/" class="bc-link">Läs mer &#8594;</a></div></div>
   </div>
 </div>
 </section>
@@ -816,6 +876,20 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 </div>
 </section>
 
+<!-- FAQ -->
+<section class="faq-section">
+<div class="container">
+  <span class="section-label">Fr&aring;gor kunder googlar</span>
+  <h2 class="section-title">Snabba svar innan du bokar</h2>
+  <div class="faq-grid">
+    <div class="faq-item"><h3>Vad kostar fels&ouml;kning av elscooter?</h3><p>Fels&ouml;kning startar fr&aring;n 349 kr. Avancerad elektronikfels&ouml;kning offereras innan vi g&aring;r vidare.</p></div>
+    <div class="faq-item"><h3>Kan ni laga batterier?</h3><p>Ja, vi testar batteri, BMS, laddport och cellbalans. Om reparation inte &auml;r s&auml;ker rekommenderar vi byte eller skrotning.</p></div>
+    <div class="faq-item"><h3>H&auml;mtar ni i &Ouml;rebro?</h3><p>Vi kan h&auml;mta och l&auml;mna efter &ouml;verenskommelse. Ange adress och modell i bokningen.</p></div>
+    <div class="faq-item"><h3>S&auml;ljer ni lagliga elscootrar?</h3><p>Vi hj&auml;lper dig skilja mellan laglig pendling, modeller som beh&ouml;ver kontrolleras och prestandamodeller f&ouml;r privat mark.</p></div>
+  </div>
+</div>
+</section>
+
 <!-- FOOTER -->
 <footer id="kontakt">
 <div class="container">
@@ -827,11 +901,11 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
     </div>
     <div>
       <div class="f-hd">Tjänster</div>
-      <ul class="f-links"><li><a href="#prislista">Felsökning & service</a></li><li><a href="#prislista">Däck & punktering</a></li><li><a href="#prislista">Batteri & el</a></li><li><a href="#prislista">Reparationer</a></li></ul>
+      <ul class="f-links"><li><a href="/elscooter-reparation-orebro/">Felsökning & service</a></li><li><a href="/punktering-elscooter-orebro/">Däck & punktering</a></li><li><a href="/batterireparation-elscooter/">Batteri & el</a></li><li><a href="/elcykel-service-orebro/">Elcykel service</a></li></ul>
     </div>
     <div>
       <div class="f-hd">Information</div>
-      <ul class="f-links"><li><a href="#blogg">Blogg</a></li><li><a href="#produkter">Produkter</a></li><li><a href="#">Om oss</a></li></ul>
+      <ul class="f-links"><li><a href="#blogg">Blogg</a></li><li><a href="#produkter">Produkter</a></li><li><a href="/regler-elscooter/">Regler</a></li><li><a href="/foretag-serviceavtal/">Företag</a></li><li><a href="/om-oss/">Om oss</a></li><li><a href="/villkor/">Villkor</a></li><li><a href="/integritet/">Integritet</a></li></ul>
     </div>
     <div>
       <div class="f-hd">Kontakt</div>
@@ -840,7 +914,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
         <li><a href="tel:0700243319">070-024 33 19</a></li>
         <li><a href="tel:0722607753">Lennart: 072-260 77 53</a></li>
         <li style="margin-top:10px"><a href="https://maps.google.com/?q=Pistolvägen+6+702+21+Örebro" target="_blank">Pistolvägen 6, 702 21 Örebro</a></li>
-        <li><a href="#">Org.nr: 880809-6658</a></li>
+        <li>Org.nr: 880809-6658</li>
       </ul>
     </div>
   </div>

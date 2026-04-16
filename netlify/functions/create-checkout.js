@@ -49,7 +49,7 @@ exports.handler = async (event) => {
           currency: 'sek',
           product_data: {
             name: product.name,
-            description: 'Elscooter \u2014 Nordic E-Mobility AB, \u00d6rebro',
+            description: 'Elscooter — Nordic E-Mobility AB, Örebro',
           },
           unit_amount: product.price,
         },
@@ -63,7 +63,7 @@ exports.handler = async (event) => {
       },
       phone_number_collection: { enabled: true },
       custom_text: {
-        submit: { message: 'Nordic E-Mobility AB \u2014 Pistolv\u00e4gen 6, 702 21 \u00d6rebro. Vi kontaktar dig om leverans.' },
+        submit: { message: 'Nordic E-Mobility AB — Pistolvägen 6, 702 21 Örebro. Vi kontaktar dig om leverans.' },
       },
     });
 
@@ -76,7 +76,7 @@ exports.handler = async (event) => {
     console.error('Stripe error:', err);
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Kunde inte skapa betalningssession. F\u00f6rs\u00f6k igen.' }),
+      body: JSON.stringify({ error: 'Kunde inte skapa betalningssession. Försök igen.' }),
     };
   }
 };
