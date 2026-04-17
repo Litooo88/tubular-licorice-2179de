@@ -26,6 +26,12 @@ const env = (name) => {
   }
 };
 
+const looksLikeResendApiKey = (value) => clean(value, 220).startsWith("re_");
+const looksLikeGooglePrivateKey = (value) => {
+  const key = clean(value, 5000).replace(/\\n/g, "\n");
+  return key.includes("BEGIN PRIVATE KEY") && key.includes("END PRIVATE KEY");
+};
+
 const STAFF = {
   lennart: {
     key: "lennart",
@@ -127,7 +133,7 @@ const resendEmail = async ({ to, subject, html, text, idempotencyKey }) => {
   const replyTo = env("EMAIL_REPLY_TO") || env("WORKSHOP_EMAIL") || "";
 
   if (!to || !to.length) return { status: "not_requested" };
-  if (!apiKey || !from) return { status: "not_configured" };
+  if (!apiKey || !from || !looksLikeResendApiKey(apiKey)) return { status: "not_configured" };
 
   const payload = {
     from,
@@ -241,7 +247,7 @@ const getGoogleAccessToken = async () => {
 
   const serviceEmail = env("GOOGLE_SERVICE_ACCOUNT_EMAIL");
   const privateKey = env("GOOGLE_PRIVATE_KEY").replace(/\\n/g, "\n");
-  if (!serviceEmail || !privateKey) return "";
+  if (!serviceEmail || !looksLikeGooglePrivateKey(privateKey)) return "";
 
   const now = Math.floor(Date.now() / 1000);
   const header = base64Url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
@@ -307,7 +313,7 @@ const createCalendarEvent = async (caseItem) => {
   const calendarId = env("GOOGLE_CALENDAR_ID");
   const serviceEmail = env("GOOGLE_SERVICE_ACCOUNT_EMAIL");
   const privateKey = env("GOOGLE_PRIVATE_KEY");
-  if (!calendarId || !serviceEmail || !privateKey) return { status: "not_configured" };
+  if (!calendarId || !serviceEmail || !looksLikeGooglePrivateKey(privateKey)) return { status: "not_configured" };
 
   try {
     const token = await getGoogleAccessToken();

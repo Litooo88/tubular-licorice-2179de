@@ -21,6 +21,8 @@ button{border:0;border-radius:8px;background:#00c853;color:#031006;font-weight:9
 button.secondary{background:transparent;color:#fff;border:1px solid #d7ded9}
 button:disabled{opacity:.6;cursor:wait}
 .error{display:none;margin-bottom:14px;padding:13px 15px;border-radius:8px;background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}
+.notice{padding:14px 16px;margin:0 0 14px;color:#d6ded8;line-height:1.5}
+.notice strong{color:#fff}
 .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:16px 0}
 .stat{padding:16px}
 .stat span{display:block;color:#99a39b;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
@@ -39,6 +41,7 @@ button:disabled{opacity:.6;cursor:wait}
 .meta{font-size:13px;color:#c5ccc7;line-height:1.5;margin:8px 0}
 .contact{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
 .contact a{display:block;border:1px solid #28322a;border-radius:8px;padding:8px;text-align:center;font-size:12px;font-weight:900;text-decoration:none}
+.contact.tools{grid-template-columns:repeat(3,1fr)}
 .edit{display:grid;gap:8px;margin-top:10px}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 textarea{min-height:66px;resize:vertical}
@@ -46,7 +49,7 @@ textarea{min-height:66px;resize:vertical}
 .notes{font-size:12px;color:#aab2ac;border-top:1px solid #263029;margin-top:10px;padding-top:8px}
 .notes div{margin-top:4px}
 @media(max-width:1200px){.board{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:760px){.wrap{padding:14px}.login,.board,.stats,.row{grid-template-columns:1fr}.top{display:block}.contact{grid-template-columns:1fr}}
+@media(max-width:760px){.wrap{padding:14px}.login,.board,.stats,.row{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -66,6 +69,7 @@ textarea{min-height:66px;resize:vertical}
   </section>
 
   <div class="error" id="error"></div>
+  <section class="panel notice"><strong>Manuellt reservläge:</strong> Om SMS, kundmail eller kalender visar "Ej konfigurerat" använder ni knapparna på varje ärende för SMS-mall, mailmall och kalenderfil tills automatiska tjänster är helt aktiva.</section>
 
   <section class="stats">
     <div class="panel stat"><span>Aktiva</span><b id="activeTotal">0</b></div>
@@ -121,6 +125,69 @@ function notificationLabel(item,type){
   const label=labels[item.status]||item.status;
   if(type==='calendar'&&item.htmlLink)return `<a href="${html(item.htmlLink)}" target="_blank" rel="noopener">${label}</a>`;
   return label;
+}
+function shortId(id){return String(id||'').replace(/^case_/,'').slice(0,18).toUpperCase();}
+function smsPhone(value){
+  const compact=String(value||'').replace(/[^\d+]/g,'');
+  if(!compact)return'';
+  if(compact.startsWith('+'))return compact;
+  if(compact.startsWith('00'))return'+'+compact.slice(2);
+  if(compact.startsWith('46'))return'+'+compact;
+  if(compact.startsWith('0'))return'+46'+compact.slice(1);
+  return compact.length>=7?'+46'+compact:'';
+}
+function customerTemplate(item){
+  const name=item.customer&&item.customer.name?item.customer.name:'';
+  const greeting=name?`Hej ${name}!`:'Hej!';
+  return `${greeting}\n\nVi har tagit emot din serviceförfrågan hos Nordic E-Mobility. Ärende: ${shortId(item.id)}.\n\nDetta är inte en bekräftad verkstadstid förrän vi har återkommit med tid, pris och nästa steg.\n\nSnabb kontakt: Sebastian 070-024 33 19 eller Lennart 072-260 77 53.\n\n/Nordic E-Mobility`;
+}
+function smsHref(item){
+  const phone=smsPhone(item.customer&&item.customer.phone);
+  if(!phone)return'#';
+  return `sms:${phone}?&body=${encodeURIComponent(customerTemplate(item))}`;
+}
+function mailHref(item){
+  const email=String(item.customer&&item.customer.email||'').trim();
+  if(!email)return'#';
+  return `mailto:${email}?subject=${encodeURIComponent('Nordic E-Mobility - ärende '+shortId(item.id))}&body=${encodeURIComponent(customerTemplate(item))}`;
+}
+function icsDate(value){
+  const date=new Date(value);
+  const safe=Number.isNaN(date.getTime())?new Date():date;
+  return safe.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}Z$/,'Z');
+}
+function icsEscape(value){return String(value||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');}
+function calendarHref(item){
+  const start=new Date(item.promisedAt||item.intakeAt||item.createdAt||Date.now());
+  const safeStart=Number.isNaN(start.getTime())?new Date():start;
+  const end=new Date(safeStart.getTime()+30*60000);
+  const summary=`Nordic verkstad: ${item.customer&&item.customer.name||'Kund'} - ${item.service||'Ärende'}`;
+  const description=[
+    `Ärende: ${shortId(item.id)}`,
+    `Kund: ${item.customer&&item.customer.name||''}`,
+    `Telefon: ${item.customer&&item.customer.phone||''}`,
+    `E-post: ${item.customer&&item.customer.email||''}`,
+    `Modell: ${item.vehicle&&item.vehicle.model||''}`,
+    `Tjänst: ${item.service||''}`,
+    `Önskad tid: ${item.preferredDate||''}`,
+    `Problem: ${item.message||''}`
+  ].join('\n');
+  const ics=[
+    'BEGIN:VCALENDAR',
+    'VERSION:2.0',
+    'PRODID:-//Nordic E-Mobility//Workshop//SV',
+    'BEGIN:VEVENT',
+    `UID:${icsEscape(item.id)}@nordicemobility.se`,
+    `DTSTAMP:${icsDate(new Date())}`,
+    `DTSTART:${icsDate(safeStart)}`,
+    `DTEND:${icsDate(end)}`,
+    `SUMMARY:${icsEscape(summary)}`,
+    'LOCATION:Pistolvägen 6, Örebro',
+    `DESCRIPTION:${icsEscape(description)}`,
+    'END:VEVENT',
+    'END:VCALENDAR'
+  ].join('\r\n');
+  return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
 }
 
 async function api(path,options={}){
@@ -187,7 +254,12 @@ function caseCard(item){
     <div class="meta">Ansvar: <strong>${html(owner.name)}</strong> &middot; ${html(owner.phone||'')}<br>V&auml;rde: <strong>${money(item.estimatedValue)}</strong><br>Kontakt: <strong>${labelFrom(item.contactMethod,contactLabels)}</strong><br>Inl&auml;mning: <strong>${labelFrom(item.logistics,logisticsLabels)}</strong><br>&Ouml;nskad tid: ${html(item.preferredDate)||'Saknas'}<br>SMS: <strong>${notificationLabel(sms,'sms')}</strong><br>Kundmail: <strong>${notificationLabel(customerEmail,'email')}</strong><br>Verkstadsmail: <strong>${notificationLabel(workshopEmail,'email')}</strong><br>Kalender: <strong>${notificationLabel(calendar,'calendar')}</strong><br>Skapad: ${dateShort(item.createdAt)}<br>Inl&auml;mnad: ${dateShort(item.intakeAt)}</div>
     <div class="contact">
       <a href="tel:${html(item.customer&&item.customer.phone||'')}">Ring kund</a>
-      <a href="mailto:${html(item.customer&&item.customer.email||'')}">Maila</a>
+      <a href="${html(smsHref(item))}">SMS-mall</a>
+    </div>
+    <div class="contact tools">
+      <a href="${html(mailHref(item))}">Mailmall</a>
+      <a href="${html(calendarHref(item))}" download="nordic-${html(shortId(item.id))}.ics">Kalenderfil</a>
+      <a href="mailto:${html(item.customer&&item.customer.email||'')}">Maila fritt</a>
     </div>
     <form class="edit" data-id="${html(item.id)}">
       <div class="row">
