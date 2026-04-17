@@ -115,10 +115,12 @@ function html(value){return String(value||'').replace(/[&<>"']/g,(char)=>({'&':'
 function showError(message){errorEl.textContent=message;errorEl.style.display=message?'block':'none';}
 function localInput(value){if(!value)return'';const d=new Date(value);if(Number.isNaN(d.getTime()))return'';const p=(n)=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;}
 function labelFrom(value,labels){return labels[value]||value||'Saknas';}
-function smsLabel(sms){
-  if(!sms)return'Ej aktiverad';
-  const labels={sent:'Skickat',pending:'V&auml;ntar',not_configured:'SMS ej konfigurerat',not_requested:'Ej valt',invalid_phone:'Fel nummer',failed:'Misslyckat'};
-  return labels[sms.status]||sms.status;
+function notificationLabel(item,type){
+  if(!item)return'Ej aktiverad';
+  const labels={sent:'Skickat',created:'Skapat',pending:'V&auml;ntar',not_configured:'Ej konfigurerat',not_requested:'Ej valt',invalid_phone:'Fel nummer',failed:'Misslyckat'};
+  const label=labels[item.status]||item.status;
+  if(type==='calendar'&&item.htmlLink)return `<a href="${html(item.htmlLink)}" target="_blank" rel="noopener">${label}</a>`;
+  return label;
 }
 
 async function api(path,options={}){
@@ -169,7 +171,11 @@ function caseCard(item){
   const card=document.createElement('article');
   card.className='case';
   const notes=(item.notes||[]).slice(-2).map(note=>`<div>${dateShort(note.at)}: ${html(note.text)}</div>`).join('');
-  const sms=item.notifications&&item.notifications.sms;
+  const notifications=item.notifications||{};
+  const sms=notifications.sms;
+  const customerEmail=notifications.customerEmail;
+  const workshopEmail=notifications.workshopEmail;
+  const calendar=notifications.calendar;
   const contactLabels={phone:'Ring kund',sms:'SMS f&ouml;rst',email:'E-post f&ouml;rst'};
   const logisticsLabels={dropoff:'L&auml;mnar in', 'pickup-question':'Fr&aring;ga om h&auml;mtning/l&auml;mning','not-sure':'Ej best&auml;mt'};
   card.innerHTML=`
@@ -178,7 +184,7 @@ function caseCard(item){
       <span class="badge ${item.priority==='urgent'?'warn':''}">${html(statusLabels[item.status]||item.status)}</span>
     </div>
     <div class="meta"><strong>${html(item.service||'Annat')}</strong><br>${html(item.message||'Ingen beskrivning')}</div>
-    <div class="meta">Ansvar: <strong>${html(owner.name)}</strong> &middot; ${html(owner.phone||'')}<br>V&auml;rde: <strong>${money(item.estimatedValue)}</strong><br>Kontakt: <strong>${labelFrom(item.contactMethod,contactLabels)}</strong><br>Inl&auml;mning: <strong>${labelFrom(item.logistics,logisticsLabels)}</strong><br>&Ouml;nskad tid: ${dateShort(item.preferredDate)}<br>SMS: <strong>${smsLabel(sms)}</strong><br>Skapad: ${dateShort(item.createdAt)}<br>Inl&auml;mnad: ${dateShort(item.intakeAt)}</div>
+    <div class="meta">Ansvar: <strong>${html(owner.name)}</strong> &middot; ${html(owner.phone||'')}<br>V&auml;rde: <strong>${money(item.estimatedValue)}</strong><br>Kontakt: <strong>${labelFrom(item.contactMethod,contactLabels)}</strong><br>Inl&auml;mning: <strong>${labelFrom(item.logistics,logisticsLabels)}</strong><br>&Ouml;nskad tid: ${html(item.preferredDate)||'Saknas'}<br>SMS: <strong>${notificationLabel(sms,'sms')}</strong><br>Kundmail: <strong>${notificationLabel(customerEmail,'email')}</strong><br>Verkstadsmail: <strong>${notificationLabel(workshopEmail,'email')}</strong><br>Kalender: <strong>${notificationLabel(calendar,'calendar')}</strong><br>Skapad: ${dateShort(item.createdAt)}<br>Inl&auml;mnad: ${dateShort(item.intakeAt)}</div>
     <div class="contact">
       <a href="tel:${html(item.customer&&item.customer.phone||'')}">Ring kund</a>
       <a href="mailto:${html(item.customer&&item.customer.email||'')}">Maila</a>

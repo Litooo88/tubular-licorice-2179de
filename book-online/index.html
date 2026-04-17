@@ -161,7 +161,7 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
         <div class="form-grid">
           <div class="form-group"><label for="name">Namn</label><input id="name" name="name" required autocomplete="name" placeholder="Ditt namn"></div>
           <div class="form-group"><label for="phone">Telefon</label><input id="phone" name="phone" required autocomplete="tel" inputmode="tel" placeholder="070-123 45 67"></div>
-          <div class="form-group"><label for="email">E-post</label><input id="email" name="email" type="email" autocomplete="email" placeholder="din@email.se"></div>
+          <div class="form-group"><label for="email">E-post f&ouml;r bekr&auml;ftelse</label><input id="email" name="email" type="email" autocomplete="email" required placeholder="din@email.se"></div>
           <div class="form-group"><label for="contactMethod">Kontakt</label><select id="contactMethod" name="contactMethod">
             <option value="phone">Ring mig</option>
             <option value="sms">SMS f&ouml;rst</option>
@@ -259,6 +259,18 @@ async function submitNetlifyBackup(data){
   if(!response.ok) throw new Error('backup failed');
 }
 
+function customerStatusMessage(result){
+  const notifications=(result.case&&result.case.notifications)||{};
+  const done=[];
+  if(notifications.customerEmail&&notifications.customerEmail.status==='sent') done.push('e-postbekräftelse är skickad');
+  if(notifications.sms&&notifications.sms.status==='sent') done.push('SMS-bekräftelse är skickad');
+  if(notifications.calendar&&notifications.calendar.status==='created') done.push('ärendet ligger i verkstadskalendern');
+  if(done.length){
+    return 'Din förfrågan är skickad till verkstaden. '+done.join(', ')+'. Vi återkommer fortfarande med slutlig tid och pris innan reparation.';
+  }
+  return 'Din förfrågan är skickad till verkstaden. Den är inte en bekräftad kalenderbokning och ingen automatisk SMS- eller e-postbekräftelse skickas ännu. Ring eller SMS:a Sebastian 070-024 33 19 eller Lennart 072-260 77 53 för att säkra tid.';
+}
+
 if(bookingForm){
   bookingForm.addEventListener('submit',async(event)=>{
     event.preventDefault();
@@ -281,7 +293,7 @@ if(bookingForm){
       const result=await response.json();
       if(!response.ok) throw new Error(result.error||'Kunde inte skicka förfrågan.');
       bookingStatus.className='status ok';
-      bookingStatus.textContent='Din förfrågan är skickad till verkstaden. Den är inte en bekräftad kalenderbokning och ingen automatisk SMS- eller e-postbekräftelse skickas ännu. Ring eller SMS:a Sebastian 070-024 33 19 eller Lennart 072-260 77 53 för att säkra tid.';
+      bookingStatus.textContent=customerStatusMessage(result);
       bookingForm.reset();
       updateSummary();
     }catch(error){
