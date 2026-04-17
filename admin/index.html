@@ -7,33 +7,46 @@
 <title>Verkstadsdashboard | Nordic E-Mobility</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Inter,Arial,sans-serif;background:#050705;color:#f6f8f5}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:#060806;color:#f5f7f4}
 a{color:#00c853}
-.wrap{max-width:1280px;margin:0 auto;padding:28px}
-.top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px}
-h1{margin:0;font-size:34px;line-height:1}
-.muted{color:#a8b0aa}
-.login,.card,.case{background:#111513;border:1px solid #273129;border-radius:8px}
-.login{padding:22px;margin-bottom:24px;display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:end}
-label{display:block;font-size:12px;color:#a8b0aa;text-transform:uppercase;font-weight:800;letter-spacing:.08em;margin-bottom:6px}
-input,select,textarea{width:100%;background:#050705;border:1px solid #273129;border-radius:8px;color:#f6f8f5;padding:11px 12px;font:inherit}
-button{border:0;border-radius:8px;background:#00c853;color:#061006;font-weight:900;padding:12px 16px;cursor:pointer}
-button.secondary{background:transparent;color:#f6f8f5;border:1px solid #f6f8f5}
+.wrap{max-width:1480px;margin:0 auto;padding:24px}
+.top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
+h1{font-size:34px;margin:0 0 8px;letter-spacing:0}
+.muted{color:#9ea79f}
+.panel,.case,.login,.column{background:#101410;border:1px solid #28322a;border-radius:8px}
+.login{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:end;padding:18px;margin-bottom:14px}
+label{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#a8b2aa;font-weight:900;margin-bottom:6px}
+input,select,textarea{width:100%;background:#060806;border:1px solid #303a32;border-radius:8px;color:#fff;padding:10px 11px;font:inherit}
+button{border:0;border-radius:8px;background:#00c853;color:#031006;font-weight:900;padding:11px 14px;cursor:pointer}
+button.secondary{background:transparent;color:#fff;border:1px solid #d7ded9}
 button:disabled{opacity:.6;cursor:wait}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
-.card{padding:18px}
-.card b{display:block;font-size:28px}
-.toolbar{display:flex;gap:10px;align-items:center;justify-content:space-between;margin:18px 0;flex-wrap:wrap}
-.cases{display:grid;gap:12px}
-.case{padding:18px;display:grid;grid-template-columns:1.4fr 1fr 1.2fr;gap:16px}
-.case h2{font-size:20px;margin:0 0 6px}
-.badge{display:inline-flex;border-radius:999px;background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.28);color:#9fffc1;padding:4px 8px;font-size:12px;font-weight:900}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0}
-.note{grid-column:1/-1}
-.small{font-size:13px;color:#a8b0aa}
-.empty{padding:28px;text-align:center;color:#a8b0aa;border:1px dashed #273129;border-radius:8px}
-.error{padding:14px 16px;border-radius:8px;background:rgba(255,90,95,.1);border:1px solid rgba(255,90,95,.35);color:#ffd6d8;margin-bottom:14px;display:none}
-@media(max-width:900px){.login,.case,.stats{grid-template-columns:1fr}.top{align-items:flex-start;flex-direction:column}}
+.error{display:none;margin-bottom:14px;padding:13px 15px;border-radius:8px;background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}
+.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:16px 0}
+.stat{padding:16px}
+.stat span{display:block;color:#99a39b;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
+.stat b{font-size:28px;display:block;margin-top:4px}
+.toolbar{display:flex;gap:10px;align-items:end;justify-content:space-between;flex-wrap:wrap;margin:18px 0}
+.filters{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.board{display:grid;grid-template-columns:repeat(5,minmax(230px,1fr));gap:12px;align-items:start}
+.column{padding:12px;min-height:220px}
+.column h2{font-size:14px;margin:0 0 10px;display:flex;align-items:center;justify-content:space-between}
+.count{background:#202820;border:1px solid #344038;border-radius:999px;padding:2px 8px;color:#b8c2ba}
+.case{padding:14px;margin-bottom:10px}
+.case-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}
+.case h3{font-size:17px;margin:0}
+.badge{display:inline-flex;border-radius:999px;background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.3);color:#aaffc6;font-size:11px;font-weight:900;padding:3px 8px;white-space:nowrap}
+.badge.warn{background:rgba(255,194,71,.12);border-color:rgba(255,194,71,.35);color:#ffe0a3}
+.meta{font-size:13px;color:#c5ccc7;line-height:1.5;margin:8px 0}
+.contact{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
+.contact a{display:block;border:1px solid #28322a;border-radius:8px;padding:8px;text-align:center;font-size:12px;font-weight:900;text-decoration:none}
+.edit{display:grid;gap:8px;margin-top:10px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+textarea{min-height:66px;resize:vertical}
+.empty{border:1px dashed #313b33;border-radius:8px;padding:18px;text-align:center;color:#8f9991}
+.notes{font-size:12px;color:#aab2ac;border-top:1px solid #263029;margin-top:10px;padding-top:8px}
+.notes div{margin-top:4px}
+@media(max-width:1200px){.board{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:760px){.wrap{padding:14px}.login,.board,.stats,.row{grid-template-columns:1fr}.top{display:block}.contact{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -41,16 +54,13 @@ button:disabled{opacity:.6;cursor:wait}
   <div class="top">
     <div>
       <h1>Verkstadsdashboard</h1>
-      <p class="muted">Aktiva kunder, status, inlämning, kontakt och uppskattat ärendevärde.</p>
+      <p class="muted">Aktiva kunder, ansvarig person, inl&auml;mning, status, v&auml;rde och n&auml;sta steg.</p>
     </div>
-    <a href="/">Till startsidan</a>
+    <a href="/book-online/">Testa bokning</a>
   </div>
 
   <section class="login">
-    <div>
-      <label for="token">Admin-token</label>
-      <input id="token" type="password" autocomplete="current-password" placeholder="ADMIN_TOKEN från Netlify">
-    </div>
+    <div><label for="token">Admin-token</label><input id="token" type="password" autocomplete="current-password" placeholder="ADMIN_TOKEN fr&aring;n Netlify"></div>
     <button id="saveToken">Spara token</button>
     <button class="secondary" id="refresh">Uppdatera</button>
   </section>
@@ -58,80 +68,77 @@ button:disabled{opacity:.6;cursor:wait}
   <div class="error" id="error"></div>
 
   <section class="stats">
-    <div class="card"><span class="muted">Aktiva ärenden</span><b id="activeTotal">0</b></div>
-    <div class="card"><span class="muted">Totalt värde</span><b id="valueTotal">0 kr</b></div>
-    <div class="card"><span class="muted">Nya bokningar</span><b id="newTotal">0</b></div>
-    <div class="card"><span class="muted">Redo att lämna ut</span><b id="readyTotal">0</b></div>
+    <div class="panel stat"><span>Aktiva</span><b id="activeTotal">0</b></div>
+    <div class="panel stat"><span>V&auml;rde aktivt</span><b id="valueTotal">0 kr</b></div>
+    <div class="panel stat"><span>Nya</span><b id="newTotal">0</b></div>
+    <div class="panel stat"><span>Inne</span><b id="insideTotal">0</b></div>
+    <div class="panel stat"><span>Klara</span><b id="readyTotal">0</b></div>
+    <div class="panel stat"><span>Tyngre jobb</span><b id="heavyTotal">0</b></div>
   </section>
 
   <div class="toolbar">
-    <div class="muted" id="lastUpdated">Inte laddad ännu</div>
-    <select id="filter">
-      <option value="">Alla statusar</option>
-      <option value="new">Ny</option>
-      <option value="contacted">Kontaktad</option>
-      <option value="checked_in">Inlämnad</option>
-      <option value="diagnosing">Felsökning</option>
-      <option value="waiting_parts">Väntar delar</option>
-      <option value="repairing">Reparerar</option>
-      <option value="ready">Klar</option>
-      <option value="done">Avslutad</option>
-    </select>
+    <div class="muted" id="lastUpdated">Inte laddad &auml;nnu</div>
+    <div class="filters">
+      <div><label for="ownerFilter">Ansvarig</label><select id="ownerFilter"><option value="">Alla</option><option value="lennart">Lennart</option><option value="sebastian">Sebastian</option></select></div>
+      <div><label for="statusFilter">Status</label><select id="statusFilter"><option value="">Alla</option><option value="new">Ny</option><option value="contacted">Kontaktad</option><option value="checked_in">Inl&auml;mnad</option><option value="diagnosing">Diagnos</option><option value="repairing">Reparerar</option><option value="waiting_parts">V&auml;ntar</option><option value="ready">Klar</option><option value="done">Avslutad</option></select></div>
+    </div>
   </div>
 
-  <section class="cases" id="cases"></section>
+  <section class="board" id="board"></section>
 </main>
 
 <script>
-const statusLabels={
-  new:'Ny',
-  contacted:'Kontaktad',
-  checked_in:'Inlämnad',
-  diagnosing:'Felsökning',
-  waiting_parts:'Väntar delar',
-  repairing:'Reparerar',
-  ready:'Klar',
-  done:'Avslutad',
-  archived:'Arkiverad'
-};
+const columns=[
+  {key:'new',title:'Nya bokningar',statuses:['new']},
+  {key:'contacted',title:'Kontakt / offert',statuses:['contacted']},
+  {key:'inside',title:'Inne p&aring; verkstad',statuses:['checked_in','diagnosing','repairing']},
+  {key:'waiting',title:'V&auml;ntar',statuses:['waiting_parts','waiting_customer']},
+  {key:'ready',title:'Klara / avsluta',statuses:['ready','done']}
+];
+const statusLabels={new:'Ny',contacted:'Kontaktad',checked_in:'Inl&auml;mnad',diagnosing:'Diagnos',repairing:'Reparerar',waiting_parts:'V&auml;ntar delar',waiting_customer:'V&auml;ntar kund',ready:'Klar',done:'Avslutad',archived:'Arkiverad'};
 const tokenInput=document.getElementById('token');
-const saveToken=document.getElementById('saveToken');
-const refreshBtn=document.getElementById('refresh');
-const casesEl=document.getElementById('cases');
-const filterEl=document.getElementById('filter');
+const boardEl=document.getElementById('board');
 const errorEl=document.getElementById('error');
+const ownerFilter=document.getElementById('ownerFilter');
+const statusFilter=document.getElementById('statusFilter');
 let cases=[];
 
 tokenInput.value=localStorage.getItem('nordicAdminToken')||'';
-saveToken.addEventListener('click',()=>{localStorage.setItem('nordicAdminToken',tokenInput.value.trim());loadCases();});
-refreshBtn.addEventListener('click',loadCases);
-filterEl.addEventListener('change',render);
+document.getElementById('saveToken').addEventListener('click',()=>{localStorage.setItem('nordicAdminToken',tokenInput.value.trim());loadCases();});
+document.getElementById('refresh').addEventListener('click',loadCases);
+ownerFilter.addEventListener('change',render);
+statusFilter.addEventListener('change',render);
 
 function money(value){return new Intl.NumberFormat('sv-SE',{style:'currency',currency:'SEK',maximumFractionDigits:0}).format(Number(value||0));}
-function dateShort(value){return value?new Date(value).toLocaleString('sv-SE'):'Saknas';}
+function dateShort(value){return value?new Date(value).toLocaleString('sv-SE',{dateStyle:'short',timeStyle:'short'}):'Saknas';}
+function html(value){return String(value||'').replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));}
 function showError(message){errorEl.textContent=message;errorEl.style.display=message?'block':'none';}
+function localInput(value){if(!value)return'';const d=new Date(value);if(Number.isNaN(d.getTime()))return'';const p=(n)=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;}
+function labelFrom(value,labels){return labels[value]||value||'Saknas';}
+function smsLabel(sms){
+  if(!sms)return'Ej aktiverad';
+  const labels={sent:'Skickat',pending:'V&auml;ntar',not_configured:'SMS ej konfigurerat',not_requested:'Ej valt',invalid_phone:'Fel nummer',failed:'Misslyckat'};
+  return labels[sms.status]||sms.status;
+}
 
 async function api(path,options={}){
-  const token=tokenInput.value.trim();
-  const response=await fetch(path,{...options,headers:{'Content-Type':'application/json','x-admin-token':token,...(options.headers||{})}});
+  const response=await fetch(path,{...options,headers:{'Content-Type':'application/json','x-admin-token':tokenInput.value.trim(),...(options.headers||{})}});
   const data=await response.json().catch(()=>({}));
-  if(!response.ok) throw new Error(data.error||'Kunde inte läsa data.');
+  if(!response.ok) throw new Error(data.error||'Kunde inte l&auml;sa data.');
   return data;
 }
 
 async function loadCases(){
+  const refresh=document.getElementById('refresh');
   try{
     showError('');
-    refreshBtn.disabled=true;
+    refresh.disabled=true;
     const data=await api('/api/cases');
     cases=data.cases||[];
     render();
     document.getElementById('lastUpdated').textContent='Uppdaterad '+new Date().toLocaleTimeString('sv-SE');
-  }catch(error){
-    showError(error.message);
-  }finally{
-    refreshBtn.disabled=false;
-  }
+  }catch(error){showError(error.message)}
+  finally{refresh.disabled=false}
 }
 
 function render(){
@@ -139,79 +146,73 @@ function render(){
   document.getElementById('activeTotal').textContent=active.length;
   document.getElementById('valueTotal').textContent=money(active.reduce((sum,item)=>sum+Number(item.estimatedValue||0),0));
   document.getElementById('newTotal').textContent=cases.filter(item=>item.status==='new').length;
+  document.getElementById('insideTotal').textContent=cases.filter(item=>['checked_in','diagnosing','repairing'].includes(item.status)).length;
   document.getElementById('readyTotal').textContent=cases.filter(item=>item.status==='ready').length;
+  document.getElementById('heavyTotal').textContent=active.filter(item=>(item.assignedTo&&item.assignedTo.key)==='sebastian').length;
 
-  const filter=filterEl.value;
-  const visible=filter?cases.filter(item=>item.status===filter):cases;
-  casesEl.innerHTML='';
-
-  if(!visible.length){
-    casesEl.innerHTML='<div class="empty">Inga ärenden att visa.</div>';
-    return;
-  }
-
-  for(const item of visible){
-    const el=document.createElement('article');
-    el.className='case';
-    el.innerHTML=`
-      <div>
-        <span class="badge">${statusLabels[item.status]||item.status}</span>
-        <h2>${escapeHtml(item.customer?.name||'Okänd kund')}</h2>
-        <div class="small">${escapeHtml(item.vehicle?.model||'Okänd modell')}</div>
-        <p>${escapeHtml(item.message||'Ingen beskrivning')}</p>
-        <div class="small">Skapad: ${dateShort(item.createdAt)}</div>
-      </div>
-      <div>
-        <div><b>Kontakt</b></div>
-        <div><a href="tel:${escapeHtml(item.customer?.phone||'')}">${escapeHtml(item.customer?.phone||'Saknas')}</a></div>
-        <div><a href="mailto:${escapeHtml(item.customer?.email||'')}">${escapeHtml(item.customer?.email||'Ingen e-post')}</a></div>
-        <p class="small">Tjänst: ${escapeHtml(item.service||'Annat')}<br>Värde: ${money(item.estimatedValue)}</p>
-      </div>
-      <form data-id="${escapeHtml(item.id)}">
-        <div class="row">
-          <div><label>Status</label><select name="status">${Object.entries(statusLabels).map(([value,label])=>`<option value="${value}" ${item.status===value?'selected':''}>${label}</option>`).join('')}</select></div>
-          <div><label>Värde</label><input name="estimatedValue" type="number" min="0" step="1" value="${Number(item.estimatedValue||0)}"></div>
-        </div>
-        <div class="row">
-          <div><label>Inlämnad</label><input name="intakeAt" type="datetime-local" value="${toLocalInput(item.intakeAt)}"></div>
-          <div><label>Klar senast</label><input name="promisedAt" type="datetime-local" value="${toLocalInput(item.promisedAt)}"></div>
-        </div>
-        <div class="note"><label>Intern notering</label><textarea name="note" rows="2" placeholder="Ex: väntar på däck, ring kund, offert skickad"></textarea></div>
-        <button type="submit">Spara ärende</button>
-      </form>`;
-    casesEl.appendChild(el);
-  }
-
-  casesEl.querySelectorAll('form').forEach(form=>{
-    form.addEventListener('submit',async(event)=>{
-      event.preventDefault();
-      const button=form.querySelector('button');
-      button.disabled=true;
-      button.textContent='Sparar...';
-      const body=Object.fromEntries(new FormData(form).entries());
-      try{
-        await api('/api/cases/'+encodeURIComponent(form.dataset.id),{method:'PATCH',body:JSON.stringify(body)});
-        await loadCases();
-      }catch(error){
-        showError(error.message);
-      }finally{
-        button.disabled=false;
-        button.textContent='Spara ärende';
-      }
-    });
+  const owner=ownerFilter.value;
+  const status=statusFilter.value;
+  let visible=cases.filter(item=>!owner || (item.assignedTo&&item.assignedTo.key)===owner).filter(item=>!status || item.status===status);
+  boardEl.innerHTML='';
+  columns.forEach(column=>{
+    const items=visible.filter(item=>column.statuses.includes(item.status));
+    const col=document.createElement('section');
+    col.className='column';
+    col.innerHTML=`<h2>${column.title}<span class="count">${items.length}</span></h2>${items.length?'':'<div class="empty">Tomt</div>'}`;
+    items.forEach(item=>col.appendChild(caseCard(item)));
+    boardEl.appendChild(col);
   });
 }
 
-function toLocalInput(value){
-  if(!value) return '';
-  const date=new Date(value);
-  if(Number.isNaN(date.getTime())) return '';
-  const pad=(num)=>String(num).padStart(2,'0');
-  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-function escapeHtml(value){
-  return String(value||'').replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));
+function caseCard(item){
+  const owner=item.assignedTo||{key:'lennart',name:'Lennart',phone:'072-260 77 53'};
+  const card=document.createElement('article');
+  card.className='case';
+  const notes=(item.notes||[]).slice(-2).map(note=>`<div>${dateShort(note.at)}: ${html(note.text)}</div>`).join('');
+  const sms=item.notifications&&item.notifications.sms;
+  const contactLabels={phone:'Ring kund',sms:'SMS f&ouml;rst',email:'E-post f&ouml;rst'};
+  const logisticsLabels={dropoff:'L&auml;mnar in', 'pickup-question':'Fr&aring;ga om h&auml;mtning/l&auml;mning','not-sure':'Ej best&auml;mt'};
+  card.innerHTML=`
+    <div class="case-head">
+      <div><h3>${html(item.customer&&item.customer.name||'Ok&auml;nd kund')}</h3><div class="muted">${html(item.vehicle&&item.vehicle.model||'Ok&auml;nd modell')}</div></div>
+      <span class="badge ${item.priority==='urgent'?'warn':''}">${html(statusLabels[item.status]||item.status)}</span>
+    </div>
+    <div class="meta"><strong>${html(item.service||'Annat')}</strong><br>${html(item.message||'Ingen beskrivning')}</div>
+    <div class="meta">Ansvar: <strong>${html(owner.name)}</strong> &middot; ${html(owner.phone||'')}<br>V&auml;rde: <strong>${money(item.estimatedValue)}</strong><br>Kontakt: <strong>${labelFrom(item.contactMethod,contactLabels)}</strong><br>Inl&auml;mning: <strong>${labelFrom(item.logistics,logisticsLabels)}</strong><br>&Ouml;nskad tid: ${dateShort(item.preferredDate)}<br>SMS: <strong>${smsLabel(sms)}</strong><br>Skapad: ${dateShort(item.createdAt)}<br>Inl&auml;mnad: ${dateShort(item.intakeAt)}</div>
+    <div class="contact">
+      <a href="tel:${html(item.customer&&item.customer.phone||'')}">Ring kund</a>
+      <a href="mailto:${html(item.customer&&item.customer.email||'')}">Maila</a>
+    </div>
+    <form class="edit" data-id="${html(item.id)}">
+      <div class="row">
+        <div><label>Status</label><select name="status">${Object.entries(statusLabels).map(([value,label])=>`<option value="${value}" ${item.status===value?'selected':''}>${label}</option>`).join('')}</select></div>
+        <div><label>Ansvarig</label><select name="assignedTo"><option value="lennart" ${owner.key!=='sebastian'?'selected':''}>Lennart</option><option value="sebastian" ${owner.key==='sebastian'?'selected':''}>Sebastian</option></select></div>
+      </div>
+      <div class="row">
+        <div><label>V&auml;rde</label><input name="estimatedValue" type="number" min="0" step="1" value="${Number(item.estimatedValue||0)}"></div>
+        <div><label>Prioritet</label><select name="priority"><option value="normal" ${item.priority!=='urgent'?'selected':''}>Normal</option><option value="urgent" ${item.priority==='urgent'?'selected':''}>Akut</option></select></div>
+      </div>
+      <div class="row">
+        <div><label>Inl&auml;mnad</label><input name="intakeAt" type="datetime-local" value="${localInput(item.intakeAt)}"></div>
+        <div><label>Klar senast</label><input name="promisedAt" type="datetime-local" value="${localInput(item.promisedAt)}"></div>
+      </div>
+      <div><label>Intern notering</label><textarea name="note" placeholder="Ex: ringt kund, v&auml;ntar d&auml;ck, offert skickad"></textarea></div>
+      <button type="submit">Spara</button>
+    </form>
+    ${notes?`<div class="notes"><strong>Senaste noteringar</strong>${notes}</div>`:''}`;
+  card.querySelector('form').addEventListener('submit',async(event)=>{
+    event.preventDefault();
+    const form=event.currentTarget;
+    const button=form.querySelector('button');
+    button.disabled=true;
+    button.textContent='Sparar...';
+    try{
+      await api('/api/cases/'+encodeURIComponent(form.dataset.id),{method:'PATCH',body:JSON.stringify(Object.fromEntries(new FormData(form).entries()))});
+      await loadCases();
+    }catch(error){showError(error.message)}
+    finally{button.disabled=false;button.textContent='Spara'}
+  });
+  return card;
 }
 
 loadCases();

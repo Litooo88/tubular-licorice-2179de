@@ -269,12 +269,23 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 .seo-card small{display:block;color:#00C853;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px}
 .seo-card strong{display:block;font-size:17px;line-height:1.25;margin-bottom:8px}
 .seo-card span{display:block;font-size:13px;color:#888;line-height:1.5}
-.case-section{padding:80px 0;background:#000}
-.case-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px;margin-top:36px}
-.case-card{background:#111;border:1px solid #222;border-radius:8px;padding:24px}
-.case-card img{width:100%;height:190px;object-fit:cover;border-radius:8px;border:1px solid #222;margin-bottom:16px;display:block}
-.case-card h3{font-size:18px;margin-bottom:10px}
-.case-card p{font-size:14px;color:#aaa;line-height:1.55}
+.case-section{padding:84px 0;background:#030303;border-top:1px solid #151515;border-bottom:1px solid #151515}
+.proof-layout{display:grid;grid-template-columns:1.15fr .85fr;gap:18px;margin-top:38px;align-items:stretch}
+.proof-feature,.proof-card{position:relative;overflow:hidden;border:1px solid #222;border-radius:8px;background:#111}
+.proof-feature{min-height:430px}
+.proof-feature img,.proof-card img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:saturate(.92) contrast(1.04)}
+.proof-feature:after,.proof-card:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.08),rgba(0,0,0,.78))}
+.proof-feature-copy,.proof-card-copy{position:absolute;left:0;right:0;bottom:0;z-index:1;padding:26px}
+.proof-eyebrow{display:inline-flex;align-items:center;gap:8px;color:#00C853;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:1.3px;margin-bottom:10px}
+.proof-feature h3,.proof-card h3{font-size:24px;margin-bottom:10px}
+.proof-feature p,.proof-card p{font-size:15px;color:#ddd;line-height:1.55;max-width:640px}
+.proof-stack{display:grid;gap:18px}
+.proof-card{min-height:206px}
+.proof-card h3{font-size:18px}
+.proof-card p{font-size:14px;color:#c8c8c8}
+.proof-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:18px;list-style:none}
+.proof-metrics li{border:1px solid #222;border-radius:8px;background:#0f0f0f;padding:18px;color:#aaa;font-size:13px;line-height:1.45}
+.proof-metrics strong{display:block;color:#fff;font-size:17px;margin-bottom:6px}
 .legal-note{padding:28px;background:rgba(255,176,32,.08);border:1px solid rgba(255,176,32,.28);border-radius:8px;margin-top:28px;color:#ddd;line-height:1.6}
 .legal-note a{color:#00C853;font-weight:700;text-decoration:none}
 .faq-section{padding:80px 0;background:#0a0a0a;border-top:1px solid #1a1a1a}
@@ -283,7 +294,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 .faq-item h3{font-size:16px;margin-bottom:8px}
 .faq-item p{font-size:14px;color:#aaa;line-height:1.55}
 .pc,.tc,.calc-form,.price-guarantee,.prod,.bc,.prob,.usp-point,.sustain-point,.sustain-visual,.sustain-cta,.calc-match,.calc-col{border-radius:8px}
-@media(max-width:900px){.seo-quick-grid,.case-grid,.faq-grid{grid-template-columns:1fr}}
+@media(max-width:900px){.seo-quick-grid,.proof-layout,.proof-metrics,.faq-grid{grid-template-columns:1fr}.proof-feature{min-height:390px}.proof-card{min-height:230px}}
 </style>
 </head>
 <body>
@@ -527,14 +538,42 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 <!-- CASES -->
 <section class="case-section">
 <div class="container">
-  <span class="section-label">Bevis f&ouml;re buzzwords</span>
-  <h2 class="section-title">Diagnosrapport ist&auml;llet f&ouml;r gissningar</h2>
-  <p class="section-sub">Det som ska g&ouml;ra Nordic starkare &auml;n konkurrenterna &auml;r inte bara priset, utan att kunden f&aring;r f&ouml;rst&aring; vad som faktiskt &auml;r fel.</p>
-  <div class="case-grid">
-    <div class="case-card"><img src="/assets/workshop/repair-before-after.jpg" alt="F&ouml;re och efter vid elscooterdiagnos"><h3>Scooter startar inte</h3><p>Vi kontrollerar batteri, BMS, display, controller och kablage innan vi rekommenderar delbyte.</p></div>
-    <div class="case-card"><img src="/assets/workshop/battery-pack.jpg" alt="Batteripack f&ouml;r elscooter"><h3>R&auml;ckvidden har rasat</h3><p>Batteridiagnos visar om problemet &auml;r cellh&auml;lsa, balans, temperatur, laddare eller k&ouml;rm&ouml;nster.</p></div>
-    <div class="case-card"><img src="/assets/workshop/tools-bench.jpg" alt="Verktyg p&aring; Nordic E-Mobilitys arbetsb&auml;nk"><h3>K&ouml;p tryggare begagnat</h3><p>Vi kan g&ouml;ra statuskontroll p&aring; batteri, bromsar och elsystem innan kunden k&ouml;per eller s&auml;ljer.</p></div>
+  <span class="section-label">Verkstadsbevis</span>
+  <h2 class="section-title">F&ouml;rst diagnos. Sedan beslut.</h2>
+  <p class="section-sub">Vi lyfter bara fram material som k&auml;nns kontrollerat: tydliga case, ren bildbearbetning och en process som kunden f&ouml;rst&aring;r innan n&aring;gon del byts.</p>
+  <div class="proof-layout">
+    <article class="proof-feature">
+      <img src="/assets/workshop/case-diagnosis-premium.jpg" alt="F&ouml;re och efter: diagnostik och f&auml;rdig elscooter hos Nordic E-Mobility">
+      <div class="proof-feature-copy">
+        <span class="proof-eyebrow">Case fr&aring;n verkstaden</span>
+        <h3>N&auml;r scootern inte startar b&ouml;rjar vi i elsystemet.</h3>
+        <p>Batteri, BMS, controller, display och kablage kontrolleras innan vi rekommenderar n&auml;sta steg. Kunden f&aring;r ett tydligt besked, inte en chansning.</p>
+      </div>
+    </article>
+    <div class="proof-stack">
+      <article class="proof-card">
+        <img src="/assets/workshop/case-battery-bms-premium.jpg" alt="Batteri och BMS under fels&ouml;kning">
+        <div class="proof-card-copy">
+          <span class="proof-eyebrow">Batteri / BMS</span>
+          <h3>R&auml;ckvidd, laddning och cellh&auml;lsa.</h3>
+          <p>Tyngre elfel g&aring;r till Sebastian f&ouml;r batteri, BMS, controller och avancerad diagnos.</p>
+        </div>
+      </article>
+      <article class="proof-card">
+        <img src="/assets/workshop/case-workshop-floor-premium.jpg" alt="Elscootrar p&aring; Nordic E-Mobilitys verkstadsgolv">
+        <div class="proof-card-copy">
+          <span class="proof-eyebrow">Aktiv verkstad</span>
+          <h3>Snabba jobb f&aring;r tydlig mottagning.</h3>
+          <p>Lennart tar golvet, mottagning och smidiga jobb s&aring; att varje &auml;rende hamnar r&auml;tt direkt.</p>
+        </div>
+      </article>
+    </div>
   </div>
+  <ul class="proof-metrics">
+    <li><strong>Aktivt &auml;rende direkt</strong>Varje bokning skapar ett verkstads&auml;rende i dashboarden.</li>
+    <li><strong>Roller som kunden f&ouml;rst&aring;r</strong>Lennart sk&ouml;ter golvet. Sebastian tar det tyngre elsystemet.</li>
+    <li><strong>B&auml;ttre Google-signaler</strong>Mer lokalt verkstadsinneh&aring;ll, tydligare tj&auml;nster och riktiga case fr&aring;n &Ouml;rebro.</li>
+  </ul>
   <div class="legal-note"><strong>Regelkoll:</strong> Alla elscootrar passar inte p&aring; allm&auml;n v&auml;g. En elsparkcykel som ska r&auml;knas som cykel beh&ouml;ver normalt vara konstruerad f&ouml;r max 20 km/h och max 250 W kontinuerlig m&auml;rkeffekt. L&auml;s v&aring;r <a href="/regler-elscooter/">guide om regler f&ouml;r elscooter</a> innan du k&ouml;per en prestandamodell.</div>
 </div>
 </section>

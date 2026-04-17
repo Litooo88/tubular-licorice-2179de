@@ -29,7 +29,7 @@ export default async (request, context) => {
   const auth = requireAdmin(request);
   if (!auth.ok) return auth.response;
 
-  const store = getStore("workshop-cases");
+  const store = getStore({ name: "workshop-cases", consistency: "strong" });
   const id = context.params?.id;
 
   if (request.method === "GET") {
@@ -72,7 +72,15 @@ export default async (request, context) => {
       intakeAt: body.intakeAt === undefined ? current.intakeAt : clean(body.intakeAt, 80) || null,
       promisedAt: body.promisedAt === undefined ? current.promisedAt : clean(body.promisedAt, 80) || null,
       estimatedValue: body.estimatedValue === undefined ? current.estimatedValue : Number(body.estimatedValue || 0),
+      priority: body.priority === undefined ? current.priority : clean(body.priority, 40) || "normal",
     };
+
+    if (body.assignedTo) {
+      const assignee = clean(body.assignedTo, 40);
+      next.assignedTo = assignee === "sebastian"
+        ? { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "070-024 33 19" }
+        : { key: "lennart", name: "Lennart", role: "Golv, mottagning och snabba jobb", phone: "072-260 77 53" };
+    }
 
     if (body.note) {
       next.notes = [...(current.notes || []), { at: now, text: clean(body.note) }];

@@ -11,22 +11,16 @@
   external_node_modules = ["@netlify/blobs", "stripe"]
 
 [[redirects]]
-  from = "https://nordicemobility.com/*"
-  to = "https://www.nordicemobility.se/:splat"
-  status = 301
-  force = true
+from = "https://nordicemobility.com/*"
+to = "https://www.nordicemobility.se/:splat"
+status = 301
+force = true
 
 [[redirects]]
-  from = "https://www.nordicemobility.com/*"
-  to = "https://www.nordicemobility.se/:splat"
-  status = 301
-  force = true
-
-[[redirects]]
-  from = "https://nordicemobility.se/*"
-  to = "https://www.nordicemobility.se/:splat"
-  status = 301
-  force = true
+from = "https://www.nordicemobility.com/*"
+to = "https://www.nordicemobility.se/:splat"
+status = 301
+force = true
 
 [[redirects]]
   from = "/product-page/*"
