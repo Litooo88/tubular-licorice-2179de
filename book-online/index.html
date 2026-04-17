@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Boka verkstad | Nordic E-Mobility &Ouml;rebro</title>
-<meta name="description" content="Boka verkstads&auml;rende f&ouml;r elscooter eller elcykel. Kunden registreras direkt i Nordic E-Mobilitys verkstadsdashboard med status, v&auml;rde och ansvarig.">
+<meta name="description" content="Kontakta Nordic E-Mobility f&ouml;r elscooter- och elcykelservice i &Ouml;rebro. Ring eller SMS:a f&ouml;r snabbast bekr&auml;ftelse.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://www.nordicemobility.se/book-online/">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Boka verkstad | Nordic E-Mobility">
-<meta property="og:description" content="Skapa ett aktivt verkstads&auml;rende f&ouml;r service, fels&ouml;kning, punktering, batteri eller elsystem.">
+<meta property="og:description" content="Servicef&ouml;rfr&aring;gan f&ouml;r fels&ouml;kning, punktering, batteri eller elsystem. Ring eller SMS:a f&ouml;r snabbast bekr&auml;ftelse.">
 <meta property="og:url" content="https://www.nordicemobility.se/book-online/">
 <meta property="og:image" content="https://www.nordicemobility.se/assets/workshop/workshop-hero.jpg">
 <meta name="theme-color" content="#00C853">
@@ -19,7 +19,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-:root{--green:#00c853;--ink:#050605;--panel:#101410;--line:#28322a;--soft:#aeb8b0;--amber:#ffbd4a}
+:root{--green:#00c853;--ink:#050605;--panel:#101410;--line:#28322a;--soft:#aeb8b0;--amber:#ffbd4a;--red:#ff5a5f}
 body{font-family:Inter,Arial,sans-serif;background:var(--ink);color:#fff;min-height:100vh}
 a{color:var(--green);text-decoration:none}
 a:hover{text-decoration:underline}
@@ -45,6 +45,10 @@ h1{font-size:clamp(34px,5vw,58px);line-height:.98;margin-bottom:18px;letter-spac
 .panel-title h2{font-size:30px;line-height:1.05}
 .panel-title p{color:var(--soft);line-height:1.5;margin-top:8px}
 .tag{display:inline-flex;border:1px solid rgba(255,189,74,.35);background:rgba(255,189,74,.1);color:#ffe0a2;border-radius:8px;padding:8px 10px;font-size:12px;font-weight:900;white-space:nowrap}
+.urgent-box{border:1px solid rgba(255,90,95,.55);background:rgba(255,90,95,.12);border-radius:8px;padding:16px;margin:0 0 18px;color:#ffe8e9;line-height:1.55}
+.urgent-box strong{display:block;color:#fff;font-size:18px;margin-bottom:6px}
+.contact-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.contact-actions a{display:block;border-radius:8px;border:1px solid rgba(0,200,83,.45);background:rgba(0,200,83,.12);padding:11px;text-align:center;font-weight:900;color:#dfffea}
 .form-block{border-top:1px solid #243027;padding-top:22px;margin-top:22px}
 .block-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .block-head b{display:grid;place-items:center;width:32px;height:32px;border-radius:8px;background:var(--green);color:#021006}
@@ -67,6 +71,7 @@ textarea{min-height:120px;resize:vertical}
 .check-row{display:flex;gap:10px;align-items:flex-start;border:1px solid #2f3a32;background:#0b0f0c;border-radius:8px;padding:14px}
 .check-row input{width:auto;margin-top:2px}
 .check-row span{color:#c9d1cb;line-height:1.45}
+.check-row.legal{border-color:rgba(255,189,74,.4);background:rgba(255,189,74,.08)}
 .submit{width:100%;border:0;border-radius:8px;background:var(--green);color:#031005;font-weight:900;font-size:17px;padding:17px;margin-top:18px;cursor:pointer}
 .submit:disabled{opacity:.65;cursor:wait}
 .status{display:none;margin-top:14px;border-radius:8px;padding:16px;line-height:1.55;font-size:14px}
@@ -87,6 +92,8 @@ textarea{min-height:120px;resize:vertical}
 .person:first-of-type{border-top:0}
 .person small{color:#9ca69f;text-transform:uppercase;letter-spacing:.08em;font-weight:900}
 .person a{font-weight:900}
+.person-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
+.person-actions a{border:1px solid #263029;border-radius:8px;padding:9px;text-align:center}
 footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align:center;color:#8d948f;font-size:13px}
 @media(max-width:940px){.hero-grid,.booking-grid,.hero-proof,.service-grid,.form-grid{grid-template-columns:1fr}.side{position:static}.container{padding:0 18px}.hero{padding-top:42px}.booking-panel{padding:18px}.panel-title{display:block}.tag{margin-top:14px}}
 </style>
@@ -102,14 +109,14 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
 <section class="hero">
 <div class="container hero-grid">
   <div>
-    <span class="eyebrow">Direkt in i verkstadssystemet</span>
-    <h1>Boka verkstad utan ludd.</h1>
-    <p class="lead">Din bokning blir ett aktivt verkstads&auml;rende med ansvarig person, uppskattat startv&auml;rde och status. Telefonnumret kan f&aring; SMS-bekr&auml;ftelse n&auml;r SMS-kopplingen &auml;r aktiverad.</p>
+    <span class="eyebrow">Ring eller SMS:a f&ouml;r bekr&auml;ftad tid</span>
+    <h1>Servicef&ouml;rfr&aring;gan f&ouml;r verkstaden.</h1>
+    <p class="lead">Formul&auml;ret hj&auml;lper oss samla r&auml;tt information, men under tiden vi kopplar klart kalender, SMS och e-post &auml;r det inte en bekr&auml;ftad kalenderbokning. Ring eller SMS:a oss f&ouml;r att s&auml;kra tid just nu.</p>
   </div>
   <div class="hero-proof">
-    <div class="proof"><b>1</b><span>V&auml;lj problem och modell.</span></div>
-    <div class="proof"><b>2</b><span>&Auml;rendet g&aring;r in i dashboarden.</span></div>
-    <div class="proof"><b>3</b><span>Vi bekr&auml;ftar tid och pris.</span></div>
+    <div class="proof"><b>1</b><span>Skicka information om problemet.</span></div>
+    <div class="proof"><b>2</b><span>Ring eller SMS:a f&ouml;r snabbast svar.</span></div>
+    <div class="proof"><b>3</b><span>Vi bekr&auml;ftar tid och pris manuellt.</span></div>
   </div>
 </div>
 </section>
@@ -119,10 +126,20 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
   <div class="booking-panel" id="form">
     <div class="panel-title">
       <div>
-        <h2>Skapa verkstads&auml;rende</h2>
-        <p>Fyll i det vi beh&ouml;ver f&ouml;r att kunna prioritera r&auml;tt direkt. Du binder dig inte till reparation innan vi har bekr&auml;ftat pris och n&auml;sta steg.</p>
+        <h2>Skicka servicef&ouml;rfr&aring;gan</h2>
+        <p>Fyll i det vi beh&ouml;ver f&ouml;r att f&ouml;rst&aring; felet. Du binder dig inte till reparation innan vi har bekr&auml;ftat pris och n&auml;sta steg.</p>
       </div>
-      <span class="tag">Ingen betalning nu</span>
+      <span class="tag">Ej bekr&auml;ftad bokning</span>
+    </div>
+    <div class="urgent-box">
+      <strong>Tillf&auml;lligt medan vi kopplar klart systemet</strong>
+      Formul&auml;ret skapar ingen kalenderbokning och skickar inte automatisk SMS- eller e-postbekr&auml;ftelse &auml;nnu. F&ouml;r att vara s&auml;ker p&aring; att vi tar emot dig just nu: ring eller SMS:a Sebastian eller Lennart direkt.
+      <div class="contact-actions">
+        <a href="tel:0700243319">Ring Sebastian</a>
+        <a href="sms:+46700243319">SMS Sebastian</a>
+        <a href="tel:0722607753">Ring Lennart</a>
+        <a href="sms:+46722607753">SMS Lennart</a>
+      </div>
     </div>
 
     <form name="booking" method="POST" data-netlify="true" netlify-honeypot="bot-field">
@@ -150,7 +167,7 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
             <option value="sms">SMS f&ouml;rst</option>
             <option value="email">E-post f&ouml;rst</option>
           </select></div>
-          <div class="form-group"><label for="preferredDate">&Ouml;nskad dag/tid</label><input id="preferredDate" name="preferredDate" type="datetime-local"></div>
+          <div class="form-group"><label for="preferredDate">&Ouml;nskad dag/tid</label><input id="preferredDate" name="preferredDate" type="text" placeholder="Ex. fredag eftermiddag, eller ring mig"></div>
           <div class="form-group"><label for="preferred">Passar b&auml;st</label><select id="preferred" name="preferred">
             <option value="">V&auml;lj...</option>
             <option value="Morgon">Morgon</option>
@@ -174,10 +191,11 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
       <div class="form-block">
         <div class="block-head"><b>3</b><h3>Beskriv felet</h3></div>
         <div class="form-group full"><label for="message">Vad har h&auml;nt?</label><textarea id="message" name="message" placeholder="Startar den? Laddar den? Felkod? Punktering fram/bak? Skriv g&auml;rna hur felet b&ouml;rjade."></textarea></div>
-        <label class="check-row"><input type="checkbox" id="smsConsent" name="smsConsent" value="yes" checked><span><strong>Skicka SMS-bekr&auml;ftelse</strong><br>N&auml;r SMS-kopplingen &auml;r aktiverad f&aring;r telefonnumret en kort bekr&auml;ftelse med &auml;rendenummer.</span></label>
+        <input type="hidden" id="smsConsent" name="smsConsent" value="no">
+        <label class="check-row legal"><input type="checkbox" id="ownershipConfirm" name="ownershipConfirm" value="yes" required><span><strong>Jag intygar att fordonet inte &auml;r st&ouml;ldgods.</strong><br>Jag kan visa kvitto, &auml;garuppgifter eller legitimation vid inl&auml;mning om verkstaden ber om det.</span></label>
       </div>
 
-      <button type="submit" class="submit">Skapa &auml;rende i verkstaden</button>
+      <button type="submit" class="submit">Skicka f&ouml;rfr&aring;gan</button>
       <div class="status" id="bookingStatus" aria-live="polite"></div>
       <p class="note">Genom att skicka formul&auml;ret godk&auml;nner du att vi behandlar uppgifterna f&ouml;r att hantera &auml;rendet och kontakta dig om bokningen. Se <a href="/integritet/">integritetspolicy</a> och <a href="/villkor/">villkor</a>.</p>
     </form>
@@ -189,13 +207,13 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
       <div class="summary-line"><span>Tj&auml;nst</span><strong id="sumService">V&auml;lj &auml;rende</strong></div>
       <div class="summary-line"><span>Startpris</span><strong id="sumPrice">-</strong></div>
       <div class="summary-line"><span>Startansvar</span><strong id="sumOwner">-</strong></div>
-      <div class="summary-line"><span>SMS</span><strong id="sumSms">P&aring;</strong></div>
-      <div class="sms-pill"><b>Premiumfl&ouml;de</b><span>&Auml;rendet skapas direkt i dashboarden med kund, status, v&auml;rde och ansvarig.</span></div>
+      <div class="summary-line"><span>Bekr&auml;ftelse</span><strong id="sumSms">Manuell</strong></div>
+      <div class="sms-pill"><b>Tillf&auml;lligt manuellt</b><span>Formul&auml;ret &auml;r en f&ouml;rfr&aring;gan tills kalender, SMS och e-post &auml;r f&auml;rdigkopplat. Ring eller SMS:a oss f&ouml;r att s&auml;kra tid.</span></div>
     </div>
     <div class="contact-card">
       <h3>Direktkontakt</h3>
-      <div class="person"><small>Golv, mottagning och snabba jobb</small><strong>Lennart</strong><a href="tel:0722607753">072-260 77 53</a></div>
-      <div class="person"><small>Tung fels&ouml;kning, batteri och elsystem</small><strong>Sebastian</strong><a href="tel:0700243319">070-024 33 19</a></div>
+      <div class="person"><small>Golv, mottagning och snabba jobb</small><strong>Lennart</strong><div class="person-actions"><a href="tel:0722607753">Ring</a><a href="sms:+46722607753">SMS</a></div><a href="tel:0722607753">072-260 77 53</a></div>
+      <div class="person"><small>Tung fels&ouml;kning, batteri och elsystem</small><strong>Sebastian</strong><div class="person-actions"><a href="tel:0700243319">Ring</a><a href="sms:+46700243319">SMS</a></div><a href="tel:0700243319">070-024 33 19</a></div>
     </div>
   </aside>
 </div>
@@ -226,11 +244,11 @@ function updateSummary(){
   sumService.textContent=service?service.value:'Välj ärende';
   sumPrice.textContent=service?service.dataset.price+' kr':'-';
   sumOwner.textContent=service?ownerFor(service,messageInput.value):'-';
-  sumSms.textContent=smsConsent.checked?'På':'Av';
+  sumSms.textContent='Manuell';
 }
 serviceInputs.forEach(input=>input.addEventListener('change',updateSummary));
 messageInput.addEventListener('input',updateSummary);
-smsConsent.addEventListener('change',updateSummary);
+if(smsConsent) smsConsent.addEventListener('change',updateSummary);
 updateSummary();
 
 async function submitNetlifyBackup(data){
@@ -255,25 +273,22 @@ if(bookingForm){
     bookingStatus.className='status';
     bookingStatus.textContent='';
     submit.disabled=true;
-    submit.textContent='Skapar ärendet i dashboarden...';
+    submit.textContent='Skickar förfrågan...';
     const data=Object.fromEntries(new FormData(bookingForm).entries());
-    if(!smsConsent.checked) data.smsConsent='no';
+    data.smsConsent='no';
     try{
       const response=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
       const result=await response.json();
-      if(!response.ok) throw new Error(result.error||'Kunde inte skapa ärendet.');
-      const owner=result.case&&result.case.assignedTo?result.case.assignedTo.name:'verkstaden';
-      const sms=result.case&&result.case.notifications&&result.case.notifications.sms;
-      const smsText=sms&&sms.status==='sent'?' SMS-bekräftelse är skickad.':' Vi kontaktar dig med tid och pris.';
+      if(!response.ok) throw new Error(result.error||'Kunde inte skicka förfrågan.');
       bookingStatus.className='status ok';
-      bookingStatus.textContent='Klart. Ärendet är skapat i verkstadsdashboarden som '+result.id+'. Startansvar: '+owner+'.'+smsText;
+      bookingStatus.textContent='Din förfrågan är skickad till verkstaden. Den är inte en bekräftad kalenderbokning och ingen automatisk SMS- eller e-postbekräftelse skickas ännu. Ring eller SMS:a Sebastian 070-024 33 19 eller Lennart 072-260 77 53 för att säkra tid.';
       bookingForm.reset();
       updateSummary();
     }catch(error){
       try{
         await submitNetlifyBackup(data);
         bookingStatus.className='status ok';
-        bookingStatus.textContent='Vi tog emot bokningen via reservflödet. Verkstaden kontaktar dig, och vi flyttar in ärendet i dashboarden manuellt om API:t ligger nere.';
+        bookingStatus.textContent='Din förfrågan gick via reservflödet. Den är inte en bekräftad kalenderbokning och ingen automatisk SMS- eller e-postbekräftelse skickas ännu. Ring eller SMS:a Sebastian 070-024 33 19 eller Lennart 072-260 77 53 för att säkra tid.';
         bookingForm.reset();
         updateSummary();
       }catch(backupError){
