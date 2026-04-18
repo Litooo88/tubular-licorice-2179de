@@ -109,13 +109,13 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
 <section class="hero">
 <div class="container hero-grid">
   <div>
-    <span class="eyebrow">Ring eller SMS:a f&ouml;r bekr&auml;ftad tid</span>
+    <span class="eyebrow">SMS-bekr&auml;ftelse p&aring; v&auml;g in</span>
     <h1>Servicef&ouml;rfr&aring;gan f&ouml;r verkstaden.</h1>
-    <p class="lead">Formul&auml;ret hj&auml;lper oss samla r&auml;tt information, men under tiden vi kopplar klart kalender, SMS och e-post &auml;r det inte en bekr&auml;ftad kalenderbokning. Ring eller SMS:a oss f&ouml;r att s&auml;kra tid just nu.</p>
+    <p class="lead">Formul&auml;ret hj&auml;lper oss samla r&auml;tt information och skapar ett verkstads&auml;rende direkt. Under tiden kalender och e-post kopplas klart &auml;r det inte en bekr&auml;ftad kalenderbokning f&ouml;rr&auml;n vi har &aring;terkommit.</p>
   </div>
   <div class="hero-proof">
     <div class="proof"><b>1</b><span>Skicka information om problemet.</span></div>
-    <div class="proof"><b>2</b><span>Ring eller SMS:a f&ouml;r snabbast svar.</span></div>
+    <div class="proof"><b>2</b><span>Du f&aring;r SMS n&auml;r kopplingen &auml;r aktiv.</span></div>
     <div class="proof"><b>3</b><span>Vi bekr&auml;ftar tid och pris manuellt.</span></div>
   </div>
 </div>
@@ -133,7 +133,7 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
     </div>
     <div class="urgent-box">
       <strong>Tillf&auml;lligt medan vi kopplar klart systemet</strong>
-      Formul&auml;ret skapar ingen kalenderbokning och skickar inte automatisk SMS- eller e-postbekr&auml;ftelse &auml;nnu. F&ouml;r att vara s&auml;ker p&aring; att vi tar emot dig just nu: ring eller SMS:a Sebastian eller Lennart direkt.
+      Formul&auml;ret skapar ett verkstads&auml;rende, men kalenderbokning och e-postbekr&auml;ftelse &auml;r inte f&auml;rdigkopplat &auml;nnu. SMS-bekr&auml;ftelse aktiveras separat. F&ouml;r att vara helt s&auml;ker p&aring; tid just nu: ring eller SMS:a Sebastian eller Lennart direkt.
       <div class="contact-actions">
         <a href="tel:0700243319">Ring Sebastian</a>
         <a href="sms:+46700243319">SMS Sebastian</a>
@@ -191,7 +191,7 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
       <div class="form-block">
         <div class="block-head"><b>3</b><h3>Beskriv felet</h3></div>
         <div class="form-group full"><label for="message">Vad har h&auml;nt?</label><textarea id="message" name="message" placeholder="Startar den? Laddar den? Felkod? Punktering fram/bak? Skriv g&auml;rna hur felet b&ouml;rjade."></textarea></div>
-        <input type="hidden" id="smsConsent" name="smsConsent" value="no">
+        <input type="hidden" id="smsConsent" name="smsConsent" value="yes">
         <label class="check-row legal"><input type="checkbox" id="ownershipConfirm" name="ownershipConfirm" value="yes" required><span><strong>Jag intygar att fordonet inte &auml;r st&ouml;ldgods.</strong><br>Jag kan visa kvitto, &auml;garuppgifter eller legitimation vid inl&auml;mning om verkstaden ber om det.</span></label>
       </div>
 
@@ -207,8 +207,8 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
       <div class="summary-line"><span>Tj&auml;nst</span><strong id="sumService">V&auml;lj &auml;rende</strong></div>
       <div class="summary-line"><span>Startpris</span><strong id="sumPrice">-</strong></div>
       <div class="summary-line"><span>Startansvar</span><strong id="sumOwner">-</strong></div>
-      <div class="summary-line"><span>Bekr&auml;ftelse</span><strong id="sumSms">Manuell</strong></div>
-      <div class="sms-pill"><b>Tillf&auml;lligt manuellt</b><span>Formul&auml;ret &auml;r en f&ouml;rfr&aring;gan tills kalender, SMS och e-post &auml;r f&auml;rdigkopplat. Ring eller SMS:a oss f&ouml;r att s&auml;kra tid.</span></div>
+      <div class="summary-line"><span>Bekr&auml;ftelse</span><strong id="sumSms">SMS om aktivt</strong></div>
+      <div class="sms-pill"><b>SMS-bekr&auml;ftelse</b><span>N&auml;r SMS-kopplingen &auml;r aktiv skickas en kort bekr&auml;ftelse till telefonnumret. Kalenderbokning bekr&auml;ftas fortfarande manuellt.</span></div>
     </div>
     <div class="contact-card">
       <h3>Direktkontakt</h3>
@@ -244,7 +244,7 @@ function updateSummary(){
   sumService.textContent=service?service.value:'Välj ärende';
   sumPrice.textContent=service?service.dataset.price+' kr':'-';
   sumOwner.textContent=service?ownerFor(service,messageInput.value):'-';
-  sumSms.textContent='Manuell';
+  sumSms.textContent='SMS om aktivt';
 }
 serviceInputs.forEach(input=>input.addEventListener('change',updateSummary));
 messageInput.addEventListener('input',updateSummary);
@@ -268,7 +268,7 @@ function customerStatusMessage(result){
   if(done.length){
     return 'Din förfrågan är skickad till verkstaden. '+done.join(', ')+'. Vi återkommer fortfarande med slutlig tid och pris innan reparation.';
   }
-  return 'Din förfrågan är skickad till verkstaden. Den är inte en bekräftad kalenderbokning och ingen automatisk SMS- eller e-postbekräftelse skickas ännu. Ring eller SMS:a Sebastian 070-024 33 19 eller Lennart 072-260 77 53 för att säkra tid.';
+  return 'Din förfrågan är skickad till verkstaden. Den är inte en bekräftad kalenderbokning ännu. Om SMS-kopplingen inte är aktiv eller du inte får SMS inom någon minut: ring eller SMS:a Sebastian 070-024 33 19 eller Lennart 072-260 77 53.';
 }
 
 if(bookingForm){
@@ -287,7 +287,7 @@ if(bookingForm){
     submit.disabled=true;
     submit.textContent='Skickar förfrågan...';
     const data=Object.fromEntries(new FormData(bookingForm).entries());
-    data.smsConsent='no';
+    data.smsConsent='yes';
     try{
       const response=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
       const result=await response.json();
