@@ -20,9 +20,9 @@ const htmlEscape = (value) =>
 
 const env = (name) => {
   try {
-    return globalThis.Netlify?.env?.get?.(name) || "";
+    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
   } catch {
-    return "";
+    return process.env[name] || "";
   }
 };
 
