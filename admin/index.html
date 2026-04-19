@@ -69,7 +69,7 @@ textarea{min-height:66px;resize:vertical}
   </section>
 
   <div class="error" id="error"></div>
-  <section class="panel notice"><strong>Manuellt reservläge:</strong> Om SMS, kundmail eller kalender visar "Ej konfigurerat" använder ni knapparna på varje ärende för SMS-mall, mailmall och kalenderfil tills automatiska tjänster är helt aktiva.</section>
+  <section class="panel notice"><strong>Automatiskt fl&ouml;de:</strong> Nya bokningar sparas h&auml;r, kunden f&aring;r SMS/e-post n&auml;r uppgifterna finns, och verkstaden f&aring;r avisering. Kalenderfilen &auml;r prelimin&auml;r tills Sebastian bekr&auml;ftar tid och pris.</section>
 
   <section class="stats">
     <div class="panel stat"><span>Aktiva</span><b id="activeTotal">0</b></div>
@@ -240,6 +240,7 @@ function caseCard(item){
   const notes=(item.notes||[]).slice(-2).map(note=>`<div>${dateShort(note.at)}: ${html(note.text)}</div>`).join('');
   const notifications=item.notifications||{};
   const sms=notifications.sms;
+  const staffSms=notifications.staffSms;
   const customerEmail=notifications.customerEmail;
   const workshopEmail=notifications.workshopEmail;
   const calendar=notifications.calendar;
@@ -251,7 +252,7 @@ function caseCard(item){
       <span class="badge ${item.priority==='urgent'?'warn':''}">${html(statusLabels[item.status]||item.status)}</span>
     </div>
     <div class="meta"><strong>${html(item.service||'Annat')}</strong><br>${html(item.message||'Ingen beskrivning')}</div>
-    <div class="meta">Ansvar: <strong>${html(owner.name)}</strong> &middot; ${html(owner.phone||'')}<br>V&auml;rde: <strong>${money(item.estimatedValue)}</strong><br>Kontakt: <strong>${labelFrom(item.contactMethod,contactLabels)}</strong><br>Inl&auml;mning: <strong>${labelFrom(item.logistics,logisticsLabels)}</strong><br>&Ouml;nskad tid: ${html(item.preferredDate)||'Saknas'}<br>SMS: <strong>${notificationLabel(sms,'sms')}</strong><br>Kundmail: <strong>${notificationLabel(customerEmail,'email')}</strong><br>Verkstadsmail: <strong>${notificationLabel(workshopEmail,'email')}</strong><br>Kalender: <strong>${notificationLabel(calendar,'calendar')}</strong><br>Skapad: ${dateShort(item.createdAt)}<br>Inl&auml;mnad: ${dateShort(item.intakeAt)}</div>
+    <div class="meta">Ansvar: <strong>${html(owner.name)}</strong> &middot; ${html(owner.phone||'')}<br>V&auml;rde: <strong>${money(item.estimatedValue)}</strong><br>Kontakt: <strong>${labelFrom(item.contactMethod,contactLabels)}</strong><br>Inl&auml;mning: <strong>${labelFrom(item.logistics,logisticsLabels)}</strong><br>&Ouml;nskad tid: ${html(item.preferredDate)||'Saknas'}<br>Kund-SMS: <strong>${notificationLabel(sms,'sms')}</strong><br>Intern SMS: <strong>${notificationLabel(staffSms,'sms')}</strong><br>Kundmail: <strong>${notificationLabel(customerEmail,'email')}</strong><br>Verkstadsmail: <strong>${notificationLabel(workshopEmail,'email')}</strong><br>Kalender: <strong>${notificationLabel(calendar,'calendar')}</strong><br>Skapad: ${dateShort(item.createdAt)}<br>Inl&auml;mnad: ${dateShort(item.intakeAt)}</div>
     <div class="contact">
       <a href="tel:${html(item.customer&&item.customer.phone||'')}">Ring kund</a>
       <a href="${html(smsHref(item))}">SMS-mall</a>

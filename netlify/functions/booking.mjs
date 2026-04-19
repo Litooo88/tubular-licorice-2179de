@@ -93,6 +93,49 @@ const shortCaseId = (id) => id.replace(/^case_/, "").slice(0, 18).toUpperCase();
 const smsMessage = (caseItem) =>
   `Nordic E-Mobility: Bokning mottagen. Arende ${shortCaseId(caseItem.id)}. Ansvarig start: ${caseItem.assignedTo.name}. Vi kontaktar dig med tid och pris.`;
 
+const workshopSmsMessage = (caseItem) =>
+  `Nytt Nordic-arende ${shortCaseId(caseItem.id)}: ${caseItem.customer.name}, ${caseItem.service}. Tel ${caseItem.customer.phone}. Ansvar: ${caseItem.assignedTo.name}.`;
+
+const smsConfig = () => ({
+  username: env("ELKS_USERNAME") || env("SMS_API_USERNAME"),
+  password: env("ELKS_PASSWORD") || env("SMS_API_PASSWORD"),
+  from: (env("SMS_FROM") || "NordicEMob").slice(0, 11),
+});
+
+const postSms = async ({ to, message }) => {
+  const normalizedTo = normalizePhone(to);
+  const { username, password, from } = smsConfig();
+
+  if (!normalizedTo) return { status: "invalid_phone", to: "" };
+  if (!username || !password) return { status: "not_configured", to: normalizedTo };
+
+  const payload = new URLSearchParams({
+    from,
+    to: normalizedTo,
+    message,
+    dontlog: "message",
+  });
+
+  try {
+    const response = await fetch("https://api.46elks.com/a1/sms", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: payload,
+      signal: AbortSignal.timeout(7000),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return { status: "failed", provider: "46elks", to: normalizedTo, error: clean(body.error || response.statusText, 180) };
+    }
+    return { status: "sent", provider: "46elks", to: normalizedTo, id: clean(body.id, 120), sentAt: new Date().toISOString() };
+  } catch (error) {
+    return { status: "failed", provider: "46elks", to: normalizedTo, error: clean(error.message, 180) };
+  }
+};
+
 const pad2 = (number) => String(number).padStart(2, "0");
 
 const parsePreferredLocalParts = (value) => {
@@ -244,39 +287,33 @@ const buildIcsAttachment = (caseItem) => ({
 
 const sendSmsConfirmation = async (caseItem, requested) => {
   const to = normalizePhone(caseItem.customer.phone);
-  const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
-  const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
-  const from = (env("SMS_FROM") || "NordicEMob").slice(0, 11);
 
   if (!requested) return { status: "not_requested", to };
-  if (!to) return { status: "invalid_phone", to: "" };
-  if (!username || !password) return { status: "not_configured", to };
+  return postSms({ to, message: smsMessage(caseItem) });
+};
 
-  const payload = new URLSearchParams({
-    from,
-    to,
-    message: smsMessage(caseItem),
-    dontlog: "message",
-  });
+const sendWorkshopSmsNotification = async (caseItem) => {
+  const configured = (env("WORKSHOP_SMS_TO") || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const recipients = configured.length ? configured : [STAFF.sebastian.phone, STAFF.lennart.phone];
+  const results = await Promise.all(recipients.map((recipient) => postSms({ to: recipient, message: workshopSmsMessage(caseItem) })));
 
-  try {
-    const response = await fetch("https://api.46elks.com/a1/sms", {
-      method: "POST",
-      headers: {
-        Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: payload,
-      signal: AbortSignal.timeout(7000),
-    });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      return { status: "failed", provider: "46elks", to, error: clean(body.error || response.statusText, 180) };
-    }
-    return { status: "sent", provider: "46elks", to, id: clean(body.id, 120), sentAt: new Date().toISOString() };
-  } catch (error) {
-    return { status: "failed", provider: "46elks", to, error: clean(error.message, 180) };
+  if (results.some((result) => result.status === "sent")) {
+    return {
+      status: "sent",
+      provider: "46elks",
+      recipients: results,
+      sentAt: new Date().toISOString(),
+    };
   }
+
+  return {
+    status: results.every((result) => result.status === "not_configured") ? "not_configured" : "failed",
+    provider: "46elks",
+    recipients: results,
+  };
 };
 
 const resendEmail = async ({ to, subject, html, text, attachments = [], idempotencyKey }) => {
@@ -533,6 +570,7 @@ export default async (request) => {
       notes: [],
       notifications: {
         sms: { status: smsRequested ? "pending" : "not_requested", to: normalizePhone(body.phone) },
+        staffSms: { status: "pending" },
         customerEmail: { status: body.email ? "pending" : "not_requested" },
         workshopEmail: { status: "pending" },
         calendar: { status: "pending" },
@@ -552,15 +590,19 @@ export default async (request) => {
     const store = getStore({ name: "workshop-cases", consistency: "strong" });
     await store.setJSON(id, caseItem);
 
-    const [sms, customerEmail, workshopEmail, calendar] = await Promise.all([
+    const [sms, staffSms, customerEmail, workshopEmail, calendar] = await Promise.all([
       sendSmsConfirmation(caseItem, smsRequested),
+      sendWorkshopSmsNotification(caseItem),
       sendCustomerEmail(caseItem),
       sendWorkshopEmail(caseItem),
       createCalendarEvent(caseItem),
     ]);
-    caseItem.notifications = { sms, customerEmail, workshopEmail, calendar };
+    caseItem.notifications = { sms, staffSms, customerEmail, workshopEmail, calendar };
     if (sms.status === "sent") {
       caseItem.timeline.push({ at: sms.sentAt, event: "SMS-bekraftelse skickad till kund." });
+    }
+    if (staffSms.status === "sent") {
+      caseItem.timeline.push({ at: staffSms.sentAt, event: "Intern SMS-avisering skickad." });
     }
     if (customerEmail.status === "sent") {
       caseItem.timeline.push({ at: customerEmail.sentAt, event: "E-postbekraftelse skickad till kund." });

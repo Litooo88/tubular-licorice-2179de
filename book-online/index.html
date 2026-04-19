@@ -138,14 +138,14 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
 <section class="hero">
 <div class="container hero-grid">
   <div>
-    <span class="eyebrow">SMS-bekr&auml;ftelse p&aring; v&auml;g in</span>
+    <span class="eyebrow">Automatisk bekr&auml;ftelse aktiv</span>
     <h1>Servicef&ouml;rfr&aring;gan f&ouml;r verkstaden.</h1>
-    <p class="lead">Formul&auml;ret hj&auml;lper oss samla r&auml;tt information och skapar ett verkstads&auml;rende direkt. Under tiden kalender och e-post kopplas klart &auml;r det inte en bekr&auml;ftad kalenderbokning f&ouml;rr&auml;n vi har &aring;terkommit.</p>
+    <p class="lead">Formul&auml;ret skapar ett verkstads&auml;rende direkt. Kunden f&aring;r bekr&auml;ftelse via e-post och SMS n&auml;r uppgifterna finns, och verkstaden f&aring;r avisering direkt.</p>
   </div>
   <div class="hero-proof">
     <div class="proof"><b>1</b><span>Skicka information om problemet.</span></div>
-    <div class="proof"><b>2</b><span>Du f&aring;r SMS n&auml;r kopplingen &auml;r aktiv.</span></div>
-    <div class="proof"><b>3</b><span>Vi bekr&auml;ftar tid och pris manuellt.</span></div>
+    <div class="proof"><b>2</b><span>Du f&aring;r SMS och e-postbekr&auml;ftelse.</span></div>
+    <div class="proof"><b>3</b><span>Sebastian bekr&auml;ftar slutlig tid och pris.</span></div>
   </div>
 </div>
 </section>
@@ -161,8 +161,8 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
       <span class="tag">Ej bekr&auml;ftad bokning</span>
     </div>
     <div class="urgent-box">
-      <strong>Tillf&auml;lligt medan vi kopplar klart systemet</strong>
-      Formul&auml;ret skapar ett verkstads&auml;rende, men kalenderbokning och e-postbekr&auml;ftelse &auml;r inte f&auml;rdigkopplat &auml;nnu. Beslut om pris, fels&ouml;kning och &aring;tg&auml;rd tas alltid av Sebastian.
+      <strong>S&aring; fungerar bokningen just nu</strong>
+      Din f&ouml;rfr&aring;gan registreras direkt, kunden f&aring;r bekr&auml;ftelse och verkstaden f&aring;r avisering. &Ouml;nskad tid &auml;r prelimin&auml;r tills Sebastian har bekr&auml;ftat pris, fels&ouml;kning och n&auml;sta steg.
       <div class="role-grid">
         <div class="role-card"><b>Sebastian</b><span>Tekniskt ansvarig. Tar beslut om diagnos, offert, prioritet och tyngre elfel.</span></div>
         <div class="role-card"><b>Lennart</b><span>Praktikant och daglig mottagning under sommaren. Finns tillg&auml;nglig dagtid f&ouml;r inl&auml;mning, enklare &auml;renden och snabb kontakt.</span></div>
@@ -240,8 +240,8 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
       <div class="summary-line"><span>Tj&auml;nst</span><strong id="sumService">V&auml;lj &auml;rende</strong></div>
       <div class="summary-line"><span>Startpris</span><strong id="sumPrice">-</strong></div>
       <div class="summary-line"><span>Startansvar</span><strong id="sumOwner">-</strong></div>
-      <div class="summary-line"><span>Bekr&auml;ftelse</span><strong id="sumSms">SMS om aktivt</strong></div>
-      <div class="sms-pill"><b>SMS-bekr&auml;ftelse</b><span>N&auml;r SMS-kopplingen &auml;r aktiv skickas en kort bekr&auml;ftelse till telefonnumret. Kalenderbokning bekr&auml;ftas fortfarande manuellt.</span></div>
+      <div class="summary-line"><span>Bekr&auml;ftelse</span><strong id="sumSms">SMS + e-post</strong></div>
+      <div class="sms-pill"><b>Automatisk bekr&auml;ftelse</b><span>Vi skickar bekr&auml;ftelse till kunden och avisering till verkstaden. Kalenderfilen &auml;r prelimin&auml;r tills Sebastian bekr&auml;ftar tid och pris.</span></div>
     </div>
     <div class="contact-card">
       <h3>Direktkontakt</h3>
@@ -277,7 +277,7 @@ function updateSummary(){
   sumService.textContent=service?service.value:'VÃ¤lj Ã¤rende';
   sumPrice.textContent=service?service.dataset.price+' kr':'-';
   sumOwner.textContent=service?ownerFor(service,messageInput.value):'-';
-  sumSms.textContent='SMS om aktivt';
+  sumSms.textContent='SMS + e-post';
 }
 serviceInputs.forEach(input=>input.addEventListener('change',updateSummary));
 messageInput.addEventListener('input',updateSummary);
@@ -295,13 +295,14 @@ async function submitNetlifyBackup(data){
 function customerStatusMessage(result){
   const notifications=(result.case&&result.case.notifications)||{};
   const done=[];
-  if(notifications.customerEmail&&notifications.customerEmail.status==='sent') done.push('e-postbekrÃ¤ftelse Ã¤r skickad');
-  if(notifications.sms&&notifications.sms.status==='sent') done.push('SMS-bekrÃ¤ftelse Ã¤r skickad');
-  if(notifications.calendar&&notifications.calendar.status==='created') done.push('Ã¤rendet ligger i verkstadskalendern');
+  if(notifications.customerEmail&&notifications.customerEmail.status==='sent') done.push('e-postbekr\u00e4ftelse \u00e4r skickad');
+  if(notifications.sms&&notifications.sms.status==='sent') done.push('SMS-bekr\u00e4ftelse \u00e4r skickad');
+  if(notifications.staffSms&&notifications.staffSms.status==='sent') done.push('verkstaden har f\u00e5tt SMS-avisering');
+  if(notifications.calendar&&notifications.calendar.status==='created') done.push('\u00e4rendet ligger i verkstadskalendern');
   if(done.length){
-    return 'Din fÃ¶rfrÃ¥gan Ã¤r skickad till verkstaden. '+done.join(', ')+'. Vi Ã¥terkommer fortfarande med slutlig tid och pris innan reparation.';
+    return 'Din f\u00f6rfr\u00e5gan \u00e4r skickad till verkstaden. '+done.join(', ')+'. Vi \u00e5terkommer fortfarande med slutlig tid och pris innan reparation.';
   }
-  return 'Din fÃ¶rfrÃ¥gan Ã¤r skickad till verkstaden. Den Ã¤r inte en bekrÃ¤ftad kalenderbokning Ã¤nnu. Om SMS-kopplingen inte Ã¤r aktiv eller du inte fÃ¥r SMS inom nÃ¥gon minut: ring eller SMS:a Sebastian 070-024 33 19 eller Lennart 072-260 77 53.';
+  return 'Din f\u00f6rfr\u00e5gan \u00e4r skickad till verkstaden. Om du inte f\u00e5r bekr\u00e4ftelse inom n\u00e5gon minut: ring eller SMS:a Sebastian 070-024 33 19 eller Lennart 072-260 77 53.';
 }
 
 if(bookingForm){
