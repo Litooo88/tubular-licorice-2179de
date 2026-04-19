@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Boka verkstad | Nordic E-Mobility &Ouml;rebro</title>
-<meta name="description" content="Kontakta Nordic E-Mobility f&ouml;r elscooter- och elcykelservice i &Ouml;rebro. Ring eller SMS:a f&ouml;r snabbast bekr&auml;ftelse.">
+<title>Boka elscooter service i Örebro | Nordic E-Mobility</title>
+<meta name="description" content="Skicka serviceförfrågan för elscooter, elcykel, punktering, batteri eller elsystem i Örebro. Nordic E-Mobility återkommer med pris, tid och nästa steg.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://www.nordicemobility.se/book-online/">
 <meta property="og:type" content="website">
@@ -47,6 +47,10 @@ h1{font-size:clamp(34px,5vw,58px);line-height:.98;margin-bottom:18px;letter-spac
 .tag{display:inline-flex;border:1px solid rgba(255,189,74,.35);background:rgba(255,189,74,.1);color:#ffe0a2;border-radius:8px;padding:8px 10px;font-size:12px;font-weight:900;white-space:nowrap}
 .urgent-box{border:1px solid rgba(255,90,95,.55);background:rgba(255,90,95,.12);border-radius:8px;padding:16px;margin:0 0 18px;color:#ffe8e9;line-height:1.55}
 .urgent-box strong{display:block;color:#fff;font-size:18px;margin-bottom:6px}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.role-card{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);border-radius:8px;padding:13px}
+.role-card b{display:block;color:#fff;margin-bottom:4px}
+.role-card span{display:block;color:#cfd8d2;font-size:13px;line-height:1.45}
 .contact-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .contact-actions a{display:block;border-radius:8px;border:1px solid rgba(0,200,83,.45);background:rgba(0,200,83,.12);padding:11px;text-align:center;font-weight:900;color:#dfffea}
 .form-block{border-top:1px solid #243027;padding-top:22px;margin-top:22px}
@@ -95,8 +99,33 @@ textarea{min-height:120px;resize:vertical}
 .person-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
 .person-actions a{border:1px solid #263029;border-radius:8px;padding:9px;text-align:center}
 footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align:center;color:#8d948f;font-size:13px}
-@media(max-width:940px){.hero-grid,.booking-grid,.hero-proof,.service-grid,.form-grid{grid-template-columns:1fr}.side{position:static}.container{padding:0 18px}.hero{padding-top:42px}.booking-panel{padding:18px}.panel-title{display:block}.tag{margin-top:14px}}
+@media(max-width:940px){.hero-grid,.booking-grid,.hero-proof,.service-grid,.form-grid,.role-grid{grid-template-columns:1fr}.side{position:static}.container{padding:0 18px}.hero{padding-top:42px}.booking-panel{padding:18px}.panel-title{display:block}.tag{margin-top:14px}}
 </style>
+<link rel="preload" as="image" href="/assets/workshop/workshop-hero.jpg" fetchpriority="high">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Boka elscooter service i Örebro | Nordic E-Mobility">
+<meta name="twitter:description" content="Skicka serviceförfrågan för elscooter, elcykel, punktering, batteri eller elsystem i Örebro. Nordic E-Mobility återkommer med pris, tid och nästa steg.">
+<meta name="twitter:image" content="https://www.nordicemobility.se/assets/workshop/workshop-hero.jpg">
+<script type="application/ld+json" id="schema-breadcrumb-boka-service">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {
+      "@type": "ListItem",
+      "position": 1,
+      "name": "Start",
+      "item": "https://www.nordicemobility.se/"
+    },
+    {
+      "@type": "ListItem",
+      "position": 2,
+      "name": "Boka service",
+      "item": "https://www.nordicemobility.se/book-online/"
+    }
+  ]
+}
+</script>
 </head>
 <body>
 <header>
@@ -133,7 +162,11 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
     </div>
     <div class="urgent-box">
       <strong>Tillf&auml;lligt medan vi kopplar klart systemet</strong>
-      Formul&auml;ret skapar ett verkstads&auml;rende, men kalenderbokning och e-postbekr&auml;ftelse &auml;r inte f&auml;rdigkopplat &auml;nnu. SMS-bekr&auml;ftelse aktiveras separat. F&ouml;r att vara helt s&auml;ker p&aring; tid just nu: ring eller SMS:a Sebastian eller Lennart direkt.
+      Formul&auml;ret skapar ett verkstads&auml;rende, men kalenderbokning och e-postbekr&auml;ftelse &auml;r inte f&auml;rdigkopplat &auml;nnu. Beslut om pris, fels&ouml;kning och &aring;tg&auml;rd tas alltid av Sebastian.
+      <div class="role-grid">
+        <div class="role-card"><b>Sebastian</b><span>Tekniskt ansvarig. Tar beslut om diagnos, offert, prioritet och tyngre elfel.</span></div>
+        <div class="role-card"><b>Lennart</b><span>Praktikant och daglig mottagning under sommaren. Finns tillg&auml;nglig dagtid f&ouml;r inl&auml;mning, enklare &auml;renden och snabb kontakt.</span></div>
+      </div>
       <div class="contact-actions">
         <a href="tel:0700243319">Ring Sebastian</a>
         <a href="sms:+46700243319">SMS Sebastian</a>

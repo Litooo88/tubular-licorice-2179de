@@ -23,6 +23,26 @@ status = 301
 force = true
 
 [[redirects]]
+  from = "/service-page/el-elektronik"
+  to = "/elscooter-reparation-orebro/"
+  status = 301
+
+[[redirects]]
+  from = "/service-page/batteri"
+  to = "/batterireparation-elscooter/"
+  status = 301
+
+[[redirects]]
+  from = "/service-page/punktering"
+  to = "/punktering-elscooter-orebro/"
+  status = 301
+
+[[redirects]]
+  from = "/service-page/*"
+  to = "/book-online/"
+  status = 301
+
+[[redirects]]
   from = "/product-page/*"
   to = "/#produkter"
   status = 301
