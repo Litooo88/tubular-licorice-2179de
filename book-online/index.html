@@ -200,7 +200,7 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
             <option value="sms">SMS f&ouml;rst</option>
             <option value="email">E-post f&ouml;rst</option>
           </select></div>
-          <div class="form-group"><label for="preferredDate">&Ouml;nskad dag/tid</label><input id="preferredDate" name="preferredDate" type="text" placeholder="Ex. fredag eftermiddag, eller ring mig"></div>
+          <div class="form-group"><label for="preferredDate">N&auml;r kan du l&auml;mna in?</label><input id="preferredDate" name="preferredDate" type="datetime-local" required></div>
           <div class="form-group"><label for="preferred">Passar b&auml;st</label><select id="preferred" name="preferred">
             <option value="">V&auml;lj...</option>
             <option value="Morgon">Morgon</option>
@@ -311,4 +311,40 @@ if(bookingForm){
     const service=selectedService();
     if(!service){
       bookingStatus.className='status err';
-  
+      bookingStatus.textContent='V\u00e4lj en tj\u00e4nst f\u00f6rst.';
+      return;
+    }
+
+    const submitButton=bookingForm.querySelector('button[type="submit"]');
+    const formData=new FormData(bookingForm);
+    formData.set('service',service.value);
+    formData.set('smsConsent','yes');
+    const data=Object.fromEntries(formData.entries());
+
+    submitButton.disabled=true;
+    submitButton.textContent='Skickar...';
+    bookingStatus.className='status ok';
+    bookingStatus.textContent='Skapar verkstads\u00e4rendet...';
+
+    try{
+      const response=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      const result=await response.json().catch(()=>({}));
+      if(!response.ok) throw new Error(result.error||'Kunde inte skicka f\u00f6rfr\u00e5gan.');
+
+      submitNetlifyBackup(data).catch(()=>{});
+      bookingStatus.className='status ok';
+      bookingStatus.textContent=customerStatusMessage(result);
+      bookingForm.reset();
+      updateSummary();
+    }catch(error){
+      bookingStatus.className='status err';
+      bookingStatus.textContent=error.message||'N\u00e5got gick fel. Ring eller SMS:a oss direkt.';
+    }finally{
+      submitButton.disabled=false;
+      submitButton.textContent='Skicka f\u00f6rfr\u00e5gan';
+    }
+  });
+}
+</script>
+</body>
+</html>

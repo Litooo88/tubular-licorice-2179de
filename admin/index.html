@@ -9,7 +9,7 @@
 *{box-sizing:border-box}
 body{margin:0;font-family:Inter,Arial,sans-serif;background:#060806;color:#f5f7f4}
 a{color:#00c853}
-.wrap{max-width:1480px;margin:0 auto;padding:24px}
+.wrap{max-width:1720px;margin:0 auto;padding:24px}
 .top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px}
 h1{font-size:34px;margin:0 0 8px;letter-spacing:0}
 .muted{color:#9ea79f}
@@ -29,20 +29,33 @@ button:disabled{opacity:.6;cursor:wait}
 .stat b{font-size:28px;display:block;margin-top:4px}
 .toolbar{display:flex;gap:10px;align-items:end;justify-content:space-between;flex-wrap:wrap;margin:18px 0}
 .filters{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
-.board{display:grid;grid-template-columns:repeat(5,minmax(230px,1fr));gap:12px;align-items:start}
+.board{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;align-items:start}
 .column{padding:12px;min-height:220px}
 .column h2{font-size:14px;margin:0 0 10px;display:flex;align-items:center;justify-content:space-between}
 .count{background:#202820;border:1px solid #344038;border-radius:999px;padding:2px 8px;color:#b8c2ba}
-.case{padding:14px;margin-bottom:10px}
+.case{padding:16px;margin-bottom:12px}
 .case-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}
-.case h3{font-size:17px;margin:0}
+.case h3{font-size:20px;margin:0}
 .badge{display:inline-flex;border-radius:999px;background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.3);color:#aaffc6;font-size:11px;font-weight:900;padding:3px 8px;white-space:nowrap}
 .badge.warn{background:rgba(255,194,71,.12);border-color:rgba(255,194,71,.35);color:#ffe0a3}
 .meta{font-size:13px;color:#c5ccc7;line-height:1.5;margin:8px 0}
+.key-date{background:#061b0d;border:1px solid rgba(0,200,83,.42);border-radius:8px;padding:12px;margin:10px 0;color:#eaffef}
+.key-date span{display:block;color:#8ff5ae;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.key-date b{display:block;font-size:20px;line-height:1.25}
+.key-date.missing{background:rgba(255,194,71,.12);border-color:rgba(255,194,71,.45);color:#fff2cf}
+.key-date.missing span{color:#ffe0a3}
+.facts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
+.fact{border:1px solid #263029;border-radius:8px;padding:8px;background:#090d09}
+.fact span{display:block;color:#9ea79f;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+.fact b{display:block;margin-top:3px;color:#fff}
+.message-box{border-left:3px solid #00c853;padding:8px 0 8px 10px;margin:10px 0;color:#e4ebe6;line-height:1.5}
 .contact{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
 .contact a{display:block;border:1px solid #28322a;border-radius:8px;padding:8px;text-align:center;font-size:12px;font-weight:900;text-decoration:none}
 .contact.tools{grid-template-columns:repeat(3,1fr)}
 .edit{display:grid;gap:8px;margin-top:10px}
+.edit-wrap{border-top:1px solid #263029;margin-top:12px;padding-top:10px}
+.edit-wrap summary{cursor:pointer;font-weight:900;color:#9fffc1;margin-bottom:10px}
+.delete-case{background:#3b1014;color:#ffe1e3;border:1px solid #7c2730}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 textarea{min-height:66px;resize:vertical}
 .empty{border:1px dashed #313b33;border-radius:8px;padding:18px;text-align:center;color:#8f9991}
@@ -118,6 +131,21 @@ function dateShort(value){return value?new Date(value).toLocaleString('sv-SE',{d
 function html(value){return String(value||'').replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));}
 function showError(message){errorEl.textContent=message;errorEl.style.display=message?'block':'none';}
 function localInput(value){if(!value)return'';const d=new Date(value);if(Number.isNaN(d.getTime()))return'';const p=(n)=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;}
+function displayDate(value){
+  if(!value)return'Saknas';
+  const raw=String(value);
+  const normalized=/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(raw)?raw:'';
+  if(!normalized)return raw;
+  const date=new Date(normalized);
+  if(Number.isNaN(date.getTime()))return raw;
+  return date.toLocaleString('sv-SE',{weekday:'short',month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function needsBookingDate(value){
+  const raw=String(value||'').trim().toLowerCase();
+  if(!raw)return true;
+  if(raw.includes('n&auml;r som helst')||raw.includes('nar som helst')||raw.includes('när som helst'))return true;
+  return !(/\d{4}-\d{2}-\d{2}|\d{1,2}[\/-]\d{1,2}/.test(raw));
+}
 function labelFrom(value,labels){return labels[value]||value||'Saknas';}
 function notificationLabel(item,type){
   if(!item)return'Ej aktiverad';
@@ -151,6 +179,16 @@ function mailHref(item){
   if(!email)return'#';
   return `mailto:${email}?subject=${encodeURIComponent('Nordic E-Mobility - ärende '+shortId(item.id))}&body=${encodeURIComponent(customerTemplate(item))}`;
 }
+function customerTemplate(item){
+  const name=item.customer&&item.customer.name?item.customer.name:'';
+  const greeting=name?`Hej ${name}!`:'Hej!';
+  return `${greeting}\n\nVi har registrerat ditt \u00e4rende hos Nordic E-Mobility. \u00c4rende: ${shortId(item.id)}.\n\n\u00d6nskad inl\u00e4mning: ${displayDate(item.preferredDate)}\nTj\u00e4nst: ${item.service||'Servicef\u00f6rfr\u00e5gan'}\n\nSebastian g\u00e5r igenom underlaget och vi \u00e5terkommer med bekr\u00e4ftad tid, pris och n\u00e4sta steg innan arbete p\u00e5b\u00f6rjas.\n\nDirektkontakt: Sebastian 070-024 33 19 eller Lennart 072-260 77 53.\n\nNordic E-Mobility`;
+}
+function mailHref(item){
+  const email=String(item.customer&&item.customer.email||'').trim();
+  if(!email)return'#';
+  return `mailto:${email}?subject=${encodeURIComponent('Nordic E-Mobility - \u00e4rende '+shortId(item.id))}&body=${encodeURIComponent(customerTemplate(item))}`;
+}
 function icsDate(value){
   const date=new Date(value);
   const safe=Number.isNaN(date.getTime())?new Date():date;
@@ -158,7 +196,7 @@ function icsDate(value){
 }
 function icsEscape(value){return String(value||'').replace(/\\/g,'\\\\').replace(/\n/g,'\\n').replace(/,/g,'\\,').replace(/;/g,'\\;');}
 function calendarHref(item){
-  const start=new Date(item.promisedAt||item.intakeAt||item.createdAt||Date.now());
+  const start=new Date(item.preferredDate||item.promisedAt||item.intakeAt||item.createdAt||Date.now());
   const safeStart=Number.isNaN(start.getTime())?new Date():start;
   const end=new Date(safeStart.getTime()+30*60000);
   const summary=`Nordic verkstad: ${item.customer&&item.customer.name||'Kund'} - ${item.service||'Ärende'}`;
@@ -246,13 +284,21 @@ function caseCard(item){
   const calendar=notifications.calendar;
   const contactLabels={phone:'Ring kund',sms:'SMS f&ouml;rst',email:'E-post f&ouml;rst'};
   const logisticsLabels={dropoff:'L&auml;mnar in', 'pickup-question':'Fr&aring;ga om h&auml;mtning/l&auml;mning','not-sure':'Ej best&auml;mt'};
+  const missingPreferred=needsBookingDate(item.preferredDate);
   card.innerHTML=`
     <div class="case-head">
       <div><h3>${html(item.customer&&item.customer.name||'Ok&auml;nd kund')}</h3><div class="muted">${html(item.vehicle&&item.vehicle.model||'Ok&auml;nd modell')}</div></div>
       <span class="badge ${item.priority==='urgent'?'warn':''}">${html(statusLabels[item.status]||item.status)}</span>
     </div>
-    <div class="meta"><strong>${html(item.service||'Annat')}</strong><br>${html(item.message||'Ingen beskrivning')}</div>
-    <div class="meta">Ansvar: <strong>${html(owner.name)}</strong> &middot; ${html(owner.phone||'')}<br>V&auml;rde: <strong>${money(item.estimatedValue)}</strong><br>Kontakt: <strong>${labelFrom(item.contactMethod,contactLabels)}</strong><br>Inl&auml;mning: <strong>${labelFrom(item.logistics,logisticsLabels)}</strong><br>&Ouml;nskad tid: ${html(item.preferredDate)||'Saknas'}<br>Kund-SMS: <strong>${notificationLabel(sms,'sms')}</strong><br>Intern SMS: <strong>${notificationLabel(staffSms,'sms')}</strong><br>Kundmail: <strong>${notificationLabel(customerEmail,'email')}</strong><br>Verkstadsmail: <strong>${notificationLabel(workshopEmail,'email')}</strong><br>Kalender: <strong>${notificationLabel(calendar,'calendar')}</strong><br>Skapad: ${dateShort(item.createdAt)}<br>Inl&auml;mnad: ${dateShort(item.intakeAt)}</div>
+    <div class="key-date ${missingPreferred?'missing':''}"><span>Planerad inl&auml;mning</span><b>${missingPreferred?'Beh&ouml;ver bokas in':html(displayDate(item.preferredDate))}</b></div>
+    <div class="message-box"><strong>${html(item.service||'Annat')}</strong><br>${html(item.message||'Ingen beskrivning')}</div>
+    <div class="facts">
+      <div class="fact"><span>Ansvar</span><b>${html(owner.name)}</b></div>
+      <div class="fact"><span>V&auml;rde</span><b>${money(item.estimatedValue)}</b></div>
+      <div class="fact"><span>Inl&auml;mnad</span><b>${item.intakeAt?dateShort(item.intakeAt):'Nej'}</b></div>
+      <div class="fact"><span>Kontakt</span><b>${labelFrom(item.contactMethod,contactLabels)}</b></div>
+    </div>
+    <div class="meta">Telefon: <strong>${html(item.customer&&item.customer.phone||'Saknas')}</strong><br>E-post: <strong>${html(item.customer&&item.customer.email||'Saknas')}</strong><br>Inl&auml;mning: <strong>${labelFrom(item.logistics,logisticsLabels)}</strong><br>Kund-SMS: <strong>${notificationLabel(sms,'sms')}</strong> &middot; Intern SMS: <strong>${notificationLabel(staffSms,'sms')}</strong><br>Kundmail: <strong>${notificationLabel(customerEmail,'email')}</strong> &middot; Verkstadsmail: <strong>${notificationLabel(workshopEmail,'email')}</strong><br>Kalender: <strong>${notificationLabel(calendar,'calendar')}</strong><br>Skapad: ${dateShort(item.createdAt)}</div>
     <div class="contact">
       <a href="tel:${html(item.customer&&item.customer.phone||'')}">Ring kund</a>
       <a href="${html(smsHref(item))}">SMS-mall</a>
@@ -262,34 +308,62 @@ function caseCard(item){
       <a href="${html(calendarHref(item))}" download="nordic-${html(shortId(item.id))}.ics">Kalenderfil</a>
       <a href="mailto:${html(item.customer&&item.customer.email||'')}">Maila fritt</a>
     </div>
-    <form class="edit" data-id="${html(item.id)}">
-      <div class="row">
-        <div><label>Status</label><select name="status">${Object.entries(statusLabels).map(([value,label])=>`<option value="${value}" ${item.status===value?'selected':''}>${label}</option>`).join('')}</select></div>
-        <div><label>Ansvarig</label><select name="assignedTo"><option value="lennart" ${owner.key!=='sebastian'?'selected':''}>Lennart</option><option value="sebastian" ${owner.key==='sebastian'?'selected':''}>Sebastian</option></select></div>
-      </div>
-      <div class="row">
-        <div><label>V&auml;rde</label><input name="estimatedValue" type="number" min="0" step="1" value="${Number(item.estimatedValue||0)}"></div>
-        <div><label>Prioritet</label><select name="priority"><option value="normal" ${item.priority!=='urgent'?'selected':''}>Normal</option><option value="urgent" ${item.priority==='urgent'?'selected':''}>Akut</option></select></div>
-      </div>
-      <div class="row">
-        <div><label>Inl&auml;mnad</label><input name="intakeAt" type="datetime-local" value="${localInput(item.intakeAt)}"></div>
-        <div><label>Klar senast</label><input name="promisedAt" type="datetime-local" value="${localInput(item.promisedAt)}"></div>
-      </div>
-      <div><label>Intern notering</label><textarea name="note" placeholder="Ex: ringt kund, v&auml;ntar d&auml;ck, offert skickad"></textarea></div>
-      <button type="submit">Spara</button>
-    </form>
+    <details class="edit-wrap">
+      <summary>Redigera kund och &auml;rende</summary>
+      <form class="edit" data-id="${html(item.id)}">
+        <div class="row">
+          <div><label>Kundnamn</label><input name="customerName" value="${html(item.customer&&item.customer.name||'')}"></div>
+          <div><label>Telefon</label><input name="customerPhone" value="${html(item.customer&&item.customer.phone||'')}"></div>
+        </div>
+        <div class="row">
+          <div><label>E-post</label><input name="customerEmail" type="email" value="${html(item.customer&&item.customer.email||'')}"></div>
+          <div><label>Modell</label><input name="vehicleModel" value="${html(item.vehicle&&item.vehicle.model||'')}"></div>
+        </div>
+        <div class="row">
+          <div><label>Status</label><select name="status">${Object.entries(statusLabels).map(([value,label])=>`<option value="${value}" ${item.status===value?'selected':''}>${label}</option>`).join('')}</select></div>
+          <div><label>Ansvarig</label><select name="assignedTo"><option value="lennart" ${owner.key!=='sebastian'?'selected':''}>Lennart</option><option value="sebastian" ${owner.key==='sebastian'?'selected':''}>Sebastian</option></select></div>
+        </div>
+        <div class="row">
+          <div><label>Service / tj&auml;nst</label><input name="service" value="${html(item.service||'')}"></div>
+          <div><label>&Ouml;nskad inl&auml;mning</label><input name="preferredDate" value="${html(item.preferredDate||'')}" placeholder="2026-04-22 kl 10:00"></div>
+        </div>
+        <div class="row">
+          <div><label>Kontakt</label><select name="contactMethod"><option value="phone" ${item.contactMethod!=='sms'&&item.contactMethod!=='email'?'selected':''}>Ring kund</option><option value="sms" ${item.contactMethod==='sms'?'selected':''}>SMS f&ouml;rst</option><option value="email" ${item.contactMethod==='email'?'selected':''}>E-post f&ouml;rst</option></select></div>
+          <div><label>Inl&auml;mning</label><select name="logistics"><option value="dropoff" ${item.logistics==='dropoff'?'selected':''}>Kund l&auml;mnar in</option><option value="pickup-question" ${item.logistics==='pickup-question'?'selected':''}>Fr&aring;ga om h&auml;mtning</option><option value="not-sure" ${item.logistics==='not-sure'?'selected':''}>Ej best&auml;mt</option></select></div>
+        </div>
+        <div class="row">
+          <div><label>V&auml;rde</label><input name="estimatedValue" type="number" min="0" step="1" value="${Number(item.estimatedValue||0)}"></div>
+          <div><label>Prioritet</label><select name="priority"><option value="normal" ${item.priority!=='urgent'?'selected':''}>Normal</option><option value="urgent" ${item.priority==='urgent'?'selected':''}>Akut</option></select></div>
+        </div>
+        <div class="row">
+          <div><label>Faktiskt inl&auml;mnad</label><input name="intakeAt" type="datetime-local" value="${localInput(item.intakeAt)}"></div>
+          <div><label>Klar senast</label><input name="promisedAt" type="datetime-local" value="${localInput(item.promisedAt)}"></div>
+        </div>
+        <div><label>Felbeskrivning</label><textarea name="message">${html(item.message||'')}</textarea></div>
+        <div><label>Intern notering</label><textarea name="note" placeholder="Ex: ringt kund, v&auml;ntar d&auml;ck, offert skickad"></textarea></div>
+        <div class="row"><button type="submit">Spara &auml;ndringar</button><button type="button" class="delete-case">Radera &auml;rende</button></div>
+      </form>
+    </details>
     ${notes?`<div class="notes"><strong>Senaste noteringar</strong>${notes}</div>`:''}`;
-  card.querySelector('form').addEventListener('submit',async(event)=>{
+  const form=card.querySelector('form');
+  form.addEventListener('submit',async(event)=>{
     event.preventDefault();
-    const form=event.currentTarget;
-    const button=form.querySelector('button');
+    const button=form.querySelector('button[type="submit"]');
     button.disabled=true;
     button.textContent='Sparar...';
     try{
       await api('/api/cases/'+encodeURIComponent(form.dataset.id),{method:'PATCH',body:JSON.stringify(Object.fromEntries(new FormData(form).entries()))});
       await loadCases();
     }catch(error){showError(error.message)}
-    finally{button.disabled=false;button.textContent='Spara'}
+    finally{button.disabled=false;button.textContent='Spara \u00e4ndringar'}
+  });
+  card.querySelector('.delete-case').addEventListener('click',async()=>{
+    const name=item.customer&&item.customer.name?item.customer.name:'detta \u00e4rende';
+    if(!confirm('Radera '+name+' permanent? Anv\u00e4nd bara f\u00f6r tester/felregistreringar.'))return;
+    try{
+      await api('/api/cases/'+encodeURIComponent(item.id),{method:'DELETE'});
+      await loadCases();
+    }catch(error){showError(error.message)}
   });
   return card;
 }

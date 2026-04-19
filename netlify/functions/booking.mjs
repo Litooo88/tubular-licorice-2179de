@@ -369,20 +369,46 @@ const caseSummaryText = (caseItem) => [
   caseItem.message ? `Felbeskrivning: ${caseItem.message}` : "",
 ].filter(Boolean).join("\n");
 
+const formatPreferredDateForEmail = (value) => {
+  const raw = clean(value, 120);
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!match) return raw || "Inte angivet";
+  const [, year, month, day, hour, minute] = match.map(Number);
+  const date = new Date(year, month - 1, day, hour, minute);
+  if (Number.isNaN(date.getTime())) return raw;
+  return new Intl.DateTimeFormat("sv-SE", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    hour: "2-digit",
+    minute: "2-digit",
+  }).format(date);
+};
+
 const customerEmailHtml = (caseItem) => `
-  <div style="font-family:Arial,sans-serif;line-height:1.55;color:#111">
-    <h2>Vi har tagit emot din serviceforfragan</h2>
-    <p>Hej ${htmlEscape(caseItem.customer.name)},</p>
-    <p>Tack. Vi har tagit emot uppgifterna om din elscooter eller elcykel.</p>
-    <p><strong>Viktigt:</strong> detta ar inte en bekraftad verkstadstid forran vi har aterkommit med tid och nasta steg.</p>
-    <p>Vi bifogar en kalenderfil for den onskade tiden. Den ar bara preliminar tills vi har bekraftat.</p>
-    <p><strong>Arende:</strong> ${htmlEscape(shortCaseId(caseItem.id))}<br>
-    <strong>Tjanst:</strong> ${htmlEscape(caseItem.service)}<br>
-    <strong>Startansvar:</strong> ${htmlEscape(caseItem.assignedTo.name)}</p>
-    <p>For snabbast hantering kan du ringa eller SMS:a:<br>
-    Sebastian: <a href="tel:+46700243319">070-024 33 19</a><br>
-    Lennart: <a href="tel:+46722607753">072-260 77 53</a></p>
-    <p>Nordic E-Mobility<br>Pistolvagen 6, Orebro</p>
+  <div style="margin:0;background:#f4f6f2;padding:24px;font-family:Arial,sans-serif;color:#111">
+    <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #dfe5dc;border-radius:8px;overflow:hidden">
+      <div style="background:#061007;color:#fff;padding:22px 24px">
+        <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8ff5ae;font-weight:700">Nordic E-Mobility</div>
+        <h1 style="font-size:24px;line-height:1.2;margin:8px 0 0">Din servicef&ouml;rfr&aring;gan &auml;r mottagen</h1>
+      </div>
+      <div style="padding:24px;line-height:1.6">
+        <p>Hej ${htmlEscape(caseItem.customer.name)},</p>
+        <p>Vi har registrerat ditt &auml;rende i verkstadssystemet. Sebastian g&aring;r igenom underlaget och vi &aring;terkommer med bekr&auml;ftad inl&auml;mningstid, pris och n&auml;sta steg innan n&aring;got arbete p&aring;b&ouml;rjas.</p>
+        <div style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:16px;margin:18px 0">
+          <p style="margin:0 0 8px"><strong>&Auml;rende:</strong> ${htmlEscape(shortCaseId(caseItem.id))}</p>
+          <p style="margin:0 0 8px"><strong>Tj&auml;nst:</strong> ${htmlEscape(caseItem.service)}</p>
+          <p style="margin:0 0 8px"><strong>&Ouml;nskad inl&auml;mning:</strong> ${htmlEscape(formatPreferredDateForEmail(caseItem.preferredDate))}</p>
+          <p style="margin:0 0 8px"><strong>Fordon:</strong> ${htmlEscape(caseItem.vehicle.model || "Inte angivet")}</p>
+          <p style="margin:0"><strong>Startansvar:</strong> ${htmlEscape(caseItem.assignedTo.name)}</p>
+        </div>
+        <p><strong>Viktigt:</strong> kalenderfilen som bifogas &auml;r prelimin&auml;r. Den hj&auml;lper dig att komma ih&aring;g din &ouml;nskade tid, men verkstadstiden g&auml;ller f&ouml;rst n&auml;r vi har bekr&auml;ftat den.</p>
+        <p>Direktkontakt:<br>
+        Sebastian, tekniskt ansvarig: <a href="tel:+46700243319">070-024 33 19</a><br>
+        Lennart, mottagning dagtid: <a href="tel:+46722607753">072-260 77 53</a></p>
+        <p style="margin-bottom:0">Nordic E-Mobility<br>Pistolv&auml;gen 6, &Ouml;rebro</p>
+      </div>
+    </div>
   </div>
 `;
 
@@ -390,16 +416,20 @@ const sendCustomerEmail = async (caseItem) => {
   if (!caseItem.customer.email) return { status: "not_requested" };
   return resendEmail({
     to: [caseItem.customer.email],
-    subject: `Vi har tagit emot din serviceforfragan - ${shortCaseId(caseItem.id)}`,
+    subject: `Din servicef\u00f6rfr\u00e5gan hos Nordic E-Mobility - ${shortCaseId(caseItem.id)}`,
     html: customerEmailHtml(caseItem),
     text: [
-      "Vi har tagit emot din serviceforfragan hos Nordic E-Mobility.",
-      "Detta ar inte en bekraftad verkstadstid forran vi har aterkommit med tid och nasta steg.",
-      "Kalenderfilen ar bifogad som preliminar tid.",
+      "Hej " + caseItem.customer.name + ",",
       "",
+      "Vi har registrerat ditt \u00e4rende i verkstadssystemet.",
+      "Sebastian g\u00e5r igenom underlaget och vi \u00e5terkommer med bekr\u00e4ftad inl\u00e4mningstid, pris och n\u00e4sta steg innan n\u00e5got arbete p\u00e5b\u00f6rjas.",
+      "",
+      "Kalenderfilen \u00e4r prelimin\u00e4r tills tiden \u00e4r bekr\u00e4ftad.",
+      "",
+      "Detaljer:",
       caseSummaryText(caseItem),
       "",
-      "For snabbast hantering: Sebastian 070-024 33 19 eller Lennart 072-260 77 53.",
+      "Direktkontakt: Sebastian 070-024 33 19 eller Lennart 072-260 77 53.",
     ].join("\n"),
     attachments: [buildIcsAttachment(caseItem)],
     idempotencyKey: `${caseItem.id}-customer-email`,
@@ -416,10 +446,11 @@ const sendWorkshopEmail = async (caseItem) => {
 
   return resendEmail({
     to: recipients,
-    subject: `Ny verkstadsforfragan: ${caseItem.customer.name} - ${caseItem.service}`,
+    subject: `Ny bokning: ${caseItem.customer.name} - ${formatPreferredDateForEmail(caseItem.preferredDate)}`,
     html: `
       <div style="font-family:Arial,sans-serif;line-height:1.55;color:#111">
-        <h2>Ny verkstadsforfragan</h2>
+        <h2>Ny bokning / servicef&ouml;rfr&aring;gan</h2>
+        <p><strong>&Ouml;nskad inl&auml;mning:</strong> ${htmlEscape(formatPreferredDateForEmail(caseItem.preferredDate))}</p>
         <pre style="white-space:pre-wrap;background:#f5f5f5;padding:14px;border-radius:8px">${htmlEscape(caseSummaryText(caseItem))}</pre>
       </div>
     `,

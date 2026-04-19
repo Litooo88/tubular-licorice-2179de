@@ -8,6 +8,11 @@ const json = (body, status = 200) =>
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
 
+const STAFF = {
+  lennart: { key: "lennart", name: "Lennart", role: "Golv, mottagning och snabba jobb", phone: "072-260 77 53" },
+  sebastian: { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "070-024 33 19" },
+};
+
 const requireAdmin = (request) => {
   const expected = process.env.ADMIN_TOKEN || globalThis.Netlify?.env?.get?.("ADMIN_TOKEN");
   const provided = request.headers.get("x-admin-token") || "";
@@ -69,17 +74,31 @@ export default async (request, context) => {
       ...current,
       updatedAt: now,
       status: clean(body.status, 40) || current.status,
+      preferredDate: body.preferredDate === undefined ? current.preferredDate : clean(body.preferredDate, 120) || null,
+      preferredContactTime: body.preferredContactTime === undefined ? current.preferredContactTime : clean(body.preferredContactTime, 80) || null,
+      contactMethod: body.contactMethod === undefined ? current.contactMethod : clean(body.contactMethod, 40) || "phone",
+      logistics: body.logistics === undefined ? current.logistics : clean(body.logistics, 80) || "dropoff",
       intakeAt: body.intakeAt === undefined ? current.intakeAt : clean(body.intakeAt, 80) || null,
       promisedAt: body.promisedAt === undefined ? current.promisedAt : clean(body.promisedAt, 80) || null,
       estimatedValue: body.estimatedValue === undefined ? current.estimatedValue : Number(body.estimatedValue || 0),
       priority: body.priority === undefined ? current.priority : clean(body.priority, 40) || "normal",
+      service: body.service === undefined ? current.service : clean(body.service, 160) || current.service,
+      message: body.message === undefined ? current.message : clean(body.message, 3000),
+      customer: {
+        ...(current.customer || {}),
+        name: body.customerName === undefined ? current.customer?.name : clean(body.customerName, 140),
+        phone: body.customerPhone === undefined ? current.customer?.phone : clean(body.customerPhone, 80),
+        email: body.customerEmail === undefined ? current.customer?.email : clean(body.customerEmail, 180),
+      },
+      vehicle: {
+        ...(current.vehicle || {}),
+        model: body.vehicleModel === undefined ? current.vehicle?.model : clean(body.vehicleModel, 180),
+      },
     };
 
     if (body.assignedTo) {
       const assignee = clean(body.assignedTo, 40);
-      next.assignedTo = assignee === "sebastian"
-        ? { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "070-024 33 19" }
-        : { key: "lennart", name: "Lennart", role: "Golv, mottagning och snabba jobb", phone: "072-260 77 53" };
+      next.assignedTo = assignee === "sebastian" ? STAFF.sebastian : STAFF.lennart;
     }
 
     if (body.note) {
@@ -93,6 +112,16 @@ export default async (request, context) => {
 
     await store.setJSON(id, next);
     return json({ ok: true, case: next });
+  }
+
+  if (request.method === "DELETE") {
+    if (!id) return json({ error: "Missing case id" }, 400);
+
+    const current = await loadCase(store, id);
+    if (!current) return json({ error: "Not found" }, 404);
+
+    await store.delete(id);
+    return json({ ok: true, deleted: id });
   }
 
   return json({ error: "Method not allowed" }, 405);
