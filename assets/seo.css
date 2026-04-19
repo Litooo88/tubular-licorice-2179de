@@ -48,6 +48,8 @@ h1{max-width:840px;margin:0 0 18px;font-size:clamp(36px,7vw,72px);line-height:.9
 .grid-3{grid-template-columns:repeat(3,minmax(0,1fr))}
 .grid-4{grid-template-columns:repeat(4,minmax(0,1fr))}
 .card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px}
+.service-link{display:block;text-decoration:none;color:var(--text);transition:border-color .18s,transform .18s}
+.service-link:hover{border-color:rgba(0,200,83,.55);transform:translateY(-2px)}
 .card h3{margin:0 0 8px;font-size:20px;line-height:1.2}
 .card p{margin:0;color:var(--muted)}
 .price{color:var(--green-2);font-weight:900}
