@@ -614,6 +614,9 @@ export default async (request) => {
     if (!caseItem.customer.name || !caseItem.customer.phone) {
       return json({ error: "Namn och telefon kravs." }, 400);
     }
+    if (!caseItem.preferredDate) {
+      return json({ error: "Valj dag och klockslag for inlamning." }, 400);
+    }
     if (body.ownershipConfirm !== "yes") {
       return json({ error: "Du maste intyga att fordonet inte ar stoldgods." }, 400);
     }

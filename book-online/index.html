@@ -138,14 +138,14 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
 <section class="hero">
 <div class="container hero-grid">
   <div>
-    <span class="eyebrow">Automatisk bekr&auml;ftelse aktiv</span>
-    <h1>Servicef&ouml;rfr&aring;gan f&ouml;r verkstaden.</h1>
-    <p class="lead">Formul&auml;ret skapar ett verkstads&auml;rende direkt. Kunden f&aring;r bekr&auml;ftelse via e-post och SMS n&auml;r uppgifterna finns, och verkstaden f&aring;r avisering direkt.</p>
+    <span class="eyebrow">Verkstadsservice i &Ouml;rebro</span>
+    <h1>Boka hj&auml;lp med din elscooter eller elcykel.</h1>
+    <p class="lead">V&auml;lj n&auml;r du kan l&auml;mna in och beskriv felet kort. Vi &aring;terkommer med bekr&auml;ftad tid, pris och n&auml;sta steg innan arbetet p&aring;b&ouml;rjas.</p>
   </div>
   <div class="hero-proof">
-    <div class="proof"><b>1</b><span>Skicka information om problemet.</span></div>
-    <div class="proof"><b>2</b><span>Du f&aring;r SMS och e-postbekr&auml;ftelse.</span></div>
-    <div class="proof"><b>3</b><span>Sebastian bekr&auml;ftar slutlig tid och pris.</span></div>
+    <div class="proof"><b>1</b><span>V&auml;lj en inl&auml;mningstid som passar.</span></div>
+    <div class="proof"><b>2</b><span>Ber&auml;tta vad som h&auml;nt.</span></div>
+    <div class="proof"><b>3</b><span>Vi bekr&auml;ftar pris och n&auml;sta steg.</span></div>
   </div>
 </div>
 </section>
@@ -155,18 +155,14 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
   <div class="booking-panel" id="form">
     <div class="panel-title">
       <div>
-        <h2>Skicka servicef&ouml;rfr&aring;gan</h2>
-        <p>Fyll i det vi beh&ouml;ver f&ouml;r att f&ouml;rst&aring; felet. Du binder dig inte till reparation innan vi har bekr&auml;ftat pris och n&auml;sta steg.</p>
+        <h2>Boka inl&auml;mning</h2>
+        <p>Du binder dig inte till reparation. Vi kontrollerar uppgifterna och bekr&auml;ftar alltid pris och n&auml;sta steg f&ouml;rst.</p>
       </div>
       <span class="tag">Ej bekr&auml;ftad bokning</span>
     </div>
     <div class="urgent-box">
-      <strong>S&aring; fungerar bokningen just nu</strong>
-      Din f&ouml;rfr&aring;gan registreras direkt, kunden f&aring;r bekr&auml;ftelse och verkstaden f&aring;r avisering. &Ouml;nskad tid &auml;r prelimin&auml;r tills Sebastian har bekr&auml;ftat pris, fels&ouml;kning och n&auml;sta steg.
-      <div class="role-grid">
-        <div class="role-card"><b>Sebastian</b><span>Tekniskt ansvarig. Tar beslut om diagnos, offert, prioritet och tyngre elfel.</span></div>
-        <div class="role-card"><b>Lennart</b><span>Praktikant och daglig mottagning under sommaren. Finns tillg&auml;nglig dagtid f&ouml;r inl&auml;mning, enklare &auml;renden och snabb kontakt.</span></div>
-      </div>
+      <strong>Innan du l&auml;mnar in</strong>
+      Tiden du v&auml;ljer &auml;r en &ouml;nskad inl&auml;mningstid. Vi skickar en bekr&auml;ftelse och kontaktar dig om n&aring;got beh&ouml;ver justeras.
       <div class="contact-actions">
         <a href="tel:0700243319">Ring Sebastian</a>
         <a href="sms:+46700243319">SMS Sebastian</a>
@@ -180,12 +176,18 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
       <p style="display:none"><label>Fyll inte i detta: <input name="bot-field"></label></p>
 
       <div class="form-block">
-        <div class="block-head"><b>1</b><h3>V&auml;lj vad som ska g&ouml;ras</h3></div>
-        <div class="service-grid">
-          <label class="service-option"><input type="radio" name="service" value="Punktering (349 kr)" data-price="349" data-owner="Lennart" required><span class="service-box"><strong>Punktering / d&auml;ck</strong><span>Snabb hantering f&ouml;r slang, ventil, tubeless och hjulkontroll.</span><small>fr. 349 kr</small></span></label>
-          <label class="service-option"><input type="radio" name="service" value="Service (399 kr)" data-price="399" data-owner="Lennart"><span class="service-box"><strong>Service och genomg&aring;ng</strong><span>Bromsar, skruvar, glapp, d&auml;cktryck och s&auml;kerhetskontroll.</span><small>399 kr</small></span></label>
-          <label class="service-option"><input type="radio" name="service" value="Felsokning (349 kr)" data-price="349" data-owner="Lennart"><span class="service-box"><strong>Fels&ouml;kning</strong><span>Startar inte, felkod, display, laddning eller oklart problem.</span><small>349 kr</small></span></label>
-          <label class="service-option"><input type="radio" name="service" value="Batteri / BMS / controller" data-price="699" data-owner="Sebastian"><span class="service-box"><strong>Batteri / BMS / controller</strong><span>Tyngre elfel, laddproblem, r&auml;ckvidd, controller och prestandamodeller.</span><small>fr. 699 kr</small></span></label>
+        <div class="block-head"><b>1</b><h3>Vad g&auml;ller det?</h3></div>
+        <div class="form-grid">
+          <div class="form-group full">
+            <label for="service">Typ av hj&auml;lp</label>
+            <select id="service" name="service">
+              <option value="Os&auml;ker / bed&ouml;m p&aring; verkstad" data-price="0" data-owner="Lennart">Jag &auml;r os&auml;ker - bed&ouml;m p&aring; verkstad</option>
+              <option value="Punktering (349 kr)" data-price="349" data-owner="Lennart">Punktering / d&auml;ck - fr. 349 kr</option>
+              <option value="Service (399 kr)" data-price="399" data-owner="Lennart">Service och genomg&aring;ng - 399 kr</option>
+              <option value="Felsokning (349 kr)" data-price="349" data-owner="Lennart">Fels&ouml;kning - fr. 349 kr</option>
+              <option value="Batteri / BMS / controller" data-price="699" data-owner="Sebastian">Batteri, BMS eller controller - fr. 699 kr</option>
+            </select>
+          </div>
         </div>
       </div>
 
@@ -200,13 +202,10 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
             <option value="sms">SMS f&ouml;rst</option>
             <option value="email">E-post f&ouml;rst</option>
           </select></div>
-          <div class="form-group"><label for="preferredDate">N&auml;r kan du l&auml;mna in?</label><input id="preferredDate" name="preferredDate" type="datetime-local" required></div>
-          <div class="form-group"><label for="preferred">Passar b&auml;st</label><select id="preferred" name="preferred">
-            <option value="">V&auml;lj...</option>
-            <option value="Morgon">Morgon</option>
-            <option value="Eftermiddag">Eftermiddag</option>
-            <option value="Ring forst">Ring f&ouml;rst</option>
-          </select></div>
+          <div class="form-group"><label for="preferredDay">Inl&auml;mningsdag</label><select id="preferredDay" name="preferredDay" required></select></div>
+          <div class="form-group"><label for="preferredClock">Klockslag</label><select id="preferredClock" name="preferredClock" required></select></div>
+          <input id="preferredDate" name="preferredDate" type="hidden">
+          <input id="preferred" name="preferred" type="hidden" value="">
           <div class="form-group"><label for="urgency">Prioritet</label><select id="urgency" name="urgency">
             <option value="normal">Normal</option>
             <option value="urgent">Beh&ouml;ver snabb hj&auml;lp</option>
@@ -237,11 +236,11 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
   <aside class="side">
     <div class="summary-panel">
       <h2>Din bokning</h2>
-      <div class="summary-line"><span>Tj&auml;nst</span><strong id="sumService">V&auml;lj &auml;rende</strong></div>
-      <div class="summary-line"><span>Startpris</span><strong id="sumPrice">-</strong></div>
+      <div class="summary-line"><span>&Auml;rende</span><strong id="sumService">Bed&ouml;ms p&aring; verkstad</strong></div>
+      <div class="summary-line"><span>Startpris</span><strong id="sumPrice">Bed&ouml;ms</strong></div>
       <div class="summary-line"><span>Startansvar</span><strong id="sumOwner">-</strong></div>
       <div class="summary-line"><span>Bekr&auml;ftelse</span><strong id="sumSms">SMS + e-post</strong></div>
-      <div class="sms-pill"><b>Automatisk bekr&auml;ftelse</b><span>Vi skickar bekr&auml;ftelse till kunden och avisering till verkstaden. Kalenderfilen &auml;r prelimin&auml;r tills Sebastian bekr&auml;ftar tid och pris.</span></div>
+      <div class="sms-pill"><b>Efter att du skickat</b><span>Du f&aring;r en bekr&auml;ftelse. Vi kontaktar dig om tiden beh&ouml;ver justeras eller om vi beh&ouml;ver mer information.</span></div>
     </div>
     <div class="contact-card">
       <h3>Direktkontakt</h3>
@@ -259,27 +258,63 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
 <script>
 const bookingForm=document.querySelector('form[name="booking"]');
 const bookingStatus=document.getElementById('bookingStatus');
-const serviceInputs=[...document.querySelectorAll('input[name="service"]')];
+const serviceSelect=document.getElementById('service');
 const messageInput=document.getElementById('message');
 const smsConsent=document.getElementById('smsConsent');
+const preferredDay=document.getElementById('preferredDay');
+const preferredClock=document.getElementById('preferredClock');
+const preferredDateInput=document.getElementById('preferredDate');
+const preferredInput=document.getElementById('preferred');
 const sumService=document.getElementById('sumService');
 const sumPrice=document.getElementById('sumPrice');
 const sumOwner=document.getElementById('sumOwner');
 const sumSms=document.getElementById('sumSms');
 
-function selectedService(){return serviceInputs.find(input=>input.checked);}
+function pad(number){return String(number).padStart(2,'0');}
+function isoDay(date){return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;}
+function fillDayOptions(){
+  if(!preferredDay)return;
+  preferredDay.innerHTML='';
+  for(let offset=0;offset<21;offset+=1){
+    const date=new Date();
+    date.setDate(date.getDate()+offset);
+    const option=document.createElement('option');
+    option.value=isoDay(date);
+    option.textContent=date.toLocaleDateString('sv-SE',{weekday:'short',day:'numeric',month:'short'});
+    preferredDay.appendChild(option);
+  }
+}
+function fillTimeOptions(){
+  if(!preferredClock)return;
+  preferredClock.innerHTML='';
+  ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'].forEach((time)=>{
+    const option=document.createElement('option');
+    option.value=time;
+    option.textContent=time;
+    preferredClock.appendChild(option);
+  });
+}
+function selectedService(){return serviceSelect?serviceSelect.options[serviceSelect.selectedIndex]:null;}
 function ownerFor(service,message){
+  if(service&&service.dataset&&service.dataset.owner)return service.dataset.owner;
   const text=(((service&&service.value)||'')+' '+(message||'')).toLowerCase();
   return /batteri|bms|controller|elsystem|avancerad|ladd|display|felkod/.test(text)?'Sebastian':'Lennart';
 }
+function buildPreferredDate(){
+  if(!preferredDay||!preferredClock||!preferredDay.value||!preferredClock.value)return'';
+  return `${preferredDay.value}T${preferredClock.value}`;
+}
 function updateSummary(){
   const service=selectedService();
-  sumService.textContent=service?service.value:'VÃ¤lj Ã¤rende';
-  sumPrice.textContent=service?service.dataset.price+' kr':'-';
+  const price=service?Number(service.dataset.price||0):0;
+  sumService.textContent=service?service.textContent.replace(/\s+-\s+.*/,''):'Bed\u00f6ms p\u00e5 verkstad';
+  sumPrice.textContent=price?`fr. ${price} kr`:'Bed\u00f6ms';
   sumOwner.textContent=service?ownerFor(service,messageInput.value):'-';
   sumSms.textContent='SMS + e-post';
 }
-serviceInputs.forEach(input=>input.addEventListener('change',updateSummary));
+fillDayOptions();
+fillTimeOptions();
+if(serviceSelect)serviceSelect.addEventListener('change',updateSummary);
 messageInput.addEventListener('input',updateSummary);
 if(smsConsent) smsConsent.addEventListener('change',updateSummary);
 updateSummary();
@@ -309,15 +344,20 @@ if(bookingForm){
   bookingForm.addEventListener('submit',async(event)=>{
     event.preventDefault();
     const service=selectedService();
-    if(!service){
+    const preferredDate=buildPreferredDate();
+    if(!preferredDate){
       bookingStatus.className='status err';
-      bookingStatus.textContent='V\u00e4lj en tj\u00e4nst f\u00f6rst.';
+      bookingStatus.textContent='V\u00e4lj inl\u00e4mningsdag och klockslag.';
       return;
     }
 
     const submitButton=bookingForm.querySelector('button[type="submit"]');
+    preferredDateInput.value=preferredDate;
+    if(preferredInput)preferredInput.value=`Klockan ${preferredClock.value}`;
     const formData=new FormData(bookingForm);
-    formData.set('service',service.value);
+    formData.set('service',(service&&service.value)||'Os\u00e4ker / bed\u00f6m p\u00e5 verkstad');
+    formData.set('preferredDate',preferredDate);
+    formData.set('preferred',`Klockan ${preferredClock.value}`);
     formData.set('smsConsent','yes');
     const data=Object.fromEntries(formData.entries());
 
