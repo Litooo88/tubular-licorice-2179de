@@ -31,6 +31,9 @@ const looksLikeGooglePrivateKey = (value) => {
   const key = clean(value, 5000).replace(/\\n/g, "\n");
   return key.includes("BEGIN PRIVATE KEY") && key.includes("END PRIVATE KEY");
 };
+const WORKSHOP_LOCATION = "Pistolv\u00e4gen 6, \u00d6rebro";
+const WORKSHOP_ORGANIZER = "info@nordicemobility.se";
+const ICS_TIME_ZONE = "Europe/Stockholm";
 
 const STAFF = {
   lennart: {
@@ -90,6 +93,155 @@ const shortCaseId = (id) => id.replace(/^case_/, "").slice(0, 18).toUpperCase();
 const smsMessage = (caseItem) =>
   `Nordic E-Mobility: Bokning mottagen. Arende ${shortCaseId(caseItem.id)}. Ansvarig start: ${caseItem.assignedTo.name}. Vi kontaktar dig med tid och pris.`;
 
+const pad2 = (number) => String(number).padStart(2, "0");
+
+const parsePreferredLocalParts = (value) => {
+  const match = clean(value, 80).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!match) return null;
+  return {
+    year: Number(match[1]),
+    month: Number(match[2]),
+    day: Number(match[3]),
+    hour: Number(match[4]),
+    minute: Number(match[5]),
+  };
+};
+
+const localPartsFromDate = (date, timeZone = ICS_TIME_ZONE) => {
+  const parts = new Intl.DateTimeFormat("sv-SE", {
+    timeZone,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).formatToParts(date);
+  const value = Object.fromEntries(parts.filter((part) => part.type !== "literal").map((part) => [part.type, part.value]));
+  return {
+    year: Number(value.year),
+    month: Number(value.month),
+    day: Number(value.day),
+    hour: Number(value.hour),
+    minute: Number(value.minute),
+  };
+};
+
+const addMinutesToLocalParts = (parts, minutes) => {
+  const date = new Date(Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute));
+  date.setUTCMinutes(date.getUTCMinutes() + minutes);
+  return {
+    year: date.getUTCFullYear(),
+    month: date.getUTCMonth() + 1,
+    day: date.getUTCDate(),
+    hour: date.getUTCHours(),
+    minute: date.getUTCMinutes(),
+  };
+};
+
+const googleLocalDateTime = (parts) =>
+  `${parts.year}-${pad2(parts.month)}-${pad2(parts.day)}T${pad2(parts.hour)}:${pad2(parts.minute)}:00`;
+
+const icsLocalDateTime = (parts) =>
+  `${parts.year}${pad2(parts.month)}${pad2(parts.day)}T${pad2(parts.hour)}${pad2(parts.minute)}00`;
+
+const eventWindow = (caseItem) => {
+  const timeZone = env("GOOGLE_CALENDAR_TIMEZONE") || ICS_TIME_ZONE;
+  const duration = Math.max(15, Math.min(240, Number(env("GOOGLE_CALENDAR_DURATION_MINUTES") || 30)));
+  const startParts = parsePreferredLocalParts(caseItem.preferredDate) || localPartsFromDate(new Date(Date.now() + 5 * 60000), timeZone);
+  const endParts = addMinutesToLocalParts(startParts, duration);
+
+  return {
+    timeZone,
+    start: {
+      google: googleLocalDateTime(startParts),
+      ics: icsLocalDateTime(startParts),
+    },
+    end: {
+      google: googleLocalDateTime(endParts),
+      ics: icsLocalDateTime(endParts),
+    },
+  };
+};
+
+const icsStamp = (date = new Date()) =>
+  date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+
+const icsEscape = (value) =>
+  clean(value, 5000)
+    .replace(/\\/g, "\\\\")
+    .replace(/\r?\n/g, "\\n")
+    .replace(/;/g, "\\;")
+    .replace(/,/g, "\\,");
+
+const foldIcsLine = (line) => {
+  if (line.length <= 74) return line;
+  const chunks = [];
+  let remaining = line;
+  while (remaining.length > 74) {
+    chunks.push(remaining.slice(0, 74));
+    remaining = remaining.slice(74);
+  }
+  chunks.push(remaining);
+  return chunks.join("\r\n ");
+};
+
+const buildIcs = (caseItem) => {
+  const window = eventWindow(caseItem);
+  const summary = `Nordic E-Mobility: ${caseItem.service}`;
+  const description = [
+    "Serviceforfragan via nordicemobility.se.",
+    "Obs: tiden ar inte bekraftad forran Nordic E-Mobility har aterkommit.",
+    "",
+    caseSummaryText(caseItem),
+  ].join("\n");
+
+  const lines = [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Nordic E-Mobility//Workshop Booking//SV",
+    "CALSCALE:GREGORIAN",
+    "METHOD:PUBLISH",
+    "BEGIN:VTIMEZONE",
+    `TZID:${ICS_TIME_ZONE}`,
+    `X-LIC-LOCATION:${ICS_TIME_ZONE}`,
+    "BEGIN:DAYLIGHT",
+    "TZOFFSETFROM:+0100",
+    "TZOFFSETTO:+0200",
+    "TZNAME:CEST",
+    "DTSTART:19700329T020000",
+    "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU",
+    "END:DAYLIGHT",
+    "BEGIN:STANDARD",
+    "TZOFFSETFROM:+0200",
+    "TZOFFSETTO:+0100",
+    "TZNAME:CET",
+    "DTSTART:19701025T030000",
+    "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU",
+    "END:STANDARD",
+    "END:VTIMEZONE",
+    "BEGIN:VEVENT",
+    `UID:${icsEscape(caseItem.id)}`,
+    `DTSTAMP:${icsStamp()}`,
+    `DTSTART;TZID=${ICS_TIME_ZONE}:${window.start.ics}`,
+    `DTEND;TZID=${ICS_TIME_ZONE}:${window.end.ics}`,
+    `SUMMARY:${icsEscape(summary)}`,
+    `LOCATION:${icsEscape(WORKSHOP_LOCATION)}`,
+    `DESCRIPTION:${icsEscape(description)}`,
+    `ORGANIZER;CN=Nordic E-Mobility:mailto:${WORKSHOP_ORGANIZER}`,
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ];
+
+  return `${lines.map(foldIcsLine).join("\r\n")}\r\n`;
+};
+
+const buildIcsAttachment = (caseItem) => ({
+  filename: `nordic-emobility-${shortCaseId(caseItem.id).toLowerCase()}.ics`,
+  content: Buffer.from(buildIcs(caseItem), "utf8").toString("base64"),
+  content_type: "text/calendar; charset=utf-8; method=PUBLISH",
+});
+
 const sendSmsConfirmation = async (caseItem, requested) => {
   const to = normalizePhone(caseItem.customer.phone);
   const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
@@ -127,7 +279,7 @@ const sendSmsConfirmation = async (caseItem, requested) => {
   }
 };
 
-const resendEmail = async ({ to, subject, html, text, idempotencyKey }) => {
+const resendEmail = async ({ to, subject, html, text, attachments = [], idempotencyKey }) => {
   const apiKey = env("RESEND_API_KEY");
   const from = env("EMAIL_FROM");
   const replyTo = env("EMAIL_REPLY_TO") || env("WORKSHOP_EMAIL") || "";
@@ -143,6 +295,7 @@ const resendEmail = async ({ to, subject, html, text, idempotencyKey }) => {
     text,
   };
   if (replyTo) payload.reply_to = replyTo;
+  if (attachments.length) payload.attachments = attachments;
 
   try {
     const response = await fetch("https://api.resend.com/emails", {
@@ -185,6 +338,7 @@ const customerEmailHtml = (caseItem) => `
     <p>Hej ${htmlEscape(caseItem.customer.name)},</p>
     <p>Tack. Vi har tagit emot uppgifterna om din elscooter eller elcykel.</p>
     <p><strong>Viktigt:</strong> detta ar inte en bekraftad verkstadstid forran vi har aterkommit med tid och nasta steg.</p>
+    <p>Vi bifogar en kalenderfil for den onskade tiden. Den ar bara preliminar tills vi har bekraftat.</p>
     <p><strong>Arende:</strong> ${htmlEscape(shortCaseId(caseItem.id))}<br>
     <strong>Tjanst:</strong> ${htmlEscape(caseItem.service)}<br>
     <strong>Startansvar:</strong> ${htmlEscape(caseItem.assignedTo.name)}</p>
@@ -204,11 +358,13 @@ const sendCustomerEmail = async (caseItem) => {
     text: [
       "Vi har tagit emot din serviceforfragan hos Nordic E-Mobility.",
       "Detta ar inte en bekraftad verkstadstid forran vi har aterkommit med tid och nasta steg.",
+      "Kalenderfilen ar bifogad som preliminar tid.",
       "",
       caseSummaryText(caseItem),
       "",
       "For snabbast hantering: Sebastian 070-024 33 19 eller Lennart 072-260 77 53.",
     ].join("\n"),
+    attachments: [buildIcsAttachment(caseItem)],
     idempotencyKey: `${caseItem.id}-customer-email`,
   });
 };
@@ -231,6 +387,7 @@ const sendWorkshopEmail = async (caseItem) => {
       </div>
     `,
     text: caseSummaryText(caseItem),
+    attachments: [buildIcsAttachment(caseItem)],
     idempotencyKey: `${caseItem.id}-workshop-email`,
   });
 };
@@ -281,31 +438,11 @@ const getGoogleAccessToken = async () => {
   return googleTokenCache.token;
 };
 
-const formatLocalDateTime = (date) => {
-  const pad = (number) => String(number).padStart(2, "0");
-  return `${date.getUTCFullYear()}-${pad(date.getUTCMonth() + 1)}-${pad(date.getUTCDate())}T${pad(date.getUTCHours())}:${pad(date.getUTCMinutes())}:00`;
-};
-
 const calendarWindow = (caseItem) => {
-  const timeZone = env("GOOGLE_CALENDAR_TIMEZONE") || "Europe/Stockholm";
-  const duration = Math.max(15, Math.min(240, Number(env("GOOGLE_CALENDAR_DURATION_MINUTES") || 30)));
-  const preferred = clean(caseItem.preferredDate, 80);
-  const match = preferred.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
-  if (match) {
-    const [, year, month, day, hour, minute] = match.map(Number);
-    const start = new Date(Date.UTC(year, month - 1, day, hour, minute));
-    const end = new Date(start.getTime() + duration * 60000);
-    return {
-      start: { dateTime: formatLocalDateTime(start), timeZone },
-      end: { dateTime: formatLocalDateTime(end), timeZone },
-    };
-  }
-
-  const start = new Date(Date.now() + 5 * 60000);
-  const end = new Date(start.getTime() + duration * 60000);
+  const window = eventWindow(caseItem);
   return {
-    start: { dateTime: start.toISOString() },
-    end: { dateTime: end.toISOString() },
+    start: { dateTime: window.start.google, timeZone: window.timeZone },
+    end: { dateTime: window.end.google, timeZone: window.timeZone },
   };
 };
 
@@ -313,7 +450,10 @@ const createCalendarEvent = async (caseItem) => {
   const calendarId = env("GOOGLE_CALENDAR_ID");
   const serviceEmail = env("GOOGLE_SERVICE_ACCOUNT_EMAIL");
   const privateKey = env("GOOGLE_PRIVATE_KEY");
-  if (!calendarId || !serviceEmail || !looksLikeGooglePrivateKey(privateKey)) return { status: "not_configured" };
+  if (!calendarId || !serviceEmail || !looksLikeGooglePrivateKey(privateKey)) {
+    console.log("Calendar integration disabled, skipping");
+    return { status: "disabled", provider: "google-calendar", reason: "not_configured" };
+  }
 
   try {
     const token = await getGoogleAccessToken();
@@ -326,7 +466,7 @@ const createCalendarEvent = async (caseItem) => {
       },
       body: JSON.stringify({
         summary: `Ny verkstadsforfragan: ${caseItem.customer.name}`,
-        location: "Pistolvagen 6, Orebro",
+        location: WORKSHOP_LOCATION,
         description: caseSummaryText(caseItem),
         start: window.start,
         end: window.end,

@@ -121,7 +121,7 @@ function localInput(value){if(!value)return'';const d=new Date(value);if(Number.
 function labelFrom(value,labels){return labels[value]||value||'Saknas';}
 function notificationLabel(item,type){
   if(!item)return'Ej aktiverad';
-  const labels={sent:'Skickat',created:'Skapat',pending:'V&auml;ntar',not_configured:'Ej konfigurerat',not_requested:'Ej valt',invalid_phone:'Fel nummer',failed:'Misslyckat'};
+  const labels={sent:'Skickat',created:'Skapat',pending:'V&auml;ntar',disabled:'Avst&auml;ngd',not_configured:'Ej konfigurerat',not_requested:'Ej valt',invalid_phone:'Fel nummer',failed:'Misslyckat'};
   const label=labels[item.status]||item.status;
   if(type==='calendar'&&item.htmlLink)return `<a href="${html(item.htmlLink)}" target="_blank" rel="noopener">${label}</a>`;
   return label;
