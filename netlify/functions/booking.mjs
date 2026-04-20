@@ -31,6 +31,35 @@ const looksLikeGooglePrivateKey = (value) => {
   const key = clean(value, 5000).replace(/\\n/g, "\n");
   return key.includes("BEGIN PRIVATE KEY") && key.includes("END PRIVATE KEY");
 };
+const googleCalendarConfig = () => {
+  const calendarId = clean(env("GOOGLE_CALENDAR_ID"), 500);
+  const serviceEmail = clean(env("GOOGLE_SERVICE_ACCOUNT_EMAIL"), 240);
+  const privateKey = clean(env("GOOGLE_PRIVATE_KEY"), 5000).replace(/\\n/g, "\n");
+  const missing = [];
+  const invalid = [];
+
+  if (!calendarId) missing.push("GOOGLE_CALENDAR_ID");
+  if (!serviceEmail) missing.push("GOOGLE_SERVICE_ACCOUNT_EMAIL");
+  if (!privateKey) missing.push("GOOGLE_PRIVATE_KEY");
+
+  if (calendarId && /^https?:\/\//i.test(calendarId)) {
+    invalid.push("GOOGLE_CALENDAR_ID_must_be_calendar_id_not_url");
+  }
+  if (serviceEmail && !serviceEmail.endsWith(".iam.gserviceaccount.com")) {
+    invalid.push("GOOGLE_SERVICE_ACCOUNT_EMAIL_must_be_service_account_email");
+  }
+  if (privateKey && !looksLikeGooglePrivateKey(privateKey)) {
+    invalid.push("GOOGLE_PRIVATE_KEY_must_include_begin_and_end_private_key");
+  }
+
+  return {
+    ok: missing.length === 0 && invalid.length === 0,
+    missing,
+    invalid,
+    calendarId,
+    serviceEmail,
+  };
+};
 const WORKSHOP_LOCATION = "Pistolv\u00e4gen 6, \u00d6rebro";
 const WORKSHOP_ORGANIZER = "info@nordicemobility.se";
 const ICS_TIME_ZONE = "Europe/Stockholm";
@@ -471,7 +500,7 @@ const getGoogleAccessToken = async () => {
   }
 
   const serviceEmail = env("GOOGLE_SERVICE_ACCOUNT_EMAIL");
-  const privateKey = env("GOOGLE_PRIVATE_KEY").replace(/\\n/g, "\n");
+  const privateKey = env("GOOGLE_PRIVATE_KEY").replace(/\\n/g, "\n").trim();
   if (!serviceEmail || !looksLikeGooglePrivateKey(privateKey)) return "";
 
   const now = Math.floor(Date.now() / 1000);
@@ -515,18 +544,25 @@ const calendarWindow = (caseItem) => {
 };
 
 const createCalendarEvent = async (caseItem) => {
-  const calendarId = env("GOOGLE_CALENDAR_ID");
-  const serviceEmail = env("GOOGLE_SERVICE_ACCOUNT_EMAIL");
-  const privateKey = env("GOOGLE_PRIVATE_KEY");
-  if (!calendarId || !serviceEmail || !looksLikeGooglePrivateKey(privateKey)) {
-    console.log("Calendar integration disabled, skipping");
-    return { status: "disabled", provider: "google-calendar", reason: "not_configured" };
+  const calendarConfig = googleCalendarConfig();
+  if (!calendarConfig.ok) {
+    console.log("Calendar integration disabled, skipping", {
+      missing: calendarConfig.missing,
+      invalid: calendarConfig.invalid,
+    });
+    return {
+      status: "disabled",
+      provider: "google-calendar",
+      reason: "not_configured",
+      missing: calendarConfig.missing,
+      invalid: calendarConfig.invalid,
+    };
   }
 
   try {
     const token = await getGoogleAccessToken();
     const window = calendarWindow(caseItem);
-    const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events`, {
+    const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarConfig.calendarId)}/events`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
