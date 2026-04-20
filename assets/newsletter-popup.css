@@ -1,0 +1,122 @@
+.nem-newsletter-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:9999;
+  display:none;
+  align-items:flex-end;
+  justify-content:center;
+  padding:18px;
+  background:rgba(0,0,0,.58);
+}
+.nem-newsletter-backdrop.is-open{display:flex}
+.nem-newsletter-card{
+  width:min(520px,100%);
+  border:1px solid rgba(0,200,83,.32);
+  border-radius:8px;
+  background:#071009;
+  color:#fff;
+  box-shadow:0 20px 60px rgba(0,0,0,.42);
+  overflow:hidden;
+  font-family:Inter,Arial,sans-serif;
+}
+.nem-newsletter-top{
+  display:flex;
+  justify-content:space-between;
+  gap:16px;
+  padding:18px 18px 0;
+}
+.nem-newsletter-kicker{
+  display:inline-flex;
+  border:1px solid rgba(0,200,83,.4);
+  background:rgba(0,200,83,.12);
+  color:#b9ffd0;
+  border-radius:8px;
+  padding:6px 9px;
+  font-size:12px;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.nem-newsletter-close{
+  width:34px;
+  height:34px;
+  border:1px solid rgba(255,255,255,.16);
+  border-radius:8px;
+  background:#101811;
+  color:#fff;
+  cursor:pointer;
+  font-size:20px;
+  line-height:1;
+}
+.nem-newsletter-body{padding:14px 18px 18px}
+.nem-newsletter-body h2{
+  margin:0 0 8px;
+  font-size:28px;
+  line-height:1.05;
+  letter-spacing:0;
+}
+.nem-newsletter-body p{
+  margin:0 0 14px;
+  color:#cbd5ce;
+  line-height:1.5;
+}
+.nem-newsletter-form{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:10px;
+  margin-top:12px;
+}
+.nem-newsletter-form input{
+  min-width:0;
+  border:1px solid #2d3a31;
+  border-radius:8px;
+  background:#111812;
+  color:#fff;
+  padding:13px 14px;
+  font:inherit;
+}
+.nem-newsletter-form button{
+  border:0;
+  border-radius:8px;
+  background:#00c853;
+  color:#031005;
+  padding:13px 15px;
+  font:inherit;
+  font-weight:900;
+  cursor:pointer;
+}
+.nem-newsletter-form button:disabled{opacity:.7;cursor:wait}
+.nem-newsletter-small{
+  display:block;
+  margin-top:9px;
+  color:#8f9b93;
+  font-size:12px;
+  line-height:1.45;
+}
+.nem-newsletter-result{
+  display:none;
+  margin-top:12px;
+  border:1px solid rgba(0,200,83,.35);
+  background:rgba(0,200,83,.1);
+  border-radius:8px;
+  padding:13px;
+  color:#eaffef;
+  line-height:1.45;
+}
+.nem-newsletter-result.is-visible{display:block}
+.nem-newsletter-code{
+  display:inline-flex;
+  margin-top:8px;
+  border:1px dashed rgba(255,255,255,.35);
+  border-radius:8px;
+  padding:7px 10px;
+  background:#030603;
+  color:#b9ffd0;
+  font-weight:900;
+  letter-spacing:.08em;
+}
+@media(max-width:620px){
+  .nem-newsletter-backdrop{align-items:flex-end;padding:10px}
+  .nem-newsletter-form{grid-template-columns:1fr}
+  .nem-newsletter-body h2{font-size:24px}
+}

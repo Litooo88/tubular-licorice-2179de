@@ -75,6 +75,7 @@ export default async (request, context) => {
       updatedAt: now,
       status: clean(body.status, 40) || current.status,
       preferredDate: body.preferredDate === undefined ? current.preferredDate : clean(body.preferredDate, 120) || null,
+      discountCode: body.discountCode === undefined ? current.discountCode : clean(body.discountCode, 40) || null,
       preferredContactTime: body.preferredContactTime === undefined ? current.preferredContactTime : clean(body.preferredContactTime, 80) || null,
       contactMethod: body.contactMethod === undefined ? current.contactMethod : clean(body.contactMethod, 40) || "phone",
       logistics: body.logistics === undefined ? current.logistics : clean(body.logistics, 80) || "dropoff",

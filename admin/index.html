@@ -202,7 +202,7 @@ function customerTemplate(item){
   const greeting=name?`Hej ${name}!`:'Hej!';
   const timeLabel=item.logistics==='pickup-ready'?'Upph\u00e4mtning':'\u00d6nskad inl\u00e4mning';
   const addons=addonText(item);
-  return `${greeting}\n\nVi har registrerat ditt \u00e4rende hos Nordic E-Mobility. \u00c4rende: ${shortId(item.id)}.\n\n${timeLabel}: ${displayDate(item.preferredDate)}\nTj\u00e4nst: ${item.service||'Servicef\u00f6rfr\u00e5gan'}${addons?`\nTillval: ${addons}`:''}\n\nSebastian g\u00e5r igenom underlaget och vi \u00e5terkommer med bekr\u00e4ftad tid, pris och n\u00e4sta steg innan arbete p\u00e5b\u00f6rjas.\n\nDirektkontakt: Sebastian 070-024 33 19 eller Lennart 072-260 77 53.\n\nNordic E-Mobility`;
+  return `${greeting}\n\nVi har registrerat ditt \u00e4rende hos Nordic E-Mobility. \u00c4rende: ${shortId(item.id)}.\n\n${timeLabel}: ${displayDate(item.preferredDate)}\nTj\u00e4nst: ${item.service||'Servicef\u00f6rfr\u00e5gan'}${item.discountCode?`\nRabattkod: ${item.discountCode}`:''}${addons?`\nTillval: ${addons}`:''}\n\nSebastian g\u00e5r igenom underlaget och vi \u00e5terkommer med bekr\u00e4ftad tid, pris och n\u00e4sta steg innan arbete p\u00e5b\u00f6rjas.\n\nDirektkontakt: Sebastian 070-024 33 19 eller Lennart 072-260 77 53.\n\nNordic E-Mobility`;
 }
 function mailHref(item){
   const email=String(item.customer&&item.customer.email||'').trim();
@@ -227,6 +227,7 @@ function calendarHref(item){
     `E-post: ${item.customer&&item.customer.email||''}`,
     `Modell: ${item.vehicle&&item.vehicle.model||''}`,
     `Tjänst: ${item.service||''}`,
+    item.discountCode?`Rabattkod: ${item.discountCode}`:'',
     addonsFor(item).length?`Tillval: ${addonText(item)}`:'',
     `Önskad tid: ${item.preferredDate||''}`,
     `Problem: ${item.message||''}`
@@ -348,6 +349,7 @@ function caseCard(item){
       <div class="fact"><span>Ansvar</span><b>${html(owner.name)}</b></div>
       <div class="fact"><span>V&auml;rde</span><b>${money(item.estimatedValue)}</b></div>
       <div class="fact"><span>Tillval</span><b>${addonsFor(item).length?`${addonsFor(item).length} st (${money(addonTotal(item))})`:'Inga'}</b></div>
+      <div class="fact"><span>Rabattkod</span><b>${html(item.discountCode||'Ingen')}</b></div>
       <div class="fact"><span>Inl&auml;mnad</span><b>${item.intakeAt?dateShort(item.intakeAt):'Nej'}</b></div>
       <div class="fact"><span>Kontakt</span><b>${labelFrom(item.contactMethod,contactLabels)}</b></div>
     </div>
@@ -384,6 +386,7 @@ function caseCard(item){
           <div><label>Kontakt</label><select name="contactMethod"><option value="phone" ${item.contactMethod!=='sms'&&item.contactMethod!=='email'?'selected':''}>Ring kund</option><option value="sms" ${item.contactMethod==='sms'?'selected':''}>SMS f&ouml;rst</option><option value="email" ${item.contactMethod==='email'?'selected':''}>E-post f&ouml;rst</option></select></div>
           <div><label>Inl&auml;mning / upph&auml;mtning</label><select name="logistics"><option value="dropoff" ${item.logistics==='dropoff'?'selected':''}>Kund l&auml;mnar in</option><option value="pickup-ready" ${item.logistics==='pickup-ready'?'selected':''}>Kund h&auml;mtar f&auml;rdig scooter</option><option value="pickup-question" ${item.logistics==='pickup-question'?'selected':''}>Fr&aring;ga om h&auml;mtning</option><option value="not-sure" ${item.logistics==='not-sure'?'selected':''}>Ej best&auml;mt</option></select></div>
         </div>
+        <div><label>Rabattkod</label><input name="discountCode" value="${html(item.discountCode||'')}"></div>
         <div class="row">
           <div><label>V&auml;rde</label><input name="estimatedValue" type="number" min="0" step="1" value="${Number(item.estimatedValue||0)}"></div>
           <div><label>Prioritet</label><select name="priority"><option value="normal" ${item.priority!=='urgent'?'selected':''}>Normal</option><option value="urgent" ${item.priority==='urgent'?'selected':''}>Akut</option></select></div>

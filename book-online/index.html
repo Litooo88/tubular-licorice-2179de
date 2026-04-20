@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="sv">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Boka elscooter service i Ãrebro | Nordic E-Mobility</title>
-<meta name="description" content="Skicka servicefÃ¶rfrÃ¥gan fÃ¶r elscooter, elcykel, punktering, batteri eller elsystem i Ãrebro. Nordic E-Mobility Ã¥terkommer med pris, tid och nÃ¤sta steg.">
+<title>Boka elscooter service i &Ouml;rebro | Nordic E-Mobility</title>
+<meta name="description" content="Skicka servicef&ouml;rfr&aring;gan f&ouml;r elscooter, elcykel, punktering, batteri eller elsystem i &Ouml;rebro. Nordic E-Mobility &aring;terkommer med pris, tid och n&auml;sta steg.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://www.nordicemobility.se/book-online/">
 <meta property="og:type" content="website">
@@ -47,6 +47,12 @@ h1{font-size:clamp(34px,5vw,58px);line-height:.98;margin-bottom:18px;letter-spac
 .tag{display:inline-flex;border:1px solid rgba(255,189,74,.35);background:rgba(255,189,74,.1);color:#ffe0a2;border-radius:8px;padding:8px 10px;font-size:12px;font-weight:900;white-space:nowrap}
 .urgent-box{border:1px solid rgba(255,90,95,.55);background:rgba(255,90,95,.12);border-radius:8px;padding:16px;margin:0 0 18px;color:#ffe8e9;line-height:1.55}
 .urgent-box strong{display:block;color:#fff;font-size:18px;margin-bottom:6px}
+.hours-box{border:1px solid rgba(0,200,83,.38);background:rgba(0,200,83,.1);border-radius:8px;padding:16px;margin:0 0 18px;color:#e9fff0}
+.hours-box strong{display:block;color:#fff;font-size:18px;margin-bottom:8px}
+.hours-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
+.hours-item{border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.18);border-radius:8px;padding:11px}
+.hours-item span{display:block;color:#a7f3be;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:5px}
+.hours-item b{display:block;color:#fff;line-height:1.3}
 .role-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
 .role-card{border:1px solid rgba(255,255,255,.12);background:rgba(255,255,255,.04);border-radius:8px;padding:13px}
 .role-card b{display:block;color:#fff;margin-bottom:4px}
@@ -109,12 +115,13 @@ textarea{min-height:120px;resize:vertical}
 .person-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
 .person-actions a{border:1px solid #263029;border-radius:8px;padding:9px;text-align:center}
 footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align:center;color:#8d948f;font-size:13px}
-@media(max-width:940px){.hero-grid,.booking-grid,.hero-proof,.service-grid,.form-grid,.role-grid,.addon-grid{grid-template-columns:1fr}.side{position:static}.container{padding:0 18px}.hero{padding-top:42px}.booking-panel{padding:18px}.panel-title{display:block}.tag{margin-top:14px}.addon-title{display:block}.addon-title span{text-align:left;margin-top:4px}}
+@media(max-width:940px){.hero-grid,.booking-grid,.hero-proof,.service-grid,.form-grid,.role-grid,.addon-grid,.hours-grid{grid-template-columns:1fr}.side{position:static}.container{padding:0 18px}.hero{padding-top:42px}.booking-panel{padding:18px}.panel-title{display:block}.tag{margin-top:14px}.addon-title{display:block}.addon-title span{text-align:left;margin-top:4px}}
 </style>
+<link rel="stylesheet" href="/assets/newsletter-popup.css">
 <link rel="preload" as="image" href="/assets/workshop/workshop-hero.jpg" fetchpriority="high">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Boka elscooter service i Ãrebro | Nordic E-Mobility">
-<meta name="twitter:description" content="Skicka servicefÃ¶rfrÃ¥gan fÃ¶r elscooter, elcykel, punktering, batteri eller elsystem i Ãrebro. Nordic E-Mobility Ã¥terkommer med pris, tid och nÃ¤sta steg.">
+<meta name="twitter:title" content="Boka elscooter service i &Ouml;rebro | Nordic E-Mobility">
+<meta name="twitter:description" content="Skicka servicef&ouml;rfr&aring;gan f&ouml;r elscooter, elcykel, punktering, batteri eller elsystem i &Ouml;rebro. Nordic E-Mobility &aring;terkommer med pris, tid och n&auml;sta steg.">
 <meta name="twitter:image" content="https://www.nordicemobility.se/assets/workshop/workshop-hero.jpg">
 <script type="application/ld+json" id="schema-breadcrumb-boka-service">
 {
@@ -178,6 +185,15 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
         <a href="sms:+46700243319">SMS Sebastian</a>
         <a href="tel:0722607753">Ring Lennart</a>
         <a href="sms:+46722607753">SMS Lennart</a>
+      </div>
+    </div>
+    <div class="hours-box">
+      <strong>&Ouml;ppettider och inl&auml;mning</strong>
+      Verkstaden &auml;r bemannad 10:00-18:00. Du kan boka inl&auml;mning eller upph&auml;mtning 09:00-20:00.
+      <div class="hours-grid">
+        <div class="hours-item"><span>Verkstad</span><b>10:00-18:00</b></div>
+        <div class="hours-item"><span>Bokningsbara tider</span><b>09:00-20:00</b></div>
+        <div class="hours-item"><span>Lennart vardagar</span><b>10:00-18:00, lunch st&auml;ngt kl. 12:00</b></div>
       </div>
     </div>
 
@@ -246,6 +262,7 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
             <option value="urgent">Beh&ouml;ver snabb hj&auml;lp</option>
             <option value="quote">Vill ha offert f&ouml;rst</option>
           </select></div>
+          <div class="form-group"><label for="discountCode">Rabattkod</label><input id="discountCode" name="discountCode" autocomplete="off" placeholder="T.ex. NORDIC10"></div>
           <div class="form-group"><label for="logistics">Inl&auml;mning / upph&auml;mtning</label><select id="logistics" name="logistics">
             <option value="dropoff">Jag l&auml;mnar in p&aring; Pistolv&auml;gen 6</option>
             <option value="pickup-ready">Jag h&auml;mtar en f&auml;rdig scooter</option>
@@ -327,7 +344,7 @@ function fillDayOptions(){
 function fillTimeOptions(){
   if(!preferredClock)return;
   preferredClock.innerHTML='';
-  ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'].forEach((time)=>{
+  ['09:00','09:30','10:00','10:30','11:00','11:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'].forEach((time)=>{
     const option=document.createElement('option');
     option.value=time;
     option.textContent=time;
@@ -450,5 +467,6 @@ if(bookingForm){
   });
 }
 </script>
+<script src="/assets/newsletter-popup.js" defer></script>
 </body>
 </html>

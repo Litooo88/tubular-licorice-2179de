@@ -495,6 +495,7 @@ const caseSummaryText = (caseItem) => [
   caseItem.preferredContactTime ? `Passar bast: ${caseItem.preferredContactTime}` : "",
   `Kontakt: ${caseItem.contactMethod}`,
   `Logistik: ${logisticsLabel(caseItem.logistics)}`,
+  caseItem.discountCode ? `Rabattkod: ${caseItem.discountCode}` : "",
   addonSummaryText(caseItem.addons),
   `Uppskattat startvarde: ${caseItem.estimatedValue} kr`,
   caseItem.message ? `Felbeskrivning: ${caseItem.message}` : "",
@@ -534,6 +535,7 @@ const customerEmailHtml = (caseItem) => `
           <p style="margin:0 0 8px"><strong>${preferredTimeHtmlLabel(caseItem)}:</strong> ${htmlEscape(formatPreferredDateForEmail(caseItem.preferredDate))}</p>
           <p style="margin:0 0 8px"><strong>Logistik:</strong> ${htmlEscape(logisticsLabel(caseItem.logistics))}</p>
           <p style="margin:0 0 8px"><strong>Fordon:</strong> ${htmlEscape(caseItem.vehicle.model || "Inte angivet")}</p>
+          ${caseItem.discountCode ? `<p style="margin:0 0 8px"><strong>Rabattkod:</strong> ${htmlEscape(caseItem.discountCode)}</p>` : ""}
           ${addonSummaryHtml(caseItem.addons)}
           <p style="margin:0"><strong>Startansvar:</strong> ${htmlEscape(caseItem.assignedTo.name)}</p>
         </div>
@@ -791,6 +793,7 @@ export default async (request) => {
       priority: clean(body.urgency, 40) || "normal",
       preferredContactTime: clean(body.preferred, 80) || null,
       preferredDate: clean(body.preferredDate, 80) || null,
+      discountCode: clean(body.discountCode, 40) || null,
       contactMethod: clean(body.contactMethod, 40) || "phone",
       logistics: clean(body.logistics, 80) || "dropoff",
       assignedTo,
