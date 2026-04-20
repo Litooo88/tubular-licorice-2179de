@@ -152,7 +152,8 @@ function notificationLabel(item,type){
   const labels={sent:'Skickat',created:'Skapat',pending:'V&auml;ntar',disabled:'Avst&auml;ngd',not_configured:'Ej konfigurerat',not_requested:'Ej valt',invalid_phone:'Fel nummer',failed:'Misslyckat'};
   const label=labels[item.status]||item.status;
   if(type==='calendar'&&item.htmlLink)return `<a href="${html(item.htmlLink)}" target="_blank" rel="noopener">${label}</a>`;
-  return label;
+  const details=[item.error,(item.missing||[]).join(', '),(item.invalid||[]).join(', ')].filter(Boolean).join(' | ');
+  return details?`${label} <span style="color:#ffb4a8;font-size:12px">(${html(details)})</span>`:label;
 }
 function shortId(id){return String(id||'').replace(/^case_/,'').slice(0,18).toUpperCase();}
 function smsPhone(value){
