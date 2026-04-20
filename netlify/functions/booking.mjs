@@ -79,6 +79,18 @@ const STAFF = {
   },
 };
 
+const LOGISTICS_LABELS = {
+  dropoff: "Kund lamnar in pa Pistolvagen 6",
+  "pickup-ready": "Upphamtning av fardig scooter",
+  "pickup-question": "Fraga om hamtning/lamning",
+  "not-sure": "Ej bestamt",
+};
+
+const logisticsLabel = (value) => LOGISTICS_LABELS[value] || clean(value, 120) || "Ej angivet";
+const isReadyPickup = (caseItem) => caseItem.logistics === "pickup-ready";
+const preferredTimeLabel = (caseItem) => isReadyPickup(caseItem) ? "Onskad upphamtning" : "Onskad inlamning";
+const preferredTimeHtmlLabel = (caseItem) => isReadyPickup(caseItem) ? "&Ouml;nskad upph&auml;mtning" : "&Ouml;nskad inl&auml;mning";
+
 const estimateValue = (service) => {
   const normalized = service
     .normalize("NFD")
@@ -391,10 +403,10 @@ const caseSummaryText = (caseItem) => [
   caseItem.customer.email ? `E-post: ${caseItem.customer.email}` : "",
   `Tjanst: ${caseItem.service}`,
   caseItem.vehicle.model ? `Modell: ${caseItem.vehicle.model}` : "",
-  caseItem.preferredDate ? `Onskad tid: ${caseItem.preferredDate}` : "",
+  caseItem.preferredDate ? `${preferredTimeLabel(caseItem)}: ${caseItem.preferredDate}` : "",
   caseItem.preferredContactTime ? `Passar bast: ${caseItem.preferredContactTime}` : "",
   `Kontakt: ${caseItem.contactMethod}`,
-  `Inlamning: ${caseItem.logistics}`,
+  `Logistik: ${logisticsLabel(caseItem.logistics)}`,
   caseItem.message ? `Felbeskrivning: ${caseItem.message}` : "",
 ].filter(Boolean).join("\n");
 
@@ -423,11 +435,14 @@ const customerEmailHtml = (caseItem) => `
       </div>
       <div style="padding:24px;line-height:1.6">
         <p>Hej ${htmlEscape(caseItem.customer.name)},</p>
-        <p>Vi har registrerat ditt &auml;rende i verkstadssystemet. Sebastian g&aring;r igenom underlaget och vi &aring;terkommer med bekr&auml;ftad inl&auml;mningstid, pris och n&auml;sta steg innan n&aring;got arbete p&aring;b&ouml;rjas.</p>
+        <p>${isReadyPickup(caseItem)
+          ? "Vi har registrerat din f&ouml;rfr&aring;gan om upph&auml;mtning. Vi &aring;terkommer om tiden beh&ouml;ver justeras eller om n&aring;got beh&ouml;ver kompletteras innan du kommer."
+          : "Vi har registrerat ditt &auml;rende i verkstadssystemet. Sebastian g&aring;r igenom underlaget och vi &aring;terkommer med bekr&auml;ftad inl&auml;mningstid, pris och n&auml;sta steg innan n&aring;got arbete p&aring;b&ouml;rjas."}</p>
         <div style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:16px;margin:18px 0">
           <p style="margin:0 0 8px"><strong>&Auml;rende:</strong> ${htmlEscape(shortCaseId(caseItem.id))}</p>
           <p style="margin:0 0 8px"><strong>Tj&auml;nst:</strong> ${htmlEscape(caseItem.service)}</p>
-          <p style="margin:0 0 8px"><strong>&Ouml;nskad inl&auml;mning:</strong> ${htmlEscape(formatPreferredDateForEmail(caseItem.preferredDate))}</p>
+          <p style="margin:0 0 8px"><strong>${preferredTimeHtmlLabel(caseItem)}:</strong> ${htmlEscape(formatPreferredDateForEmail(caseItem.preferredDate))}</p>
+          <p style="margin:0 0 8px"><strong>Logistik:</strong> ${htmlEscape(logisticsLabel(caseItem.logistics))}</p>
           <p style="margin:0 0 8px"><strong>Fordon:</strong> ${htmlEscape(caseItem.vehicle.model || "Inte angivet")}</p>
           <p style="margin:0"><strong>Startansvar:</strong> ${htmlEscape(caseItem.assignedTo.name)}</p>
         </div>
@@ -451,7 +466,9 @@ const sendCustomerEmail = async (caseItem) => {
       "Hej " + caseItem.customer.name + ",",
       "",
       "Vi har registrerat ditt \u00e4rende i verkstadssystemet.",
-      "Sebastian g\u00e5r igenom underlaget och vi \u00e5terkommer med bekr\u00e4ftad inl\u00e4mningstid, pris och n\u00e4sta steg innan n\u00e5got arbete p\u00e5b\u00f6rjas.",
+      isReadyPickup(caseItem)
+        ? "Vi \u00e5terkommer om upph\u00e4mtningstiden beh\u00f6ver justeras."
+        : "Sebastian g\u00e5r igenom underlaget och vi \u00e5terkommer med bekr\u00e4ftad inl\u00e4mningstid, pris och n\u00e4sta steg innan n\u00e5got arbete p\u00e5b\u00f6rjas.",
       "",
       "Kalenderfilen \u00e4r prelimin\u00e4r tills tiden \u00e4r bekr\u00e4ftad.",
       "",
@@ -479,7 +496,7 @@ const sendWorkshopEmail = async (caseItem) => {
     html: `
       <div style="font-family:Arial,sans-serif;line-height:1.55;color:#111">
         <h2>Ny bokning / servicef&ouml;rfr&aring;gan</h2>
-        <p><strong>&Ouml;nskad inl&auml;mning:</strong> ${htmlEscape(formatPreferredDateForEmail(caseItem.preferredDate))}</p>
+        <p><strong>${preferredTimeHtmlLabel(caseItem)}:</strong> ${htmlEscape(formatPreferredDateForEmail(caseItem.preferredDate))}</p>
         <pre style="white-space:pre-wrap;background:#f5f5f5;padding:14px;border-radius:8px">${htmlEscape(caseSummaryText(caseItem))}</pre>
       </div>
     `,
@@ -569,7 +586,7 @@ const createCalendarEvent = async (caseItem) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        summary: `Ny verkstadsforfragan: ${caseItem.customer.name}`,
+        summary: `${isReadyPickup(caseItem) ? "Upphamtning fardig scooter" : "Ny verkstadsforfragan"}: ${caseItem.customer.name}`,
         location: WORKSHOP_LOCATION,
         description: caseSummaryText(caseItem),
         start: window.start,

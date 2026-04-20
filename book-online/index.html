@@ -186,6 +186,7 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
               <option value="Service (399 kr)" data-price="399" data-owner="Lennart">Service och genomg&aring;ng - 399 kr</option>
               <option value="Felsokning (349 kr)" data-price="349" data-owner="Lennart">Fels&ouml;kning - fr. 349 kr</option>
               <option value="Batteri / BMS / controller" data-price="699" data-owner="Sebastian">Batteri, BMS eller controller - fr. 699 kr</option>
+              <option value="Upphamtning av fardig scooter" data-price="0" data-owner="Lennart">Upph&auml;mtning av f&auml;rdig scooter</option>
             </select>
           </div>
         </div>
@@ -202,7 +203,7 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
             <option value="sms">SMS f&ouml;rst</option>
             <option value="email">E-post f&ouml;rst</option>
           </select></div>
-          <div class="form-group"><label for="preferredDay">Inl&auml;mningsdag</label><select id="preferredDay" name="preferredDay" required></select></div>
+          <div class="form-group"><label for="preferredDay">Dag</label><select id="preferredDay" name="preferredDay" required></select></div>
           <div class="form-group"><label for="preferredClock">Klockslag</label><select id="preferredClock" name="preferredClock" required></select></div>
           <input id="preferredDate" name="preferredDate" type="hidden">
           <input id="preferred" name="preferred" type="hidden" value="">
@@ -211,8 +212,9 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
             <option value="urgent">Beh&ouml;ver snabb hj&auml;lp</option>
             <option value="quote">Vill ha offert f&ouml;rst</option>
           </select></div>
-          <div class="form-group"><label for="logistics">Inl&auml;mning</label><select id="logistics" name="logistics">
+          <div class="form-group"><label for="logistics">Inl&auml;mning / upph&auml;mtning</label><select id="logistics" name="logistics">
             <option value="dropoff">Jag l&auml;mnar in p&aring; Pistolv&auml;gen 6</option>
+            <option value="pickup-ready">Jag h&auml;mtar en f&auml;rdig scooter</option>
             <option value="pickup-question">Fr&aring;ga om h&auml;mtning/l&auml;mning</option>
             <option value="not-sure">Vet inte &auml;n</option>
           </select></div>
@@ -222,7 +224,7 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
 
       <div class="form-block">
         <div class="block-head"><b>3</b><h3>Beskriv felet</h3></div>
-        <div class="form-group full"><label for="message">Vad har h&auml;nt?</label><textarea id="message" name="message" placeholder="Startar den? Laddar den? Felkod? Punktering fram/bak? Skriv g&auml;rna hur felet b&ouml;rjade."></textarea></div>
+        <div class="form-group full"><label for="message">Kort information</label><textarea id="message" name="message" placeholder="Beskriv felet kort, eller skriv vilket &auml;rende/scooter du vill h&auml;mta om den redan &auml;r klar."></textarea></div>
         <input type="hidden" id="smsConsent" name="smsConsent" value="yes">
         <label class="check-row legal"><input type="checkbox" id="ownershipConfirm" name="ownershipConfirm" value="yes" required><span><strong>Jag intygar att fordonet inte &auml;r st&ouml;ldgods.</strong><br>Jag kan visa kvitto, &auml;garuppgifter eller legitimation vid inl&auml;mning om verkstaden ber om det.</span></label>
       </div>
@@ -261,6 +263,7 @@ const bookingStatus=document.getElementById('bookingStatus');
 const serviceSelect=document.getElementById('service');
 const messageInput=document.getElementById('message');
 const smsConsent=document.getElementById('smsConsent');
+const logisticsSelect=document.getElementById('logistics');
 const preferredDay=document.getElementById('preferredDay');
 const preferredClock=document.getElementById('preferredClock');
 const preferredDateInput=document.getElementById('preferredDate');
@@ -312,9 +315,17 @@ function updateSummary(){
   sumOwner.textContent=service?ownerFor(service,messageInput.value):'-';
   sumSms.textContent='SMS + e-post';
 }
+function syncPickupService(){
+  if(!logisticsSelect||!serviceSelect)return;
+  if(logisticsSelect.value!=='pickup-ready')return;
+  const pickupOption=[...serviceSelect.options].find(option=>option.value==='Upphamtning av fardig scooter');
+  if(pickupOption)serviceSelect.value=pickupOption.value;
+  updateSummary();
+}
 fillDayOptions();
 fillTimeOptions();
 if(serviceSelect)serviceSelect.addEventListener('change',updateSummary);
+if(logisticsSelect)logisticsSelect.addEventListener('change',syncPickupService);
 messageInput.addEventListener('input',updateSummary);
 if(smsConsent) smsConsent.addEventListener('change',updateSummary);
 updateSummary();
