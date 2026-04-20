@@ -14,13 +14,16 @@ a{color:#00c853}
 h1{font-size:34px;margin:0 0 8px;letter-spacing:0}
 .muted{color:#9ea79f}
 .panel,.case,.login,.column{background:#101410;border:1px solid #28322a;border-radius:8px}
-.login{display:grid;grid-template-columns:1fr auto auto;gap:12px;align-items:end;padding:18px;margin-bottom:14px}
+.login{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:end;padding:18px;margin-bottom:14px}
 label{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#a8b2aa;font-weight:900;margin-bottom:6px}
 input,select,textarea{width:100%;background:#060806;border:1px solid #303a32;border-radius:8px;color:#fff;padding:10px 11px;font:inherit}
 button{border:0;border-radius:8px;background:#00c853;color:#031006;font-weight:900;padding:11px 14px;cursor:pointer}
 button.secondary{background:transparent;color:#fff;border:1px solid #d7ded9}
 button:disabled{opacity:.6;cursor:wait}
 .error{display:none;margin-bottom:14px;padding:13px 15px;border-radius:8px;background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}
+.calendar-result{display:none;margin-bottom:14px;padding:13px 15px;border-radius:8px;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.35);color:#eaffef;line-height:1.45}
+.calendar-result.bad{background:rgba(255,90,95,.12);border-color:rgba(255,90,95,.4);color:#ffe1e3}
+.calendar-result code{color:#fff;background:#050805;border:1px solid #263029;border-radius:6px;padding:2px 5px}
 .notice{padding:14px 16px;margin:0 0 14px;color:#d6ded8;line-height:1.5}
 .notice strong{color:#fff}
 .stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:16px 0}
@@ -79,9 +82,11 @@ textarea{min-height:66px;resize:vertical}
     <div><label for="token">Admin-token</label><input id="token" type="password" autocomplete="current-password" placeholder="ADMIN_TOKEN fr&aring;n Netlify"></div>
     <button id="saveToken">Spara token</button>
     <button class="secondary" id="refresh">Uppdatera</button>
+    <button class="secondary" id="calendarTest">Testa kalender</button>
   </section>
 
   <div class="error" id="error"></div>
+  <div class="calendar-result" id="calendarResult"></div>
   <section class="panel notice"><strong>Automatiskt fl&ouml;de:</strong> Nya bokningar sparas h&auml;r, kunden f&aring;r SMS/e-post n&auml;r uppgifterna finns, och verkstaden f&aring;r avisering. Kalenderfilen &auml;r prelimin&auml;r tills Sebastian bekr&auml;ftar tid och pris.</section>
 
   <section class="stats">
@@ -116,6 +121,7 @@ const statusLabels={new:'Ny',contacted:'Kontaktad',checked_in:'Inl&auml;mnad',di
 const tokenInput=document.getElementById('token');
 const boardEl=document.getElementById('board');
 const errorEl=document.getElementById('error');
+const calendarResultEl=document.getElementById('calendarResult');
 const ownerFilter=document.getElementById('ownerFilter');
 const statusFilter=document.getElementById('statusFilter');
 let cases=[];
@@ -123,6 +129,7 @@ let cases=[];
 tokenInput.value=localStorage.getItem('nordicAdminToken')||'';
 document.getElementById('saveToken').addEventListener('click',()=>{localStorage.setItem('nordicAdminToken',tokenInput.value.trim());loadCases();});
 document.getElementById('refresh').addEventListener('click',loadCases);
+document.getElementById('calendarTest').addEventListener('click',testCalendar);
 ownerFilter.addEventListener('change',render);
 statusFilter.addEventListener('change',render);
 
@@ -130,6 +137,7 @@ function money(value){return new Intl.NumberFormat('sv-SE',{style:'currency',cur
 function dateShort(value){return value?new Date(value).toLocaleString('sv-SE',{dateStyle:'short',timeStyle:'short'}):'Saknas';}
 function html(value){return String(value||'').replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));}
 function showError(message){errorEl.textContent=message;errorEl.style.display=message?'block':'none';}
+function showCalendarResult(result,bad=false){calendarResultEl.classList.toggle('bad',bad);calendarResultEl.innerHTML=result;calendarResultEl.style.display=result?'block':'none';}
 function localInput(value){if(!value)return'';const d=new Date(value);if(Number.isNaN(d.getTime()))return'';const p=(n)=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;}
 function displayDate(value){
   if(!value)return'Saknas';
@@ -247,6 +255,34 @@ async function loadCases(){
     document.getElementById('lastUpdated').textContent='Uppdaterad '+new Date().toLocaleTimeString('sv-SE');
   }catch(error){showError(error.message)}
   finally{refresh.disabled=false}
+}
+
+async function testCalendar(){
+  const button=document.getElementById('calendarTest');
+  try{
+    showError('');
+    showCalendarResult('Testar Google Calendar...');
+    button.disabled=true;
+    const data=await api('/api/calendar-self-test',{method:'POST',body:JSON.stringify({})});
+    if(data.ok){
+      showCalendarResult(`Kalenderkopplingen fungerar. Testevent skapades och raderades direkt.<br>Kalender: <code>${html(data.calendar&&data.calendar.summary||data.calendar&&data.calendar.id||'ok')}</code>`);
+      return;
+    }
+    const error=data.error||{};
+    const details=[
+      data.stage?`Steg: <code>${html(data.stage)}</code>`:'',
+      error.httpStatus?`HTTP: <code>${html(error.httpStatus)}</code>`:'',
+      error.reason?`Orsak: <code>${html(error.reason)}</code>`:'',
+      error.message?`Meddelande: <code>${html(error.message)}</code>`:'',
+      data.missing&&data.missing.length?`Saknas: <code>${html(data.missing.join(', '))}</code>`:'',
+      data.invalid&&data.invalid.length?`Fel format: <code>${html(data.invalid.join(', '))}</code>`:'',
+    ].filter(Boolean).join('<br>');
+    showCalendarResult(`Kalendertest misslyckades.<br>${details||'Ingen detalj returnerades.'}`,true);
+  }catch(error){
+    showCalendarResult(`Kalendertest misslyckades: <code>${html(error.message)}</code>`,true);
+  }finally{
+    button.disabled=false;
+  }
 }
 
 function render(){
