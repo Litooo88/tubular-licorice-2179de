@@ -86,10 +86,81 @@ const LOGISTICS_LABELS = {
   "not-sure": "Ej bestamt",
 };
 
+const ADDON_OPTIONS = [
+  {
+    id: "brake-pads-discount",
+    label: "Nya bromsbel\u00e4gg vid service",
+    price: 150,
+  },
+  {
+    id: "safety-check",
+    label: "Extra s\u00e4kerhetskontroll",
+    price: 199,
+  },
+  {
+    id: "tire-sealant",
+    label: "Punkteringsskydd / t\u00e4tningsv\u00e4tska",
+    price: 149,
+  },
+  {
+    id: "contact-clean",
+    label: "Reng\u00f6ring av laddport och kontakter",
+    price: 149,
+  },
+];
+
+const ADDON_BY_ID = new Map(ADDON_OPTIONS.map((option) => [option.id, option]));
+
 const logisticsLabel = (value) => LOGISTICS_LABELS[value] || clean(value, 120) || "Ej angivet";
 const isReadyPickup = (caseItem) => caseItem.logistics === "pickup-ready";
 const preferredTimeLabel = (caseItem) => isReadyPickup(caseItem) ? "Onskad upphamtning" : "Onskad inlamning";
 const preferredTimeHtmlLabel = (caseItem) => isReadyPickup(caseItem) ? "&Ouml;nskad upph&auml;mtning" : "&Ouml;nskad inl&auml;mning";
+
+const parseAddons = (value) => {
+  let raw = value;
+
+  if (typeof raw === "string") {
+    try {
+      raw = raw.trim() ? JSON.parse(raw) : [];
+    } catch {
+      raw = raw.split(",").map((item) => item.trim()).filter(Boolean);
+    }
+  }
+
+  if (!Array.isArray(raw)) return [];
+
+  const seen = new Set();
+  const addons = [];
+
+  raw.forEach((item) => {
+    const id = typeof item === "string" ? item : item?.id;
+    const option = ADDON_BY_ID.get(clean(id, 80));
+    if (!option || seen.has(option.id)) return;
+    seen.add(option.id);
+    addons.push({ ...option });
+  });
+
+  return addons;
+};
+
+const addonTotal = (addons = []) =>
+  addons.reduce((sum, item) => sum + Number(item.price || 0), 0);
+
+const addonSummaryText = (addons = []) => {
+  if (!addons.length) return "";
+  return [
+    `Tillval (${addonTotal(addons)} kr):`,
+    ...addons.map((item) => `- ${item.label}: +${item.price} kr`),
+  ].join("\n");
+};
+
+const addonSummaryHtml = (addons = []) => {
+  if (!addons.length) return "";
+  const rows = addons
+    .map((item) => `${htmlEscape(item.label)} (+${htmlEscape(item.price)} kr)`)
+    .join("<br>");
+  return `<p style="margin:0 0 8px"><strong>Tillval:</strong><br>${rows}</p>`;
+};
 
 const estimateValue = (service) => {
   const normalized = service
@@ -134,8 +205,10 @@ const shortCaseId = (id) => id.replace(/^case_/, "").slice(0, 18).toUpperCase();
 const smsMessage = (caseItem) =>
   `Nordic E-Mobility: Bokning mottagen. Arende ${shortCaseId(caseItem.id)}. Ansvarig start: ${caseItem.assignedTo.name}. Vi kontaktar dig med tid och pris.`;
 
-const workshopSmsMessage = (caseItem) =>
-  `Nytt Nordic-arende ${shortCaseId(caseItem.id)}: ${caseItem.customer.name}, ${caseItem.service}. Tel ${caseItem.customer.phone}. Ansvar: ${caseItem.assignedTo.name}.`;
+const workshopSmsMessage = (caseItem) => {
+  const addonInfo = caseItem.addons?.length ? ` Tillval ${caseItem.addons.length}.` : "";
+  return `Nytt Nordic-arende ${shortCaseId(caseItem.id)}: ${caseItem.customer.name}, ${caseItem.service}. Tel ${caseItem.customer.phone}. Varde ${caseItem.estimatedValue} kr.${addonInfo} Ansvar: ${caseItem.assignedTo.name}.`;
+};
 
 const smsConfig = () => ({
   username: env("ELKS_USERNAME") || env("SMS_API_USERNAME"),
@@ -422,6 +495,8 @@ const caseSummaryText = (caseItem) => [
   caseItem.preferredContactTime ? `Passar bast: ${caseItem.preferredContactTime}` : "",
   `Kontakt: ${caseItem.contactMethod}`,
   `Logistik: ${logisticsLabel(caseItem.logistics)}`,
+  addonSummaryText(caseItem.addons),
+  `Uppskattat startvarde: ${caseItem.estimatedValue} kr`,
   caseItem.message ? `Felbeskrivning: ${caseItem.message}` : "",
 ].filter(Boolean).join("\n");
 
@@ -459,6 +534,7 @@ const customerEmailHtml = (caseItem) => `
           <p style="margin:0 0 8px"><strong>${preferredTimeHtmlLabel(caseItem)}:</strong> ${htmlEscape(formatPreferredDateForEmail(caseItem.preferredDate))}</p>
           <p style="margin:0 0 8px"><strong>Logistik:</strong> ${htmlEscape(logisticsLabel(caseItem.logistics))}</p>
           <p style="margin:0 0 8px"><strong>Fordon:</strong> ${htmlEscape(caseItem.vehicle.model || "Inte angivet")}</p>
+          ${addonSummaryHtml(caseItem.addons)}
           <p style="margin:0"><strong>Startansvar:</strong> ${htmlEscape(caseItem.assignedTo.name)}</p>
         </div>
         <p><strong>Viktigt:</strong> kalenderfilen som bifogas &auml;r prelimin&auml;r. Den hj&auml;lper dig att komma ih&aring;g din &ouml;nskade tid, men verkstadstiden g&auml;ller f&ouml;rst n&auml;r vi har bekr&auml;ftat den.</p>
@@ -700,7 +776,8 @@ export default async (request) => {
     const now = new Date().toISOString();
     const id = `case_${now.replace(/[:.]/g, "-")}_${Math.random().toString(36).slice(2, 8)}`;
     const service = clean(body.service) || "Annat";
-    const estimatedValue = estimateValue(service);
+    const addons = parseAddons(body.addons);
+    const estimatedValue = estimateValue(service) + addonTotal(addons);
     const assignedTo = assignOwner(service, body.message);
     const smsRequested = body.smsConsent === "yes";
 
@@ -726,6 +803,7 @@ export default async (request) => {
         model: clean(body.scooter || body.vehicle),
       },
       service,
+      addons,
       estimatedValue,
       message: clean(body.message),
       intakeAt: null,
@@ -740,6 +818,7 @@ export default async (request) => {
       },
       timeline: [
         { at: now, event: `Bokning skapad via hemsidan. Startansvar: ${assignedTo.name}` },
+        ...(addons.length ? [{ at: now, event: `Tillval valda: ${addons.map((item) => item.label).join(", ")}.` }] : []),
       ],
     };
 

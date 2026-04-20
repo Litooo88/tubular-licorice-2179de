@@ -72,6 +72,16 @@ textarea{min-height:120px;resize:vertical}
 .service-box strong{display:block;font-size:16px;margin-bottom:8px}
 .service-box span{display:block;color:#aeb8b0;font-size:13px;line-height:1.45}
 .service-box small{display:inline-flex;color:#b9ffd0;font-weight:900;margin-top:12px}
+.addon-panel{margin-top:16px}
+.addon-title{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:10px}
+.addon-title strong{font-size:15px}
+.addon-title span{color:#aeb8b0;font-size:13px;line-height:1.4;text-align:right}
+.addon-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+.addon-option{display:flex;gap:10px;align-items:flex-start;border:1px solid #2f3a32;background:#0b0f0c;border-radius:8px;padding:13px;cursor:pointer}
+.addon-option:has(input:checked){border-color:var(--green);background:rgba(0,200,83,.1)}
+.addon-option input{width:auto;margin-top:3px}
+.addon-option span{display:block;color:#d8e1da;line-height:1.4;font-weight:800}
+.addon-option small{display:block;color:#b9ffd0;font-weight:900;margin-top:5px}
 .check-row{display:flex;gap:10px;align-items:flex-start;border:1px solid #2f3a32;background:#0b0f0c;border-radius:8px;padding:14px}
 .check-row input{width:auto;margin-top:2px}
 .check-row span{color:#c9d1cb;line-height:1.45}
@@ -99,7 +109,7 @@ textarea{min-height:120px;resize:vertical}
 .person-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
 .person-actions a{border:1px solid #263029;border-radius:8px;padding:9px;text-align:center}
 footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align:center;color:#8d948f;font-size:13px}
-@media(max-width:940px){.hero-grid,.booking-grid,.hero-proof,.service-grid,.form-grid,.role-grid{grid-template-columns:1fr}.side{position:static}.container{padding:0 18px}.hero{padding-top:42px}.booking-panel{padding:18px}.panel-title{display:block}.tag{margin-top:14px}}
+@media(max-width:940px){.hero-grid,.booking-grid,.hero-proof,.service-grid,.form-grid,.role-grid,.addon-grid{grid-template-columns:1fr}.side{position:static}.container{padding:0 18px}.hero{padding-top:42px}.booking-panel{padding:18px}.panel-title{display:block}.tag{margin-top:14px}.addon-title{display:block}.addon-title span{text-align:left;margin-top:4px}}
 </style>
 <link rel="preload" as="image" href="/assets/workshop/workshop-hero.jpg" fetchpriority="high">
 <meta name="twitter:card" content="summary_large_image">
@@ -190,6 +200,30 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
             </select>
           </div>
         </div>
+        <div class="addon-panel" aria-label="Tillval">
+          <div class="addon-title">
+            <strong>Vill du l&auml;gga till n&aring;got direkt?</strong>
+            <span>Valfritt. Vi bekr&auml;ftar alltid slutpris innan arbete.</span>
+          </div>
+          <div class="addon-grid">
+            <label class="addon-option">
+              <input type="checkbox" name="addons" value="brake-pads-discount" data-label="Nya bromsbel&auml;gg vid service" data-price="150">
+              <span>Nya bromsbel&auml;gg vid service<small>Rabattpris +150 kr</small></span>
+            </label>
+            <label class="addon-option">
+              <input type="checkbox" name="addons" value="safety-check" data-label="Extra s&auml;kerhetskontroll" data-price="199">
+              <span>Extra s&auml;kerhetskontroll<small>Bromsar, skruvar, glapp och d&auml;cktryck +199 kr</small></span>
+            </label>
+            <label class="addon-option">
+              <input type="checkbox" name="addons" value="tire-sealant" data-label="Punkteringsskydd / t&auml;tningsv&auml;tska" data-price="149">
+              <span>Punkteringsskydd i d&auml;ck<small>T&auml;tningsv&auml;tska vid service +149 kr</small></span>
+            </label>
+            <label class="addon-option">
+              <input type="checkbox" name="addons" value="contact-clean" data-label="Reng&ouml;ring av laddport och kontakter" data-price="149">
+              <span>Reng&ouml;ring av laddport<small>Kontakter och snabb genomg&aring;ng +149 kr</small></span>
+            </label>
+          </div>
+        </div>
       </div>
 
       <div class="form-block">
@@ -240,6 +274,7 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
       <h2>Din bokning</h2>
       <div class="summary-line"><span>&Auml;rende</span><strong id="sumService">Bed&ouml;ms p&aring; verkstad</strong></div>
       <div class="summary-line"><span>Startpris</span><strong id="sumPrice">Bed&ouml;ms</strong></div>
+      <div class="summary-line"><span>Tillval</span><strong id="sumAddons">Inga</strong></div>
       <div class="summary-line"><span>Startansvar</span><strong id="sumOwner">-</strong></div>
       <div class="summary-line"><span>Bekr&auml;ftelse</span><strong id="sumSms">SMS + e-post</strong></div>
       <div class="sms-pill"><b>Efter att du skickat</b><span>Du f&aring;r en bekr&auml;ftelse. Vi kontaktar dig om tiden beh&ouml;ver justeras eller om vi beh&ouml;ver mer information.</span></div>
@@ -270,8 +305,10 @@ const preferredDateInput=document.getElementById('preferredDate');
 const preferredInput=document.getElementById('preferred');
 const sumService=document.getElementById('sumService');
 const sumPrice=document.getElementById('sumPrice');
+const sumAddons=document.getElementById('sumAddons');
 const sumOwner=document.getElementById('sumOwner');
 const sumSms=document.getElementById('sumSms');
+const addonInputs=[...document.querySelectorAll('input[name="addons"]')];
 
 function pad(number){return String(number).padStart(2,'0');}
 function isoDay(date){return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;}
@@ -307,11 +344,24 @@ function buildPreferredDate(){
   if(!preferredDay||!preferredClock||!preferredDay.value||!preferredClock.value)return'';
   return `${preferredDay.value}T${preferredClock.value}`;
 }
+function collectAddons(){
+  return addonInputs
+    .filter((input)=>input.checked)
+    .map((input)=>({
+      id:input.value,
+      label:input.dataset.label||input.value,
+      price:Number(input.dataset.price||0)
+    }));
+}
 function updateSummary(){
   const service=selectedService();
   const price=service?Number(service.dataset.price||0):0;
+  const addons=collectAddons();
+  const addonTotal=addons.reduce((sum,item)=>sum+Number(item.price||0),0);
+  const total=price+addonTotal;
   sumService.textContent=service?service.textContent.replace(/\s+-\s+.*/,''):'Bed\u00f6ms p\u00e5 verkstad';
-  sumPrice.textContent=price?`fr. ${price} kr`:'Bed\u00f6ms';
+  sumPrice.textContent=total?`fr. ${total} kr`:'Bed\u00f6ms';
+  if(sumAddons)sumAddons.textContent=addons.length?`${addons.length} valda (+${addonTotal} kr)`:'Inga';
   sumOwner.textContent=service?ownerFor(service,messageInput.value):'-';
   sumSms.textContent='SMS + e-post';
 }
@@ -326,6 +376,7 @@ fillDayOptions();
 fillTimeOptions();
 if(serviceSelect)serviceSelect.addEventListener('change',updateSummary);
 if(logisticsSelect)logisticsSelect.addEventListener('change',syncPickupService);
+addonInputs.forEach((input)=>input.addEventListener('change',updateSummary));
 messageInput.addEventListener('input',updateSummary);
 if(smsConsent) smsConsent.addEventListener('change',updateSummary);
 updateSummary();
@@ -370,6 +421,8 @@ if(bookingForm){
     formData.set('preferredDate',preferredDate);
     formData.set('preferred',`Klockan ${preferredClock.value}`);
     formData.set('smsConsent','yes');
+    formData.delete('addons');
+    formData.set('addons',JSON.stringify(collectAddons()));
     const data=Object.fromEntries(formData.entries());
 
     submitButton.disabled=true;
