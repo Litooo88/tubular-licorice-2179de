@@ -211,6 +211,19 @@ const localPartsFromDate = (date, timeZone = ICS_TIME_ZONE) => {
   };
 };
 
+const localPartsToUtcIso = (parts, timeZone = ICS_TIME_ZONE) => {
+  let guess = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute);
+  for (let index = 0; index < 4; index += 1) {
+    const local = localPartsFromDate(new Date(guess), timeZone);
+    const wanted = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute);
+    const actual = Date.UTC(local.year, local.month - 1, local.day, local.hour, local.minute);
+    const delta = wanted - actual;
+    if (Math.abs(delta) < 1000) break;
+    guess += delta;
+  }
+  return new Date(guess).toISOString();
+};
+
 const addMinutesToLocalParts = (parts, minutes) => {
   const date = new Date(Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute));
   date.setUTCMinutes(date.getUTCMinutes() + minutes);
@@ -240,10 +253,12 @@ const eventWindow = (caseItem) => {
     start: {
       google: googleLocalDateTime(startParts),
       ics: icsLocalDateTime(startParts),
+      utc: localPartsToUtcIso(startParts, timeZone),
     },
     end: {
       google: googleLocalDateTime(endParts),
       ics: icsLocalDateTime(endParts),
+      utc: localPartsToUtcIso(endParts, timeZone),
     },
   };
 };
@@ -524,7 +539,7 @@ const getGoogleAccessToken = async () => {
   const header = base64Url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
   const claim = base64Url(JSON.stringify({
     iss: serviceEmail,
-    scope: "https://www.googleapis.com/auth/calendar.events",
+    scope: "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly",
     aud: "https://oauth2.googleapis.com/token",
     exp: now + 3600,
     iat: now,
@@ -558,6 +573,70 @@ const calendarWindow = (caseItem) => {
     start: { dateTime: window.start.google, timeZone: window.timeZone },
     end: { dateTime: window.end.google, timeZone: window.timeZone },
   };
+};
+
+const checkCalendarAvailability = async (caseItem) => {
+  const calendarConfig = googleCalendarConfig();
+  if (!calendarConfig.ok) {
+    return {
+      status: "failed",
+      provider: "google-calendar",
+      reason: "not_configured",
+      missing: calendarConfig.missing,
+      invalid: calendarConfig.invalid,
+    };
+  }
+
+  try {
+    const token = await getGoogleAccessToken();
+    if (!token) {
+      return { status: "failed", provider: "google-calendar", reason: "no_token" };
+    }
+
+    const window = eventWindow(caseItem);
+    const response = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        timeMin: window.start.utc,
+        timeMax: window.end.utc,
+        timeZone: window.timeZone,
+        items: [{ id: calendarConfig.calendarId }],
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      return { status: "failed", provider: "google-calendar", error: clean(body.error?.message || response.statusText, 240) };
+    }
+
+    const calendar = body.calendars?.[calendarConfig.calendarId];
+    const errors = calendar?.errors || [];
+    if (errors.length) {
+      return {
+        status: "failed",
+        provider: "google-calendar",
+        error: clean(errors.map((item) => item.reason || item.message).filter(Boolean).join(", "), 240),
+      };
+    }
+
+    const busy = calendar?.busy || [];
+    return {
+      status: "checked",
+      provider: "google-calendar",
+      available: busy.length === 0,
+      busy: busy.slice(0, 3).map((item) => ({
+        start: clean(item.start, 80),
+        end: clean(item.end, 80),
+      })),
+      checkedAt: new Date().toISOString(),
+    };
+  } catch (error) {
+    return { status: "failed", provider: "google-calendar", error: clean(error.message, 240) };
+  }
 };
 
 const createCalendarEvent = async (caseItem) => {
@@ -674,17 +753,44 @@ export default async (request) => {
       return json({ error: "Du maste intyga att fordonet inte ar stoldgods." }, 400);
     }
 
+    const availability = await checkCalendarAvailability(caseItem);
+    caseItem.notifications.calendarAvailability = availability;
+    if (availability.status !== "checked") {
+      return json({
+        error: "Kunde inte kontrollera verkstadskalendern just nu. Ring eller SMS:a oss sa bokar vi tiden manuellt.",
+        availability,
+      }, 503);
+    }
+    if (!availability.available) {
+      return json({
+        error: "Tiden ar redan upptagen i verkstadskalendern. Valj en annan tid eller kontakta oss direkt.",
+        availability,
+      }, 409);
+    }
+    caseItem.timeline.push({ at: availability.checkedAt, event: "Kalendern kontrollerad: tiden var ledig." });
+
     const store = getStore({ name: "workshop-cases", consistency: "strong" });
     await store.setJSON(id, caseItem);
 
-    const [sms, staffSms, customerEmail, workshopEmail, calendar] = await Promise.all([
+    const calendar = await createCalendarEvent(caseItem);
+    caseItem.notifications.calendar = calendar;
+    if (calendar.status !== "created") {
+      caseItem.timeline.push({ at: new Date().toISOString(), event: `Kalenderhandelse kunde inte skapas: ${calendar.error || calendar.reason || "okant fel"}` });
+      await store.setJSON(id, caseItem);
+      return json({
+        error: "Tiden sag ledig ut men kunde inte bokas i kalendern. Ring eller SMS:a oss sa bokar vi manuellt.",
+        calendar,
+      }, 503);
+    }
+    caseItem.timeline.push({ at: calendar.createdAt, event: "Kalenderhandelse skapad for verkstaden." });
+
+    const [sms, staffSms, customerEmail, workshopEmail] = await Promise.all([
       sendSmsConfirmation(caseItem, smsRequested),
       sendWorkshopSmsNotification(caseItem),
       sendCustomerEmail(caseItem),
       sendWorkshopEmail(caseItem),
-      createCalendarEvent(caseItem),
     ]);
-    caseItem.notifications = { sms, staffSms, customerEmail, workshopEmail, calendar };
+    caseItem.notifications = { sms, staffSms, customerEmail, workshopEmail, calendar, calendarAvailability: availability };
     if (sms.status === "sent") {
       caseItem.timeline.push({ at: sms.sentAt, event: "SMS-bekraftelse skickad till kund." });
     }
@@ -696,9 +802,6 @@ export default async (request) => {
     }
     if (workshopEmail.status === "sent") {
       caseItem.timeline.push({ at: workshopEmail.sentAt, event: "Intern e-post skickad till verkstaden." });
-    }
-    if (calendar.status === "created") {
-      caseItem.timeline.push({ at: calendar.createdAt, event: "Kalenderhandelse skapad for verkstaden." });
     }
     await store.setJSON(id, caseItem);
 
