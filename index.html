@@ -542,7 +542,12 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   .trust-grid{grid-template-columns:1fr}
   .calc-wrap{grid-template-columns:1fr}
   .blog-grid{grid-template-columns:1fr}
-  .products-grid{grid-template-columns:1fr 1fr}
+  .products .products-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px}
+  .prod{display:flex;flex-direction:column;min-width:0}
+  .prod-img{width:100%;height:auto!important;aspect-ratio:1/1;min-height:0}
+  .prod-img img{width:100%!important;height:100%!important;object-fit:contain!important;padding:8px}
+  .prod-body{display:flex;flex-direction:column;flex:1}
+  .prod-btn{margin-top:auto}
   .f-grid{grid-template-columns:1fr 1fr}
   .steps-grid{grid-template-columns:1fr 1fr}
   .usp-grid{grid-template-columns:1fr}
