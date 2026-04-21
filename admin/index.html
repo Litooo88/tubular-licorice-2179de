@@ -32,6 +32,7 @@ button:disabled{opacity:.6;cursor:wait}
 .stat b{font-size:28px;display:block;margin-top:4px}
 .toolbar{display:flex;gap:10px;align-items:end;justify-content:space-between;flex-wrap:wrap;margin:18px 0}
 .filters{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
+.filters .search-filter{min-width:280px}
 .board{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;align-items:start}
 .column{padding:12px;min-height:220px}
 .column h2{font-size:14px;margin:0 0 10px;display:flex;align-items:center;justify-content:space-between}
@@ -39,6 +40,9 @@ button:disabled{opacity:.6;cursor:wait}
 .case{padding:16px;margin-bottom:12px}
 .case-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}
 .case h3{font-size:20px;margin:0}
+.customer-line{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}
+.customer-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #2b342d;border-radius:999px;padding:5px 9px;background:#0a0f0a;color:#dce5de;font-size:12px;font-weight:800}
+.customer-chip strong{color:#fff}
 .badge{display:inline-flex;border-radius:999px;background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.3);color:#aaffc6;font-size:11px;font-weight:900;padding:3px 8px;white-space:nowrap}
 .badge.warn{background:rgba(255,194,71,.12);border-color:rgba(255,194,71,.35);color:#ffe0a3}
 .meta{font-size:13px;color:#c5ccc7;line-height:1.5;margin:8px 0}
@@ -79,7 +83,7 @@ textarea{min-height:66px;resize:vertical}
 .contact-state.waiting{color:#cce2ff}
 .contact-state.waiting::before{background:#4ba3ff;box-shadow:0 0 0 3px rgba(75,163,255,.18)}
 @media(max-width:1200px){.board{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:760px){.wrap{padding:14px}.login,.board,.stats,.row{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}}
+@media(max-width:760px){.wrap{padding:14px}.login,.board,.stats,.row{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}}
 </style>
 </head>
 <body>
@@ -87,7 +91,7 @@ textarea{min-height:66px;resize:vertical}
   <div class="top">
     <div>
       <h1>Verkstadsdashboard</h1>
-      <p class="muted">Aktiva kunder, ansvarig person, inl&auml;mning/upph&auml;mtning, status, v&auml;rde och n&auml;sta steg.</p>
+      <p class="muted">Se direkt vilka kunder som ligger i pipen, deras kontaktuppgifter, planerad tid och n&auml;sta steg.</p>
     </div>
     <a href="/book-online/">Testa bokning</a>
   </div>
@@ -115,6 +119,7 @@ textarea{min-height:66px;resize:vertical}
   <div class="toolbar">
     <div class="muted" id="lastUpdated">Inte laddad &auml;nnu</div>
     <div class="filters">
+      <div class="search-filter"><label for="searchFilter">S&ouml;k kund</label><input id="searchFilter" type="search" placeholder="Namn, telefon, modell eller e-post"></div>
       <div><label for="ownerFilter">Ansvarig</label><select id="ownerFilter"><option value="">Alla</option><option value="lennart">Lennart</option><option value="sebastian">Sebastian</option></select></div>
       <div><label for="statusFilter">Status</label><select id="statusFilter"><option value="">Alla</option><option value="new">Ny</option><option value="contacted">Kontaktad</option><option value="waiting_customer">V&auml;ntar kund</option><option value="checked_in">Inl&auml;mnad</option><option value="diagnosing">Diagnos</option><option value="repairing">Reparerar</option><option value="waiting_parts">V&auml;ntar delar</option><option value="ready">Klar</option><option value="done">Avslutad</option></select></div>
     </div>
@@ -138,6 +143,7 @@ const errorEl=document.getElementById('error');
 const calendarResultEl=document.getElementById('calendarResult');
 const ownerFilter=document.getElementById('ownerFilter');
 const statusFilter=document.getElementById('statusFilter');
+const searchFilter=document.getElementById('searchFilter');
 let cases=[];
 let isLoadingCases=false;
 
@@ -147,6 +153,7 @@ document.getElementById('refresh').addEventListener('click',loadCases);
 document.getElementById('calendarTest').addEventListener('click',testCalendar);
 ownerFilter.addEventListener('change',render);
 statusFilter.addEventListener('change',render);
+searchFilter.addEventListener('input',render);
 
 function money(value){return new Intl.NumberFormat('sv-SE',{style:'currency',currency:'SEK',maximumFractionDigits:0}).format(Number(value||0));}
 function dateShort(value){return value?new Date(value).toLocaleString('sv-SE',{dateStyle:'short',timeStyle:'short'}):'Saknas';}
@@ -379,7 +386,22 @@ function render(){
 
   const owner=ownerFilter.value;
   const status=statusFilter.value;
-  let visible=cases.filter(item=>!owner || (item.assignedTo&&item.assignedTo.key)===owner).filter(item=>!status || item.status===status);
+  const search=String(searchFilter.value||'').trim().toLowerCase();
+  let visible=cases
+    .filter(item=>!owner || (item.assignedTo&&item.assignedTo.key)===owner)
+    .filter(item=>!status || item.status===status)
+    .filter(item=>{
+      if(!search)return true;
+      const haystack=[
+        item.customer&&item.customer.name,
+        item.customer&&item.customer.phone,
+        item.customer&&item.customer.email,
+        item.vehicle&&item.vehicle.model,
+        item.service,
+        item.message
+      ].filter(Boolean).join(' ').toLowerCase();
+      return haystack.includes(search);
+    });
   boardEl.innerHTML='';
   columns.forEach(column=>{
     const items=visible.filter(item=>column.statuses.includes(item.status));
@@ -394,6 +416,9 @@ function render(){
 function caseCard(item){
   const owner=item.assignedTo||{key:'lennart',name:'Lennart',phone:'072-260 77 53'};
   const contactState=contactStateMeta(item);
+  const customerPhone=item.customer&&item.customer.phone||'Saknas';
+  const customerEmailAddress=item.customer&&item.customer.email||'Saknas';
+  const vehicleModel=item.vehicle&&item.vehicle.model||'Okänd modell';
   const card=document.createElement('article');
   card.className='case';
   const notes=(item.notes||[]).slice(-2).map(note=>`<div>${dateShort(note.at)}: ${html(note.text)}</div>`).join('');
@@ -413,19 +438,25 @@ function caseCard(item){
       <div><h3>${html(item.customer&&item.customer.name||'Ok&auml;nd kund')}</h3><div class="muted">${html(item.vehicle&&item.vehicle.model||'Ok&auml;nd modell')}</div></div>
       <span class="badge ${item.priority==='urgent'?'warn':''}">${html(statusLabels[item.status]||item.status)}</span>
     </div>
+    <div class="customer-line">
+      <span class="customer-chip"><strong>Telefon</strong> ${html(customerPhone)}</span>
+      <span class="customer-chip"><strong>E-post</strong> ${html(customerEmailAddress)}</span>
+      <span class="customer-chip"><strong>Modell</strong> ${html(vehicleModel)}</span>
+    </div>
     <div class="key-date ${missingPreferred?'missing':''}"><span>${isPickupReady?'Planerad upph&auml;mtning':'Planerad inl&auml;mning'}</span><b>${missingPreferred?'Beh&ouml;ver bokas in':html(displayDate(item.preferredDate))}</b></div>
     <div class="message-box"><strong>${html(item.service||'Annat')}</strong><br>${html(item.message||'Ingen beskrivning')}</div>
     ${addonHtml}
     <div class="facts">
-      <div class="fact"><span>Ansvar</span><b>${html(owner.name)}</b></div>
+      <div class="fact"><span>Kontaktl&auml;ge</span><b class="contact-state ${contactState.className}">${contactState.label}</b></div>
+      <div class="fact"><span>Kontaktv&auml;g</span><b>${labelFrom(item.contactMethod,contactLabels)}</b></div>
       <div class="fact"><span>V&auml;rde</span><b>${money(item.estimatedValue)}</b></div>
       <div class="fact"><span>Tillval</span><b>${addonsFor(item).length?`${addonsFor(item).length} st (${money(addonTotal(item))})`:'Inga'}</b></div>
       <div class="fact"><span>Rabattkod</span><b>${html(item.discountCode||'Ingen')}</b></div>
       <div class="fact"><span>Inl&auml;mnad</span><b>${item.intakeAt?dateShort(item.intakeAt):'Nej'}</b></div>
-      <div class="fact"><span>Kontakt</span><b>${labelFrom(item.contactMethod,contactLabels)}</b></div>
-      <div class="fact"><span>Kontaktl&auml;ge</span><b class="contact-state ${contactState.className}">${contactState.label}</b></div>
+      <div class="fact"><span>Ansvarig</span><b>${html(owner.name)}</b></div>
+      <div class="fact"><span>&Auml;rende</span><b>${html(shortId(item.id))}</b></div>
     </div>
-    <div class="meta">Telefon: <strong>${html(item.customer&&item.customer.phone||'Saknas')}</strong><br>E-post: <strong>${html(item.customer&&item.customer.email||'Saknas')}</strong><br>Logistik: <strong>${labelFrom(item.logistics,logisticsLabels)}</strong><br>Kund-SMS: <strong>${notificationLabel(sms,'sms')}</strong> &middot; Intern SMS: <strong>${notificationLabel(staffSms,'sms')}</strong><br>Kundmail: <strong>${notificationLabel(customerEmail,'email')}</strong> &middot; Verkstadsmail: <strong>${notificationLabel(workshopEmail,'email')}</strong><br>Kalender: <strong>${notificationLabel(calendar,'calendar')}</strong><br>Skapad: ${dateShort(item.createdAt)}</div>
+    <div class="meta">Logistik: <strong>${labelFrom(item.logistics,logisticsLabels)}</strong><br>Kund-SMS: <strong>${notificationLabel(sms,'sms')}</strong> &middot; Intern SMS: <strong>${notificationLabel(staffSms,'sms')}</strong><br>Kundmail: <strong>${notificationLabel(customerEmail,'email')}</strong> &middot; Verkstadsmail: <strong>${notificationLabel(workshopEmail,'email')}</strong><br>Kalender: <strong>${notificationLabel(calendar,'calendar')}</strong><br>Skapad: ${dateShort(item.createdAt)}</div>
     <div class="contact">
       <a href="tel:${html(item.customer&&item.customer.phone||'')}">Ring kund</a>
       <a href="${html(smsHref(item))}">SMS-mall</a>
