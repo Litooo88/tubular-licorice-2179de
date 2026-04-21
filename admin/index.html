@@ -57,17 +57,29 @@ button:disabled{opacity:.6;cursor:wait}
 .contact{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
 .contact a{display:block;border:1px solid #28322a;border-radius:8px;padding:8px;text-align:center;font-size:12px;font-weight:900;text-decoration:none}
 .contact.tools{grid-template-columns:repeat(3,1fr)}
+.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
+.quick-actions button{padding:9px 10px;font-size:12px}
+.quick-actions button.secondary.active{background:rgba(0,200,83,.14);border-color:rgba(0,200,83,.45);color:#baffcf}
 .edit{display:grid;gap:8px;margin-top:10px}
 .edit-wrap{border-top:1px solid #263029;margin-top:12px;padding-top:10px}
 .edit-wrap summary{cursor:pointer;font-weight:900;color:#9fffc1;margin-bottom:10px}
+.edit-help{margin:0 0 8px;color:#9ea79f;font-size:12px;line-height:1.45}
 .delete-case{background:#3b1014;color:#ffe1e3;border:1px solid #7c2730}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 textarea{min-height:66px;resize:vertical}
 .empty{border:1px dashed #313b33;border-radius:8px;padding:18px;text-align:center;color:#8f9991}
 .notes{font-size:12px;color:#aab2ac;border-top:1px solid #263029;margin-top:10px;padding-top:8px}
 .notes div{margin-top:4px}
+.contact-state{display:inline-flex;align-items:center;gap:8px;font-weight:900}
+.contact-state::before{content:'';width:9px;height:9px;border-radius:999px;background:#6e776f;box-shadow:0 0 0 3px rgba(110,119,111,.12)}
+.contact-state.todo{color:#ffe0a3}
+.contact-state.todo::before{background:#ffc247;box-shadow:0 0 0 3px rgba(255,194,71,.18)}
+.contact-state.done{color:#9fffc1}
+.contact-state.done::before{background:#00c853;box-shadow:0 0 0 3px rgba(0,200,83,.18)}
+.contact-state.waiting{color:#cce2ff}
+.contact-state.waiting::before{background:#4ba3ff;box-shadow:0 0 0 3px rgba(75,163,255,.18)}
 @media(max-width:1200px){.board{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:760px){.wrap{padding:14px}.login,.board,.stats,.row{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools{grid-template-columns:1fr}}
+@media(max-width:760px){.wrap{padding:14px}.login,.board,.stats,.row{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -104,7 +116,7 @@ textarea{min-height:66px;resize:vertical}
     <div class="muted" id="lastUpdated">Inte laddad &auml;nnu</div>
     <div class="filters">
       <div><label for="ownerFilter">Ansvarig</label><select id="ownerFilter"><option value="">Alla</option><option value="lennart">Lennart</option><option value="sebastian">Sebastian</option></select></div>
-      <div><label for="statusFilter">Status</label><select id="statusFilter"><option value="">Alla</option><option value="new">Ny</option><option value="contacted">Kontaktad</option><option value="checked_in">Inl&auml;mnad</option><option value="diagnosing">Diagnos</option><option value="repairing">Reparerar</option><option value="waiting_parts">V&auml;ntar</option><option value="ready">Klar</option><option value="done">Avslutad</option></select></div>
+      <div><label for="statusFilter">Status</label><select id="statusFilter"><option value="">Alla</option><option value="new">Ny</option><option value="contacted">Kontaktad</option><option value="waiting_customer">V&auml;ntar kund</option><option value="checked_in">Inl&auml;mnad</option><option value="diagnosing">Diagnos</option><option value="repairing">Reparerar</option><option value="waiting_parts">V&auml;ntar delar</option><option value="ready">Klar</option><option value="done">Avslutad</option></select></div>
     </div>
   </div>
 
@@ -127,6 +139,7 @@ const calendarResultEl=document.getElementById('calendarResult');
 const ownerFilter=document.getElementById('ownerFilter');
 const statusFilter=document.getElementById('statusFilter');
 let cases=[];
+let isLoadingCases=false;
 
 tokenInput.value=localStorage.getItem('nordicAdminToken')||'';
 document.getElementById('saveToken').addEventListener('click',()=>{localStorage.setItem('nordicAdminToken',tokenInput.value.trim());loadCases();});
@@ -179,6 +192,11 @@ function addonText(item){
   const addons=addonsFor(item);
   if(!addons.length)return'';
   return addons.map((addon)=>`${addon.label||addon.id} (+${money(addon.price||0)})`).join(', ');
+}
+function contactStateMeta(item){
+  if(item.status==='contacted') return {label:'Kontaktad',className:'done'};
+  if(item.status==='waiting_customer') return {label:'V&auml;ntar svar',className:'waiting'};
+  return {label:'Ska kontaktas',className:'todo'};
 }
 function smsPhone(value){
   const compact=String(value||'').replace(/[^\d+]/g,'');
@@ -264,17 +282,62 @@ async function api(path,options={}){
   return data;
 }
 
-async function loadCases(){
+function openEditorIds(){
+  return [...document.querySelectorAll('.edit-wrap[open] form[data-id]')].map((form)=>form.dataset.id);
+}
+
+function focusedEditorField(){
+  const active=document.activeElement;
+  if(!active||!active.name||!active.closest)return null;
+  const form=active.closest('form[data-id]');
+  if(!form)return null;
+  const field={caseId:form.dataset.id,name:active.name};
+  if(typeof active.selectionStart==='number') field.selectionStart=active.selectionStart;
+  if(typeof active.selectionEnd==='number') field.selectionEnd=active.selectionEnd;
+  return field;
+}
+
+function restoreEditorState(openIds=[],focusedField=null){
+  openIds.forEach((id)=>{
+    const form=boardEl.querySelector(`form[data-id="${id}"]`);
+    const wrap=form&&form.closest('.edit-wrap');
+    if(wrap) wrap.open=true;
+  });
+  if(!focusedField) return;
+  const form=boardEl.querySelector(`form[data-id="${focusedField.caseId}"]`);
+  const field=form&&form.elements.namedItem(focusedField.name);
+  if(!field||typeof field.focus!=='function') return;
+  field.focus({preventScroll:true});
+  if(typeof focusedField.selectionStart==='number'&&typeof field.setSelectionRange==='function'){
+    field.setSelectionRange(focusedField.selectionStart,focusedField.selectionEnd ?? focusedField.selectionStart);
+  }
+}
+
+function shouldPauseRefresh(){
+  const active=document.activeElement;
+  return document.hidden || Boolean(document.querySelector('.edit-wrap[open]')) || Boolean(active&&active.closest&&active.closest('.edit-wrap'));
+}
+
+async function loadCases(options={}){
+  if(isLoadingCases) return;
   const refresh=document.getElementById('refresh');
+  const openIds=openEditorIds();
+  const focusedField=focusedEditorField();
+  const background=Boolean(options.background);
   try{
+    isLoadingCases=true;
     showError('');
-    refresh.disabled=true;
+    if(!background) refresh.disabled=true;
     const data=await api('/api/cases');
     cases=data.cases||[];
     render();
+    restoreEditorState(openIds,focusedField);
     document.getElementById('lastUpdated').textContent='Uppdaterad '+new Date().toLocaleTimeString('sv-SE');
   }catch(error){showError(error.message)}
-  finally{refresh.disabled=false}
+  finally{
+    isLoadingCases=false;
+    if(!background) refresh.disabled=false;
+  }
 }
 
 async function testCalendar(){
@@ -330,6 +393,7 @@ function render(){
 
 function caseCard(item){
   const owner=item.assignedTo||{key:'lennart',name:'Lennart',phone:'072-260 77 53'};
+  const contactState=contactStateMeta(item);
   const card=document.createElement('article');
   card.className='case';
   const notes=(item.notes||[]).slice(-2).map(note=>`<div>${dateShort(note.at)}: ${html(note.text)}</div>`).join('');
@@ -359,11 +423,17 @@ function caseCard(item){
       <div class="fact"><span>Rabattkod</span><b>${html(item.discountCode||'Ingen')}</b></div>
       <div class="fact"><span>Inl&auml;mnad</span><b>${item.intakeAt?dateShort(item.intakeAt):'Nej'}</b></div>
       <div class="fact"><span>Kontakt</span><b>${labelFrom(item.contactMethod,contactLabels)}</b></div>
+      <div class="fact"><span>Kontaktl&auml;ge</span><b class="contact-state ${contactState.className}">${contactState.label}</b></div>
     </div>
     <div class="meta">Telefon: <strong>${html(item.customer&&item.customer.phone||'Saknas')}</strong><br>E-post: <strong>${html(item.customer&&item.customer.email||'Saknas')}</strong><br>Logistik: <strong>${labelFrom(item.logistics,logisticsLabels)}</strong><br>Kund-SMS: <strong>${notificationLabel(sms,'sms')}</strong> &middot; Intern SMS: <strong>${notificationLabel(staffSms,'sms')}</strong><br>Kundmail: <strong>${notificationLabel(customerEmail,'email')}</strong> &middot; Verkstadsmail: <strong>${notificationLabel(workshopEmail,'email')}</strong><br>Kalender: <strong>${notificationLabel(calendar,'calendar')}</strong><br>Skapad: ${dateShort(item.createdAt)}</div>
     <div class="contact">
       <a href="tel:${html(item.customer&&item.customer.phone||'')}">Ring kund</a>
       <a href="${html(smsHref(item))}">SMS-mall</a>
+    </div>
+    <div class="quick-actions">
+      <button type="button" class="secondary quick-status ${item.status==='contacted'?'active':''}" data-status="contacted" data-note="Kund kontaktad.">Kontaktad</button>
+      <button type="button" class="secondary quick-status ${item.status==='waiting_customer'?'active':''}" data-status="waiting_customer" data-note="Inv&auml;ntar svar fr&aring;n kund.">V&auml;ntar svar</button>
+      <button type="button" class="secondary quick-status ${item.status==='checked_in'?'active':''}" data-status="checked_in" data-note="Fordon inl&auml;mnat p&aring; verkstaden.">Inl&auml;mnad</button>
     </div>
     <div class="contact tools">
       <a href="${html(mailHref(item))}">Mailmall</a>
@@ -373,6 +443,7 @@ function caseCard(item){
     <details class="edit-wrap">
       <summary>Redigera kund och &auml;rende</summary>
       <form class="edit" data-id="${html(item.id)}">
+        <div class="edit-help">Automatisk uppdatering pausas medan den h&auml;r kunden &auml;r &ouml;ppen.</div>
         <div class="row">
           <div><label>Kundnamn</label><input name="customerName" value="${html(item.customer&&item.customer.name||'')}"></div>
           <div><label>Telefon</label><input name="customerPhone" value="${html(item.customer&&item.customer.phone||'')}"></div>
@@ -409,6 +480,24 @@ function caseCard(item){
     </details>
     ${notes?`<div class="notes"><strong>Senaste noteringar</strong>${notes}</div>`:''}`;
   const form=card.querySelector('form');
+  card.querySelectorAll('.quick-status').forEach((button)=>{
+    button.addEventListener('click',async()=>{
+      const original=button.textContent;
+      button.disabled=true;
+      button.textContent='Sparar...';
+      try{
+        await api('/api/cases/'+encodeURIComponent(item.id),{
+          method:'PATCH',
+          body:JSON.stringify({status:button.dataset.status,note:button.dataset.note})
+        });
+        await loadCases();
+      }catch(error){showError(error.message)}
+      finally{
+        button.disabled=false;
+        button.textContent=original;
+      }
+    });
+  });
   form.addEventListener('submit',async(event)=>{
     event.preventDefault();
     const button=form.querySelector('button[type="submit"]');
@@ -432,7 +521,7 @@ function caseCard(item){
 }
 
 loadCases();
-setInterval(loadCases,10000);
+setInterval(()=>{if(!shouldPauseRefresh())loadCases({background:true});},30000);
 </script>
 </body>
 </html>
