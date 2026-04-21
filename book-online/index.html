@@ -411,12 +411,12 @@ function customerStatusMessage(result){
   const done=[];
   if(notifications.customerEmail&&notifications.customerEmail.status==='sent') done.push('e-postbekr\u00e4ftelse \u00e4r skickad');
   if(notifications.sms&&notifications.sms.status==='sent') done.push('SMS-bekr\u00e4ftelse \u00e4r skickad');
-  if(notifications.staffSms&&notifications.staffSms.status==='sent') done.push('verkstaden har f\u00e5tt SMS-avisering');
+  if(notifications.staffSms&&(notifications.staffSms.status==='sent'||notifications.staffSms.status==='partial')) done.push('verkstaden har f\u00e5tt avisering');
   if(notifications.calendar&&notifications.calendar.status==='created') done.push('\u00e4rendet ligger i verkstadskalendern');
   if(done.length){
     return 'Din f\u00f6rfr\u00e5gan \u00e4r skickad till verkstaden. '+done.join(', ')+'. Vi \u00e5terkommer fortfarande med slutlig tid och pris innan reparation.';
   }
-  return 'Din f\u00f6rfr\u00e5gan \u00e4r skickad till verkstaden. Om du inte f\u00e5r bekr\u00e4ftelse inom n\u00e5gon minut: ring eller SMS:a Sebastian 070-024 33 19 eller Lennart 072-260 77 53.';
+  return 'Din f\u00f6rfr\u00e5gan \u00e4r skickad till verkstaden. Om du inte ser n\u00e5gon bekr\u00e4ftelse inom n\u00e5gra minuter: ring eller SMS:a Sebastian 070-024 33 19 eller Lennart 072-260 77 53.';
 }
 
 if(bookingForm){
