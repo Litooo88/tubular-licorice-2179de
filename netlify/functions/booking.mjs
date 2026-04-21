@@ -200,6 +200,18 @@ const normalizePhone = (phone) => {
   return compact.length >= 7 ? `+46${compact}` : "";
 };
 
+const uniquePhones = (numbers = []) => {
+  const seen = new Set();
+  const result = [];
+  for (const number of numbers) {
+    const normalized = normalizePhone(number);
+    if (!normalized || seen.has(normalized)) continue;
+    seen.add(normalized);
+    result.push(normalized);
+  }
+  return result;
+};
+
 const shortCaseId = (id) => id.replace(/^case_/, "").slice(0, 18).toUpperCase();
 
 const smsMessage = (caseItem) =>
@@ -426,14 +438,19 @@ const sendWorkshopSmsNotification = async (caseItem) => {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
-  const recipients = configured.length ? configured : [STAFF.sebastian.phone, STAFF.lennart.phone];
+  const recipients = uniquePhones([STAFF.sebastian.phone, STAFF.lennart.phone, ...configured]);
   const results = await Promise.all(recipients.map((recipient) => postSms({ to: recipient, message: workshopSmsMessage(caseItem) })));
+  const sentCount = results.filter((result) => result.status === "sent").length;
+  const failedCount = results.length - sentCount;
 
-  if (results.some((result) => result.status === "sent")) {
+  if (sentCount) {
     return {
-      status: "sent",
+      status: failedCount ? "partial" : "sent",
       provider: "46elks",
+      requestedRecipients: recipients,
       recipients: results,
+      sentCount,
+      failedCount,
       sentAt: new Date().toISOString(),
     };
   }
@@ -441,7 +458,10 @@ const sendWorkshopSmsNotification = async (caseItem) => {
   return {
     status: results.every((result) => result.status === "not_configured") ? "not_configured" : "failed",
     provider: "46elks",
+    requestedRecipients: recipients,
     recipients: results,
+    sentCount,
+    failedCount,
   };
 };
 
@@ -876,7 +896,7 @@ export default async (request) => {
     if (sms.status === "sent") {
       caseItem.timeline.push({ at: sms.sentAt, event: "SMS-bekraftelse skickad till kund." });
     }
-    if (staffSms.status === "sent") {
+    if (staffSms.status === "sent" || staffSms.status === "partial") {
       caseItem.timeline.push({ at: staffSms.sentAt, event: "Intern SMS-avisering skickad." });
     }
     if (customerEmail.status === "sent") {
