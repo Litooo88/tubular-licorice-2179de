@@ -408,15 +408,20 @@ async function submitNetlifyBackup(data){
 
 function customerStatusMessage(result){
   const notifications=(result.case&&result.case.notifications)||{};
-  const done=[];
-  if(notifications.customerEmail&&notifications.customerEmail.status==='sent') done.push('e-postbekr\u00e4ftelse \u00e4r skickad');
-  if(notifications.sms&&notifications.sms.status==='sent') done.push('SMS-bekr\u00e4ftelse \u00e4r skickad');
-  if(notifications.staffSms&&(notifications.staffSms.status==='sent'||notifications.staffSms.status==='partial')) done.push('verkstaden har f\u00e5tt avisering');
-  if(notifications.calendar&&notifications.calendar.status==='created') done.push('\u00e4rendet ligger i verkstadskalendern');
-  if(done.length){
-    return 'Din f\u00f6rfr\u00e5gan \u00e4r skickad till verkstaden. '+done.join(', ')+'. Vi \u00e5terkommer fortfarande med slutlig tid och pris innan reparation.';
+  const delivery=(result.case&&result.case.customerDelivery)||notifications.customerDelivery||{};
+  const workshopNotified=notifications.staffSms&&(notifications.staffSms.status==='sent'||notifications.staffSms.status==='partial');
+  const inCalendar=notifications.calendar&&notifications.calendar.status==='created';
+  const base='Din bokning \u00e4r registrerad hos Nordic E-Mobility.';
+
+  if(delivery.status==='sent'){
+    return `${base} B\u00e5de SMS och e-postbekr\u00e4ftelse \u00e4r skickad${workshopNotified?' och verkstaden har redan f\u00e5tt avisering':''}${inCalendar?', samtidigt som \u00e4rendet ligger i verkstadskalendern':''}. Vi \u00e5terkommer med bekr\u00e4ftad tid, pris och n\u00e4sta steg.`;
   }
-  return 'Din f\u00f6rfr\u00e5gan \u00e4r skickad till verkstaden. Om du inte ser n\u00e5gon bekr\u00e4ftelse inom n\u00e5gra minuter: ring eller SMS:a Sebastian 070-024 33 19 eller Lennart 072-260 77 53.';
+
+  if(delivery.status==='partial'){
+    return `${base} ${delivery.label||'En del av kundbekr\u00e4ftelsen gick iv\u00e4g'}${workshopNotified?' och verkstaden har f\u00e5tt avisering':''}. Vi f\u00f6ljer upp resten manuellt vid behov och \u00e5terkommer med bekr\u00e4ftad tid, pris och n\u00e4sta steg.`;
+  }
+
+  return `${base} Verkstaden har f\u00e5tt ditt \u00e4rende, men automatisk kundbekr\u00e4ftelse gick inte iv\u00e4g just nu. Ring eller SMS:a Sebastian 070-024 33 19 eller Lennart 072-260 77 53 s\u00e5 bekr\u00e4ftar vi direkt.`;
 }
 
 if(bookingForm){

@@ -26,7 +26,7 @@ button:disabled{opacity:.6;cursor:wait}
 .calendar-result code{color:#fff;background:#050805;border:1px solid #263029;border-radius:6px;padding:2px 5px}
 .notice{padding:14px 16px;margin:0 0 14px;color:#d6ded8;line-height:1.5}
 .notice strong{color:#fff}
-.stats{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin:16px 0}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
 .stat{padding:16px}
 .stat span{display:block;color:#99a39b;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
 .stat b{font-size:28px;display:block;margin-top:4px}
@@ -55,10 +55,15 @@ button:disabled{opacity:.6;cursor:wait}
 .fact{border:1px solid #263029;border-radius:8px;padding:8px;background:#090d09}
 .fact span{display:block;color:#9ea79f;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
 .fact b{display:block;margin-top:3px;color:#fff}
-.message-box{border-left:3px solid #00c853;padding:8px 0 8px 10px;margin:10px 0;color:#e4ebe6;line-height:1.5}
-.addons-box{border:1px solid rgba(0,200,83,.28);background:rgba(0,200,83,.08);border-radius:8px;padding:10px;margin:10px 0;color:#eaffef;font-size:13px;line-height:1.5}
-.addons-box strong{display:block;margin-bottom:4px}
-.contact{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
+  .message-box{border-left:3px solid #00c853;padding:8px 0 8px 10px;margin:10px 0;color:#e4ebe6;line-height:1.5}
+  .addons-box{border:1px solid rgba(0,200,83,.28);background:rgba(0,200,83,.08);border-radius:8px;padding:10px;margin:10px 0;color:#eaffef;font-size:13px;line-height:1.5}
+  .addons-box strong{display:block;margin-bottom:4px}
+  .delivery-banner{border-radius:8px;padding:12px 13px;margin:10px 0;line-height:1.45}
+  .delivery-banner strong{display:block;margin-bottom:4px}
+  .delivery-banner.ok{background:rgba(0,200,83,.10);border:1px solid rgba(0,200,83,.3);color:#e7fff0}
+  .delivery-banner.partial{background:rgba(255,194,71,.12);border:1px solid rgba(255,194,71,.35);color:#fff1cf}
+  .delivery-banner.attention{background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}
+  .contact{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
 .contact a{display:block;border:1px solid #28322a;border-radius:8px;padding:8px;text-align:center;font-size:12px;font-weight:900;text-decoration:none}
 .contact.tools{grid-template-columns:repeat(3,1fr)}
 .quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
@@ -82,8 +87,8 @@ textarea{min-height:66px;resize:vertical}
 .contact-state.done::before{background:#00c853;box-shadow:0 0 0 3px rgba(0,200,83,.18)}
 .contact-state.waiting{color:#cce2ff}
 .contact-state.waiting::before{background:#4ba3ff;box-shadow:0 0 0 3px rgba(75,163,255,.18)}
-@media(max-width:1200px){.board{grid-template-columns:repeat(2,1fr)}.stats{grid-template-columns:repeat(3,1fr)}}
-@media(max-width:760px){.wrap{padding:14px}.login,.board,.stats,.row{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}}
+  @media(max-width:1200px){.board{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}}
 </style>
 </head>
 <body>
@@ -105,12 +110,13 @@ textarea{min-height:66px;resize:vertical}
 
   <div class="error" id="error"></div>
   <div class="calendar-result" id="calendarResult"></div>
-  <section class="panel notice"><strong>Automatiskt fl&ouml;de:</strong> Nya bokningar sparas h&auml;r, kunden f&aring;r SMS/e-post n&auml;r uppgifterna finns, och verkstaden f&aring;r avisering. Kalenderfilen &auml;r prelimin&auml;r tills Sebastian bekr&auml;ftar tid och pris.</section>
+  <section class="panel notice"><strong>Automatiskt fl&ouml;de:</strong> Nya bokningar sparas h&auml;r, kunden ska f&aring; SMS och e-post direkt, och verkstaden f&aring;r avisering. Om ett kort markeras med r&ouml;d kundbekr&auml;ftelse beh&ouml;ver kunden f&ouml;ljas upp manuellt direkt.</section>
 
   <section class="stats">
     <div class="panel stat"><span>Aktiva</span><b id="activeTotal">0</b></div>
     <div class="panel stat"><span>V&auml;rde aktivt</span><b id="valueTotal">0 kr</b></div>
     <div class="panel stat"><span>Nya</span><b id="newTotal">0</b></div>
+    <div class="panel stat"><span>Bekr&auml;ftelse saknas</span><b id="attentionTotal">0</b></div>
     <div class="panel stat"><span>Inne</span><b id="insideTotal">0</b></div>
     <div class="panel stat"><span>Klara</span><b id="readyTotal">0</b></div>
     <div class="panel stat"><span>Tyngre jobb</span><b id="heavyTotal">0</b></div>
@@ -205,6 +211,23 @@ function contactStateMeta(item){
   if(item.status==='waiting_customer') return {label:'V&auml;ntar svar',className:'waiting'};
   return {label:'Ska kontaktas',className:'todo'};
 }
+function customerDeliveryMeta(item){
+  const notifications=item.notifications||{};
+  const delivery=item.customerDelivery||notifications.customerDelivery||{};
+  const smsSent=notifications.sms&&notifications.sms.status==='sent';
+  const emailSent=notifications.customerEmail&&notifications.customerEmail.status==='sent';
+  const sentCount=(smsSent?1:0)+(emailSent?1:0);
+  if(delivery.status==='sent'||sentCount===2){
+    return {className:'ok',title:'Kund bekr&auml;ftad',text:'SMS och e-post gick iv&auml;g till kunden.'};
+  }
+  if(delivery.status==='partial'||sentCount===1){
+    return {className:'partial',title:'Delvis bekr&auml;ftad',text:(delivery.nextStep||'En kanal gick iv&auml;g. Komplettera manuellt vid behov.')};
+  }
+  return {className:'attention',title:'Kundbekr&auml;ftelse saknas',text:(delivery.nextStep||'Ingen automatisk kundbekr&auml;ftelse gick iv&auml;g. Ring eller skicka manuellt nu.')};
+}
+function needsCustomerAttention(item){
+  return customerDeliveryMeta(item).className==='attention';
+}
 function smsPhone(value){
   const compact=String(value||'').replace(/[^\d+]/g,'');
   if(!compact)return'';
@@ -234,7 +257,7 @@ function customerTemplate(item){
   const greeting=name?`Hej ${name}!`:'Hej!';
   const timeLabel=item.logistics==='pickup-ready'?'Upph\u00e4mtning':'\u00d6nskad inl\u00e4mning';
   const addons=addonText(item);
-  return `${greeting}\n\nVi har registrerat ditt \u00e4rende hos Nordic E-Mobility. \u00c4rende: ${shortId(item.id)}.\n\n${timeLabel}: ${displayDate(item.preferredDate)}\nTj\u00e4nst: ${item.service||'Servicef\u00f6rfr\u00e5gan'}${item.discountCode?`\nRabattkod: ${item.discountCode}`:''}${addons?`\nTillval: ${addons}`:''}\n\nSebastian g\u00e5r igenom underlaget och vi \u00e5terkommer med bekr\u00e4ftad tid, pris och n\u00e4sta steg innan arbete p\u00e5b\u00f6rjas.\n\nDirektkontakt: Sebastian 070-024 33 19 eller Lennart 072-260 77 53.\n\nNordic E-Mobility`;
+  return `${greeting}\n\nVi har tagit emot din bokning hos Nordic E-Mobility. \u00c4rende: ${shortId(item.id)}.\n\n${timeLabel}: ${displayDate(item.preferredDate)}\nTj\u00e4nst: ${item.service||'Servicef\u00f6rfr\u00e5gan'}${item.discountCode?`\nRabattkod: ${item.discountCode}`:''}${addons?`\nTillval: ${addons}`:''}\n\nVi g\u00e5r nu igenom underlaget och \u00e5terkommer med bekr\u00e4ftad tid, pris och n\u00e4sta steg innan arbete p\u00e5b\u00f6rjas.\n\nDirektkontakt: Sebastian 070-024 33 19 eller Lennart 072-260 77 53.\n\nNordic E-Mobility`;
 }
 function mailHref(item){
   const email=String(item.customer&&item.customer.email||'').trim();
@@ -380,6 +403,7 @@ function render(){
   document.getElementById('activeTotal').textContent=active.length;
   document.getElementById('valueTotal').textContent=money(active.reduce((sum,item)=>sum+Number(item.estimatedValue||0),0));
   document.getElementById('newTotal').textContent=cases.filter(item=>item.status==='new').length;
+  document.getElementById('attentionTotal').textContent=active.filter(item=>needsCustomerAttention(item)).length;
   document.getElementById('insideTotal').textContent=cases.filter(item=>['checked_in','diagnosing','repairing'].includes(item.status)).length;
   document.getElementById('readyTotal').textContent=cases.filter(item=>item.status==='ready').length;
   document.getElementById('heavyTotal').textContent=active.filter(item=>(item.assignedTo&&item.assignedTo.key)==='sebastian').length;
@@ -401,6 +425,11 @@ function render(){
         item.message
       ].filter(Boolean).join(' ').toLowerCase();
       return haystack.includes(search);
+    })
+    .sort((a,b)=>{
+      const attentionDelta=Number(needsCustomerAttention(b))-Number(needsCustomerAttention(a));
+      if(attentionDelta) return attentionDelta;
+      return String(b.updatedAt||b.createdAt).localeCompare(String(a.updatedAt||a.createdAt));
     });
   boardEl.innerHTML='';
   columns.forEach(column=>{
@@ -416,6 +445,7 @@ function render(){
 function caseCard(item){
   const owner=item.assignedTo||{key:'lennart',name:'Lennart',phone:'072-260 77 53'};
   const contactState=contactStateMeta(item);
+  const delivery=customerDeliveryMeta(item);
   const customerPhone=item.customer&&item.customer.phone||'Saknas';
   const customerEmailAddress=item.customer&&item.customer.email||'Saknas';
   const vehicleModel=item.vehicle&&item.vehicle.model||'Okänd modell';
@@ -444,6 +474,7 @@ function caseCard(item){
       <span class="customer-chip"><strong>Modell</strong> ${html(vehicleModel)}</span>
     </div>
     <div class="key-date ${missingPreferred?'missing':''}"><span>${isPickupReady?'Planerad upph&auml;mtning':'Planerad inl&auml;mning'}</span><b>${missingPreferred?'Beh&ouml;ver bokas in':html(displayDate(item.preferredDate))}</b></div>
+    <div class="delivery-banner ${delivery.className}"><strong>${delivery.title}</strong>${html(delivery.text)}</div>
     <div class="message-box"><strong>${html(item.service||'Annat')}</strong><br>${html(item.message||'Ingen beskrivning')}</div>
     ${addonHtml}
     <div class="facts">

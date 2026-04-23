@@ -235,8 +235,42 @@ const formatPreferredDateForSms = (caseItem) => {
   return `${label}: ${formatted}`;
 };
 
+const customerDeliverySummary = ({ sms, customerEmail }) => {
+  const smsStatus = clean(sms?.status, 40) || "not_requested";
+  const emailStatus = clean(customerEmail?.status, 40) || "not_requested";
+  const sentChannels = [];
+  const missingChannels = [];
+
+  if (smsStatus === "sent") sentChannels.push("sms");
+  else if (smsStatus !== "not_requested") missingChannels.push(`sms${sms?.error ? `: ${sms.error}` : ""}`);
+
+  if (emailStatus === "sent") sentChannels.push("email");
+  else if (emailStatus !== "not_requested") missingChannels.push(`email${customerEmail?.error ? `: ${customerEmail.error}` : ""}`);
+
+  const status = sentChannels.length === 2 ? "sent" : sentChannels.length === 1 ? "partial" : "attention";
+
+  return {
+    status,
+    sentChannels,
+    missingChannels,
+    needsAttention: sentChannels.length === 0,
+    label:
+      status === "sent"
+        ? "SMS och e-post skickade"
+        : status === "partial"
+          ? `Bekraftelse skickad via ${sentChannels[0] === "sms" ? "SMS" : "e-post"}`
+          : "Ingen kundbekraftelse skickad",
+    nextStep:
+      status === "sent"
+        ? "Kunden har fatt automatisk bekraftelse."
+        : status === "partial"
+          ? "En kanal gick ivag. Komplettera manuellt vid behov."
+          : "Ring eller skicka manuell bekraftelse till kunden nu.",
+  };
+};
+
 const smsMessage = (caseItem) =>
-  `Nordic E-Mobility: Bokning mottagen. Arende ${shortCaseId(caseItem.id)}. Ansvarig start: ${caseItem.assignedTo.name}. Vi kontaktar dig med tid och pris.`;
+  `Nordic E-Mobility: Vi har tagit emot din bokning. ${formatPreferredDateForSms(caseItem)}. Tjanst: ${caseItem.service}. Arende ${shortCaseId(caseItem.id)}. Vi aterkommer med bekraftad tid, pris och nasta steg. Direktkontakt: Sebastian 070-024 33 19 eller Lennart 072-260 77 53.`;
 
 const workshopSmsMessage = (caseItem) => {
   const addonInfo = caseItem.addons?.length ? ` Tillval ${caseItem.addons.length}.` : "";
@@ -563,13 +597,18 @@ const customerEmailHtml = (caseItem) => `
     <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #dfe5dc;border-radius:8px;overflow:hidden">
       <div style="background:#061007;color:#fff;padding:22px 24px">
         <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8ff5ae;font-weight:700">Nordic E-Mobility</div>
-        <h1 style="font-size:24px;line-height:1.2;margin:8px 0 0">Din servicef&ouml;rfr&aring;gan &auml;r mottagen</h1>
+        <h1 style="font-size:24px;line-height:1.2;margin:8px 0 0">Din bokning &auml;r mottagen</h1>
       </div>
       <div style="padding:24px;line-height:1.6">
         <p>Hej ${htmlEscape(caseItem.customer.name)},</p>
         <p>${isReadyPickup(caseItem)
-          ? "Vi har registrerat din f&ouml;rfr&aring;gan om upph&auml;mtning. Vi &aring;terkommer om tiden beh&ouml;ver justeras eller om n&aring;got beh&ouml;ver kompletteras innan du kommer."
-          : "Vi har registrerat ditt &auml;rende i verkstadssystemet. Sebastian g&aring;r igenom underlaget och vi &aring;terkommer med bekr&auml;ftad inl&auml;mningstid, pris och n&auml;sta steg innan n&aring;got arbete p&aring;b&ouml;rjas."}</p>
+          ? "Vi har registrerat din upph&auml;mtning i systemet. Om tiden beh&ouml;ver justeras eller om n&aring;got beh&ouml;ver kompletteras h&ouml;r vi av oss direkt."
+          : "Vi har registrerat ditt &auml;rende i systemet. Vi g&aring;r nu igenom underlaget och &aring;terkommer med bekr&auml;ftad tid, prisbild och n&auml;sta steg innan n&aring;got arbete p&aring;b&ouml;rjas."}</p>
+        <div style="margin:18px 0">
+          <div style="border:1px solid #dfe8dc;border-radius:8px;padding:12px;background:#f7faf6;margin-bottom:10px"><strong style="display:block;margin-bottom:6px">1. Mottaget</strong><span style="color:#516055;font-size:14px">Din bokning &auml;r registrerad och har f&aring;tt ett &auml;rendenummer.</span></div>
+          <div style="border:1px solid #dfe8dc;border-radius:8px;padding:12px;background:#f7faf6;margin-bottom:10px"><strong style="display:block;margin-bottom:6px">2. Genomg&aring;ng</strong><span style="color:#516055;font-size:14px">Vi granskar felbild, modell och vald tid innan vi bekr&auml;ftar uppl&auml;gget.</span></div>
+          <div style="border:1px solid #dfe8dc;border-radius:8px;padding:12px;background:#f7faf6"><strong style="display:block;margin-bottom:6px">3. Bekr&auml;ftelse</strong><span style="color:#516055;font-size:14px">Du f&aring;r bekr&auml;ftad tid och n&auml;sta steg fr&aring;n verkstaden s&aring; snart allt &auml;r kontrollerat.</span></div>
+        </div>
         <div style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:16px;margin:18px 0">
           <p style="margin:0 0 8px"><strong>&Auml;rende:</strong> ${htmlEscape(shortCaseId(caseItem.id))}</p>
           <p style="margin:0 0 8px"><strong>Tj&auml;nst:</strong> ${htmlEscape(caseItem.service)}</p>
@@ -580,7 +619,7 @@ const customerEmailHtml = (caseItem) => `
           ${addonSummaryHtml(caseItem.addons)}
           <p style="margin:0"><strong>Startansvar:</strong> ${htmlEscape(caseItem.assignedTo.name)}</p>
         </div>
-        <p><strong>Viktigt:</strong> kalenderfilen som bifogas &auml;r prelimin&auml;r. Den hj&auml;lper dig att komma ih&aring;g din &ouml;nskade tid, men verkstadstiden g&auml;ller f&ouml;rst n&auml;r vi har bekr&auml;ftat den.</p>
+        <p><strong>Viktigt:</strong> kalenderfilen som bifogas &auml;r prelimin&auml;r. Den hj&auml;lper dig att komma ih&aring;g den tid du valde, men verkstadstiden g&auml;ller f&ouml;rst n&auml;r vi har bekr&auml;ftat den till dig.</p>
         <p>Direktkontakt:<br>
         Sebastian, tekniskt ansvarig: <a href="tel:+46700243319">070-024 33 19</a><br>
         Lennart, mottagning dagtid: <a href="tel:+46722607753">072-260 77 53</a></p>
@@ -599,12 +638,17 @@ const sendCustomerEmail = async (caseItem) => {
     text: [
       "Hej " + caseItem.customer.name + ",",
       "",
-      "Vi har registrerat ditt \u00e4rende i verkstadssystemet.",
+      "Vi har tagit emot din bokning hos Nordic E-Mobility.",
       isReadyPickup(caseItem)
-        ? "Vi \u00e5terkommer om upph\u00e4mtningstiden beh\u00f6ver justeras."
-        : "Sebastian g\u00e5r igenom underlaget och vi \u00e5terkommer med bekr\u00e4ftad inl\u00e4mningstid, pris och n\u00e4sta steg innan n\u00e5got arbete p\u00e5b\u00f6rjas.",
+        ? "Vi aterkommer om upphamtningstiden behover justeras eller om nagot behover kompletteras innan du kommer."
+        : "Vi gar igenom underlaget och aterkommer med bekraftad inlamningstid, pris och nasta steg innan nagot arbete paborjas.",
       "",
-      "Kalenderfilen \u00e4r prelimin\u00e4r tills tiden \u00e4r bekr\u00e4ftad.",
+      "Detta hander nu:",
+      "1. Din bokning ar registrerad.",
+      "2. Verkstaden granskar arendet.",
+      "3. Du far bekraftad tid och nasta steg.",
+      "",
+      "Kalenderfilen ar preliminar tills tiden ar bekraftad.",
       "",
       "Detaljer:",
       caseSummaryText(caseItem),
@@ -913,7 +957,9 @@ export default async (request) => {
       sendCustomerEmail(caseItem),
       sendWorkshopEmail(caseItem),
     ]);
-    caseItem.notifications = { sms, staffSms, customerEmail, workshopEmail, calendar, calendarAvailability: availability };
+    const customerDelivery = customerDeliverySummary({ sms, customerEmail });
+    caseItem.customerDelivery = customerDelivery;
+    caseItem.notifications = { sms, staffSms, customerEmail, workshopEmail, calendar, calendarAvailability: availability, customerDelivery };
     if (sms.status === "sent") {
       caseItem.timeline.push({ at: sms.sentAt, event: "SMS-bekraftelse skickad till kund." });
     }
@@ -925,6 +971,12 @@ export default async (request) => {
     }
     if (workshopEmail.status === "sent") {
       caseItem.timeline.push({ at: workshopEmail.sentAt, event: "Intern e-post skickad till verkstaden." });
+    }
+    if (customerDelivery.status === "partial") {
+      caseItem.timeline.push({ at: new Date().toISOString(), event: `Kundbekraftelse delvis skickad. ${customerDelivery.nextStep}` });
+    }
+    if (customerDelivery.needsAttention) {
+      caseItem.timeline.push({ at: new Date().toISOString(), event: `Kundbekraftelse misslyckades. ${customerDelivery.nextStep}` });
     }
     await store.setJSON(id, caseItem);
 
