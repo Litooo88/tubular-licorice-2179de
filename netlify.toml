@@ -23,6 +23,18 @@ status = 301
 force = true
 
 [[redirects]]
+  from = "/nordic-emobility-site"
+  to = "/"
+  status = 301
+  force = true
+
+[[redirects]]
+  from = "/nordic-emobility-site/*"
+  to = "/:splat"
+  status = 301
+  force = true
+
+[[redirects]]
   from = "/service-page/el-elektronik"
   to = "/elscooter-reparation-orebro/"
   status = 301
@@ -87,5 +99,10 @@ force = true
 
 [[headers]]
   for = "/admin/*"
+  [headers.values]
+    X-Robots-Tag = "noindex, nofollow"
+
+[[headers]]
+  for = "/__forms.html"
   [headers.values]
     X-Robots-Tag = "noindex, nofollow"

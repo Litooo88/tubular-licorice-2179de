@@ -489,6 +489,30 @@ nav a:hover{color:#fff}
 .prod-btn{display:block;width:100%;padding:9px;margin-top:10px;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#00C853;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all .2s;text-decoration:none}
 .prod-btn:hover{background:#00C853;color:#000}
 
+/* SHOWROOM */
+.showroom{padding:84px 0;background:#050705;border-top:1px solid #121a14}
+.showroom-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.9fr);gap:20px;margin-top:36px}
+.showroom-stage{background:#101311;border:1px solid #202822;border-radius:8px;overflow:hidden}
+.showroom-stage-media{aspect-ratio:1.35/1;background:#060806}
+.showroom-stage-media img{width:100%;height:100%;display:block;object-fit:cover}
+.showroom-stage-copy{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:20px;flex-wrap:wrap}
+.showroom-stage-copy h3{margin:8px 0 8px;font-size:28px;line-height:1.08}
+.showroom-stage-copy p{margin:0;max-width:640px;color:#9fb0a1}
+.showroom-kicker{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#64dd8a}
+.showroom-thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:0 20px 20px}
+.showroom-thumb{appearance:none;background:#0c100d;border:1px solid #202822;border-radius:8px;padding:8px;cursor:pointer;color:#f6f8f5;text-align:left}
+.showroom-thumb img{width:100%;aspect-ratio:1/1;display:block;border-radius:6px;object-fit:cover;margin-bottom:8px}
+.showroom-thumb strong{display:block;font-size:13px;line-height:1.2}
+.showroom-thumb span{display:block;font-size:12px;color:#8f9b91;margin-top:4px}
+.showroom-thumb.is-active{border-color:#00C853;box-shadow:0 0 0 1px rgba(0,200,83,.25) inset}
+.showroom-aside{display:grid;gap:16px}
+.showroom-card{background:#101311;border:1px solid #202822;border-radius:8px;overflow:hidden}
+.showroom-card img{width:100%;height:240px;display:block;object-fit:cover}
+.showroom-card-copy{padding:18px}
+.showroom-card-copy h3{margin:8px 0 8px;font-size:22px;line-height:1.12}
+.showroom-card-copy p{margin:0;color:#9fb0a1}
+.showroom-note{padding:18px 20px;border-radius:8px;border:1px solid rgba(0,200,83,.22);background:rgba(0,200,83,.07);color:#d7ded8}
+
 /* BLOG */
 .blog{padding:80px 0;background:#0a0a0a}
 .blog-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:40px}
@@ -541,6 +565,9 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   .pricing-grid,.problems-grid{grid-template-columns:1fr}
   .trust-grid{grid-template-columns:1fr}
   .calc-wrap{grid-template-columns:1fr}
+  .showroom-grid{grid-template-columns:1fr}
+  .showroom-thumbs{grid-template-columns:1fr}
+  .showroom-stage-copy h3{font-size:24px}
   .blog-grid{grid-template-columns:1fr}
   .products .products-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px}
   .prod{display:flex;flex-direction:column;min-width:0}
@@ -1161,6 +1188,66 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 </div>
 </section>
 
+<!-- SHOWROOM -->
+<section class="showroom" id="showroom">
+<div class="container">
+  <span class="section-label">Showroom / verkstad</span>
+  <h2 class="section-title">Riktiga maskiner. Riktiga vinklar.</h2>
+  <p class="section-sub">Vi bygger upp en mer premium produktupplevelse med egna verkstadsbilder. H&auml;r kan kunden redan nu v&auml;xla mellan flera vyer i st&auml;llet f&ouml;r att bara se generiska katalogbilder.</p>
+  <div class="showroom-grid">
+    <div class="showroom-stage">
+      <div class="showroom-stage-media">
+        <img id="showroomMainImage" loading="lazy" decoding="async" src="/assets/showroom/showroom-custom-full.jpg" alt="Specialbyggd elscooter fotograferad i verkstaden hos Nordic E-Mobility">
+      </div>
+      <div class="showroom-stage-copy">
+        <div>
+          <div class="showroom-kicker" id="showroomAngle">Helvy</div>
+          <h3 id="showroomTitle">Custom-scooter med grova d&auml;ck och riktiga komponenter.</h3>
+          <p id="showroomDescription">V&auml;xla mellan helvy och detaljbilder f&ouml;r att se hur ett verkligt bygge ser ut i verkstaden. Det h&auml;r &auml;r steget innan full 360-visning av toppmodellerna.</p>
+        </div>
+        <a href="/book-online/" class="btn-primary">Fr&aring;ga om liknande bygge</a>
+      </div>
+      <div class="showroom-thumbs">
+        <button class="showroom-thumb is-active" type="button" data-image="/assets/showroom/showroom-custom-full.jpg" data-angle="Helvy" data-title="Custom-scooter med grova d&auml;ck och riktiga komponenter." data-description="Helhetsbilden ger proportion, markfrig&aring;ng och den robusta upps&auml;ttningen direkt.">
+          <img loading="lazy" decoding="async" src="/assets/showroom/showroom-custom-full.jpg" alt="Helvy av custom elscooter">
+          <strong>Helvy</strong>
+          <span>Proportion, stance och helhetsk&auml;nsla.</span>
+        </button>
+        <button class="showroom-thumb" type="button" data-image="/assets/showroom/showroom-custom-rear-detail.jpg" data-angle="Bakdetalj" data-title="Bakdel, st&ouml;td&auml;mpare och inf&auml;stning i n&auml;rbild." data-description="Den h&auml;r vyn lyfter upp finishen i bakpartiet och g&ouml;r det l&auml;ttare att visa upp detaljer som annars f&ouml;rsvinner i katalogbilder.">
+          <img loading="lazy" decoding="async" src="/assets/showroom/showroom-custom-rear-detail.jpg" alt="Detaljbild p&aring; bakhjul, d&auml;mpare och inf&auml;stning">
+          <strong>Bakdetalj</strong>
+          <span>D&auml;mpare, inf&auml;stning och grovt gummi.</span>
+        </button>
+        <button class="showroom-thumb" type="button" data-image="/assets/showroom/showroom-custom-cockpit.jpg" data-angle="Cockpit" data-title="Cockpit, styrk&auml;nsla och frontdetaljer." data-description="Cockpitvyn visar att maskinen &auml;r verklig, p&aring; plats och byggd f&ouml;r anv&auml;ndning - inte bara en render.">
+          <img loading="lazy" decoding="async" src="/assets/showroom/showroom-custom-cockpit.jpg" alt="Cockpitdetalj p&aring; custom elscooter i verkstaden">
+          <strong>Cockpit</strong>
+          <span>Styr, front och n&auml;rvaro p&aring; riktigt.</span>
+        </button>
+      </div>
+    </div>
+    <div class="showroom-aside">
+      <article class="showroom-card">
+        <img loading="lazy" decoding="async" src="/assets/showroom/showroom-group-wide.jpg" alt="Flera premiumscootrar och elcrossar i Nordic E-Mobilitys verkstad">
+        <div class="showroom-card-copy">
+          <div class="showroom-kicker">P&aring; plats i &Ouml;rebro</div>
+          <h3>Flera segment under samma tak.</h3>
+          <p>Showroomk&auml;nslan blir starkare n&auml;r kunderna ser verkliga maskiner, verkliga m&auml;rken och en aktiv verkstadsmilj&ouml; i samma vy.</p>
+        </div>
+      </article>
+      <article class="showroom-card">
+        <img loading="lazy" decoding="async" src="/assets/showroom/showroom-orange-bike.jpg" alt="Orange elcross och prestandascooter i verkstaden">
+        <div class="showroom-card-copy">
+          <div class="showroom-kicker">Premiumk&auml;nsla</div>
+          <h3>Mindre katalog. Mer verklighet.</h3>
+          <p>Egna bilder g&ouml;r sortimentet tryggare och mer levande. N&auml;sta steg &auml;r att fotografera toppmodellerna i full rundserie f&ouml;r riktig 360-visning.</p>
+        </div>
+      </article>
+      <div class="showroom-note">Riktig 360 eller AR kr&auml;ver en komplett serie bilder i j&auml;mna vinklar eller en 3D-scan. Nu har sajten i st&auml;llet f&aring;tt en interaktiv flervy som &auml;r &auml;rlig, snygg och byggd p&aring; riktiga verkstadsbilder.</div>
+    </div>
+  </div>
+</div>
+</section>
+
 <!-- BLOGG -->
 <section class="blog" id="blogg">
 <div class="container">
@@ -1171,6 +1258,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
     <div class="bc"><div class="bc-thumb">&#10052;&#65039;</div><div class="bc-body"><div class="bc-tag">Säsong</div><div class="bc-title">Vinterförvaring — checklista för Örebro</div><p class="bc-ex">Ställa av scooten? Så undviker du skador på batteri och elektronik.</p><a href="/guider/vinterforvaring/" class="bc-link">Läs mer &#8594;</a></div></div>
     <div class="bc"><div class="bc-thumb">&#128220;</div><div class="bc-body"><div class="bc-tag">Regler</div><div class="bc-title">Regler för elscootrar i Sverige</div><p class="bc-ex">Hastighet, försäkring och var du får köra. Uppdaterad guide.</p><a href="/regler-elscooter/" class="bc-link">Läs mer &#8594;</a></div></div>
   </div>
+  <div style="margin-top:24px;text-align:center"><a href="/guider/" class="btn-secondary">Se alla guider</a></div>
 </div>
 </section>
 
@@ -1245,7 +1333,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
     </div>
     <div>
       <div class="f-hd">Information</div>
-      <ul class="f-links"><li><a href="#blogg">Blogg</a></li><li><a href="#produkter">Produkter</a></li><li><a href="/regler-elscooter/">Regler</a></li><li><a href="/foretag-serviceavtal/">Företag</a></li><li><a href="/om-oss/">Om oss</a></li><li><a href="/villkor/">Villkor</a></li><li><a href="/integritet/">Integritet</a></li></ul>
+      <ul class="f-links"><li><a href="/guider/">Guider</a></li><li><a href="#produkter">Produkter</a></li><li><a href="/regler-elscooter/">Regler</a></li><li><a href="/foretag-serviceavtal/">Företag</a></li><li><a href="/om-oss/">Om oss</a></li><li><a href="/villkor/">Villkor</a></li><li><a href="/integritet/">Integritet</a></li></ul>
     </div>
     <div>
       <div class="f-hd">Kontakt</div>
@@ -1344,6 +1432,24 @@ document.querySelectorAll('.stripe-buy').forEach(btn=>{
       if(data.url){window.location.href=data.url}
       else{alert('Kunde inte starta betalning. Ring oss på 070-024 33 19.');this.textContent=orig;this.style.pointerEvents='auto'}
     }catch(err){alert('Något gick fel. Ring oss på 070-024 33 19.');this.textContent=orig;this.style.pointerEvents='auto'}
+  });
+});
+
+// === SHOWROOM SWITCHER ===
+document.querySelectorAll('.showroom-thumb').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    const mainImage=document.getElementById('showroomMainImage');
+    const angle=document.getElementById('showroomAngle');
+    const title=document.getElementById('showroomTitle');
+    const description=document.getElementById('showroomDescription');
+    if(!mainImage||!angle||!title||!description)return;
+    mainImage.src=btn.dataset.image;
+    mainImage.alt=btn.querySelector('img')?.alt||mainImage.alt;
+    angle.textContent=btn.dataset.angle||'Vy';
+    title.textContent=btn.dataset.title||title.textContent;
+    description.textContent=btn.dataset.description||description.textContent;
+    document.querySelectorAll('.showroom-thumb').forEach(item=>item.classList.remove('is-active'));
+    btn.classList.add('is-active');
   });
 });
 
