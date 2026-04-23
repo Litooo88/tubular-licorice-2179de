@@ -214,12 +214,33 @@ const uniquePhones = (numbers = []) => {
 
 const shortCaseId = (id) => id.replace(/^case_/, "").slice(0, 18).toUpperCase();
 
+const formatPreferredDateForSms = (caseItem) => {
+  const raw = clean(caseItem.preferredDate, 120);
+  const label = isReadyPickup(caseItem) ? "Upphamtning" : "Inlamning";
+  const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!match) return `${label}: tid saknas`;
+
+  const [, year, month, day, hour, minute] = match.map(Number);
+  const date = new Date(year, month - 1, day, hour, minute);
+  if (Number.isNaN(date.getTime())) return `${label}: ${raw}`;
+
+  const formatted = new Intl.DateTimeFormat("sv-SE", {
+    day: "numeric",
+    month: "short",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(date).replace(".", "");
+
+  return `${label}: ${formatted}`;
+};
+
 const smsMessage = (caseItem) =>
   `Nordic E-Mobility: Bokning mottagen. Arende ${shortCaseId(caseItem.id)}. Ansvarig start: ${caseItem.assignedTo.name}. Vi kontaktar dig med tid och pris.`;
 
 const workshopSmsMessage = (caseItem) => {
   const addonInfo = caseItem.addons?.length ? ` Tillval ${caseItem.addons.length}.` : "";
-  return `Nytt Nordic-arende ${shortCaseId(caseItem.id)}: ${caseItem.customer.name}, ${caseItem.service}. Tel ${caseItem.customer.phone}. Varde ${caseItem.estimatedValue} kr.${addonInfo} Ansvar: ${caseItem.assignedTo.name}.`;
+  return `Nordic: ${caseItem.customer.name} - ${caseItem.service}. ${formatPreferredDateForSms(caseItem)}. Tel ${caseItem.customer.phone}. Arende ${shortCaseId(caseItem.id)}. Varde ${caseItem.estimatedValue} kr.${addonInfo} Ansvar: ${caseItem.assignedTo.name}.`;
 };
 
 const smsConfig = () => ({
