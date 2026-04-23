@@ -23,6 +23,12 @@ status = 301
 force = true
 
 [[redirects]]
+from = "https://sv.nordicemobility.com/*"
+to = "https://www.nordicemobility.se/:splat"
+status = 301
+force = true
+
+[[redirects]]
   from = "/nordic-emobility-site"
   to = "/"
   status = 301
