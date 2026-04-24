@@ -8,6 +8,7 @@ const PRODUCTS = {
   'navee-st3-pro': { name: 'NAVEE ST3 Pro SE', price: 1099000 },
   'navee-st3': { name: 'NAVEE ST3 SE', price: 899000 },
   'navee-n65i': { name: 'NAVEE N65i', price: 849900 },
+  'navee-v50i-pro': { name: 'NAVEE V50i Pro', price: 599000 },
   'navee-g5': { name: 'NAVEE G5', price: 549000 },
   'navee-v25i-pro-ii': { name: 'NAVEE V25i Pro II', price: 449000 },
   'navee-k100-max': { name: 'NAVEE K100 Max', price: 349900 },
