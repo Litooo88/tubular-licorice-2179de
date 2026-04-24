@@ -488,6 +488,20 @@ nav a:hover{color:#fff}
 .prod-price{font-size:15px;font-weight:800;color:#00C853}
 .prod-btn{display:block;width:100%;padding:9px;margin-top:10px;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#00C853;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all .2s;text-decoration:none}
 .prod-btn:hover{background:#00C853;color:#000}
+.navee-lookbook{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:14px;margin:10px 0 28px}
+.navee-shot{position:relative;min-height:250px;border-radius:12px;overflow:hidden;border:1px solid #1c241e;background:#111;display:flex;align-items:flex-end}
+.navee-shot--feature{grid-row:span 2;min-height:0}
+.navee-shot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;filter:brightness(.8)}
+.navee-shot:after{content:"";position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.05) 0%,rgba(0,0,0,.18) 36%,rgba(0,0,0,.76) 100%)}
+.navee-shot-body{position:relative;z-index:1;padding:20px;display:flex;flex-direction:column;gap:8px;max-width:430px}
+.navee-shot-kicker{display:inline-flex;align-self:flex-start;padding:5px 9px;border-radius:999px;background:rgba(0,0,0,.45);border:1px solid rgba(255,255,255,.14);font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#dfe6e1}
+.navee-shot-title{font-size:28px;line-height:1.02;font-weight:800;color:#fff}
+.navee-shot-copy{font-size:13px;line-height:1.55;color:#d4dad5}
+.navee-shot-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.navee-shot-btn{display:inline-flex;align-items:center;justify-content:center;min-height:38px;padding:0 14px;border-radius:6px;border:1px solid rgba(255,255,255,.18);background:rgba(0,0,0,.38);color:#fff;font-size:11px;font-weight:700;text-decoration:none;cursor:pointer}
+.navee-shot-btn--primary{background:#00C853;border-color:#00C853;color:#04150a}
+.navee-shot-btn:hover{border-color:#00C853;color:#00C853}
+.navee-shot-btn--primary:hover{color:#04150a;filter:brightness(1.04)}
 
 /* SHOWROOM */
 .showroom{padding:84px 0;background:#050705;border-top:1px solid #121a14}
@@ -569,6 +583,9 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   .showroom-thumbs{grid-template-columns:1fr}
   .showroom-stage-copy h3{font-size:24px}
   .blog-grid{grid-template-columns:1fr}
+  .navee-lookbook{grid-template-columns:1fr 1fr}
+  .navee-shot--feature{grid-column:1 / -1;min-height:320px}
+  .navee-shot-title{font-size:24px}
   .products .products-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px}
   .prod{display:flex;flex-direction:column;min-width:0}
   .prod-img{width:100%;height:auto!important;aspect-ratio:1/1;min-height:0}
@@ -587,6 +604,12 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   .sticky-cta{display:block}
   body{padding-bottom:68px}
   .section-title{font-size:28px}
+}
+@media(max-width:640px){
+  .navee-lookbook{grid-template-columns:1fr}
+  .navee-shot,.navee-shot--feature{min-height:260px}
+  .navee-shot-title{font-size:22px}
+  .navee-shot-copy{font-size:12px}
 }
 .seo-quick{padding:70px 0;background:#050505;border-top:1px solid #1a1a1a;border-bottom:1px solid #1a1a1a}
 .seo-quick-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:34px}
@@ -1092,6 +1115,53 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
       <div style="font-size:11px;font-weight:800;letter-spacing:1.6px;text-transform:uppercase;color:#ffb74d;margin-bottom:8px">V&auml;ntas in / begr&auml;nsat</div>
       <div style="font-size:13px;color:#fff;line-height:1.7">ST3 Pro &mdash; v&auml;ntas i maj<br>V25i Pro II &mdash; v&auml;ntas i slutet av maj<br>NT5 Max &mdash; v&auml;ntas i juni<br>XT5 Pro IT &mdash; endast 5 ex hos NAVEE</div>
     </div>
+  </div>
+  <div class="navee-lookbook">
+    <article class="navee-shot navee-shot--feature">
+      <img src="/assets/products/navee/xt5-ultra-drive.jpg" alt="NAVEE XT5 Ultra i premiumkampanjbild" loading="lazy" decoding="async">
+      <div class="navee-shot-body">
+        <span class="navee-shot-kicker">NAVEE:s rekommendation</span>
+        <div class="navee-shot-title">XT5 Ultra</div>
+        <div class="navee-shot-copy">High-end-valet NAVEE sj&auml;lva pekar ut just nu. Dubbla motorer, stark r&auml;ckvidd och en profil som faktiskt ser premium ut redan innan kunden klickar vidare.</div>
+        <div class="navee-shot-actions">
+          <a href="#" class="navee-shot-btn navee-shot-btn--primary stripe-buy" data-product="navee-xt5-ultra" data-price="16990">Best&auml;ll XT5 Ultra</a>
+          <a class="navee-shot-btn" href="/book-online">F&aring; r&aring;d f&ouml;rst</a>
+        </div>
+      </div>
+    </article>
+    <article class="navee-shot">
+      <img src="/assets/products/navee/v50i-pro-drive.jpg" alt="NAVEE V50i Pro i stadsmilj&ouml;" loading="lazy" decoding="async">
+      <div class="navee-shot-body">
+        <span class="navee-shot-kicker">Smidig pendling</span>
+        <div class="navee-shot-title">V50i Pro</div>
+        <div class="navee-shot-copy">Svensk 20 km/h-version med l&auml;ttare känsla och ren vardagsprofil. Bra val f&ouml;r kunder som vill ha design, komfort och enkel vardagsanv&auml;ndning.</div>
+        <div class="navee-shot-actions">
+          <a href="#" class="navee-shot-btn navee-shot-btn--primary stripe-buy" data-product="navee-v50i-pro" data-price="5990">Best&auml;ll V50i Pro</a>
+        </div>
+      </div>
+    </article>
+    <article class="navee-shot">
+      <img src="/assets/products/navee/n65i-drive.jpg" alt="NAVEE N65i i livsstilsbild" loading="lazy" decoding="async">
+      <div class="navee-shot-body">
+        <span class="navee-shot-kicker">Mer komfort</span>
+        <div class="navee-shot-title">N65i</div>
+        <div class="navee-shot-copy">Stadigare geometri och mer r&auml;ckvidd f&ouml;r kunden som vill ha en tryggare, vuxnare pendlar-scooter utan att g&aring; upp i XT-serien.</div>
+        <div class="navee-shot-actions">
+          <a href="#" class="navee-shot-btn navee-shot-btn--primary stripe-buy" data-product="navee-n65i" data-price="8499">Best&auml;ll N65i</a>
+        </div>
+      </div>
+    </article>
+    <article class="navee-shot">
+      <img src="/assets/products/navee/g5-drive.jpg" alt="NAVEE G5 i kampanjbild" loading="lazy" decoding="async">
+      <div class="navee-shot-body">
+        <span class="navee-shot-kicker">Prisv&auml;rt val</span>
+        <div class="navee-shot-title">G5</div>
+        <div class="navee-shot-copy">Ett mer tillg&auml;ngligt insteg i NAVEE-sortimentet, men fortfarande med ren design och en tydlig stadskänsla som g&ouml;r den l&auml;tt att s&auml;lja in.</div>
+        <div class="navee-shot-actions">
+          <a href="#" class="navee-shot-btn navee-shot-btn--primary stripe-buy" data-product="navee-g5" data-price="5490">Best&auml;ll G5</a>
+        </div>
+      </div>
+    </article>
   </div>
 
   <!-- NAVEE Flaggskepp -->
