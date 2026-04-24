@@ -51,6 +51,11 @@ button:disabled{opacity:.6;cursor:wait}
 .key-date b{display:block;font-size:20px;line-height:1.25}
 .key-date.missing{background:rgba(255,194,71,.12);border-color:rgba(255,194,71,.45);color:#fff2cf}
 .key-date.missing span{color:#ffe0a3}
+.card-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:12px 0 10px}
+.card-tab{background:#0a0f0a;color:#d6ded8;border:1px solid #28322a;padding:10px 12px;font-size:12px;font-weight:900}
+.card-tab.is-active{background:rgba(0,200,83,.14);border-color:rgba(0,200,83,.45);color:#baffcf}
+.card-panel{display:none}
+.card-panel.is-active{display:block}
 .facts{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
 .fact{border:1px solid #263029;border-radius:8px;padding:8px;background:#090d09}
 .fact span{display:block;color:#9ea79f;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
@@ -66,6 +71,16 @@ button:disabled{opacity:.6;cursor:wait}
   .contact{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:10px 0}
 .contact a{display:block;border:1px solid #28322a;border-radius:8px;padding:8px;text-align:center;font-size:12px;font-weight:900;text-decoration:none}
 .contact.tools{grid-template-columns:repeat(3,1fr)}
+.contact-panel{border:1px solid #263029;border-radius:8px;background:#090d09;padding:12px;margin:10px 0}
+.contact-panel h4{margin:0 0 10px;font-size:14px}
+.contact-panel p{margin:0 0 10px;color:#b9c3bb;font-size:13px;line-height:1.5}
+.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.contact-action{display:flex;flex-direction:column;gap:4px;border:1px solid #2a342c;border-radius:8px;padding:12px;background:#061008;text-decoration:none;color:#f5f7f4}
+.contact-action span{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#8ff5ae}
+.contact-action strong{font-size:15px;line-height:1.35}
+.contact-action.disabled{opacity:.5;pointer-events:none}
+.contact-inline{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.contact-inline .fact b a{color:#fff;text-decoration:none}
 .quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
 .quick-actions button{padding:9px 10px;font-size:12px}
 .quick-actions button.secondary.active{background:rgba(0,200,83,.14);border-color:rgba(0,200,83,.45);color:#baffcf}
@@ -88,7 +103,7 @@ textarea{min-height:66px;resize:vertical}
 .contact-state.waiting{color:#cce2ff}
 .contact-state.waiting::before{background:#4ba3ff;box-shadow:0 0 0 3px rgba(75,163,255,.18)}
   @media(max-width:1200px){.board{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}}
+  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}}
 </style>
 </head>
 <body>
@@ -152,6 +167,7 @@ const statusFilter=document.getElementById('statusFilter');
 const searchFilter=document.getElementById('searchFilter');
 let cases=[];
 let isLoadingCases=false;
+const cardTabState={};
 
 tokenInput.value=localStorage.getItem('nordicAdminToken')||'';
 document.getElementById('saveToken').addEventListener('click',()=>{localStorage.setItem('nordicAdminToken',tokenInput.value.trim());loadCases();});
@@ -449,6 +465,9 @@ function caseCard(item){
   const customerPhone=item.customer&&item.customer.phone||'Saknas';
   const customerEmailAddress=item.customer&&item.customer.email||'Saknas';
   const vehicleModel=item.vehicle&&item.vehicle.model||'Okänd modell';
+  const customerPhoneHref=item.customer&&item.customer.phone?`tel:${item.customer.phone}`:'#';
+  const customerEmailHref=item.customer&&item.customer.email?`mailto:${item.customer.email}`:'#';
+  const activeTab=cardTabState[item.id]||'overview';
   const card=document.createElement('article');
   card.className='case';
   const notes=(item.notes||[]).slice(-2).map(note=>`<div>${dateShort(note.at)}: ${html(note.text)}</div>`).join('');
@@ -473,74 +492,116 @@ function caseCard(item){
       <span class="customer-chip"><strong>E-post</strong> ${html(customerEmailAddress)}</span>
       <span class="customer-chip"><strong>Modell</strong> ${html(vehicleModel)}</span>
     </div>
-    <div class="key-date ${missingPreferred?'missing':''}"><span>${isPickupReady?'Planerad upph&auml;mtning':'Planerad inl&auml;mning'}</span><b>${missingPreferred?'Beh&ouml;ver bokas in':html(displayDate(item.preferredDate))}</b></div>
-    <div class="delivery-banner ${delivery.className}"><strong>${delivery.title}</strong>${html(delivery.text)}</div>
-    <div class="message-box"><strong>${html(item.service||'Annat')}</strong><br>${html(item.message||'Ingen beskrivning')}</div>
-    ${addonHtml}
-    <div class="facts">
-      <div class="fact"><span>Kontaktl&auml;ge</span><b class="contact-state ${contactState.className}">${contactState.label}</b></div>
-      <div class="fact"><span>Kontaktv&auml;g</span><b>${labelFrom(item.contactMethod,contactLabels)}</b></div>
-      <div class="fact"><span>V&auml;rde</span><b>${money(item.estimatedValue)}</b></div>
-      <div class="fact"><span>Tillval</span><b>${addonsFor(item).length?`${addonsFor(item).length} st (${money(addonTotal(item))})`:'Inga'}</b></div>
-      <div class="fact"><span>Rabattkod</span><b>${html(item.discountCode||'Ingen')}</b></div>
-      <div class="fact"><span>Inl&auml;mnad</span><b>${item.intakeAt?dateShort(item.intakeAt):'Nej'}</b></div>
-      <div class="fact"><span>Ansvarig</span><b>${html(owner.name)}</b></div>
-      <div class="fact"><span>&Auml;rende</span><b>${html(shortId(item.id))}</b></div>
+    <div class="card-tabs" role="tablist" aria-label="Kundkort">
+      <button type="button" class="secondary card-tab ${activeTab==='overview'?'is-active':''}" data-tab="overview">Översikt</button>
+      <button type="button" class="secondary card-tab ${activeTab==='contact'?'is-active':''}" data-tab="contact">Kontakt info</button>
     </div>
-    <div class="meta">Logistik: <strong>${labelFrom(item.logistics,logisticsLabels)}</strong><br>Kund-SMS: <strong>${notificationLabel(sms,'sms')}</strong> &middot; Intern SMS: <strong>${notificationLabel(staffSms,'sms')}</strong><br>Kundmail: <strong>${notificationLabel(customerEmail,'email')}</strong> &middot; Verkstadsmail: <strong>${notificationLabel(workshopEmail,'email')}</strong><br>Kalender: <strong>${notificationLabel(calendar,'calendar')}</strong><br>Skapad: ${dateShort(item.createdAt)}</div>
-    <div class="contact">
-      <a href="tel:${html(item.customer&&item.customer.phone||'')}">Ring kund</a>
-      <a href="${html(smsHref(item))}">SMS-mall</a>
+    <div class="card-panel ${activeTab==='overview'?'is-active':''}" data-panel="overview">
+      <div class="key-date ${missingPreferred?'missing':''}"><span>${isPickupReady?'Planerad upph&auml;mtning':'Planerad inl&auml;mning'}</span><b>${missingPreferred?'Beh&ouml;ver bokas in':html(displayDate(item.preferredDate))}</b></div>
+      <div class="delivery-banner ${delivery.className}"><strong>${delivery.title}</strong>${html(delivery.text)}</div>
+      <div class="message-box"><strong>${html(item.service||'Annat')}</strong><br>${html(item.message||'Ingen beskrivning')}</div>
+      ${addonHtml}
+      <div class="facts">
+        <div class="fact"><span>Kontaktl&auml;ge</span><b class="contact-state ${contactState.className}">${contactState.label}</b></div>
+        <div class="fact"><span>Kontaktv&auml;g</span><b>${labelFrom(item.contactMethod,contactLabels)}</b></div>
+        <div class="fact"><span>V&auml;rde</span><b>${money(item.estimatedValue)}</b></div>
+        <div class="fact"><span>Tillval</span><b>${addonsFor(item).length?`${addonsFor(item).length} st (${money(addonTotal(item))})`:'Inga'}</b></div>
+        <div class="fact"><span>Rabattkod</span><b>${html(item.discountCode||'Ingen')}</b></div>
+        <div class="fact"><span>Inl&auml;mnad</span><b>${item.intakeAt?dateShort(item.intakeAt):'Nej'}</b></div>
+        <div class="fact"><span>Ansvarig</span><b>${html(owner.name)}</b></div>
+        <div class="fact"><span>&Auml;rende</span><b>${html(shortId(item.id))}</b></div>
+      </div>
+      <div class="meta">Logistik: <strong>${labelFrom(item.logistics,logisticsLabels)}</strong><br>Kund-SMS: <strong>${notificationLabel(sms,'sms')}</strong> &middot; Intern SMS: <strong>${notificationLabel(staffSms,'sms')}</strong><br>Kundmail: <strong>${notificationLabel(customerEmail,'email')}</strong> &middot; Verkstadsmail: <strong>${notificationLabel(workshopEmail,'email')}</strong><br>Kalender: <strong>${notificationLabel(calendar,'calendar')}</strong><br>Skapad: ${dateShort(item.createdAt)}</div>
+      <div class="contact">
+        <a href="tel:${html(item.customer&&item.customer.phone||'')}">Ring kund</a>
+        <a href="${html(smsHref(item))}">SMS-mall</a>
+      </div>
+      <div class="quick-actions">
+        <button type="button" class="secondary quick-status ${item.status==='contacted'?'active':''}" data-status="contacted" data-note="Kund kontaktad.">Kontaktad</button>
+        <button type="button" class="secondary quick-status ${item.status==='waiting_customer'?'active':''}" data-status="waiting_customer" data-note="Inv&auml;ntar svar fr&aring;n kund.">V&auml;ntar svar</button>
+        <button type="button" class="secondary quick-status ${item.status==='checked_in'?'active':''}" data-status="checked_in" data-note="Fordon inl&auml;mnat p&aring; verkstaden.">Inl&auml;mnad</button>
+      </div>
+      <div class="contact tools">
+        <a href="${html(mailHref(item))}">Mailmall</a>
+        <a href="${html(calendarHref(item))}" download="nordic-${html(shortId(item.id))}.ics">Kalenderfil</a>
+        <a href="mailto:${html(item.customer&&item.customer.email||'')}">Maila fritt</a>
+      </div>
+      <details class="edit-wrap">
+        <summary>Redigera kund och &auml;rende</summary>
+        <form class="edit" data-id="${html(item.id)}">
+          <div class="edit-help">Automatisk uppdatering pausas medan den h&auml;r kunden &auml;r &ouml;ppen.</div>
+          <div class="row">
+            <div><label>Kundnamn</label><input name="customerName" value="${html(item.customer&&item.customer.name||'')}"></div>
+            <div><label>Telefon</label><input name="customerPhone" value="${html(item.customer&&item.customer.phone||'')}"></div>
+          </div>
+          <div class="row">
+            <div><label>E-post</label><input name="customerEmail" type="email" value="${html(item.customer&&item.customer.email||'')}"></div>
+            <div><label>Modell</label><input name="vehicleModel" value="${html(item.vehicle&&item.vehicle.model||'')}"></div>
+          </div>
+          <div class="row">
+            <div><label>Status</label><select name="status">${Object.entries(statusLabels).map(([value,label])=>`<option value="${value}" ${item.status===value?'selected':''}>${label}</option>`).join('')}</select></div>
+            <div><label>Ansvarig</label><select name="assignedTo"><option value="lennart" ${owner.key!=='sebastian'?'selected':''}>Lennart</option><option value="sebastian" ${owner.key==='sebastian'?'selected':''}>Sebastian</option></select></div>
+          </div>
+          <div class="row">
+            <div><label>Service / tj&auml;nst</label><input name="service" value="${html(item.service||'')}"></div>
+            <div><label>&Ouml;nskad tid</label><input name="preferredDate" value="${html(item.preferredDate||'')}" placeholder="2026-04-22 kl 10:00"></div>
+          </div>
+          <div class="row">
+            <div><label>Kontakt</label><select name="contactMethod"><option value="phone" ${item.contactMethod!=='sms'&&item.contactMethod!=='email'?'selected':''}>Ring kund</option><option value="sms" ${item.contactMethod==='sms'?'selected':''}>SMS f&ouml;rst</option><option value="email" ${item.contactMethod==='email'?'selected':''}>E-post f&ouml;rst</option></select></div>
+            <div><label>Inl&auml;mning / upph&auml;mtning</label><select name="logistics"><option value="dropoff" ${item.logistics==='dropoff'?'selected':''}>Kund l&auml;mnar in</option><option value="pickup-ready" ${item.logistics==='pickup-ready'?'selected':''}>Kund h&auml;mtar f&auml;rdig scooter</option><option value="pickup-question" ${item.logistics==='pickup-question'?'selected':''}>Fr&aring;ga om h&auml;mtning</option><option value="not-sure" ${item.logistics==='not-sure'?'selected':''}>Ej best&auml;mt</option></select></div>
+          </div>
+          <div><label>Rabattkod</label><input name="discountCode" value="${html(item.discountCode||'')}"></div>
+          <div class="row">
+            <div><label>V&auml;rde</label><input name="estimatedValue" type="number" min="0" step="1" value="${Number(item.estimatedValue||0)}"></div>
+            <div><label>Prioritet</label><select name="priority"><option value="normal" ${item.priority!=='urgent'?'selected':''}>Normal</option><option value="urgent" ${item.priority==='urgent'?'selected':''}>Akut</option></select></div>
+          </div>
+          <div class="row">
+            <div><label>Faktiskt inl&auml;mnad</label><input name="intakeAt" type="datetime-local" value="${localInput(item.intakeAt)}"></div>
+            <div><label>Klar senast</label><input name="promisedAt" type="datetime-local" value="${localInput(item.promisedAt)}"></div>
+          </div>
+          <div><label>Felbeskrivning</label><textarea name="message">${html(item.message||'')}</textarea></div>
+          <div><label>Intern notering</label><textarea name="note" placeholder="Ex: ringt kund, v&auml;ntar d&auml;ck, offert skickad"></textarea></div>
+          <div class="row"><button type="submit">Spara &auml;ndringar</button><button type="button" class="delete-case">Radera &auml;rende</button></div>
+        </form>
+      </details>
     </div>
-    <div class="quick-actions">
-      <button type="button" class="secondary quick-status ${item.status==='contacted'?'active':''}" data-status="contacted" data-note="Kund kontaktad.">Kontaktad</button>
-      <button type="button" class="secondary quick-status ${item.status==='waiting_customer'?'active':''}" data-status="waiting_customer" data-note="Inv&auml;ntar svar fr&aring;n kund.">V&auml;ntar svar</button>
-      <button type="button" class="secondary quick-status ${item.status==='checked_in'?'active':''}" data-status="checked_in" data-note="Fordon inl&auml;mnat p&aring; verkstaden.">Inl&auml;mnad</button>
+    <div class="card-panel ${activeTab==='contact'?'is-active':''}" data-panel="contact">
+      <div class="contact-panel">
+        <h4>Kontakt info</h4>
+        <p>Öppna telefon eller e-post direkt härifrån när du behöver nå kunden snabbt från mobilen.</p>
+        <div class="contact-grid">
+          <a class="contact-action ${item.customer&&item.customer.phone?'':'disabled'}" href="${html(customerPhoneHref)}">
+            <span>Ring kund</span>
+            <strong>${html(customerPhone)}</strong>
+          </a>
+          <a class="contact-action ${item.customer&&item.customer.phone?'':'disabled'}" href="${html(smsHref(item))}">
+            <span>SMS kund</span>
+            <strong>Öppna SMS med mall</strong>
+          </a>
+          <a class="contact-action ${item.customer&&item.customer.email?'':'disabled'}" href="${html(customerEmailHref)}">
+            <span>Maila kund</span>
+            <strong>${html(customerEmailAddress)}</strong>
+          </a>
+          <a class="contact-action ${item.customer&&item.customer.email?'':'disabled'}" href="${html(mailHref(item))}">
+            <span>Mailmall</span>
+            <strong>Öppna förifyllt svar</strong>
+          </a>
+        </div>
+        <div class="contact-inline">
+          <div class="fact"><span>Kundtelefon</span><b><a href="${html(customerPhoneHref)}">${html(customerPhone)}</a></b></div>
+          <div class="fact"><span>Kundmail</span><b><a href="${html(customerEmailHref)}">${html(customerEmailAddress)}</a></b></div>
+        </div>
+      </div>
     </div>
-    <div class="contact tools">
-      <a href="${html(mailHref(item))}">Mailmall</a>
-      <a href="${html(calendarHref(item))}" download="nordic-${html(shortId(item.id))}.ics">Kalenderfil</a>
-      <a href="mailto:${html(item.customer&&item.customer.email||'')}">Maila fritt</a>
-    </div>
-    <details class="edit-wrap">
-      <summary>Redigera kund och &auml;rende</summary>
-      <form class="edit" data-id="${html(item.id)}">
-        <div class="edit-help">Automatisk uppdatering pausas medan den h&auml;r kunden &auml;r &ouml;ppen.</div>
-        <div class="row">
-          <div><label>Kundnamn</label><input name="customerName" value="${html(item.customer&&item.customer.name||'')}"></div>
-          <div><label>Telefon</label><input name="customerPhone" value="${html(item.customer&&item.customer.phone||'')}"></div>
-        </div>
-        <div class="row">
-          <div><label>E-post</label><input name="customerEmail" type="email" value="${html(item.customer&&item.customer.email||'')}"></div>
-          <div><label>Modell</label><input name="vehicleModel" value="${html(item.vehicle&&item.vehicle.model||'')}"></div>
-        </div>
-        <div class="row">
-          <div><label>Status</label><select name="status">${Object.entries(statusLabels).map(([value,label])=>`<option value="${value}" ${item.status===value?'selected':''}>${label}</option>`).join('')}</select></div>
-          <div><label>Ansvarig</label><select name="assignedTo"><option value="lennart" ${owner.key!=='sebastian'?'selected':''}>Lennart</option><option value="sebastian" ${owner.key==='sebastian'?'selected':''}>Sebastian</option></select></div>
-        </div>
-        <div class="row">
-          <div><label>Service / tj&auml;nst</label><input name="service" value="${html(item.service||'')}"></div>
-          <div><label>&Ouml;nskad tid</label><input name="preferredDate" value="${html(item.preferredDate||'')}" placeholder="2026-04-22 kl 10:00"></div>
-        </div>
-        <div class="row">
-          <div><label>Kontakt</label><select name="contactMethod"><option value="phone" ${item.contactMethod!=='sms'&&item.contactMethod!=='email'?'selected':''}>Ring kund</option><option value="sms" ${item.contactMethod==='sms'?'selected':''}>SMS f&ouml;rst</option><option value="email" ${item.contactMethod==='email'?'selected':''}>E-post f&ouml;rst</option></select></div>
-          <div><label>Inl&auml;mning / upph&auml;mtning</label><select name="logistics"><option value="dropoff" ${item.logistics==='dropoff'?'selected':''}>Kund l&auml;mnar in</option><option value="pickup-ready" ${item.logistics==='pickup-ready'?'selected':''}>Kund h&auml;mtar f&auml;rdig scooter</option><option value="pickup-question" ${item.logistics==='pickup-question'?'selected':''}>Fr&aring;ga om h&auml;mtning</option><option value="not-sure" ${item.logistics==='not-sure'?'selected':''}>Ej best&auml;mt</option></select></div>
-        </div>
-        <div><label>Rabattkod</label><input name="discountCode" value="${html(item.discountCode||'')}"></div>
-        <div class="row">
-          <div><label>V&auml;rde</label><input name="estimatedValue" type="number" min="0" step="1" value="${Number(item.estimatedValue||0)}"></div>
-          <div><label>Prioritet</label><select name="priority"><option value="normal" ${item.priority!=='urgent'?'selected':''}>Normal</option><option value="urgent" ${item.priority==='urgent'?'selected':''}>Akut</option></select></div>
-        </div>
-        <div class="row">
-          <div><label>Faktiskt inl&auml;mnad</label><input name="intakeAt" type="datetime-local" value="${localInput(item.intakeAt)}"></div>
-          <div><label>Klar senast</label><input name="promisedAt" type="datetime-local" value="${localInput(item.promisedAt)}"></div>
-        </div>
-        <div><label>Felbeskrivning</label><textarea name="message">${html(item.message||'')}</textarea></div>
-        <div><label>Intern notering</label><textarea name="note" placeholder="Ex: ringt kund, v&auml;ntar d&auml;ck, offert skickad"></textarea></div>
-        <div class="row"><button type="submit">Spara &auml;ndringar</button><button type="button" class="delete-case">Radera &auml;rende</button></div>
-      </form>
-    </details>
     ${notes?`<div class="notes"><strong>Senaste noteringar</strong>${notes}</div>`:''}`;
+  card.querySelectorAll('.card-tab').forEach((button)=>{
+    button.addEventListener('click',()=>{
+      const nextTab=button.dataset.tab||'overview';
+      cardTabState[item.id]=nextTab;
+      card.querySelectorAll('.card-tab').forEach((tab)=>tab.classList.toggle('is-active',tab===button));
+      card.querySelectorAll('.card-panel').forEach((panel)=>panel.classList.toggle('is-active',panel.dataset.panel===nextTab));
+    });
+  });
   const form=card.querySelector('form');
   card.querySelectorAll('.quick-status').forEach((button)=>{
     button.addEventListener('click',async()=>{
