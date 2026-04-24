@@ -7,6 +7,12 @@ const json = (body, status = 200) =>
   });
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
+const numberOrNull = (value) => {
+  if (value === undefined) return undefined;
+  if (value === null || value === "") return null;
+  const normalized = Number(String(value).replace(/[^\d.,-]/g, "").replace(",", "."));
+  return Number.isFinite(normalized) ? normalized : null;
+};
 
 const STAFF = {
   lennart: { key: "lennart", name: "Lennart", role: "Golv, mottagning och snabba jobb", phone: "072-260 77 53" },
@@ -70,6 +76,26 @@ export default async (request, context) => {
 
     const body = await request.json();
     const now = new Date().toISOString();
+    const nextCompletion = {
+      ...(current.completion || {}),
+      totalCost:
+        body.totalCost === undefined
+          ? current.completion?.totalCost ?? null
+          : numberOrNull(body.totalCost),
+      workSummary:
+        body.workSummary === undefined
+          ? current.completion?.workSummary || ""
+          : clean(body.workSummary, 3000),
+      pickupSummary:
+        body.pickupSummary === undefined
+          ? current.completion?.pickupSummary || ""
+          : clean(body.pickupSummary, 1600),
+      readyAt:
+        body.readyAt === undefined
+          ? current.completion?.readyAt || null
+          : clean(body.readyAt, 80) || null,
+      updatedAt: now,
+    };
     const next = {
       ...current,
       updatedAt: now,
@@ -95,11 +121,16 @@ export default async (request, context) => {
         ...(current.vehicle || {}),
         model: body.vehicleModel === undefined ? current.vehicle?.model : clean(body.vehicleModel, 180),
       },
+      completion: nextCompletion,
     };
 
     if (body.assignedTo) {
       const assignee = clean(body.assignedTo, 40);
       next.assignedTo = assignee === "sebastian" ? STAFF.sebastian : STAFF.lennart;
+    }
+
+    if (body.status === "ready" && !next.completion.readyAt) {
+      next.completion.readyAt = now;
     }
 
     if (body.note) {

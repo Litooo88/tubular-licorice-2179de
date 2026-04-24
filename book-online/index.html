@@ -326,6 +326,11 @@ const sumAddons=document.getElementById('sumAddons');
 const sumOwner=document.getElementById('sumOwner');
 const sumSms=document.getElementById('sumSms');
 const addonInputs=[...document.querySelectorAll('input[name="addons"]')];
+const heroEyebrow=document.querySelector('.hero .eyebrow');
+const heroHeading=document.querySelector('.hero h1');
+const heroLead=document.querySelector('.hero .lead');
+const panelHeading=document.querySelector('.panel-title h2');
+const panelLead=document.querySelector('.panel-title p');
 
 function pad(number){return String(number).padStart(2,'0');}
 function isoDay(date){return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;}
@@ -389,8 +394,38 @@ function syncPickupService(){
   if(pickupOption)serviceSelect.value=pickupOption.value;
   updateSummary();
 }
+function setSelectValue(select,value){
+  if(!select||!value)return;
+  const option=[...select.options].find((entry)=>String(entry.value).toLowerCase()===String(value).toLowerCase());
+  if(option)select.value=option.value;
+}
+function applyPrefillFromUrl(){
+  const params=new URLSearchParams(window.location.search);
+  const logistics=params.get('logistics');
+  const service=params.get('service');
+  const scooter=params.get('scooter');
+  const message=params.get('message');
+  const caseId=params.get('caseId');
+  if(logistics) setSelectValue(logisticsSelect,logistics);
+  if(service) setSelectValue(serviceSelect,service);
+  if(scooter){
+    const scooterInput=document.getElementById('scooter');
+    if(scooterInput) scooterInput.value=scooter;
+  }
+  if(message&&messageInput) messageInput.value=message;
+  if(caseId&&messageInput&&!messageInput.value.includes(caseId)) messageInput.value=`${messageInput.value ? `${messageInput.value} ` : ''}(Ärende ${caseId})`;
+  if((logistics||'').toLowerCase()==='pickup-ready'){
+    if(heroEyebrow) heroEyebrow.textContent='Upphämtning i Örebro';
+    if(heroHeading) heroHeading.textContent='Boka upphämtning av din klara scooter.';
+    if(heroLead) heroLead.textContent='Välj när du vill hämta fordonet. Vi sammanfattar tid, modell och nästa steg direkt i bokningen.';
+    if(panelHeading) panelHeading.textContent='Boka upphämtning';
+    if(panelLead) panelLead.textContent='Välj en upphämtningstid som passar. Vi använder uppgifterna för att hålla utlämningen snabb, tydlig och säker.';
+    syncPickupService();
+  }
+}
 fillDayOptions();
 fillTimeOptions();
+applyPrefillFromUrl();
 if(serviceSelect)serviceSelect.addEventListener('change',updateSummary);
 if(logisticsSelect)logisticsSelect.addEventListener('change',syncPickupService);
 addonInputs.forEach((input)=>input.addEventListener('change',updateSummary));

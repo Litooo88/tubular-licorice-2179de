@@ -51,7 +51,7 @@ button:disabled{opacity:.6;cursor:wait}
 .key-date b{display:block;font-size:20px;line-height:1.25}
 .key-date.missing{background:rgba(255,194,71,.12);border-color:rgba(255,194,71,.45);color:#fff2cf}
 .key-date.missing span{color:#ffe0a3}
-.card-tabs{display:grid;grid-template-columns:repeat(2,1fr);gap:6px;margin:12px 0 10px}
+.card-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0 10px}
 .card-tab{background:#0a0f0a;color:#d6ded8;border:1px solid #28322a;padding:10px 12px;font-size:12px;font-weight:900}
 .card-tab.is-active{background:rgba(0,200,83,.14);border-color:rgba(0,200,83,.45);color:#baffcf}
 .card-panel{display:none}
@@ -81,6 +81,21 @@ button:disabled{opacity:.6;cursor:wait}
 .contact-action.disabled{opacity:.5;pointer-events:none}
 .contact-inline{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .contact-inline .fact b a{color:#fff;text-decoration:none}
+.completion-panel{border:1px solid #263029;border-radius:8px;background:#090d09;padding:12px;margin:10px 0}
+.completion-panel h4{margin:0 0 10px;font-size:15px}
+.completion-panel p{margin:0 0 10px;color:#b9c3bb;font-size:13px;line-height:1.5}
+.completion-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.completion-grid .full{grid-column:1 / -1}
+.completion-note{display:block;margin-top:8px;color:#a8b3aa;font-size:12px;line-height:1.45}
+.completion-preview{border:1px solid #263029;border-radius:8px;background:#061008;padding:12px;margin-top:10px}
+.completion-preview strong{display:block;margin-bottom:8px;font-size:13px}
+.completion-preview textarea{min-height:120px;background:#050805}
+.completion-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:10px}
+.completion-actions .wide{grid-column:1 / -1}
+.completion-link{display:block;margin-top:10px;padding:10px 12px;border-radius:8px;border:1px solid rgba(0,200,83,.35);background:rgba(0,200,83,.08);color:#e8fff0;text-decoration:none;word-break:break-all;font-size:12px;line-height:1.45}
+.completion-warning{border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;line-height:1.5}
+.completion-warning.good{background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#e6ffef}
+.completion-warning.warn{background:rgba(255,194,71,.12);border:1px solid rgba(255,194,71,.4);color:#fff1cf}
 .quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
 .quick-actions button{padding:9px 10px;font-size:12px}
 .quick-actions button.secondary.active{background:rgba(0,200,83,.14);border-color:rgba(0,200,83,.45);color:#baffcf}
@@ -103,7 +118,7 @@ textarea{min-height:66px;resize:vertical}
 .contact-state.waiting{color:#cce2ff}
 .contact-state.waiting::before{background:#4ba3ff;box-shadow:0 0 0 3px rgba(75,163,255,.18)}
   @media(max-width:1200px){.board{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}}
+  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -279,6 +294,63 @@ function mailHref(item){
   const email=String(item.customer&&item.customer.email||'').trim();
   if(!email)return'#';
   return `mailto:${email}?subject=${encodeURIComponent('Nordic E-Mobility - \u00e4rende '+shortId(item.id))}&body=${encodeURIComponent(customerTemplate(item))}`;
+}
+function pickupBookingUrl(item,overrides={}){
+  const url=new URL('/book-online/',window.location.origin);
+  const model=String(overrides.vehicleModel!==undefined?overrides.vehicleModel:item.vehicle&&item.vehicle.model||'').trim();
+  url.searchParams.set('logistics','pickup-ready');
+  url.searchParams.set('service','Upphamtning av fardig scooter');
+  url.searchParams.set('caseId',shortId(item.id));
+  if(model)url.searchParams.set('scooter',model);
+  url.searchParams.set('message',`Jag vill boka upphämtning av mitt klara fordon. Ärende ${shortId(item.id)}.`);
+  return url.toString();
+}
+function completionData(item,overrides={}){
+  const completion=item.completion||{};
+  const totalCostRaw=overrides.totalCost!==undefined?overrides.totalCost:completion.totalCost;
+  const hasTotal=!(totalCostRaw===null||totalCostRaw===undefined||totalCostRaw==='');
+  const totalCost=totalCostRaw===null||totalCostRaw===undefined||totalCostRaw===''?0:Number(totalCostRaw||0);
+  const vehicleModel=String(overrides.vehicleModel!==undefined?overrides.vehicleModel:item.vehicle&&item.vehicle.model||'').trim();
+  const workSummary=String(overrides.workSummary!==undefined?overrides.workSummary:completion.workSummary||'').trim();
+  const pickupSummary=String(overrides.pickupSummary!==undefined?overrides.pickupSummary:completion.pickupSummary||'').trim()||'Boka en upphämtningstid via länken nedan eller svara på detta meddelande om du vill att vi hjälper dig.';
+  const bookingUrl=pickupBookingUrl(item,{vehicleModel});
+  return {
+    totalCost,
+    totalLabel:hasTotal?`${money(totalCost)} inkl. moms`:'Ej ifyllt än',
+    vehicleModel:vehicleModel||'scooter',
+    workSummary,
+    pickupSummary,
+    bookingUrl,
+    readyAt:overrides.readyAt!==undefined?overrides.readyAt:completion.readyAt||null,
+    canDraft:hasTotal && Boolean(workSummary)
+  };
+}
+function readySmsTemplate(item,overrides={}){
+  const data=completionData(item,overrides);
+  const greeting=item.customer&&item.customer.name?`Hej ${item.customer.name}!`:'Hej!';
+  return `${greeting}\n\nDin ${data.vehicleModel} är nu klar för upphämtning hos Nordic E-Mobility.\n\nUtförda åtgärder: ${data.workSummary||'Se underlag i ärendet.'}\nTotalt belopp inkl. moms: ${data.totalLabel}\n\nBoka upphämtning här: ${data.bookingUrl}\n\n${data.pickupSummary}\n\nNordic E-Mobility`;
+}
+function readyMailSubject(item,overrides={}){
+  const data=completionData(item,overrides);
+  return `Din ${data.vehicleModel} är klar för upphämtning | Nordic E-Mobility`;
+}
+function readyMailTemplate(item,overrides={}){
+  const data=completionData(item,overrides);
+  const greeting=item.customer&&item.customer.name?`Hej ${item.customer.name},`:'Hej,';
+  return `${greeting}\n\nDin ${data.vehicleModel} är nu klar för upphämtning hos Nordic E-Mobility.\n\nUtförda åtgärder\n${data.workSummary||'Se underlag i ärendet.'}\n\nTotalt belopp inkl. moms\n${data.totalLabel}\n\nBoka upphämtning\n${data.bookingUrl}\n\n${data.pickupSummary}\n\nAdress\nPistolvägen 6, Örebro\n\nOm du vill att vi reserverar en tid åt dig går det bra att svara direkt på detta mail eller SMS.\n\nVänliga hälsningar,\nNordic E-Mobility`;
+}
+async function copyText(text){
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    await navigator.clipboard.writeText(text);
+    return true;
+  }
+  const temp=document.createElement('textarea');
+  temp.value=text;
+  document.body.appendChild(temp);
+  temp.select();
+  const ok=document.execCommand('copy');
+  temp.remove();
+  return ok;
 }
 function icsDate(value){
   const date=new Date(value);
@@ -467,7 +539,8 @@ function caseCard(item){
   const vehicleModel=item.vehicle&&item.vehicle.model||'Okänd modell';
   const customerPhoneHref=item.customer&&item.customer.phone?`tel:${item.customer.phone}`:'#';
   const customerEmailHref=item.customer&&item.customer.email?`mailto:${item.customer.email}`:'#';
-  const activeTab=cardTabState[item.id]||'overview';
+  const completion=completionData(item);
+  const activeTab=cardTabState[item.id]||(item.status==='ready'?'ready':'overview');
   const card=document.createElement('article');
   card.className='case';
   const notes=(item.notes||[]).slice(-2).map(note=>`<div>${dateShort(note.at)}: ${html(note.text)}</div>`).join('');
@@ -482,6 +555,7 @@ function caseCard(item){
   const missingPreferred=needsBookingDate(item.preferredDate);
   const isPickupReady=item.logistics==='pickup-ready';
   const addonHtml=addonsFor(item).length?`<div class="addons-box"><strong>Tillval</strong>${html(addonText(item))}</div>`:'';
+  const completionBanner=completion.workSummary||completion.totalCost?`<div class="addons-box"><strong>Klarunderlag</strong>${completion.workSummary?`${html(completion.workSummary)}<br>`:''}Slutbelopp: ${html(completion.totalLabel)}${completion.readyAt?`<br>Klarmarkerad: ${html(dateShort(completion.readyAt))}`:''}</div>`:'';
   card.innerHTML=`
     <div class="case-head">
       <div><h3>${html(item.customer&&item.customer.name||'Ok&auml;nd kund')}</h3><div class="muted">${html(item.vehicle&&item.vehicle.model||'Ok&auml;nd modell')}</div></div>
@@ -495,16 +569,19 @@ function caseCard(item){
     <div class="card-tabs" role="tablist" aria-label="Kundkort">
       <button type="button" class="secondary card-tab ${activeTab==='overview'?'is-active':''}" data-tab="overview">Översikt</button>
       <button type="button" class="secondary card-tab ${activeTab==='contact'?'is-active':''}" data-tab="contact">Kontakt info</button>
+      <button type="button" class="secondary card-tab ${activeTab==='ready'?'is-active':''}" data-tab="ready">Klar / h&auml;mtning</button>
     </div>
     <div class="card-panel ${activeTab==='overview'?'is-active':''}" data-panel="overview">
       <div class="key-date ${missingPreferred?'missing':''}"><span>${isPickupReady?'Planerad upph&auml;mtning':'Planerad inl&auml;mning'}</span><b>${missingPreferred?'Beh&ouml;ver bokas in':html(displayDate(item.preferredDate))}</b></div>
       <div class="delivery-banner ${delivery.className}"><strong>${delivery.title}</strong>${html(delivery.text)}</div>
       <div class="message-box"><strong>${html(item.service||'Annat')}</strong><br>${html(item.message||'Ingen beskrivning')}</div>
       ${addonHtml}
+      ${completionBanner}
       <div class="facts">
         <div class="fact"><span>Kontaktl&auml;ge</span><b class="contact-state ${contactState.className}">${contactState.label}</b></div>
         <div class="fact"><span>Kontaktv&auml;g</span><b>${labelFrom(item.contactMethod,contactLabels)}</b></div>
         <div class="fact"><span>V&auml;rde</span><b>${money(item.estimatedValue)}</b></div>
+        <div class="fact"><span>Slutbelopp</span><b>${html(completion.totalLabel)}</b></div>
         <div class="fact"><span>Tillval</span><b>${addonsFor(item).length?`${addonsFor(item).length} st (${money(addonTotal(item))})`:'Inga'}</b></div>
         <div class="fact"><span>Rabattkod</span><b>${html(item.discountCode||'Ingen')}</b></div>
         <div class="fact"><span>Inl&auml;mnad</span><b>${item.intakeAt?dateShort(item.intakeAt):'Nej'}</b></div>
@@ -593,6 +670,53 @@ function caseCard(item){
         </div>
       </div>
     </div>
+    <div class="card-panel ${activeTab==='ready'?'is-active':''}" data-panel="ready">
+      <div class="completion-panel">
+        <h4>Klar f&ouml;r upph&auml;mtning</h4>
+        <p>Fyll i slutbelopp och utf&ouml;rda &aring;tg&auml;rder. D&auml;refter kan du spara underlaget och direkt drafta SMS eller mail till kunden med bokningsl&auml;nk f&ouml;r upph&auml;mtning.</p>
+        <form class="edit completion-form" data-id="${html(item.id)}">
+          <div class="completion-grid">
+            <div>
+              <label>Totalt belopp inkl. moms</label>
+              <input name="totalCost" type="number" min="0" step="1" value="${completion.totalCost||''}" placeholder="T.ex. 1490">
+            </div>
+            <div>
+              <label>Status n&auml;r detta sparas</label>
+              <input value="${html(statusLabels[item.status]||item.status)}" readonly>
+            </div>
+            <div class="full">
+              <label>Utf&ouml;rda &aring;tg&auml;rder</label>
+              <textarea name="workSummary" placeholder="T.ex. bytt slang bak, riktat styre, testk&ouml;rt och kontrollerat bromsar">${html(completion.workSummary||'')}</textarea>
+            </div>
+            <div class="full">
+              <label>Kundinfo om upph&auml;mtning</label>
+              <textarea name="pickupSummary" placeholder="T.ex. boka en tid via l&auml;nken nedan eller svara om du vill att vi reserverar en tid">${html(completion.pickupSummary||'')}</textarea>
+              <span class="completion-note">Det h&auml;r blir din standardtext i SMS och mail. Slutbeloppet sparas separat i &auml;rendet, men riktig bokf&ouml;ringss&auml;kring kommer med Fortnox-steget.</span>
+            </div>
+          </div>
+          <a class="completion-link booking-link" href="${html(completion.bookingUrl)}" target="_blank" rel="noopener">${html(completion.bookingUrl)}</a>
+          <div class="completion-warning ${completion.canDraft?'good':'warn'} completion-state">${completion.canDraft?'Underlaget &auml;r redo att drafta till kunden.':'Fyll i slutbelopp och utf&ouml;rda &aring;tg&auml;rder innan du draftar SMS eller mail.'}</div>
+          <div class="row">
+            <button type="submit">Spara underlag</button>
+            <button type="button" class="secondary mark-ready">Spara + markera klar</button>
+          </div>
+          <div class="completion-actions">
+            <button type="button" class="secondary draft-sms">Drafta SMS</button>
+            <button type="button" class="secondary draft-mail">Drafta mail</button>
+            <button type="button" class="secondary copy-sms">Kopiera SMS</button>
+            <button type="button" class="secondary copy-mail">Kopiera mail</button>
+          </div>
+          <div class="completion-preview">
+            <strong>SMS-utkast</strong>
+            <textarea class="sms-preview" readonly></textarea>
+          </div>
+          <div class="completion-preview">
+            <strong>Mail-utkast</strong>
+            <textarea class="mail-preview" readonly></textarea>
+          </div>
+        </form>
+      </div>
+    </div>
     ${notes?`<div class="notes"><strong>Senaste noteringar</strong>${notes}</div>`:''}`;
   card.querySelectorAll('.card-tab').forEach((button)=>{
     button.addEventListener('click',()=>{
@@ -602,7 +726,8 @@ function caseCard(item){
       card.querySelectorAll('.card-panel').forEach((panel)=>panel.classList.toggle('is-active',panel.dataset.panel===nextTab));
     });
   });
-  const form=card.querySelector('form');
+  const form=card.querySelector('.edit-wrap form');
+  const completionForm=card.querySelector('.completion-form');
   card.querySelectorAll('.quick-status').forEach((button)=>{
     button.addEventListener('click',async()=>{
       const original=button.textContent;
@@ -632,6 +757,90 @@ function caseCard(item){
     }catch(error){showError(error.message)}
     finally{button.disabled=false;button.textContent='Spara \u00e4ndringar'}
   });
+  function completionValues(){
+    const data=new FormData(completionForm);
+    return {
+      totalCost:data.get('totalCost'),
+      workSummary:data.get('workSummary'),
+      pickupSummary:data.get('pickupSummary'),
+      vehicleModel:item.vehicle&&item.vehicle.model||''
+    };
+  }
+  function refreshCompletionPreview(){
+    const data=completionData(item,completionValues());
+    card.querySelector('.sms-preview').value=readySmsTemplate(item,completionValues());
+    card.querySelector('.mail-preview').value=readyMailTemplate(item,completionValues());
+    const bookingLink=card.querySelector('.booking-link');
+    bookingLink.href=data.bookingUrl;
+    bookingLink.textContent=data.bookingUrl;
+    const state=card.querySelector('.completion-state');
+    state.className=`completion-warning ${data.canDraft?'good':'warn'} completion-state`;
+    state.innerHTML=data.canDraft?'Underlaget &auml;r redo att drafta till kunden.':'Fyll i slutbelopp och utf&ouml;rda &aring;tg&auml;rder innan du draftar SMS eller mail.';
+    card.querySelectorAll('.draft-sms,.draft-mail,.copy-sms,.copy-mail').forEach((button)=>button.disabled=!data.canDraft);
+    return data;
+  }
+  async function saveCompletion(markReady=false){
+    const values=completionValues();
+    const payload={totalCost:values.totalCost,workSummary:values.workSummary,pickupSummary:values.pickupSummary};
+    if(markReady){
+      payload.status='ready';
+      payload.readyAt=new Date().toISOString();
+      payload.note=`Klar för upphämtning. Slutbelopp ${values.totalCost||0} kr.`;
+    }
+    await api('/api/cases/'+encodeURIComponent(completionForm.dataset.id),{method:'PATCH',body:JSON.stringify(payload)});
+    await loadCases();
+  }
+  completionForm.addEventListener('submit',async(event)=>{
+    event.preventDefault();
+    const button=completionForm.querySelector('button[type="submit"]');
+    button.disabled=true;
+    button.textContent='Sparar...';
+    try{
+      await saveCompletion(false);
+    }catch(error){showError(error.message)}
+    finally{
+      button.disabled=false;
+      button.textContent='Spara underlag';
+    }
+  });
+  completionForm.querySelector('.mark-ready').addEventListener('click',async()=>{
+    const button=completionForm.querySelector('.mark-ready');
+    button.disabled=true;
+    button.textContent='Sparar...';
+    try{
+      await saveCompletion(true);
+    }catch(error){showError(error.message)}
+    finally{
+      button.disabled=false;
+      button.textContent='Spara + markera klar';
+    }
+  });
+  completionForm.querySelector('.draft-sms').addEventListener('click',()=>{
+    const data=refreshCompletionPreview();
+    if(!data.canDraft){showError('Fyll i slutbelopp och utförda åtgärder innan du draftar SMS.');return;}
+    const phone=smsPhone(item.customer&&item.customer.phone);
+    if(!phone){showError('Kundtelefon saknas på ärendet.');return;}
+    window.location.href=`sms:${phone}?&body=${encodeURIComponent(readySmsTemplate(item,completionValues()))}`;
+  });
+  completionForm.querySelector('.draft-mail').addEventListener('click',()=>{
+    const data=refreshCompletionPreview();
+    if(!data.canDraft){showError('Fyll i slutbelopp och utförda åtgärder innan du draftar mail.');return;}
+    const email=String(item.customer&&item.customer.email||'').trim();
+    if(!email){showError('Kundmail saknas på ärendet.');return;}
+    window.location.href=`mailto:${email}?subject=${encodeURIComponent(readyMailSubject(item,completionValues()))}&body=${encodeURIComponent(readyMailTemplate(item,completionValues()))}`;
+  });
+  completionForm.querySelector('.copy-sms').addEventListener('click',async()=>{
+    const data=refreshCompletionPreview();
+    if(!data.canDraft){showError('Fyll i slutbelopp och utförda åtgärder innan du kopierar SMS.');return;}
+    try{await copyText(readySmsTemplate(item,completionValues()));}catch(error){showError('Kunde inte kopiera SMS-utkastet.');}
+  });
+  completionForm.querySelector('.copy-mail').addEventListener('click',async()=>{
+    const data=refreshCompletionPreview();
+    if(!data.canDraft){showError('Fyll i slutbelopp och utförda åtgärder innan du kopierar mail.');return;}
+    try{await copyText(`${readyMailSubject(item,completionValues())}\n\n${readyMailTemplate(item,completionValues())}`);}catch(error){showError('Kunde inte kopiera mailutkastet.');}
+  });
+  completionForm.querySelectorAll('input, textarea').forEach((field)=>field.addEventListener('input',refreshCompletionPreview));
+  refreshCompletionPreview();
   card.querySelector('.delete-case').addEventListener('click',async()=>{
     const name=item.customer&&item.customer.name?item.customer.name:'detta \u00e4rende';
     if(!confirm('Radera '+name+' permanent? Anv\u00e4nd bara f\u00f6r tester/felregistreringar.'))return;
