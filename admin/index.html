@@ -51,7 +51,7 @@ button:disabled{opacity:.6;cursor:wait}
 .key-date b{display:block;font-size:20px;line-height:1.25}
 .key-date.missing{background:rgba(255,194,71,.12);border-color:rgba(255,194,71,.45);color:#fff2cf}
 .key-date.missing span{color:#ffe0a3}
-.card-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0 10px}
+.card-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0 10px}
 .card-tab{background:#0a0f0a;color:#d6ded8;border:1px solid #28322a;padding:10px 12px;font-size:12px;font-weight:900}
 .card-tab.is-active{background:rgba(0,200,83,.14);border-color:rgba(0,200,83,.45);color:#baffcf}
 .card-panel{display:none}
@@ -84,6 +84,16 @@ button:disabled{opacity:.6;cursor:wait}
 .completion-panel{border:1px solid #263029;border-radius:8px;background:#090d09;padding:12px;margin:10px 0}
 .completion-panel h4{margin:0 0 10px;font-size:15px}
 .completion-panel p{margin:0 0 10px;color:#b9c3bb;font-size:13px;line-height:1.5}
+.payment-pill{display:inline-flex;align-items:center;gap:8px;padding:5px 9px;border-radius:999px;border:1px solid #2b342d;background:#0a0f0a;font-size:12px;font-weight:900}
+.payment-pill::before{content:'';width:9px;height:9px;border-radius:999px;background:#6e776f;box-shadow:0 0 0 3px rgba(110,119,111,.12)}
+.payment-pill.unpaid{color:#ffe0a3;border-color:rgba(255,194,71,.35)}
+.payment-pill.unpaid::before{background:#ffc247;box-shadow:0 0 0 3px rgba(255,194,71,.18)}
+.payment-pill.invoice_ready{color:#cce2ff;border-color:rgba(75,163,255,.35)}
+.payment-pill.invoice_ready::before{background:#4ba3ff;box-shadow:0 0 0 3px rgba(75,163,255,.18)}
+.payment-pill.invoiced{color:#d7d9ff;border-color:rgba(142,158,255,.35)}
+.payment-pill.invoiced::before{background:#8e9eff;box-shadow:0 0 0 3px rgba(142,158,255,.18)}
+.payment-pill.paid{color:#9fffc1;border-color:rgba(0,200,83,.35)}
+.payment-pill.paid::before{background:#00c853;box-shadow:0 0 0 3px rgba(0,200,83,.18)}
 .completion-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .completion-grid .full{grid-column:1 / -1}
 .completion-note{display:block;margin-top:8px;color:#a8b3aa;font-size:12px;line-height:1.45}
@@ -149,6 +159,7 @@ textarea{min-height:66px;resize:vertical}
     <div class="panel stat"><span>Bekr&auml;ftelse saknas</span><b id="attentionTotal">0</b></div>
     <div class="panel stat"><span>Inne</span><b id="insideTotal">0</b></div>
     <div class="panel stat"><span>Klara</span><b id="readyTotal">0</b></div>
+    <div class="panel stat"><span>Betalda</span><b id="paidTotal">0</b></div>
     <div class="panel stat"><span>Tyngre jobb</span><b id="heavyTotal">0</b></div>
   </section>
 
@@ -173,6 +184,8 @@ const columns=[
   {key:'ready',title:'Klara / avsluta',statuses:['ready','done']}
 ];
 const statusLabels={new:'Ny',contacted:'Kontaktad',checked_in:'Inl&auml;mnad',diagnosing:'Diagnos',repairing:'Reparerar',waiting_parts:'V&auml;ntar delar',waiting_customer:'V&auml;ntar kund',ready:'Klar',done:'Avslutad',archived:'Arkiverad'};
+const paymentStatusLabels={unpaid:'Ej betald',invoice_ready:'Klar f&ouml;r faktura',invoiced:'Fakturerad',paid:'Betald'};
+const paymentMethodLabels={swish:'Swish',card:'Kort',cash:'Kontant',invoice:'Faktura',bank:'Bank',other:'Annat'};
 const tokenInput=document.getElementById('token');
 const boardEl=document.getElementById('board');
 const errorEl=document.getElementById('error');
@@ -325,6 +338,77 @@ function completionData(item,overrides={}){
     canDraft:hasTotal && Boolean(workSummary)
   };
 }
+function paymentData(item,overrides={}){
+  const payment=item.payment||{};
+  const completion=completionData(item,overrides);
+  const amountRaw=overrides.paymentAmount!==undefined?overrides.paymentAmount:(payment.amount!==undefined&&payment.amount!==null?payment.amount:completion.totalCost||'');
+  const hasAmount=!(amountRaw===null||amountRaw===undefined||amountRaw==='');
+  const amount=amountRaw===null||amountRaw===undefined||amountRaw===''?0:Number(amountRaw||0);
+  const status=String(overrides.paymentStatus!==undefined?overrides.paymentStatus:(payment.status||'unpaid')).trim()||'unpaid';
+  const method=String(overrides.paymentMethod!==undefined?overrides.paymentMethod:(payment.method||'')).trim()||'';
+  const reference=String(overrides.paymentReference!==undefined?overrides.paymentReference:(payment.reference||'')).trim();
+  const paidAtRaw=overrides.paidAt!==undefined?overrides.paidAt:(payment.paidAt||'');
+  const paidAt=String(paidAtRaw||'').trim();
+  const fortnoxCustomerNumber=String(overrides.fortnoxCustomerNumber!==undefined?overrides.fortnoxCustomerNumber:(payment.fortnoxCustomerNumber||'')).trim();
+  const fortnoxInvoiceNumber=String(overrides.fortnoxInvoiceNumber!==undefined?overrides.fortnoxInvoiceNumber:(payment.fortnoxInvoiceNumber||'')).trim();
+  return {
+    amount,
+    hasAmount,
+    amountLabel:hasAmount?`${money(amount)} inkl. moms`:'Ej ifyllt &auml;n',
+    status,
+    statusLabel:paymentStatusLabels[status]||status||'Ej betald',
+    method,
+    methodLabel:paymentMethodLabels[method]||method||'Ej valt',
+    reference,
+    paidAt,
+    paidAtLabel:paidAt?dateShort(paidAt):'Inte registrerat',
+    fortnoxCustomerNumber,
+    fortnoxInvoiceNumber,
+    canSave:Boolean(hasAmount),
+    canDraftFortnox:Boolean(hasAmount && completion.workSummary)
+  };
+}
+function fortnoxDraft(item,overrides={}){
+  const completion=completionData(item,overrides);
+  const payment=paymentData(item,overrides);
+  return [
+    'NORDIC E-MOBILITY - FORTNOXUNDERLAG',
+    `Ärende: ${shortId(item.id)}`,
+    '',
+    'KUND',
+    `Namn: ${item.customer&&item.customer.name||''}`,
+    `Telefon: ${item.customer&&item.customer.phone||''}`,
+    `E-post: ${item.customer&&item.customer.email||''}`,
+    '',
+    'FORDON / JOBB',
+    `Modell: ${completion.vehicleModel}`,
+    `Tjänst: ${item.service||'Verkstadsärende'}`,
+    `Utförda åtgärder: ${completion.workSummary||item.message||''}`,
+    '',
+    'FAKTURA / BETALNING',
+    `Belopp inkl. moms: ${payment.amountLabel}`,
+    `Betalstatus: ${payment.statusLabel}`,
+    `Betalsätt: ${payment.methodLabel}`,
+    `Referens: ${payment.reference||'-'}`,
+    `Betald: ${payment.paidAtLabel}`,
+    `Fortnox kundnr: ${payment.fortnoxCustomerNumber||'-'}`,
+    `Fortnox fakturanr: ${payment.fortnoxInvoiceNumber||'-'}`,
+    '',
+    'FÖRESLAGEN FAKTURATEXT',
+    `${completion.vehicleModel} - ${item.service||'Verkstadsarbete'}`,
+    `${completion.workSummary||item.message||'Verkstadsarbete enligt ärende'}`,
+    '',
+    'INTERNT',
+    `Ansvarig: ${item.assignedTo&&item.assignedTo.name||'Lennart'}`,
+    `Skapad: ${dateShort(item.createdAt)}`,
+    `Klar: ${completion.readyAt?dateShort(completion.readyAt):'Inte markerad klar'}`,
+  ].join('\n');
+}
+function bookkeepingDraft(item,overrides={}){
+  const payment=paymentData(item,overrides);
+  const completion=completionData(item,overrides);
+  return `Betalning registrerad för ${item.customer&&item.customer.name||'kund'} (${completion.vehicleModel}). Belopp ${payment.amountLabel}. Status ${payment.statusLabel}. Betalsätt ${payment.methodLabel}. Referens ${payment.reference||'-'}. Betald ${payment.paidAtLabel}. Ärende ${shortId(item.id)}.`;
+}
 function readySmsTemplate(item,overrides={}){
   const data=completionData(item,overrides);
   const greeting=item.customer&&item.customer.name?`Hej ${item.customer.name}!`:'Hej!';
@@ -338,6 +422,18 @@ function readyMailTemplate(item,overrides={}){
   const data=completionData(item,overrides);
   const greeting=item.customer&&item.customer.name?`Hej ${item.customer.name},`:'Hej,';
   return `${greeting}\n\nDin ${data.vehicleModel} är nu klar för upphämtning hos Nordic E-Mobility.\n\nUtförda åtgärder\n${data.workSummary||'Se underlag i ärendet.'}\n\nTotalt belopp inkl. moms\n${data.totalLabel}\n\nBoka upphämtning\n${data.bookingUrl}\n\n${data.pickupSummary}\n\nAdress\nPistolvägen 6, Örebro\n\nOm du vill att vi reserverar en tid åt dig går det bra att svara direkt på detta mail eller SMS.\n\nVänliga hälsningar,\nNordic E-Mobility`;
+}
+function contentDrafts(item,overrides={}){
+  const data=completionData(item,overrides);
+  const model=data.vehicleModel;
+  const service=String(item.service||'verkstadsjobb').replace(/\s+\(\d+.*?\)$/,'');
+  const work=data.workSummary||item.message||'felsökning och åtgärd i verkstaden';
+  const price=data.totalLabel!=='Ej ifyllt än'?` Slutbelopp ${data.totalLabel}.`:'';
+  return {
+    social:`Verkstadsklar ${model}.\n\nInkommen för ${service.toLowerCase()}, nu klar efter: ${work}.${price}\nVi fortsätter bygga en verkstad där tydlighet, säkerhet och snabb återkoppling faktiskt märks för kunden.\n\n#nordicemobility #elscooter #örebro #elscooterservice #reparation`,
+    google:`Klar i verkstaden: ${model}. Vi tog in den för ${service.toLowerCase()} och åtgärdade ${work}.${price} Boka service eller upphämtning via nordicemobility.se.`,
+    web:`${model} kom in för ${service.toLowerCase()}. Utförda åtgärder: ${work}.${price} Nordic E-Mobility i Örebro hanterar allt från punktering och service till batteri, BMS och tyngre felsökning.`
+  };
 }
 async function copyText(text){
   if(navigator.clipboard&&navigator.clipboard.writeText){
@@ -494,6 +590,7 @@ function render(){
   document.getElementById('attentionTotal').textContent=active.filter(item=>needsCustomerAttention(item)).length;
   document.getElementById('insideTotal').textContent=cases.filter(item=>['checked_in','diagnosing','repairing'].includes(item.status)).length;
   document.getElementById('readyTotal').textContent=cases.filter(item=>item.status==='ready').length;
+  document.getElementById('paidTotal').textContent=cases.filter(item=>(item.payment&&item.payment.status)==='paid').length;
   document.getElementById('heavyTotal').textContent=active.filter(item=>(item.assignedTo&&item.assignedTo.key)==='sebastian').length;
 
   const owner=ownerFilter.value;
@@ -540,6 +637,7 @@ function caseCard(item){
   const customerPhoneHref=item.customer&&item.customer.phone?`tel:${item.customer.phone}`:'#';
   const customerEmailHref=item.customer&&item.customer.email?`mailto:${item.customer.email}`:'#';
   const completion=completionData(item);
+  const payment=paymentData(item);
   const activeTab=cardTabState[item.id]||(item.status==='ready'?'ready':'overview');
   const card=document.createElement('article');
   card.className='case';
@@ -565,11 +663,13 @@ function caseCard(item){
       <span class="customer-chip"><strong>Telefon</strong> ${html(customerPhone)}</span>
       <span class="customer-chip"><strong>E-post</strong> ${html(customerEmailAddress)}</span>
       <span class="customer-chip"><strong>Modell</strong> ${html(vehicleModel)}</span>
+      <span class="payment-pill ${html(payment.status)}">${html(payment.statusLabel)}</span>
     </div>
     <div class="card-tabs" role="tablist" aria-label="Kundkort">
       <button type="button" class="secondary card-tab ${activeTab==='overview'?'is-active':''}" data-tab="overview">Översikt</button>
       <button type="button" class="secondary card-tab ${activeTab==='contact'?'is-active':''}" data-tab="contact">Kontakt info</button>
       <button type="button" class="secondary card-tab ${activeTab==='ready'?'is-active':''}" data-tab="ready">Klar / h&auml;mtning</button>
+      <button type="button" class="secondary card-tab ${activeTab==='payment'?'is-active':''}" data-tab="payment">Betalning</button>
     </div>
     <div class="card-panel ${activeTab==='overview'?'is-active':''}" data-panel="overview">
       <div class="key-date ${missingPreferred?'missing':''}"><span>${isPickupReady?'Planerad upph&auml;mtning':'Planerad inl&auml;mning'}</span><b>${missingPreferred?'Beh&ouml;ver bokas in':html(displayDate(item.preferredDate))}</b></div>
@@ -582,6 +682,8 @@ function caseCard(item){
         <div class="fact"><span>Kontaktv&auml;g</span><b>${labelFrom(item.contactMethod,contactLabels)}</b></div>
         <div class="fact"><span>V&auml;rde</span><b>${money(item.estimatedValue)}</b></div>
         <div class="fact"><span>Slutbelopp</span><b>${html(completion.totalLabel)}</b></div>
+        <div class="fact"><span>Betalstatus</span><b>${html(payment.statusLabel)}</b></div>
+        <div class="fact"><span>Betals&auml;tt</span><b>${html(payment.methodLabel)}</b></div>
         <div class="fact"><span>Tillval</span><b>${addonsFor(item).length?`${addonsFor(item).length} st (${money(addonTotal(item))})`:'Inga'}</b></div>
         <div class="fact"><span>Rabattkod</span><b>${html(item.discountCode||'Ingen')}</b></div>
         <div class="fact"><span>Inl&auml;mnad</span><b>${item.intakeAt?dateShort(item.intakeAt):'Nej'}</b></div>
@@ -717,6 +819,74 @@ function caseCard(item){
         </form>
       </div>
     </div>
+    <div class="card-panel ${activeTab==='payment'?'is-active':''}" data-panel="payment">
+      <div class="completion-panel">
+        <h4>Betalning &amp; Fortnox</h4>
+        <p>Registrera om kunden är betald, vilket sätt som använts och kopiera ett tydligt underlag för Fortnox eller intern bokföring.</p>
+        <form class="edit payment-form" data-id="${html(item.id)}">
+          <div class="completion-grid">
+            <div>
+              <label>Betalstatus</label>
+              <select name="paymentStatus">
+                <option value="unpaid" ${payment.status==='unpaid'?'selected':''}>Ej betald</option>
+                <option value="invoice_ready" ${payment.status==='invoice_ready'?'selected':''}>Klar för faktura</option>
+                <option value="invoiced" ${payment.status==='invoiced'?'selected':''}>Fakturerad</option>
+                <option value="paid" ${payment.status==='paid'?'selected':''}>Betald</option>
+              </select>
+            </div>
+            <div>
+              <label>Betalsätt</label>
+              <select name="paymentMethod">
+                <option value="" ${!payment.method?'selected':''}>Välj</option>
+                <option value="swish" ${payment.method==='swish'?'selected':''}>Swish</option>
+                <option value="card" ${payment.method==='card'?'selected':''}>Kort</option>
+                <option value="cash" ${payment.method==='cash'?'selected':''}>Kontant</option>
+                <option value="invoice" ${payment.method==='invoice'?'selected':''}>Faktura</option>
+                <option value="bank" ${payment.method==='bank'?'selected':''}>Bank</option>
+                <option value="other" ${payment.method==='other'?'selected':''}>Annat</option>
+              </select>
+            </div>
+            <div>
+              <label>Belopp att bokföra</label>
+              <input name="paymentAmount" type="number" min="0" step="1" value="${payment.hasAmount?payment.amount:''}" placeholder="T.ex. 1490">
+            </div>
+            <div>
+              <label>Betald den</label>
+              <input name="paidAt" type="datetime-local" value="${localInput(payment.paidAt)}">
+            </div>
+            <div class="full">
+              <label>Referens / kvitto / Swish-ID</label>
+              <input name="paymentReference" value="${html(payment.reference)}" placeholder="T.ex. swish 7H2K9 eller kvitto 1042">
+            </div>
+            <div>
+              <label>Fortnox kundnr</label>
+              <input name="fortnoxCustomerNumber" value="${html(payment.fortnoxCustomerNumber)}" placeholder="Valfritt">
+            </div>
+            <div>
+              <label>Fortnox fakturanr</label>
+              <input name="fortnoxInvoiceNumber" value="${html(payment.fortnoxInvoiceNumber)}" placeholder="Valfritt">
+            </div>
+          </div>
+          <div class="completion-warning ${payment.canSave?'good':'warn'} payment-state">${payment.canSave?'Betalunderlaget är redo att sparas och kopieras vidare till Fortnox.':'Fyll i belopp innan du markerar kunden som betald.'}</div>
+          <div class="row">
+            <button type="submit">Spara betalinfo</button>
+            <button type="button" class="secondary mark-paid">Markera betald nu</button>
+          </div>
+          <div class="completion-actions">
+            <button type="button" class="secondary copy-fortnox">Kopiera Fortnox-underlag</button>
+            <button type="button" class="secondary copy-bookkeeping">Kopiera betalnotering</button>
+          </div>
+          <div class="completion-preview">
+            <strong>Fortnox-underlag</strong>
+            <textarea class="fortnox-preview" readonly></textarea>
+          </div>
+          <div class="completion-preview">
+            <strong>Intern betalningsnotering</strong>
+            <textarea class="bookkeeping-preview" readonly></textarea>
+          </div>
+        </form>
+      </div>
+    </div>
     ${notes?`<div class="notes"><strong>Senaste noteringar</strong>${notes}</div>`:''}`;
   card.querySelectorAll('.card-tab').forEach((button)=>{
     button.addEventListener('click',()=>{
@@ -728,6 +898,7 @@ function caseCard(item){
   });
   const form=card.querySelector('.edit-wrap form');
   const completionForm=card.querySelector('.completion-form');
+  const paymentForm=card.querySelector('.payment-form');
   card.querySelectorAll('.quick-status').forEach((button)=>{
     button.addEventListener('click',async()=>{
       const original=button.textContent;
@@ -766,6 +937,19 @@ function caseCard(item){
       vehicleModel:item.vehicle&&item.vehicle.model||''
     };
   }
+  function paymentValues(){
+    const data=new FormData(paymentForm);
+    return {
+      ...completionValues(),
+      paymentStatus:data.get('paymentStatus'),
+      paymentMethod:data.get('paymentMethod'),
+      paymentAmount:data.get('paymentAmount'),
+      paymentReference:data.get('paymentReference'),
+      paidAt:data.get('paidAt'),
+      fortnoxCustomerNumber:data.get('fortnoxCustomerNumber'),
+      fortnoxInvoiceNumber:data.get('fortnoxInvoiceNumber')
+    };
+  }
   function refreshCompletionPreview(){
     const data=completionData(item,completionValues());
     card.querySelector('.sms-preview').value=readySmsTemplate(item,completionValues());
@@ -779,6 +963,23 @@ function caseCard(item){
     card.querySelectorAll('.draft-sms,.draft-mail,.copy-sms,.copy-mail').forEach((button)=>button.disabled=!data.canDraft);
     return data;
   }
+  function refreshPaymentPreview(){
+    const data=paymentData(item,paymentValues());
+    paymentForm.querySelector('.fortnox-preview').value=fortnoxDraft(item,paymentValues());
+    paymentForm.querySelector('.bookkeeping-preview').value=bookkeepingDraft(item,paymentValues());
+    const state=paymentForm.querySelector('.payment-state');
+    const fortnoxReady=data.canDraftFortnox;
+    state.className=`completion-warning ${data.canSave&&fortnoxReady?'good':'warn'} payment-state`;
+    state.innerHTML=!data.canSave
+      ?'Fyll i belopp innan du markerar kunden som betald.'
+      :!fortnoxReady
+        ?'Betalning kan sparas nu, men fyll i utförda åtgärder under Klar / hämtning innan du kopierar Fortnox-underlaget.'
+        :'Betalunderlaget är redo att sparas och kopieras vidare till Fortnox.';
+    paymentForm.querySelector('.mark-paid').disabled=!data.canSave;
+    paymentForm.querySelector('.copy-bookkeeping').disabled=!data.canSave;
+    paymentForm.querySelector('.copy-fortnox').disabled=!fortnoxReady;
+    return data;
+  }
   async function saveCompletion(markReady=false){
     const values=completionValues();
     const payload={totalCost:values.totalCost,workSummary:values.workSummary,pickupSummary:values.pickupSummary};
@@ -788,6 +989,21 @@ function caseCard(item){
       payload.note=`Klar för upphämtning. Slutbelopp ${values.totalCost||0} kr.`;
     }
     await api('/api/cases/'+encodeURIComponent(completionForm.dataset.id),{method:'PATCH',body:JSON.stringify(payload)});
+    await loadCases();
+  }
+  async function savePayment(markPaid=false){
+    const values=paymentValues();
+    const payload={
+      paymentStatus:markPaid?'paid':values.paymentStatus,
+      paymentMethod:values.paymentMethod,
+      paymentAmount:values.paymentAmount,
+      paymentReference:values.paymentReference,
+      paidAt:markPaid?(values.paidAt||new Date().toISOString()):values.paidAt,
+      fortnoxCustomerNumber:values.fortnoxCustomerNumber,
+      fortnoxInvoiceNumber:values.fortnoxInvoiceNumber,
+      note:markPaid?`Betalning registrerad ${values.paymentAmount||0} kr via ${paymentMethodLabels[values.paymentMethod]||'valt betalsätt'}.`:undefined
+    };
+    await api('/api/cases/'+encodeURIComponent(paymentForm.dataset.id),{method:'PATCH',body:JSON.stringify(payload)});
     await loadCases();
   }
   completionForm.addEventListener('submit',async(event)=>{
@@ -841,6 +1057,46 @@ function caseCard(item){
   });
   completionForm.querySelectorAll('input, textarea').forEach((field)=>field.addEventListener('input',refreshCompletionPreview));
   refreshCompletionPreview();
+  paymentForm.addEventListener('submit',async(event)=>{
+    event.preventDefault();
+    const button=paymentForm.querySelector('button[type="submit"]');
+    button.disabled=true;
+    button.textContent='Sparar...';
+    try{
+      await savePayment(false);
+    }catch(error){showError(error.message)}
+    finally{
+      button.disabled=false;
+      button.textContent='Spara betalinfo';
+    }
+  });
+  paymentForm.querySelector('.mark-paid').addEventListener('click',async()=>{
+    const data=refreshPaymentPreview();
+    if(!data.canSave){showError('Fyll i belopp innan du markerar kunden som betald.');return;}
+    const button=paymentForm.querySelector('.mark-paid');
+    button.disabled=true;
+    button.textContent='Sparar...';
+    try{
+      await savePayment(true);
+    }catch(error){showError(error.message)}
+    finally{
+      button.disabled=false;
+      button.textContent='Markera betald nu';
+    }
+  });
+  paymentForm.querySelector('.copy-fortnox').addEventListener('click',async()=>{
+    const data=refreshPaymentPreview();
+    if(!data.canDraftFortnox){showError('Fyll i utförda åtgärder under Klar / hämtning innan du kopierar Fortnox-underlaget.');return;}
+    try{await copyText(fortnoxDraft(item,paymentValues()));}catch(error){showError('Kunde inte kopiera Fortnox-underlaget.');}
+  });
+  paymentForm.querySelector('.copy-bookkeeping').addEventListener('click',async()=>{
+    const data=refreshPaymentPreview();
+    if(!data.canSave){showError('Fyll i belopp innan du kopierar betalnoteringen.');return;}
+    try{await copyText(bookkeepingDraft(item,paymentValues()));}catch(error){showError('Kunde inte kopiera betalnoteringen.');}
+  });
+  paymentForm.querySelectorAll('input, textarea, select').forEach((field)=>field.addEventListener('input',refreshPaymentPreview));
+  paymentForm.querySelectorAll('select').forEach((field)=>field.addEventListener('change',refreshPaymentPreview));
+  refreshPaymentPreview();
   card.querySelector('.delete-case').addEventListener('click',async()=>{
     const name=item.customer&&item.customer.name?item.customer.name:'detta \u00e4rende';
     if(!confirm('Radera '+name+' permanent? Anv\u00e4nd bara f\u00f6r tester/felregistreringar.'))return;

@@ -19,12 +19,15 @@ const STAFF = {
   sebastian: { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "070-024 33 19" },
 };
 
+const PAYMENT_STATUSES = new Set(["unpaid", "invoice_ready", "invoiced", "paid"]);
+const PAYMENT_METHODS = new Set(["swish", "card", "cash", "invoice", "bank", "other"]);
+
 const requireAdmin = (request) => {
   const expected = process.env.ADMIN_TOKEN || globalThis.Netlify?.env?.get?.("ADMIN_TOKEN");
   const provided = request.headers.get("x-admin-token") || "";
 
   if (!expected) {
-    return { ok: false, response: json({ error: "ADMIN_TOKEN saknas i Netlify miljövariabler." }, 503) };
+    return { ok: false, response: json({ error: "ADMIN_TOKEN saknas i Netlify miljo variabler." }, 503) };
   }
 
   if (provided !== expected) {
@@ -76,33 +79,65 @@ export default async (request, context) => {
 
     const body = await request.json();
     const now = new Date().toISOString();
+    const currentPayment = current.payment || {};
+
     const nextCompletion = {
       ...(current.completion || {}),
       totalCost:
-        body.totalCost === undefined
-          ? current.completion?.totalCost ?? null
-          : numberOrNull(body.totalCost),
+        body.totalCost === undefined ? current.completion?.totalCost ?? null : numberOrNull(body.totalCost),
       workSummary:
-        body.workSummary === undefined
-          ? current.completion?.workSummary || ""
-          : clean(body.workSummary, 3000),
+        body.workSummary === undefined ? current.completion?.workSummary || "" : clean(body.workSummary, 3000),
       pickupSummary:
-        body.pickupSummary === undefined
-          ? current.completion?.pickupSummary || ""
-          : clean(body.pickupSummary, 1600),
+        body.pickupSummary === undefined ? current.completion?.pickupSummary || "" : clean(body.pickupSummary, 1600),
       readyAt:
-        body.readyAt === undefined
-          ? current.completion?.readyAt || null
-          : clean(body.readyAt, 80) || null,
+        body.readyAt === undefined ? current.completion?.readyAt || null : clean(body.readyAt, 80) || null,
       updatedAt: now,
     };
+
+    const requestedPaymentStatus =
+      body.paymentStatus === undefined ? currentPayment.status || "unpaid" : clean(body.paymentStatus, 40) || "unpaid";
+    const requestedPaymentMethod =
+      body.paymentMethod === undefined ? currentPayment.method || "" : clean(body.paymentMethod, 40) || "";
+
+    const nextPayment = {
+      ...currentPayment,
+      status: PAYMENT_STATUSES.has(requestedPaymentStatus) ? requestedPaymentStatus : currentPayment.status || "unpaid",
+      method:
+        PAYMENT_METHODS.has(requestedPaymentMethod)
+          ? requestedPaymentMethod
+          : requestedPaymentMethod
+            ? currentPayment.method || ""
+            : "",
+      amount:
+        body.paymentAmount === undefined
+          ? currentPayment.amount ?? current.completion?.totalCost ?? null
+          : numberOrNull(body.paymentAmount),
+      reference:
+        body.paymentReference === undefined ? currentPayment.reference || "" : clean(body.paymentReference, 160),
+      paidAt: body.paidAt === undefined ? currentPayment.paidAt || null : clean(body.paidAt, 80) || null,
+      fortnoxCustomerNumber:
+        body.fortnoxCustomerNumber === undefined
+          ? currentPayment.fortnoxCustomerNumber || ""
+          : clean(body.fortnoxCustomerNumber, 80),
+      fortnoxInvoiceNumber:
+        body.fortnoxInvoiceNumber === undefined
+          ? currentPayment.fortnoxInvoiceNumber || ""
+          : clean(body.fortnoxInvoiceNumber, 80),
+      updatedAt: now,
+    };
+
+    if (nextPayment.status === "paid" && !nextPayment.paidAt) {
+      nextPayment.paidAt = now;
+    }
+
     const next = {
       ...current,
       updatedAt: now,
       status: clean(body.status, 40) || current.status,
       preferredDate: body.preferredDate === undefined ? current.preferredDate : clean(body.preferredDate, 120) || null,
       discountCode: body.discountCode === undefined ? current.discountCode : clean(body.discountCode, 40) || null,
-      preferredContactTime: body.preferredContactTime === undefined ? current.preferredContactTime : clean(body.preferredContactTime, 80) || null,
+      preferredContactTime:
+        body.preferredContactTime === undefined ? current.preferredContactTime : clean(body.preferredContactTime, 80) || null,
       contactMethod: body.contactMethod === undefined ? current.contactMethod : clean(body.contactMethod, 40) || "phone",
       logistics: body.logistics === undefined ? current.logistics : clean(body.logistics, 80) || "dropoff",
       intakeAt: body.intakeAt === undefined ? current.intakeAt : clean(body.intakeAt, 80) || null,
@@ -122,6 +157,7 @@ export default async (request, context) => {
         model: body.vehicleModel === undefined ? current.vehicle?.model : clean(body.vehicleModel, 180),
       },
       completion: nextCompletion,
+      payment: nextPayment,
     };
 
     if (body.assignedTo) {
@@ -137,10 +173,30 @@ export default async (request, context) => {
       next.notes = [...(current.notes || []), { at: now, text: clean(body.note) }];
     }
 
-    next.timeline = [
-      ...(current.timeline || []),
-      { at: now, event: body.note ? `Uppdaterad: ${clean(body.note, 160)}` : `Status ändrad till ${next.status}` },
-    ];
+    const timeline = [...(current.timeline || [])];
+    if (body.note) {
+      timeline.push({ at: now, event: `Uppdaterad: ${clean(body.note, 160)}` });
+    } else if (body.status !== undefined) {
+      timeline.push({ at: now, event: `Status andrad till ${next.status}` });
+    }
+
+    const paymentTouched =
+      body.paymentStatus !== undefined ||
+      body.paymentMethod !== undefined ||
+      body.paymentAmount !== undefined ||
+      body.paymentReference !== undefined ||
+      body.paidAt !== undefined ||
+      body.fortnoxCustomerNumber !== undefined ||
+      body.fortnoxInvoiceNumber !== undefined;
+
+    if (paymentTouched) {
+      timeline.push({
+        at: now,
+        event: `Betalning: ${nextPayment.status}${nextPayment.amount !== null && nextPayment.amount !== undefined ? ` ${nextPayment.amount} kr` : ""}${nextPayment.method ? ` via ${nextPayment.method}` : ""}`,
+      });
+    }
+
+    next.timeline = timeline;
 
     await store.setJSON(id, next);
     return json({ ok: true, case: next });
