@@ -1,5 +1,11 @@
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
+const adminDebugAllowed = (event) => {
+  const expected = process.env.ADMIN_TOKEN || "";
+  const provided = event.headers["x-admin-token"] || event.headers["X-Admin-Token"] || "";
+  return Boolean(expected && provided && expected === provided);
+};
+
 const PRODUCTS = {
   // NAVEE
   "navee-ut5-ultra-x": { name: "NAVEE UT5 Ultra X", price: 2349000 },
@@ -85,10 +91,19 @@ exports.handler = async (event) => {
     };
   } catch (err) {
     console.error("Stripe error:", err);
+    const debug = adminDebugAllowed(event)
+      ? {
+          message: err?.message || "Unknown Stripe error",
+          type: err?.type || "",
+          code: err?.code || "",
+          param: err?.param || "",
+        }
+      : undefined;
     return {
       statusCode: 500,
       body: JSON.stringify({
         error: "Kunde inte skapa betalningssession. Forsok igen.",
+        debug,
       }),
     };
   }
