@@ -3,41 +3,269 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Priser elscooter service Örebro | Nordic E-Mobility</title>
-<meta name="description" content="Prislista för elscooter service, punktering, felsökning, batteridiagnos och elcykelservice i Örebro. Tydliga startpriser och offert innan reparation.">
+<title>Prislista elscooter service, batteri och reparation Örebro | Nordic E-Mobility</title>
+<meta name="description" content="Aktuell prislista för punktering, batterireparation, felsökning, service och upphämtning hos Nordic E-Mobility i Örebro. Tydliga startpriser och offert innan åtgärd.">
 <link rel="canonical" href="https://www.nordicemobility.se/priser/">
 <meta property="og:type" content="website">
-<meta property="og:title" content="Priser elscooter service i Örebro">
-<meta property="og:description" content="Startpriser för felsökning, punktering, batteridiagnos och service hos Nordic E-Mobility.">
+<meta property="og:title" content="Prislista för service och batteri i Örebro | Nordic E-Mobility">
+<meta property="og:description" content="Se aktuella priser för däck, batteri, felsökning, service och upphämtning. Tydlig prisbild innan vi börjar.">
 <meta property="og:url" content="https://www.nordicemobility.se/priser/">
-<meta property="og:image" content="https://www.nordicemobility.se/assets/workshop/workshop-hero.jpg">
+<meta property="og:image" content="https://www.nordicemobility.se/assets/pricing/prislista-poster-b.png">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Priser elscooter service Örebro | Nordic E-Mobility">
-<meta name="twitter:description" content="Tydliga startpriser för verkstad, batteri, däck och felsökning i Örebro.">
-<meta name="twitter:image" content="https://www.nordicemobility.se/assets/workshop/workshop-hero.jpg">
+<meta name="twitter:title" content="Prislista Örebro | Nordic E-Mobility">
+<meta name="twitter:description" content="Aktuell prislista för elscooter service, batteri, däck och reparation i Örebro.">
+<meta name="twitter:image" content="https://www.nordicemobility.se/assets/pricing/prislista-poster-b.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/assets/seo.css">
-<link rel="preload" as="image" href="/assets/workshop/workshop-hero.jpg" fetchpriority="high">
+<link rel="preload" as="image" href="/assets/pricing/prislista-poster-b.png" fetchpriority="high">
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Start","item":"https://www.nordicemobility.se/"},{"@type":"ListItem","position":2,"name":"Priser","item":"https://www.nordicemobility.se/priser/"}]}
 </script>
 <script type="application/ld+json">
-{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Är priset fast när jag skickar en förfrågan?","acceptedAnswer":{"@type":"Answer","text":"Nej. Du binder dig inte till reparation innan Nordic E-Mobility har bekräftat pris och nästa steg."}},{"@type":"Question","name":"Vad kostar felsökning av elscooter?","acceptedAnswer":{"@type":"Answer","text":"Normal felsökning startar från 349 kr. Avancerad elektronik, batteri, BMS eller controller startar normalt från 699 kr."}},{"@type":"Question","name":"Vad kostar punktering på elscooter?","acceptedAnswer":{"@type":"Answer","text":"Punktering och däckjobb startar från 349 kr. Slang, tubeless, ventil och däcktyp kan påverka slutpriset."}}]}
+{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"Är prislistan fast eller får jag alltid offert först?","acceptedAnswer":{"@type":"Answer","text":"Prislistan visar aktuella startpriser inklusive moms. Vi bekräftar alltid upplägg, delar och slutpris innan vi fortsätter med arbete utöver grundkontrollen."}},{"@type":"Question","name":"Vad kostar felsökning av elscooter?","acceptedAnswer":{"@type":"Answer","text":"Felsökning för elscooter startar från 299 kr. Tyngre elfel, kabelproblem eller batterirelaterade arbeten offereras efter första kontroll."}},{"@type":"Question","name":"Vad kostar batterireparation och batteribyggnation?","acceptedAnswer":{"@type":"Answer","text":"Batterireparation startar från 995 kr och batteribyggnation för premiummodeller startar från 3600 kr. Exakt pris beror på batterityp, cellstatus och komponentval."}},{"@type":"Question","name":"Kan jag boka upphämtning eller expressjobb?","acceptedAnswer":{"@type":"Answer","text":"Ja. Upphämtning eller leverans startar från 99 kr och akut service inom 24 timmar kan läggas till från 200 kr beroende på belastning och modell."}}]}
 </script>
 <link rel="stylesheet" href="/assets/newsletter-popup.css">
+<style>
+.price-hero{background-image:linear-gradient(90deg,rgba(0,0,0,.94),rgba(0,0,0,.7),rgba(0,0,0,.44)),url('/assets/pricing/prislista-poster-b.png');background-position:center top}
+.price-top-grid{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(320px,.8fr);gap:18px;align-items:stretch}
+.poster-stack{display:grid;gap:16px}
+.poster-frame{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:14px}
+.poster-frame img{width:100%;height:auto;display:block;border-radius:6px;border:1px solid rgba(255,255,255,.08)}
+.poster-caption{margin:10px 0 0;color:var(--muted);font-size:14px}
+.promo-card{display:grid;gap:18px}
+.promo-card h3,.fact-card h3{margin:0;font-size:26px;line-height:1.1}
+.promo-card p,.fact-card p{margin:0;color:var(--soft)}
+.mini-promo{display:grid;gap:12px;padding:16px;border-radius:8px;background:rgba(0,200,83,.08);border:1px solid rgba(0,200,83,.22)}
+.mini-promo strong{font-size:18px}
+.fact-list{display:grid;gap:10px;margin:0;padding:0;list-style:none}
+.fact-list li{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line);color:var(--soft)}
+.fact-list li:last-child{border-bottom:none}
+.fact-list b{color:var(--text)}
+.price-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px}
+.price-card{background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:22px}
+.price-card-header{display:flex;align-items:flex-start;gap:14px;margin-bottom:14px}
+.price-card-icon{width:52px;height:52px;border-radius:8px;display:grid;place-items:center;background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.24);font-size:24px}
+.price-card h3{margin:0 0 4px;font-size:28px;line-height:1.05}
+.price-card p{margin:0;color:var(--muted)}
+.price-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:14px;padding:14px 0;border-bottom:1px solid var(--line)}
+.price-row:last-child{border-bottom:none}
+.price-row-title{font-weight:800;color:var(--text)}
+.price-row-note{display:block;color:var(--muted);font-size:14px;margin-top:2px}
+.price-row-value{font-weight:900;color:var(--green-2);white-space:nowrap;font-size:28px;line-height:1}
+.price-footnote{margin-top:14px;padding:12px 14px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid var(--line);color:var(--soft);font-size:14px}
+.info-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}
+.quote-band{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:18px;align-items:center;background:rgba(255,176,32,.08);border:1px solid rgba(255,176,32,.24);border-radius:8px;padding:20px}
+.quote-band strong{display:block;font-size:20px}
+.quote-band p{margin:4px 0 0;color:var(--soft)}
+@media (max-width: 980px){
+  .price-top-grid,.price-grid,.info-grid,.quote-band{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
-<header class="site-header"><nav class="nav"><a class="brand" href="/"><img loading="lazy" decoding="async" src="/logo.png" alt="Nordic E-Mobility">Nordic E-Mobility</a><div class="nav-links"><a href="/elscooter-reparation-orebro/">Reparation</a><a href="/batterireparation-elscooter/">Batteri</a><a href="/kontakt/">Kontakt</a><a href="/book-online/" class="btn btn-primary">Boka service</a></div></nav></header>
+<header class="site-header">
+  <nav class="nav">
+    <a class="brand" href="/"><img loading="lazy" decoding="async" src="/logo.png" alt="Nordic E-Mobility">Nordic E-Mobility</a>
+    <div class="nav-links">
+      <a href="/elscooter-reparation-orebro/">Reparation</a>
+      <a href="/batterireparation-elscooter/">Batteri</a>
+      <a href="/kontakt/">Kontakt</a>
+      <a href="/book-online/" class="btn btn-primary">Boka service</a>
+    </div>
+  </nav>
+</header>
 <div class="breadcrumb"><a href="/">Start</a> / Priser</div>
 <main>
-<section class="hero"><div class="hero-inner"><span class="eyebrow">Prislista Örebro</span><h1>Tydliga startpriser innan vi öppnar något.</h1><p class="lead">Du får ett ärende, en första prisbild och ett beslut innan reparationen startar. Vid tyngre elfel eller batteriarbete tar Sebastian beslut om diagnos och åtgärd.</p><div class="hero-actions"><a class="btn btn-primary" href="/book-online/">Skicka serviceförfrågan</a><a class="btn btn-secondary" href="tel:0700243319">Ring Sebastian</a></div><div class="proof"><span>Felsökning fr. 349 kr</span><span>Punktering fr. 349 kr</span><span>Batteri fr. 699 kr</span></div></div></section>
-<section class="section"><div class="wrap grid grid-2"><div><div class="section-head"><h2>Verkstadspriser</h2><p>Startpriser inklusive moms. Delar, specialdäck och avancerad elektronik offereras innan vi fortsätter.</p></div><table class="table"><tr><th>Tjänst</th><th>Pris från</th></tr><tr><td>Punktering, slang, ventil eller tubeless-kontroll</td><td class="price">349 kr</td></tr><tr><td>Service och säkerhetsgenomgång</td><td class="price">399 kr</td></tr><tr><td>Felsökning vid felkod, startproblem eller laddproblem</td><td class="price">349 kr</td></tr><tr><td>Batteri, BMS, controller eller avancerat elsystem</td><td class="price">699 kr</td></tr><tr><td>Elcykelservice och batteritest</td><td class="price">349 kr</td></tr></table></div><div class="card"><h3>Så undviker vi fel reparation</h3><ul class="list"><li>Först symptom och modell.</li><li>Sedan mätning eller visuell kontroll.</li><li>Därefter prisförslag innan åtgärd.</li><li>Inget arbete startas utan bekräftelse.</li></ul></div></div></section>
-<section class="section alt"><div class="wrap"><div class="section-head"><h2>Relaterade tjänster</h2><p>Välj den sida som bäst matchar problemet.</p></div><div class="grid grid-4"><a class="card service-link" href="/punktering-elscooter-orebro/"><h3>Punktering</h3><p>Däck, slang, ventil och hjulkontroll.</p></a><a class="card service-link" href="/elscooter-reparation-orebro/"><h3>Reparation</h3><p>Felsökning, bromsar och elektronik.</p></a><a class="card service-link" href="/batterireparation-elscooter/"><h3>Batteri</h3><p>BMS, laddning, celler och räckvidd.</p></a><a class="card service-link" href="/elcykel-service-orebro/"><h3>Elcykel</h3><p>Service för batteri, broms och elsystem.</p></a></div></div></section>
-<div class="cta-band"><div class="wrap"><div><h2>Vill du få en prisbild snabbt?</h2><p>Skicka modell, symptom och gärna bild. Vi återkommer med nästa steg.</p></div><a class="btn" href="/book-online/">Boka service</a></div></div>
+  <section class="hero price-hero">
+    <div class="hero-inner">
+      <span class="eyebrow">Prislista 2026</span>
+      <h1>Prislista för service, batteri och reparation i Örebro.</h1>
+      <p class="lead">Här ser du våra aktuella startpriser för däckjobb, batteriarbeten, felsökning och upphämtning. Du får alltid en tydlig prisbild innan vi går vidare med arbete som kräver delar eller extra tid.</p>
+      <div class="hero-actions">
+        <a class="btn btn-primary" href="/book-online/">Boka service</a>
+        <a class="btn btn-secondary" href="/assets/pricing/prislista-poster-b.png" target="_blank" rel="noopener">Öppna prisbild</a>
+      </div>
+      <div class="proof">
+        <span>Felsökning från 299 kr</span>
+        <span>Punktering från 349 kr</span>
+        <span>Batterireparation från 995 kr</span>
+        <span>Upphämtning från 99 kr</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap price-top-grid">
+      <div class="poster-stack">
+        <div class="poster-frame">
+          <img src="/assets/pricing/prislista-poster-b.png" alt="Premiumprislista för Nordic E-Mobility med batteri, service och däckpriser">
+          <p class="poster-caption">Den här versionen funkar för hemsida, DM och delning direkt till kund när någon vill se prisbilden snabbt.</p>
+        </div>
+        <div class="media-strip">
+          <img src="/assets/pricing/prislista-poster-a.png" alt="Prisbild för Nordic E-Mobility med däck och uppgraderingar">
+          <img src="/assets/workshop/case-workshop-floor-premium.jpg" alt="Verkstadsmiljö hos Nordic E-Mobility i Örebro">
+        </div>
+      </div>
+      <div class="card promo-card">
+        <div>
+          <span class="eyebrow" style="margin-bottom:10px">Aktuellt just nu</span>
+          <h3>20% rabatt på batteriarbeten.</h3>
+          <p>Vi driver batteri- och elsystemjobben hårt just nu för att fler ska få ordning på räckvidd, laddproblem och BMS innan säsongen drar igång fullt.</p>
+        </div>
+        <div class="mini-promo">
+          <strong>Gratis batteribesiktning</strong>
+          <span class="mini">Värde 199 kr när du bokar batterireparation eller batteriarbete under kampanjperioden.</span>
+        </div>
+        <ul class="fact-list">
+          <li><span>Startpris innan vi öppnar något</span><b>Tydligt</b></li>
+          <li><span>Offert innan delar eller extra tid</span><b>Alltid</b></li>
+          <li><span>Lennart på plats dagtid</span><b>Vardagar</b></li>
+          <li><span>Sebastian tar batteri och tyngre elfel</span><b>Beslut</b></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt">
+    <div class="wrap">
+      <div class="section-head">
+        <h2>Aktuell verkstadsprislista</h2>
+        <p>Alla priser nedan är inklusive moms. Specialdäck, ovanliga delar och större demontering bekräftas innan vi fortsätter.</p>
+      </div>
+      <div class="price-grid">
+        <article class="price-card">
+          <div class="price-card-header">
+            <div class="price-card-icon">🛞</div>
+            <div>
+              <h3>Punktering & däck</h3>
+              <p>Däckjobb, slang, tubeless och uppgraderingar som gör vardagen enklare.</p>
+            </div>
+          </div>
+          <div class="price-row"><div><span class="price-row-title">Punkteringsfritt 8" däck</span><span class="price-row-note">Tillägg på ordinarie däck.</span></div><div class="price-row-value">+289</div></div>
+          <div class="price-row"><div><span class="price-row-title">Punkteringsfritt / tubeless</span><span class="price-row-note">För andra storlekar och modeller.</span></div><div class="price-row-value">fr. 349</div></div>
+          <div class="price-row"><div><span class="price-row-title">Montering av tubeless</span><span class="price-row-note">Motorhjul, exklusive däck.</span></div><div class="price-row-value">449</div></div>
+          <div class="price-row"><div><span class="price-row-title">Byte av däck</span><span class="price-row-note">Ej motorhjul.</span></div><div class="price-row-value">395</div></div>
+          <div class="price-row"><div><span class="price-row-title">Laga punktering</span><span class="price-row-note">Slangjobb.</span></div><div class="price-row-value">349</div></div>
+          <div class="price-row"><div><span class="price-row-title">Byte slang</span><span class="price-row-note">Inklusive arbete, slang tillkommer.</span></div><div class="price-row-value">449 + 100</div></div>
+          <div class="price-footnote">Kontroll av däck, ventil och lufttryck ingår alltid i däckjobben.</div>
+        </article>
+
+        <article class="price-card">
+          <div class="price-card-header">
+            <div class="price-card-icon">🔋</div>
+            <div>
+              <h3>Batteri & el</h3>
+              <p>För räckvidd, laddning, batteribyggnation och tyngre elektronikproblem.</p>
+            </div>
+          </div>
+          <div class="price-row"><div><span class="price-row-title">Batteridiagnos / besiktning</span><span class="price-row-note">Kampanjpris just nu.</span></div><div class="price-row-value">0</div></div>
+          <div class="price-row"><div><span class="price-row-title">Batterireparation</span><span class="price-row-note">Cellbalans, BMS eller kontakter.</span></div><div class="price-row-value">fr. 995</div></div>
+          <div class="price-row"><div><span class="price-row-title">Batteribyggnation</span><span class="price-row-note">För premiummodeller och specialupplägg.</span></div><div class="price-row-value">fr. 3600</div></div>
+          <div class="price-row"><div><span class="price-row-title">48V 20Ah batteri</span><span class="price-row-note">Byggt och klart enligt upplägg.</span></div><div class="price-row-value">3600</div></div>
+          <div class="price-row"><div><span class="price-row-title">48V 25Ah batteri</span><span class="price-row-note">För dig som vill upp i räckvidd.</span></div><div class="price-row-value">3800</div></div>
+          <div class="price-row"><div><span class="price-row-title">48V 30Ah batteri</span><span class="price-row-note">Högre kapacitet för längre körning.</span></div><div class="price-row-value">4700</div></div>
+          <div class="price-footnote">Vi använder testade komponenter, dokumenterar felbilden och bekräftar upplägg innan cellarbete eller större batteriåtgärd.</div>
+        </article>
+
+        <article class="price-card">
+          <div class="price-card-header">
+            <div class="price-card-icon">🧰</div>
+            <div>
+              <h3>Service & reparation</h3>
+              <p>Det här är priserna flest kunder kommer in för under vanlig verkstadsvecka.</p>
+            </div>
+          </div>
+          <div class="price-row"><div><span class="price-row-title">Felsökning elscooter</span><span class="price-row-note">Startproblem, felkod eller konstiga beteenden.</span></div><div class="price-row-value">299</div></div>
+          <div class="price-row"><div><span class="price-row-title">Full service</span><span class="price-row-note">Bromsar, justering och genomgång.</span></div><div class="price-row-value">499</div></div>
+          <div class="price-row"><div><span class="price-row-title">Bromsjustering</span><span class="price-row-note">Snabbjustering av bromskänsla och kontakt.</span></div><div class="price-row-value">199</div></div>
+          <div class="price-row"><div><span class="price-row-title">Byte bromsbelägg</span><span class="price-row-note">Beror på modell och åtkomst.</span></div><div class="price-row-value">fr. 299</div></div>
+          <div class="price-row"><div><span class="price-row-title">Kabel / elfel</span><span class="price-row-note">För kablage, kontakter och enklare eljobb.</span></div><div class="price-row-value">fr. 399</div></div>
+          <div class="price-row"><div><span class="price-row-title">Firmware / mjukvaruuppdatering</span><span class="price-row-note">När modell och styrenhet stödjer det.</span></div><div class="price-row-value">199</div></div>
+          <div class="price-row"><div><span class="price-row-title">Styrdämpare / justering</span><span class="price-row-note">På modeller där det är relevant.</span></div><div class="price-row-value">fr. 299</div></div>
+          <div class="price-footnote">Vi återkommer alltid innan vi går vidare med större reparation, extra delar eller fler timmar än väntat.</div>
+        </article>
+
+        <article class="price-card">
+          <div class="price-card-header">
+            <div class="price-card-icon">🚚</div>
+            <div>
+              <h3>Extra tjänster</h3>
+              <p>När du vill få det smidigare, snabbare eller bara slippa lägga tid på logistiken.</p>
+            </div>
+          </div>
+          <div class="price-row"><div><span class="price-row-title">Upphämtning / leverans</span><span class="price-row-note">Inom närområdet, beroende på rutt.</span></div><div class="price-row-value">fr. 99</div></div>
+          <div class="price-row"><div><span class="price-row-title">Akut service inom 24h</span><span class="price-row-note">När vi kan prioritera om i schemat.</span></div><div class="price-row-value">+200</div></div>
+          <div class="price-row"><div><span class="price-row-title">Offert / rådgivning</span><span class="price-row-note">För enklare genomgång av upplägg.</span></div><div class="price-row-value">Gratis</div></div>
+          <div class="price-footnote">Perfekt när kunden vill ha upphämtning efter färdig service eller snabbt besked inför säsong, försäljning eller garantiärende.</div>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="quote-band">
+        <div>
+          <strong>Bokföringssäkert och lätt för kunden att förstå.</strong>
+          <p>Vi jobbar med tydliga startpriser, specificerade åtgärder och bekräftelse innan extra arbete. Det gör det enklare både i verkstaden och när kunden ska hämta ut.</p>
+        </div>
+        <a class="btn btn-primary" href="/book-online/">Boka med prisbild</a>
+      </div>
+      <div class="info-grid" style="margin-top:18px">
+        <div class="card fact-card">
+          <h3>Det här ingår alltid</h3>
+          <ul class="list">
+            <li>Genomgång av symptom innan vi gissar.</li>
+            <li>Prisbekräftelse innan större åtgärd.</li>
+            <li>Tydligt ärende med modell, åtgärd och ansvarig.</li>
+          </ul>
+        </div>
+        <div class="card fact-card">
+          <h3>Bra att veta</h3>
+          <ul class="list">
+            <li>Delar tillkommer där det behövs.</li>
+            <li>Motorhjul och ovanliga modeller kan kräva mer tid.</li>
+            <li>Akutjobb tas in när schemat tillåter.</li>
+          </ul>
+        </div>
+        <div class="card fact-card">
+          <h3>När du vill gå vidare</h3>
+          <p>Skicka modell, symptom och gärna bild via bokningen. Då kan vi ge en tydligare prisbild direkt och korta ledtiden innan inlämning.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="cta-band">
+    <div class="wrap">
+      <div>
+        <h2>Vill du att vi återkommer med rätt upplägg direkt?</h2>
+        <p>Skicka serviceförfrågan med modell, problem och om du vill lämna in själv eller boka upphämtning.</p>
+      </div>
+      <a class="btn" href="/book-online/">Boka service</a>
+    </div>
+  </section>
 </main>
-<footer class="footer"><div class="wrap"><div><strong>Nordic E-Mobility</strong><p>Pistolvägen 6, 702 21 Örebro.</p></div><div><a href="/kontakt/">Kontakt</a><a href="/elscooter-reparation-orebro/">Elscooter reparation</a><a href="/batterireparation-elscooter/">Batterireparation</a></div><div><a href="/villkor/">Villkor</a><a href="/integritet/">Integritet</a><a href="tel:0700243319">070-024 33 19</a></div></div></footer>
+<footer class="footer">
+  <div class="wrap">
+    <div>
+      <strong>Nordic E-Mobility</strong>
+      <p>Pistolvägen 6, 702 21 Örebro.</p>
+    </div>
+    <div>
+      <a href="/kontakt/">Kontakt</a>
+      <a href="/elscooter-reparation-orebro/">Elscooter reparation</a>
+      <a href="/batterireparation-elscooter/">Batterireparation</a>
+    </div>
+    <div>
+      <a href="/villkor/">Villkor</a>
+      <a href="/integritet/">Integritet</a>
+      <a href="tel:0700243319">070-024 33 19</a>
+    </div>
+  </div>
+</footer>
 <script src="/assets/newsletter-popup.js" defer></script>
 </body>
 </html>
