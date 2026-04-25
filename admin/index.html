@@ -51,7 +51,7 @@ button:disabled{opacity:.6;cursor:wait}
 .key-date b{display:block;font-size:20px;line-height:1.25}
 .key-date.missing{background:rgba(255,194,71,.12);border-color:rgba(255,194,71,.45);color:#fff2cf}
 .key-date.missing span{color:#ffe0a3}
-.card-tabs{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:12px 0 10px}
+.card-tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:12px 0 10px}
 .card-tab{background:#0a0f0a;color:#d6ded8;border:1px solid #28322a;padding:10px 12px;font-size:12px;font-weight:900}
 .card-tab.is-active{background:rgba(0,200,83,.14);border-color:rgba(0,200,83,.45);color:#baffcf}
 .card-panel{display:none}
@@ -106,7 +106,23 @@ button:disabled{opacity:.6;cursor:wait}
 .completion-warning{border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;line-height:1.5}
 .completion-warning.good{background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#e6ffef}
 .completion-warning.warn{background:rgba(255,194,71,.12);border:1px solid rgba(255,194,71,.4);color:#fff1cf}
-.quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
+.media-panel{border:1px solid #263029;border-radius:8px;background:#090d09;padding:12px;margin:10px 0}
+.media-panel h4{margin:0 0 10px;font-size:15px}
+.media-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+.media-card{border:1px solid #263029;border-radius:8px;background:#060806;overflow:hidden}
+.media-thumb{aspect-ratio:1/1;background:#0a0f0a;display:flex;align-items:center;justify-content:center}
+.media-thumb img{width:100%;height:100%;object-fit:cover;display:block}
+.media-body{padding:10px}
+.media-body strong{display:block;margin-bottom:6px;font-size:13px}
+.media-body small{display:block;color:#9ea79f;line-height:1.45}
+.media-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
+.media-actions button,.media-actions a{padding:9px 10px;font-size:12px;text-align:center;text-decoration:none}
+.media-empty{border:1px dashed #313b33;border-radius:8px;padding:16px;text-align:center;color:#8f9991;margin-top:10px}
+.content-builder{border:1px solid #263029;border-radius:8px;background:#061008;padding:12px;margin-top:12px}
+.content-builder h5{margin:0 0 10px;font-size:14px}
+.content-builder textarea{min-height:110px}
+.content-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}
+  .quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
 .quick-actions button{padding:9px 10px;font-size:12px}
 .quick-actions button.secondary.active{background:rgba(0,200,83,.14);border-color:rgba(0,200,83,.45);color:#baffcf}
 .edit{display:grid;gap:8px;margin-top:10px}
@@ -128,7 +144,7 @@ textarea{min-height:66px;resize:vertical}
 .contact-state.waiting{color:#cce2ff}
 .contact-state.waiting::before{background:#4ba3ff;box-shadow:0 0 0 3px rgba(75,163,255,.18)}
   @media(max-width:1200px){.board{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}}
+  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions,.media-grid,.content-actions{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -409,6 +425,22 @@ function bookkeepingDraft(item,overrides={}){
   const completion=completionData(item,overrides);
   return `Betalning registrerad för ${item.customer&&item.customer.name||'kund'} (${completion.vehicleModel}). Belopp ${payment.amountLabel}. Status ${payment.statusLabel}. Betalsätt ${payment.methodLabel}. Referens ${payment.reference||'-'}. Betald ${payment.paidAtLabel}. Ärende ${shortId(item.id)}.`;
 }
+const mediaCategoryLabels={overview:'Översikt',before:'Före',after:'Efter',damage:'Skada',battery:'Batteri / el',parts:'Delar',delivery:'Upphämtning / leverans',workbench:'Verkstadsbord'};
+function mediaItems(item){
+  return Array.isArray(item&&item.media)?[...item.media].sort((a,b)=>String(b.uploadedAt||'').localeCompare(String(a.uploadedAt||''))):[];
+}
+function mediaDrafts(item){
+  const base=contentDrafts(item);
+  const latest=mediaItems(item)[0]||null;
+  const category=latest?mediaCategoryLabels[latest.category]||latest.category||'Översikt':''; 
+  const note=latest&&latest.note?` Anteckning från bilden: ${latest.note}.`:''; 
+  const mediaHint=latest?` Bildfokus: ${category}.${note}`:'';
+  return {
+    social:`${base.social}${mediaHint}`,
+    google:`${base.google}${mediaHint}`,
+    web:`${base.web}${mediaHint}`
+  };
+}
 function readySmsTemplate(item,overrides={}){
   const data=completionData(item,overrides);
   const greeting=item.customer&&item.customer.name?`Hej ${item.customer.name}!`:'Hej!';
@@ -529,7 +561,12 @@ function restoreEditorState(openIds=[],focusedField=null){
 
 function shouldPauseRefresh(){
   const active=document.activeElement;
-  return document.hidden || Boolean(document.querySelector('.edit-wrap[open]')) || Boolean(active&&active.closest&&active.closest('.edit-wrap'));
+  const fileBusy=[...document.querySelectorAll('input[type="file"]')].some((input)=>input.files&&input.files.length);
+  return document.hidden
+    || fileBusy
+    || Boolean(document.querySelector('.edit-wrap[open]'))
+    || Boolean(active&&active.closest&&active.closest('.edit-wrap'))
+    || Boolean(active&&active.closest&&active.closest('.completion-form,.payment-form,.media-form'));
 }
 
 async function loadCases(options={}){
@@ -638,6 +675,8 @@ function caseCard(item){
   const customerEmailHref=item.customer&&item.customer.email?`mailto:${item.customer.email}`:'#';
   const completion=completionData(item);
   const payment=paymentData(item);
+  const media=mediaItems(item);
+  const drafts=mediaDrafts(item);
   const activeTab=cardTabState[item.id]||(item.status==='ready'?'ready':'overview');
   const card=document.createElement('article');
   card.className='case';
@@ -654,6 +693,20 @@ function caseCard(item){
   const isPickupReady=item.logistics==='pickup-ready';
   const addonHtml=addonsFor(item).length?`<div class="addons-box"><strong>Tillval</strong>${html(addonText(item))}</div>`:'';
   const completionBanner=completion.workSummary||completion.totalCost?`<div class="addons-box"><strong>Klarunderlag</strong>${completion.workSummary?`${html(completion.workSummary)}<br>`:''}Slutbelopp: ${html(completion.totalLabel)}${completion.readyAt?`<br>Klarmarkerad: ${html(dateShort(completion.readyAt))}`:''}</div>`:'';
+  const mediaHtml=media.length
+    ? `<div class="media-grid">${media.map((entry)=>`
+      <article class="media-card">
+        <div class="media-thumb"><img src="${html(entry.url)}" alt="${html((mediaCategoryLabels[entry.category]||entry.category||'Bild')+' '+(entry.name||''))}" loading="lazy"></div>
+        <div class="media-body">
+          <strong>${html(mediaCategoryLabels[entry.category]||entry.category||'Bild')}</strong>
+          <small>${html(entry.note||entry.name||'Ingen notering')}<br>${html(dateShort(entry.uploadedAt))}${entry.publicOk?'<br>OK för content':''}</small>
+          <div class="media-actions">
+            <a class="secondary" href="${html(entry.url)}" target="_blank" rel="noopener">Öppna</a>
+            <button type="button" class="secondary delete-media" data-media-id="${html(entry.id)}">Ta bort</button>
+          </div>
+        </div>
+      </article>`).join('')}</div>`
+    : '<div class="media-empty">Inga bilder uppladdade ännu.</div>';
   card.innerHTML=`
     <div class="case-head">
       <div><h3>${html(item.customer&&item.customer.name||'Ok&auml;nd kund')}</h3><div class="muted">${html(item.vehicle&&item.vehicle.model||'Ok&auml;nd modell')}</div></div>
@@ -670,6 +723,7 @@ function caseCard(item){
       <button type="button" class="secondary card-tab ${activeTab==='contact'?'is-active':''}" data-tab="contact">Kontakt info</button>
       <button type="button" class="secondary card-tab ${activeTab==='ready'?'is-active':''}" data-tab="ready">Klar / h&auml;mtning</button>
       <button type="button" class="secondary card-tab ${activeTab==='payment'?'is-active':''}" data-tab="payment">Betalning</button>
+      <button type="button" class="secondary card-tab ${activeTab==='media'?'is-active':''}" data-tab="media">Bilder / content</button>
     </div>
     <div class="card-panel ${activeTab==='overview'?'is-active':''}" data-panel="overview">
       <div class="key-date ${missingPreferred?'missing':''}"><span>${isPickupReady?'Planerad upph&auml;mtning':'Planerad inl&auml;mning'}</span><b>${missingPreferred?'Beh&ouml;ver bokas in':html(displayDate(item.preferredDate))}</b></div>
@@ -887,6 +941,60 @@ function caseCard(item){
         </form>
       </div>
     </div>
+    <div class="card-panel ${activeTab==='media'?'is-active':''}" data-panel="media">
+      <div class="media-panel">
+        <h4>Bilder &amp; content</h4>
+        <p>Ladda upp bilder direkt på ärendet, kategorisera dem och kopiera utkast för sociala medier, Google eller webbcase.</p>
+        <form class="edit media-form" data-id="${html(item.id)}">
+          <div class="completion-grid">
+            <div>
+              <label>Bildkategori</label>
+              <select name="category">
+                <option value="overview">Översikt</option>
+                <option value="before">Före</option>
+                <option value="after">Efter</option>
+                <option value="damage">Skada</option>
+                <option value="battery">Batteri / el</option>
+                <option value="parts">Delar</option>
+                <option value="delivery">Upphämtning / leverans</option>
+                <option value="workbench">Verkstadsbord</option>
+              </select>
+            </div>
+            <div>
+              <label>Kan användas i content</label>
+              <select name="publicOk">
+                <option value="false">Nej, internt</option>
+                <option value="true">Ja, ok för content</option>
+              </select>
+            </div>
+            <div class="full">
+              <label>Kort notering</label>
+              <input name="note" placeholder="T.ex. färdig efter batteridiagnos och ny bakslang">
+            </div>
+            <div class="full">
+              <label>Ladda upp bilder</label>
+              <input name="files" type="file" accept="image/*" multiple>
+            </div>
+          </div>
+          <div class="row">
+            <button type="submit">Ladda upp bilder</button>
+            <button type="button" class="secondary copy-social">Kopiera socialt utkast</button>
+          </div>
+          <div class="content-builder">
+            <h5>Content builder</h5>
+            <textarea class="content-social" readonly>${html(drafts.social)}</textarea>
+            <div class="content-actions">
+              <button type="button" class="secondary copy-google">Kopiera Google</button>
+              <button type="button" class="secondary copy-web">Kopiera webbcase</button>
+              <button type="button" class="secondary copy-social-2">Kopiera socialt</button>
+            </div>
+            <textarea class="content-google" readonly>${html(drafts.google)}</textarea>
+            <textarea class="content-web" readonly>${html(drafts.web)}</textarea>
+          </div>
+        </form>
+        ${mediaHtml}
+      </div>
+    </div>
     ${notes?`<div class="notes"><strong>Senaste noteringar</strong>${notes}</div>`:''}`;
   card.querySelectorAll('.card-tab').forEach((button)=>{
     button.addEventListener('click',()=>{
@@ -899,6 +1007,7 @@ function caseCard(item){
   const form=card.querySelector('.edit-wrap form');
   const completionForm=card.querySelector('.completion-form');
   const paymentForm=card.querySelector('.payment-form');
+  const mediaForm=card.querySelector('.media-form');
   card.querySelectorAll('.quick-status').forEach((button)=>{
     button.addEventListener('click',async()=>{
       const original=button.textContent;
@@ -979,6 +1088,26 @@ function caseCard(item){
     paymentForm.querySelector('.copy-bookkeeping').disabled=!data.canSave;
     paymentForm.querySelector('.copy-fortnox').disabled=!fortnoxReady;
     return data;
+  }
+  async function uploadMedia(){
+    const files=mediaForm.querySelector('input[name="files"]').files;
+    if(!files||!files.length){
+      showError('Välj minst en bild att ladda upp.');
+      return;
+    }
+    const data=new FormData();
+    data.append('category',mediaForm.elements.namedItem('category').value||'overview');
+    data.append('publicOk',mediaForm.elements.namedItem('publicOk').value||'false');
+    data.append('note',mediaForm.elements.namedItem('note').value||'');
+    [...files].forEach((file)=>data.append('files',file,file.name));
+    const response=await fetch(`/api/cases/${encodeURIComponent(item.id)}/media`,{
+      method:'POST',
+      headers:{'x-admin-token':tokenInput.value.trim()},
+      body:data
+    });
+    const payload=await response.json().catch(()=>({}));
+    if(!response.ok) throw new Error(payload.error||'Kunde inte ladda upp bilderna.');
+    await loadCases();
   }
   async function saveCompletion(markReady=false){
     const values=completionValues();
@@ -1097,6 +1226,41 @@ function caseCard(item){
   paymentForm.querySelectorAll('input, textarea, select').forEach((field)=>field.addEventListener('input',refreshPaymentPreview));
   paymentForm.querySelectorAll('select').forEach((field)=>field.addEventListener('change',refreshPaymentPreview));
   refreshPaymentPreview();
+  mediaForm.addEventListener('submit',async(event)=>{
+    event.preventDefault();
+    const button=mediaForm.querySelector('button[type="submit"]');
+    button.disabled=true;
+    button.textContent='Laddar upp...';
+    try{
+      await uploadMedia();
+    }catch(error){showError(error.message)}
+    finally{
+      button.disabled=false;
+      button.textContent='Ladda upp bilder';
+    }
+  });
+  mediaForm.querySelector('.copy-social').addEventListener('click',async()=>{try{await copyText(drafts.social);}catch(error){showError('Kunde inte kopiera socialt utkast.');}});
+  mediaForm.querySelector('.copy-social-2').addEventListener('click',async()=>{try{await copyText(drafts.social);}catch(error){showError('Kunde inte kopiera socialt utkast.');}});
+  mediaForm.querySelector('.copy-google').addEventListener('click',async()=>{try{await copyText(drafts.google);}catch(error){showError('Kunde inte kopiera Google-utkastet.');}});
+  mediaForm.querySelector('.copy-web').addEventListener('click',async()=>{try{await copyText(drafts.web);}catch(error){showError('Kunde inte kopiera webbcaset.');}});
+  card.querySelectorAll('.delete-media').forEach((button)=>{
+    button.addEventListener('click',async()=>{
+      const mediaId=button.dataset.mediaId;
+      if(!mediaId)return;
+      if(!confirm('Ta bort den här bilden från ärendet?')) return;
+      const original=button.textContent;
+      button.disabled=true;
+      button.textContent='Tar bort...';
+      try{
+        await api(`/api/case-media/${encodeURIComponent(item.id)}/${encodeURIComponent(mediaId)}`,{method:'DELETE'});
+        await loadCases();
+      }catch(error){showError(error.message)}
+      finally{
+        button.disabled=false;
+        button.textContent=original;
+      }
+    });
+  });
   card.querySelector('.delete-case').addEventListener('click',async()=>{
     const name=item.customer&&item.customer.name?item.customer.name:'detta \u00e4rende';
     if(!confirm('Radera '+name+' permanent? Anv\u00e4nd bara f\u00f6r tester/felregistreringar.'))return;
