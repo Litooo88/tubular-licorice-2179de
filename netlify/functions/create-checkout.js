@@ -49,7 +49,6 @@ exports.handler = async (event) => {
     const origin = event.headers.origin || "https://www.nordicemobility.se";
 
     const session = await stripe.checkout.sessions.create({
-      payment_method_types: ["card", "klarna"],
       locale: "sv",
       line_items: [
         {
@@ -74,7 +73,7 @@ exports.handler = async (event) => {
       custom_text: {
         submit: {
           message:
-            "Betala tryggt med kort eller Klarna. Nordic E-Mobility kontaktar dig om leverans, showroom och efterservice.",
+            "Betala tryggt med kort. Klarna visas automatiskt nar det ar tillgangligt for checkouten. Nordic E-Mobility kontaktar dig om leverans, showroom och efterservice.",
         },
       },
     });
