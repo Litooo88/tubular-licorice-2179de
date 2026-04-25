@@ -978,8 +978,9 @@ function caseCard(item){
           </div>
           <div class="row">
             <button type="submit">Ladda upp bilder</button>
-            <button type="button" class="secondary copy-social">Kopiera socialt utkast</button>
+            <button type="button" class="secondary analyze-media">Analysera material</button>
           </div>
+          <div class="completion-warning warn analysis-state">Ingen analys körd ännu. Grundutkastet nedan bygger på ärendet och senaste bilden.</div>
           <div class="content-builder">
             <h5>Content builder</h5>
             <textarea class="content-social" readonly>${html(drafts.social)}</textarea>
@@ -1108,6 +1109,19 @@ function caseCard(item){
     const payload=await response.json().catch(()=>({}));
     if(!response.ok) throw new Error(payload.error||'Kunde inte ladda upp bilderna.');
     await loadCases();
+  }
+  async function analyzeMedia(){
+    const result=await api(`/api/cases/${encodeURIComponent(item.id)}/analyze`,{method:'POST',body:JSON.stringify({})});
+    const content=result.content||{};
+    mediaForm.querySelector('.content-social').value=content.social||drafts.social;
+    mediaForm.querySelector('.content-google').value=content.google||drafts.google;
+    mediaForm.querySelector('.content-web').value=content.web||drafts.web;
+    const state=mediaForm.querySelector('.analysis-state');
+    const summary=result.summary||'Analysen är klar.';
+    const angle=result.strategy&&result.strategy.primaryAngle?` Vinkel: ${result.strategy.primaryAngle}.`:'';
+    state.className='completion-warning good analysis-state';
+    state.textContent=`Analys klar. ${summary}${angle}`;
+    return result;
   }
   async function saveCompletion(markReady=false){
     const values=completionValues();
@@ -1239,10 +1253,21 @@ function caseCard(item){
       button.textContent='Ladda upp bilder';
     }
   });
-  mediaForm.querySelector('.copy-social').addEventListener('click',async()=>{try{await copyText(drafts.social);}catch(error){showError('Kunde inte kopiera socialt utkast.');}});
-  mediaForm.querySelector('.copy-social-2').addEventListener('click',async()=>{try{await copyText(drafts.social);}catch(error){showError('Kunde inte kopiera socialt utkast.');}});
-  mediaForm.querySelector('.copy-google').addEventListener('click',async()=>{try{await copyText(drafts.google);}catch(error){showError('Kunde inte kopiera Google-utkastet.');}});
-  mediaForm.querySelector('.copy-web').addEventListener('click',async()=>{try{await copyText(drafts.web);}catch(error){showError('Kunde inte kopiera webbcaset.');}});
+  mediaForm.querySelector('.analyze-media').addEventListener('click',async()=>{
+    const button=mediaForm.querySelector('.analyze-media');
+    button.disabled=true;
+    button.textContent='Analyserar...';
+    try{
+      await analyzeMedia();
+    }catch(error){showError(error.message)}
+    finally{
+      button.disabled=false;
+      button.textContent='Analysera material';
+    }
+  });
+  mediaForm.querySelector('.copy-social-2').addEventListener('click',async()=>{try{await copyText(mediaForm.querySelector('.content-social').value);}catch(error){showError('Kunde inte kopiera socialt utkast.');}});
+  mediaForm.querySelector('.copy-google').addEventListener('click',async()=>{try{await copyText(mediaForm.querySelector('.content-google').value);}catch(error){showError('Kunde inte kopiera Google-utkastet.');}});
+  mediaForm.querySelector('.copy-web').addEventListener('click',async()=>{try{await copyText(mediaForm.querySelector('.content-web').value);}catch(error){showError('Kunde inte kopiera webbcaset.');}});
   card.querySelectorAll('.delete-media').forEach((button)=>{
     button.addEventListener('click',async()=>{
       const mediaId=button.dataset.mediaId;
