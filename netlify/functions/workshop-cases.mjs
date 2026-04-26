@@ -21,6 +21,7 @@ const STAFF = {
 
 const PAYMENT_STATUSES = new Set(["unpaid", "invoice_ready", "invoiced", "paid"]);
 const PAYMENT_METHODS = new Set(["swish", "card", "cash", "invoice", "bank", "other"]);
+const CONTENT_STATUSES = new Set(["draft", "review", "ready", "published"]);
 
 const requireAdmin = (request) => {
   const expected = process.env.ADMIN_TOKEN || globalThis.Netlify?.env?.get?.("ADMIN_TOKEN");
@@ -80,6 +81,7 @@ export default async (request, context) => {
     const body = await request.json();
     const now = new Date().toISOString();
     const currentPayment = current.payment || {};
+    const currentContent = current.content || {};
 
     const nextCompletion = {
       ...(current.completion || {}),
@@ -133,6 +135,27 @@ export default async (request, context) => {
           : clean(body.fortnoxInvoiceNumber, 80),
       updatedAt: now,
     };
+    const requestedContentStatus =
+      body.contentStatus === undefined ? currentContent.status || "draft" : clean(body.contentStatus, 40) || "draft";
+    const nextContent = {
+      ...currentContent,
+      social:
+        body.contentSocial === undefined ? currentContent.social || "" : clean(body.contentSocial, 4000),
+      google:
+        body.contentGoogle === undefined ? currentContent.google || "" : clean(body.contentGoogle, 3000),
+      web:
+        body.contentWeb === undefined ? currentContent.web || "" : clean(body.contentWeb, 5000),
+      status: CONTENT_STATUSES.has(requestedContentStatus) ? requestedContentStatus : currentContent.status || "draft",
+      targets:
+        body.contentTargets === undefined ? currentContent.targets || "" : clean(body.contentTargets, 160),
+      notes:
+        body.contentNotes === undefined ? currentContent.notes || "" : clean(body.contentNotes, 1600),
+      reviewedAt:
+        body.contentReviewedAt === undefined ? currentContent.reviewedAt || null : clean(body.contentReviewedAt, 80) || null,
+      publishedAt:
+        body.contentPublishedAt === undefined ? currentContent.publishedAt || null : clean(body.contentPublishedAt, 80) || null,
+      updatedAt: now,
+    };
 
     if (nextPayment.status === "paid" && !nextPayment.paidAt) {
       nextPayment.paidAt = now;
@@ -166,6 +189,7 @@ export default async (request, context) => {
       },
       completion: nextCompletion,
       payment: nextPayment,
+      content: nextContent,
     };
 
     if (body.assignedTo) {
@@ -196,6 +220,15 @@ export default async (request, context) => {
       body.paidAt !== undefined ||
       body.fortnoxCustomerNumber !== undefined ||
       body.fortnoxInvoiceNumber !== undefined;
+    const contentTouched =
+      body.contentSocial !== undefined ||
+      body.contentGoogle !== undefined ||
+      body.contentWeb !== undefined ||
+      body.contentStatus !== undefined ||
+      body.contentTargets !== undefined ||
+      body.contentNotes !== undefined ||
+      body.contentReviewedAt !== undefined ||
+      body.contentPublishedAt !== undefined;
     const readyNotificationTouched = body.customerNotifiedAt !== undefined || body.customerNotifiedVia !== undefined;
 
     if (paymentTouched) {
@@ -209,6 +242,14 @@ export default async (request, context) => {
       timeline.push({
         at: nextCompletion.customerNotifiedAt,
         event: `Klartext skickad till kund${nextCompletion.customerNotifiedVia ? ` via ${nextCompletion.customerNotifiedVia}` : ""}.`,
+      });
+    }
+
+    if (contentTouched) {
+      const targetInfo = nextContent.targets ? ` mot ${nextContent.targets}` : "";
+      timeline.push({
+        at: now,
+        event: `Content uppdaterat: ${nextContent.status}${targetInfo}.`,
       });
     }
 

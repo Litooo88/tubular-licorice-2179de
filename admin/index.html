@@ -202,6 +202,7 @@ const columns=[
 const statusLabels={new:'Ny',contacted:'Kontaktad',checked_in:'Inl&auml;mnad',diagnosing:'Diagnos',repairing:'Reparerar',waiting_parts:'V&auml;ntar delar',waiting_customer:'V&auml;ntar kund',ready:'Klar',done:'Avslutad',archived:'Arkiverad'};
 const paymentStatusLabels={unpaid:'Ej betald',invoice_ready:'Klar f&ouml;r faktura',invoiced:'Fakturerad',paid:'Betald'};
 const paymentMethodLabels={swish:'Swish',card:'Kort',cash:'Kontant',invoice:'Faktura',bank:'Bank',other:'Annat'};
+const contentStatusLabels={draft:'Utkast',review:'F&ouml;r granskning',ready:'Redo att publicera',published:'Publicerat'};
 const tokenInput=document.getElementById('token');
 const boardEl=document.getElementById('board');
 const errorEl=document.getElementById('error');
@@ -461,6 +462,39 @@ function mediaDrafts(item){
     web:`${base.web}${mediaHint}`
   };
 }
+function contentData(item,overrides={}){
+  const saved=item.content||{};
+  const drafts=mediaDrafts(item);
+  const status=String(overrides.contentStatus!==undefined?overrides.contentStatus:(saved.status||'draft')).trim()||'draft';
+  const targets=String(overrides.contentTargets!==undefined?overrides.contentTargets:(saved.targets||'Alla tre')).trim()||'Alla tre';
+  const notes=String(overrides.contentNotes!==undefined?overrides.contentNotes:(saved.notes||'')).trim();
+  const social=String(overrides.contentSocial!==undefined?overrides.contentSocial:(saved.social||drafts.social)).trim();
+  const google=String(overrides.contentGoogle!==undefined?overrides.contentGoogle:(saved.google||drafts.google)).trim();
+  const web=String(overrides.contentWeb!==undefined?overrides.contentWeb:(saved.web||drafts.web)).trim();
+  const reviewedAt=overrides.contentReviewedAt!==undefined?overrides.contentReviewedAt:(saved.reviewedAt||null);
+  const publishedAt=overrides.contentPublishedAt!==undefined?overrides.contentPublishedAt:(saved.publishedAt||null);
+  return {
+    social,
+    google,
+    web,
+    status,
+    statusLabel:contentStatusLabels[status]||status,
+    targets,
+    notes,
+    reviewedAt,
+    publishedAt,
+    reviewedLabel:reviewedAt?dateShort(reviewedAt):'Inte granskat',
+    publishedLabel:publishedAt?dateShort(publishedAt):'Inte publicerat',
+    canSave:Boolean(social||google||web)
+  };
+}
+function contentWorkflowState(data){
+  if(!data.canSave)return {className:'warn',text:'K&ouml;r analys eller skriv ett eget utkast innan du sparar contentfl&ouml;det.'};
+  if(data.status==='published')return {className:'good',text:`Publicerat mot ${data.targets}. Publiceringsdatum: ${data.publishedLabel}.`};
+  if(data.status==='ready')return {className:'good',text:`Redo att publicera mot ${data.targets}. Granskat: ${data.reviewedLabel}.`};
+  if(data.status==='review')return {className:'warn',text:`Utkast sparat f&ouml;r granskning mot ${data.targets}. Kontrollera text och bilder innan publicering.`};
+  return {className:'warn',text:'Utkast finns men &auml;r &auml;nnu inte markerat f&ouml;r granskning eller publicering.'};
+}
 function readySmsTemplate(item,overrides={}){
   const data=completionData(item,overrides);
   const greeting=item.customer&&item.customer.name?`Hej ${item.customer.name}!`:'Hej!';
@@ -696,6 +730,7 @@ function caseCard(item){
   const completion=completionData(item);
   const payment=paymentData(item);
   const media=mediaItems(item);
+  const content=contentData(item);
   const drafts=mediaDrafts(item);
   const activeTab=cardTabState[item.id]||(item.status==='ready'?'ready':'overview');
   const card=document.createElement('article');
@@ -758,6 +793,7 @@ function caseCard(item){
         <div class="fact"><span>Slutbelopp</span><b>${html(completion.totalLabel)}</b></div>
         <div class="fact"><span>Betalstatus</span><b>${html(payment.statusLabel)}</b></div>
         <div class="fact"><span>Betals&auml;tt</span><b>${html(payment.methodLabel)}</b></div>
+        <div class="fact"><span>Contentstatus</span><b>${html(content.statusLabel)}</b></div>
         <div class="fact"><span>Tillval</span><b>${addonsFor(item).length?`${addonsFor(item).length} st (${money(addonTotal(item))})`:'Inga'}</b></div>
         <div class="fact"><span>Rabattkod</span><b>${html(item.discountCode||'Ingen')}</b></div>
         <div class="fact"><span>Inl&auml;mnad</span><b>${item.intakeAt?dateShort(item.intakeAt):'Nej'}</b></div>
@@ -1008,16 +1044,52 @@ function caseCard(item){
             <button type="button" class="secondary analyze-media">Analysera material</button>
           </div>
           <div class="completion-warning warn analysis-state">Ingen analys körd ännu. Grundutkastet nedan bygger på ärendet och senaste bilden.</div>
+          <div class="contact-inline">
+            <div class="fact"><span>Contentstatus</span><b class="content-status-label">${html(content.statusLabel)}</b></div>
+            <div class="fact"><span>Kanaler</span><b class="content-targets-label">${html(content.targets)}</b></div>
+            <div class="fact"><span>Senast granskat</span><b class="content-reviewed-label">${html(content.reviewedLabel)}</b></div>
+            <div class="fact"><span>Senast publicerat</span><b class="content-published-label">${html(content.publishedLabel)}</b></div>
+          </div>
+          <div class="completion-warning ${contentWorkflowState(content).className} analysis-state">${contentWorkflowState(content).text}</div>
           <div class="content-builder">
             <h5>Content builder</h5>
-            <textarea class="content-social" readonly>${html(drafts.social)}</textarea>
+            <div class="completion-grid">
+              <div>
+                <label>Contentstatus</label>
+                <select name="contentStatus">
+                  <option value="draft" ${content.status==='draft'?'selected':''}>Utkast</option>
+                  <option value="review" ${content.status==='review'?'selected':''}>F&ouml;r granskning</option>
+                  <option value="ready" ${content.status==='ready'?'selected':''}>Redo att publicera</option>
+                  <option value="published" ${content.status==='published'?'selected':''}>Publicerat</option>
+                </select>
+              </div>
+              <div>
+                <label>Prim&auml;ra kanaler</label>
+                <select name="contentTargets">
+                  <option value="Alla tre" ${content.targets==='Alla tre'?'selected':''}>Alla tre</option>
+                  <option value="Instagram + Facebook" ${content.targets==='Instagram + Facebook'?'selected':''}>Instagram + Facebook</option>
+                  <option value="Google Business" ${content.targets==='Google Business'?'selected':''}>Google Business</option>
+                  <option value="Webbcase" ${content.targets==='Webbcase'?'selected':''}>Webbcase</option>
+                </select>
+              </div>
+              <div class="full">
+                <label>Intern contentnotering</label>
+                <textarea name="contentNotes" placeholder="T.ex. bra f&ouml;re/efter-case. V&auml;nta med publicering tills kunden h&auml;mtat.">${html(content.notes||'')}</textarea>
+              </div>
+            </div>
+            <textarea class="content-social">${html(content.social||drafts.social)}</textarea>
             <div class="content-actions">
+              <button type="button" class="secondary save-content">Spara content</button>
+              <button type="button" class="secondary mark-content-review">Markera granskning</button>
+              <button type="button" class="secondary mark-content-ready">Markera redo</button>
+              <button type="button" class="secondary mark-content-published">Markera publicerat</button>
               <button type="button" class="secondary copy-google">Kopiera Google</button>
               <button type="button" class="secondary copy-web">Kopiera webbcase</button>
               <button type="button" class="secondary copy-social-2">Kopiera socialt</button>
+              <button type="button" class="secondary copy-content-pack">Kopiera allt</button>
             </div>
-            <textarea class="content-google" readonly>${html(drafts.google)}</textarea>
-            <textarea class="content-web" readonly>${html(drafts.web)}</textarea>
+            <textarea class="content-google">${html(content.google||drafts.google)}</textarea>
+            <textarea class="content-web">${html(content.web||drafts.web)}</textarea>
           </div>
         </form>
         ${mediaHtml}
@@ -1036,6 +1108,10 @@ function caseCard(item){
   const completionForm=card.querySelector('.completion-form');
   const paymentForm=card.querySelector('.payment-form');
   const mediaForm=card.querySelector('.media-form');
+  const duplicateAnalysisStates=mediaForm?mediaForm.querySelectorAll('.analysis-state'):[];
+  if(duplicateAnalysisStates.length>1){
+    duplicateAnalysisStates[0].remove();
+  }
   card.querySelectorAll('.quick-status').forEach((button)=>{
     button.addEventListener('click',async()=>{
       const original=button.textContent;
@@ -1087,6 +1163,17 @@ function caseCard(item){
       fortnoxInvoiceNumber:data.get('fortnoxInvoiceNumber')
     };
   }
+  function contentValues(){
+    const data=new FormData(mediaForm);
+    return {
+      contentStatus:data.get('contentStatus'),
+      contentTargets:data.get('contentTargets'),
+      contentNotes:data.get('contentNotes'),
+      contentSocial:mediaForm.querySelector('.content-social').value,
+      contentGoogle:mediaForm.querySelector('.content-google').value,
+      contentWeb:mediaForm.querySelector('.content-web').value
+    };
+  }
   function refreshCompletionPreview(){
     const data=completionData(item,completionValues());
     card.querySelector('.sms-preview').value=readySmsTemplate(item,completionValues());
@@ -1120,6 +1207,19 @@ function caseCard(item){
     paymentForm.querySelector('.copy-fortnox').disabled=!fortnoxReady;
     return data;
   }
+  function refreshContentPreview(){
+    const data=contentData(item,contentValues());
+    mediaForm.querySelector('.content-status-label').textContent=data.statusLabel;
+    mediaForm.querySelector('.content-targets-label').textContent=data.targets;
+    mediaForm.querySelector('.content-reviewed-label').textContent=data.reviewedLabel;
+    mediaForm.querySelector('.content-published-label').textContent=data.publishedLabel;
+    const state=mediaForm.querySelector('.analysis-state');
+    const workflow=contentWorkflowState(data);
+    state.className=`completion-warning ${workflow.className} analysis-state`;
+    state.innerHTML=workflow.text;
+    mediaForm.querySelectorAll('.save-content,.mark-content-review,.mark-content-ready,.mark-content-published,.copy-social-2,.copy-google,.copy-web,.copy-content-pack').forEach((button)=>button.disabled=!data.canSave);
+    return data;
+  }
   async function uploadMedia(){
     const files=mediaForm.querySelector('input[name="files"]').files;
     if(!files||!files.length){
@@ -1146,11 +1246,15 @@ function caseCard(item){
     mediaForm.querySelector('.content-social').value=content.social||drafts.social;
     mediaForm.querySelector('.content-google').value=content.google||drafts.google;
     mediaForm.querySelector('.content-web').value=content.web||drafts.web;
+    if(!mediaForm.elements.namedItem('contentStatus').value){
+      mediaForm.elements.namedItem('contentStatus').value='draft';
+    }
     const state=mediaForm.querySelector('.analysis-state');
     const summary=result.summary||'Analysen är klar.';
     const angle=result.strategy&&result.strategy.primaryAngle?` Vinkel: ${result.strategy.primaryAngle}.`:'';
     state.className='completion-warning good analysis-state';
     state.textContent=`Analys klar. ${summary}${angle}`;
+    refreshContentPreview();
     return result;
   }
   async function saveCompletion(markReady=false){
@@ -1192,6 +1296,30 @@ function caseCard(item){
       note:markPaid?`Betalning registrerad ${values.paymentAmount||0} kr via ${paymentMethodLabels[values.paymentMethod]||'valt betalsätt'}.`:undefined
     };
     await api('/api/cases/'+encodeURIComponent(paymentForm.dataset.id),{method:'PATCH',body:JSON.stringify(payload)});
+    await loadCases();
+  }
+  async function saveContent(statusOverride=null){
+    const values=contentValues();
+    const payload={
+      contentStatus:statusOverride||values.contentStatus,
+      contentTargets:values.contentTargets,
+      contentNotes:values.contentNotes,
+      contentSocial:values.contentSocial,
+      contentGoogle:values.contentGoogle,
+      contentWeb:values.contentWeb
+    };
+    if(statusOverride==='review' || values.contentStatus==='review'){
+      payload.contentReviewedAt=new Date().toISOString();
+    }
+    if(statusOverride==='ready'){
+      payload.contentReviewedAt=new Date().toISOString();
+    }
+    if(statusOverride==='published'){
+      payload.contentReviewedAt=new Date().toISOString();
+      payload.contentPublishedAt=new Date().toISOString();
+    }
+    payload.note=`Content uppdaterat: ${payload.contentStatus}${payload.contentTargets?` (${payload.contentTargets})`:''}.`;
+    await api('/api/cases/'+encodeURIComponent(mediaForm.dataset.id),{method:'PATCH',body:JSON.stringify(payload)});
     await loadCases();
   }
   completionForm.addEventListener('submit',async(event)=>{
@@ -1345,9 +1473,77 @@ function caseCard(item){
       button.textContent='Analysera material';
     }
   });
+  mediaForm.querySelector('.save-content').addEventListener('click',async()=>{
+    const button=mediaForm.querySelector('.save-content');
+    const original=button.textContent;
+    const data=refreshContentPreview();
+    if(!data.canSave)return;
+    button.disabled=true;
+    button.textContent='Sparar...';
+    try{
+      await saveContent();
+    }catch(error){showError(error.message)}
+    finally{
+      button.disabled=false;
+      button.textContent=original;
+    }
+  });
+  mediaForm.querySelector('.mark-content-review').addEventListener('click',async()=>{
+    const button=mediaForm.querySelector('.mark-content-review');
+    const original=button.textContent;
+    const data=refreshContentPreview();
+    if(!data.canSave)return;
+    button.disabled=true;
+    button.textContent='Sparar...';
+    try{
+      await saveContent('review');
+    }catch(error){showError(error.message)}
+    finally{
+      button.disabled=false;
+      button.textContent=original;
+    }
+  });
+  mediaForm.querySelector('.mark-content-ready').addEventListener('click',async()=>{
+    const button=mediaForm.querySelector('.mark-content-ready');
+    const original=button.textContent;
+    const data=refreshContentPreview();
+    if(!data.canSave)return;
+    button.disabled=true;
+    button.textContent='Sparar...';
+    try{
+      await saveContent('ready');
+    }catch(error){showError(error.message)}
+    finally{
+      button.disabled=false;
+      button.textContent=original;
+    }
+  });
+  mediaForm.querySelector('.mark-content-published').addEventListener('click',async()=>{
+    const button=mediaForm.querySelector('.mark-content-published');
+    const original=button.textContent;
+    const data=refreshContentPreview();
+    if(!data.canSave)return;
+    button.disabled=true;
+    button.textContent='Sparar...';
+    try{
+      await saveContent('published');
+    }catch(error){showError(error.message)}
+    finally{
+      button.disabled=false;
+      button.textContent=original;
+    }
+  });
   mediaForm.querySelector('.copy-social-2').addEventListener('click',async()=>{try{await copyText(mediaForm.querySelector('.content-social').value);}catch(error){showError('Kunde inte kopiera socialt utkast.');}});
   mediaForm.querySelector('.copy-google').addEventListener('click',async()=>{try{await copyText(mediaForm.querySelector('.content-google').value);}catch(error){showError('Kunde inte kopiera Google-utkastet.');}});
   mediaForm.querySelector('.copy-web').addEventListener('click',async()=>{try{await copyText(mediaForm.querySelector('.content-web').value);}catch(error){showError('Kunde inte kopiera webbcaset.');}});
+  mediaForm.querySelector('.copy-content-pack').addEventListener('click',async()=>{
+    try{
+      await copyText(`SOCIALT\n${mediaForm.querySelector('.content-social').value}\n\nGOOGLE BUSINESS\n${mediaForm.querySelector('.content-google').value}\n\nWEBBCASE\n${mediaForm.querySelector('.content-web').value}`);
+    }catch(error){showError('Kunde inte kopiera contentpaketet.');}
+  });
+  mediaForm.querySelectorAll('input, textarea, select').forEach((field)=>field.addEventListener('input',refreshContentPreview));
+  mediaForm.querySelectorAll('select').forEach((field)=>field.addEventListener('change',refreshContentPreview));
+  refreshContentPreview();
   card.querySelectorAll('.delete-media').forEach((button)=>{
     button.addEventListener('click',async()=>{
       const mediaId=button.dataset.mediaId;
