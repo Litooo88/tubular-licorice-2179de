@@ -343,6 +343,9 @@ function completionData(item,overrides={}){
   const workSummary=String(overrides.workSummary!==undefined?overrides.workSummary:completion.workSummary||'').trim();
   const pickupSummary=String(overrides.pickupSummary!==undefined?overrides.pickupSummary:completion.pickupSummary||'').trim()||'Boka en upphämtningstid via länken nedan eller svara på detta meddelande om du vill att vi hjälper dig.';
   const bookingUrl=pickupBookingUrl(item,{vehicleModel});
+  const customerNotifiedAt=overrides.customerNotifiedAt!==undefined?overrides.customerNotifiedAt:completion.customerNotifiedAt||null;
+  const customerNotifiedVia=String(overrides.customerNotifiedVia!==undefined?overrides.customerNotifiedVia:completion.customerNotifiedVia||'').trim();
+  const channelLabel=customerNotifiedVia==='email'?'mail':customerNotifiedVia==='sms'?'SMS':'kundkanal';
   return {
     totalCost,
     totalLabel:hasTotal?`${money(totalCost)} inkl. moms`:'Ej ifyllt än',
@@ -351,6 +354,9 @@ function completionData(item,overrides={}){
     pickupSummary,
     bookingUrl,
     readyAt:overrides.readyAt!==undefined?overrides.readyAt:completion.readyAt||null,
+    customerNotifiedAt,
+    customerNotifiedVia,
+    customerNotifiedLabel:customerNotifiedAt?`${channelLabel} skickat ${dateShort(customerNotifiedAt)}`:'Inte markerat',
     canDraft:hasTotal && Boolean(workSummary)
   };
 }
@@ -383,6 +389,20 @@ function paymentData(item,overrides={}){
     canSave:Boolean(hasAmount),
     canDraftFortnox:Boolean(hasAmount && completion.workSummary)
   };
+}
+function readyPaymentLine(item,overrides={}){
+  const payment=paymentData(item,overrides);
+  const completion=completionData(item,overrides);
+  const amount=payment.hasAmount?payment.amountLabel:completion.totalLabel;
+  if(payment.status==='paid')return `Betalning registrerad: ${amount}${payment.method?` via ${payment.methodLabel}`:''}.`;
+  if(payment.status==='invoiced')return `Faktura skickad: ${amount}.`;
+  if(payment.status==='invoice_ready')return `Underlag klart f\u00f6r faktura: ${amount}.`;
+  return `Att betala vid upph\u00e4mtning: ${amount}.`;
+}
+function readyDeliveryState(data){
+  if(!data.canDraft)return {className:'warn',text:'Fyll i slutbelopp och utf\u00f6rda \u00e5tg\u00e4rder innan du draftar SMS eller mail.'};
+  if(data.customerNotifiedAt)return {className:'good',text:`Klarmeddelandet \u00e4r markerat som skickat via ${data.customerNotifiedVia==='email'?'mail':'SMS'} ${dateShort(data.customerNotifiedAt)}.`};
+  return {className:'good',text:'Underlaget \u00e4r redo. Drafta, skicka och markera sedan vilken kanal du anv\u00e4nde.'};
 }
 function fortnoxDraft(item,overrides={}){
   const completion=completionData(item,overrides);
@@ -692,7 +712,7 @@ function caseCard(item){
   const missingPreferred=needsBookingDate(item.preferredDate);
   const isPickupReady=item.logistics==='pickup-ready';
   const addonHtml=addonsFor(item).length?`<div class="addons-box"><strong>Tillval</strong>${html(addonText(item))}</div>`:'';
-  const completionBanner=completion.workSummary||completion.totalCost?`<div class="addons-box"><strong>Klarunderlag</strong>${completion.workSummary?`${html(completion.workSummary)}<br>`:''}Slutbelopp: ${html(completion.totalLabel)}${completion.readyAt?`<br>Klarmarkerad: ${html(dateShort(completion.readyAt))}`:''}</div>`:'';
+  const completionBanner=completion.workSummary||completion.totalCost?`<div class="addons-box"><strong>Klarunderlag</strong>${completion.workSummary?`${html(completion.workSummary)}<br>`:''}Slutbelopp: ${html(completion.totalLabel)}${completion.readyAt?`<br>Klarmarkerad: ${html(dateShort(completion.readyAt))}`:''}${completion.customerNotifiedAt?`<br>Kund aviserad: ${html(completion.customerNotifiedLabel)}`:''}</div>`:'';
   const mediaHtml=media.length
     ? `<div class="media-grid">${media.map((entry)=>`
       <article class="media-card">
@@ -850,8 +870,12 @@ function caseCard(item){
               <span class="completion-note">Det h&auml;r blir din standardtext i SMS och mail. Slutbeloppet sparas separat i &auml;rendet, men riktig bokf&ouml;ringss&auml;kring kommer med Fortnox-steget.</span>
             </div>
           </div>
+          <div class="contact-inline">
+            <div class="fact"><span>Klarmeddelande</span><b class="ready-notified-label">${html(completion.customerNotifiedLabel)}</b></div>
+            <div class="fact"><span>Betalinfo i utskicket</span><b class="ready-payment-line">${html(readyPaymentLine(item))}</b></div>
+          </div>
           <a class="completion-link booking-link" href="${html(completion.bookingUrl)}" target="_blank" rel="noopener">${html(completion.bookingUrl)}</a>
-          <div class="completion-warning ${completion.canDraft?'good':'warn'} completion-state">${completion.canDraft?'Underlaget &auml;r redo att drafta till kunden.':'Fyll i slutbelopp och utf&ouml;rda &aring;tg&auml;rder innan du draftar SMS eller mail.'}</div>
+          <div class="completion-warning ${readyDeliveryState(completion).className} completion-state">${readyDeliveryState(completion).text}</div>
           <div class="row">
             <button type="submit">Spara underlag</button>
             <button type="button" class="secondary mark-ready">Spara + markera klar</button>
@@ -861,6 +885,9 @@ function caseCard(item){
             <button type="button" class="secondary draft-mail">Drafta mail</button>
             <button type="button" class="secondary copy-sms">Kopiera SMS</button>
             <button type="button" class="secondary copy-mail">Kopiera mail</button>
+            <button type="button" class="secondary copy-booking-link">Kopiera h&auml;mtl&auml;nk</button>
+            <button type="button" class="secondary mark-sms-sent">Markera SMS skickat</button>
+            <button type="button" class="secondary mark-mail-sent">Markera mail skickat</button>
           </div>
           <div class="completion-preview">
             <strong>SMS-utkast</strong>
@@ -1067,10 +1094,13 @@ function caseCard(item){
     const bookingLink=card.querySelector('.booking-link');
     bookingLink.href=data.bookingUrl;
     bookingLink.textContent=data.bookingUrl;
+    card.querySelector('.ready-notified-label').textContent=data.customerNotifiedLabel;
+    card.querySelector('.ready-payment-line').textContent=readyPaymentLine(item,completionValues());
     const state=card.querySelector('.completion-state');
-    state.className=`completion-warning ${data.canDraft?'good':'warn'} completion-state`;
-    state.innerHTML=data.canDraft?'Underlaget &auml;r redo att drafta till kunden.':'Fyll i slutbelopp och utf&ouml;rda &aring;tg&auml;rder innan du draftar SMS eller mail.';
-    card.querySelectorAll('.draft-sms,.draft-mail,.copy-sms,.copy-mail').forEach((button)=>button.disabled=!data.canDraft);
+    const readyState=readyDeliveryState(data);
+    state.className=`completion-warning ${readyState.className} completion-state`;
+    state.innerHTML=readyState.text;
+    card.querySelectorAll('.draft-sms,.draft-mail,.copy-sms,.copy-mail,.copy-booking-link,.mark-sms-sent,.mark-mail-sent').forEach((button)=>button.disabled=!data.canDraft);
     return data;
   }
   function refreshPaymentPreview(){
@@ -1132,6 +1162,21 @@ function caseCard(item){
       payload.note=`Klar för upphämtning. Slutbelopp ${values.totalCost||0} kr.`;
     }
     await api('/api/cases/'+encodeURIComponent(completionForm.dataset.id),{method:'PATCH',body:JSON.stringify(payload)});
+    await loadCases();
+  }
+  async function markReadyNoticeSent(via){
+    const values=completionValues();
+    await api('/api/cases/'+encodeURIComponent(completionForm.dataset.id),{
+      method:'PATCH',
+      body:JSON.stringify({
+        totalCost:values.totalCost,
+        workSummary:values.workSummary,
+        pickupSummary:values.pickupSummary,
+        customerNotifiedAt:new Date().toISOString(),
+        customerNotifiedVia:via,
+        note:`Klarmeddelande skickat till kund via ${via==='email'?'mail':'SMS'}.`
+      })
+    });
     await loadCases();
   }
   async function savePayment(markPaid=false){
@@ -1197,6 +1242,41 @@ function caseCard(item){
     const data=refreshCompletionPreview();
     if(!data.canDraft){showError('Fyll i slutbelopp och utförda åtgärder innan du kopierar mail.');return;}
     try{await copyText(`${readyMailSubject(item,completionValues())}\n\n${readyMailTemplate(item,completionValues())}`);}catch(error){showError('Kunde inte kopiera mailutkastet.');}
+  });
+  completionForm.querySelector('.copy-booking-link').addEventListener('click',async()=>{
+    const data=refreshCompletionPreview();
+    if(!data.canDraft){showError('Fyll i slutbelopp och utf\u00f6rda \u00e5tg\u00e4rder innan du kopierar h\u00e4mtl\u00e4nken.');return;}
+    try{await copyText(data.bookingUrl);}catch(error){showError('Kunde inte kopiera h\u00e4mtl\u00e4nken.');}
+  });
+  completionForm.querySelector('.mark-sms-sent').addEventListener('click',async()=>{
+    const data=refreshCompletionPreview();
+    if(!data.canDraft){showError('Fyll i slutbelopp och utf\u00f6rda \u00e5tg\u00e4rder innan du markerar SMS som skickat.');return;}
+    const button=completionForm.querySelector('.mark-sms-sent');
+    const original=button.textContent;
+    button.disabled=true;
+    button.textContent='Sparar...';
+    try{
+      await markReadyNoticeSent('sms');
+    }catch(error){showError(error.message)}
+    finally{
+      button.disabled=false;
+      button.textContent=original;
+    }
+  });
+  completionForm.querySelector('.mark-mail-sent').addEventListener('click',async()=>{
+    const data=refreshCompletionPreview();
+    if(!data.canDraft){showError('Fyll i slutbelopp och utf\u00f6rda \u00e5tg\u00e4rder innan du markerar mail som skickat.');return;}
+    const button=completionForm.querySelector('.mark-mail-sent');
+    const original=button.textContent;
+    button.disabled=true;
+    button.textContent='Sparar...';
+    try{
+      await markReadyNoticeSent('email');
+    }catch(error){showError(error.message)}
+    finally{
+      button.disabled=false;
+      button.textContent=original;
+    }
   });
   completionForm.querySelectorAll('input, textarea').forEach((field)=>field.addEventListener('input',refreshCompletionPreview));
   refreshCompletionPreview();
@@ -1295,6 +1375,21 @@ function caseCard(item){
     }catch(error){showError(error.message)}
   });
   return card;
+}
+
+function readySmsTemplate(item,overrides={}){
+  const data=completionData(item,overrides);
+  const greeting=item.customer&&item.customer.name?`Hej ${item.customer.name}!`:'Hej!';
+  return `${greeting}\n\nDin ${data.vehicleModel} \u00e4r nu klar f\u00f6r upph\u00e4mtning hos Nordic E-Mobility.\n\nUtf\u00f6rda \u00e5tg\u00e4rder: ${data.workSummary||'Se underlag i \u00e4rendet.'}\nTotalt belopp inkl. moms: ${data.totalLabel}\n${readyPaymentLine(item,overrides)}\n\nBoka upph\u00e4mtning h\u00e4r: ${data.bookingUrl}\n\n${data.pickupSummary}\n\n\u00c4rende: ${shortId(item.id)}\nNordic E-Mobility`;
+}
+function readyMailSubject(item,overrides={}){
+  const data=completionData(item,overrides);
+  return `Din ${data.vehicleModel} \u00e4r klar f\u00f6r upph\u00e4mtning | Nordic E-Mobility`;
+}
+function readyMailTemplate(item,overrides={}){
+  const data=completionData(item,overrides);
+  const greeting=item.customer&&item.customer.name?`Hej ${item.customer.name},`:'Hej,';
+  return `${greeting}\n\nDin ${data.vehicleModel} \u00e4r nu klar f\u00f6r upph\u00e4mtning hos Nordic E-Mobility.\n\nUtf\u00f6rda \u00e5tg\u00e4rder\n${data.workSummary||'Se underlag i \u00e4rendet.'}\n\nTotalt belopp inkl. moms\n${data.totalLabel}\n${readyPaymentLine(item,overrides)}\n\nBoka upph\u00e4mtning\n${data.bookingUrl}\n\n${data.pickupSummary}\n\nAdress\nPistolv\u00e4gen 6, \u00d6rebro\n\nOm du vill att vi reserverar en tid \u00e5t dig g\u00e5r det bra att svara direkt p\u00e5 detta mail eller SMS.\n\n\u00c4rende\n${shortId(item.id)}\n\nV\u00e4nliga h\u00e4lsningar,\nNordic E-Mobility`;
 }
 
 loadCases();

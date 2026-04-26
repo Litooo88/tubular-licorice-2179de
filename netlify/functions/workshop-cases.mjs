@@ -91,6 +91,14 @@ export default async (request, context) => {
         body.pickupSummary === undefined ? current.completion?.pickupSummary || "" : clean(body.pickupSummary, 1600),
       readyAt:
         body.readyAt === undefined ? current.completion?.readyAt || null : clean(body.readyAt, 80) || null,
+      customerNotifiedAt:
+        body.customerNotifiedAt === undefined
+          ? current.completion?.customerNotifiedAt || null
+          : clean(body.customerNotifiedAt, 80) || null,
+      customerNotifiedVia:
+        body.customerNotifiedVia === undefined
+          ? current.completion?.customerNotifiedVia || ""
+          : clean(body.customerNotifiedVia, 80),
       updatedAt: now,
     };
 
@@ -188,11 +196,19 @@ export default async (request, context) => {
       body.paidAt !== undefined ||
       body.fortnoxCustomerNumber !== undefined ||
       body.fortnoxInvoiceNumber !== undefined;
+    const readyNotificationTouched = body.customerNotifiedAt !== undefined || body.customerNotifiedVia !== undefined;
 
     if (paymentTouched) {
       timeline.push({
         at: now,
         event: `Betalning: ${nextPayment.status}${nextPayment.amount !== null && nextPayment.amount !== undefined ? ` ${nextPayment.amount} kr` : ""}${nextPayment.method ? ` via ${nextPayment.method}` : ""}`,
+      });
+    }
+
+    if (readyNotificationTouched && nextCompletion.customerNotifiedAt) {
+      timeline.push({
+        at: nextCompletion.customerNotifiedAt,
+        event: `Klartext skickad till kund${nextCompletion.customerNotifiedVia ? ` via ${nextCompletion.customerNotifiedVia}` : ""}.`,
       });
     }
 
