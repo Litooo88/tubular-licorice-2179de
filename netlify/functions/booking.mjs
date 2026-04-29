@@ -602,12 +602,15 @@ const customerEmailHtml = (caseItem) => `
       <div style="padding:24px;line-height:1.6">
         <p>Hej ${htmlEscape(caseItem.customer.name)},</p>
         <p>${isReadyPickup(caseItem)
-          ? "Vi har registrerat din upph&auml;mtning i systemet. Om tiden beh&ouml;ver justeras eller om n&aring;got beh&ouml;ver kompletteras h&ouml;r vi av oss direkt."
-          : "Vi har registrerat ditt &auml;rende i systemet. Vi g&aring;r nu igenom underlaget och &aring;terkommer med bekr&auml;ftad tid, prisbild och n&auml;sta steg innan n&aring;got arbete p&aring;b&ouml;rjas."}</p>
+          ? "Din beg&auml;ran om upph&auml;mtning &auml;r nu registrerad. Om tiden beh&ouml;ver justeras eller om vi beh&ouml;ver kompletterande information h&ouml;r vi av oss direkt."
+          : "Tack f&ouml;r din bokning. Ditt &auml;rende &auml;r nu registrerat hos verkstaden och vi g&aring;r igenom modell, felbild och vald tid innan vi bekr&auml;ftar uppl&auml;gget."}</p>
+        <p>${isReadyPickup(caseItem)
+          ? "Vi str&auml;var efter att h&aring;lla upph&auml;mtningsfl&ouml;det lika tydligt som resten av verkstaden: du ska snabbt veta n&auml;r fordonet kan h&auml;mtas och vad som g&auml;ller."
+          : "Du f&aring;r n&auml;sta uppdatering fr&aring;n oss med bekr&auml;ftad tid, prisbild eller eventuella kompletteringar. Inget extra arbete utf&ouml;rs innan vi har varit tydliga mot dig."}</p>
         <div style="margin:18px 0">
-          <div style="border:1px solid #dfe8dc;border-radius:8px;padding:12px;background:#f7faf6;margin-bottom:10px"><strong style="display:block;margin-bottom:6px">1. Mottaget</strong><span style="color:#516055;font-size:14px">Din bokning &auml;r registrerad och har f&aring;tt ett &auml;rendenummer.</span></div>
-          <div style="border:1px solid #dfe8dc;border-radius:8px;padding:12px;background:#f7faf6;margin-bottom:10px"><strong style="display:block;margin-bottom:6px">2. Genomg&aring;ng</strong><span style="color:#516055;font-size:14px">Vi granskar felbild, modell och vald tid innan vi bekr&auml;ftar uppl&auml;gget.</span></div>
-          <div style="border:1px solid #dfe8dc;border-radius:8px;padding:12px;background:#f7faf6"><strong style="display:block;margin-bottom:6px">3. Bekr&auml;ftelse</strong><span style="color:#516055;font-size:14px">Du f&aring;r bekr&auml;ftad tid och n&auml;sta steg fr&aring;n verkstaden s&aring; snart allt &auml;r kontrollerat.</span></div>
+          <div style="border:1px solid #dfe8dc;border-radius:8px;padding:12px;background:#f7faf6;margin-bottom:10px"><strong style="display:block;margin-bottom:6px">1. Registrerat</strong><span style="color:#516055;font-size:14px">Din bokning &auml;r sparad i systemet och har f&aring;tt ett &auml;rendenummer.</span></div>
+          <div style="border:1px solid #dfe8dc;border-radius:8px;padding:12px;background:#f7faf6;margin-bottom:10px"><strong style="display:block;margin-bottom:6px">2. Verkstaden g&aring;r igenom &auml;rendet</strong><span style="color:#516055;font-size:14px">Vi granskar modell, felbild, tillval och vald tid innan vi l&aring;ser n&auml;sta steg.</span></div>
+          <div style="border:1px solid #dfe8dc;border-radius:8px;padding:12px;background:#f7faf6"><strong style="display:block;margin-bottom:6px">3. Du f&aring;r besked</strong><span style="color:#516055;font-size:14px">Vi &aring;terkommer med bekr&auml;ftad tid, prisbild eller komplettering s&aring; att allt &auml;r tydligt innan arbetet g&aring;r vidare.</span></div>
         </div>
         <div style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:16px;margin:18px 0">
           <p style="margin:0 0 8px"><strong>&Auml;rende:</strong> ${htmlEscape(shortCaseId(caseItem.id))}</p>
@@ -620,6 +623,7 @@ const customerEmailHtml = (caseItem) => `
           <p style="margin:0"><strong>Startansvar:</strong> ${htmlEscape(caseItem.assignedTo.name)}</p>
         </div>
         <p><strong>Viktigt:</strong> kalenderfilen som bifogas &auml;r prelimin&auml;r. Den hj&auml;lper dig att komma ih&aring;g den tid du valde, men verkstadstiden g&auml;ller f&ouml;rst n&auml;r vi har bekr&auml;ftat den till dig.</p>
+        <p>Beh&ouml;ver du komplettera n&aring;got innan dess g&aring;r det bra att svara direkt p&aring; det h&auml;r mailet eller ringa verkstaden.</p>
         <p>Direktkontakt:<br>
         Sebastian, tekniskt ansvarig: <a href="tel:+46700243319">070-024 33 19</a><br>
         Lennart, mottagning dagtid: <a href="tel:+46722607753">072-260 77 53</a></p>
@@ -633,22 +637,23 @@ const sendCustomerEmail = async (caseItem) => {
   if (!caseItem.customer.email) return { status: "not_requested" };
   return resendEmail({
     to: [caseItem.customer.email],
-    subject: `Din servicef\u00f6rfr\u00e5gan hos Nordic E-Mobility - ${shortCaseId(caseItem.id)}`,
+    subject: `Vi har tagit emot din bokning | Nordic E-Mobility | ${shortCaseId(caseItem.id)}`,
     html: customerEmailHtml(caseItem),
     text: [
       "Hej " + caseItem.customer.name + ",",
       "",
-      "Vi har tagit emot din bokning hos Nordic E-Mobility.",
+      "Tack for din bokning hos Nordic E-Mobility.",
       isReadyPickup(caseItem)
-        ? "Vi aterkommer om upphamtningstiden behover justeras eller om nagot behover kompletteras innan du kommer."
-        : "Vi gar igenom underlaget och aterkommer med bekraftad inlamningstid, pris och nasta steg innan nagot arbete paborjas.",
+        ? "Din begaran om upphamtning ar registrerad. Vi hor av oss om tiden behover justeras eller om vi behover mer information innan du kommer."
+        : "Ditt arende ar registrerat hos verkstaden. Vi gar igenom modell, felbild och vald tid innan vi bekraftar upplagget.",
       "",
       "Detta hander nu:",
-      "1. Din bokning ar registrerad.",
-      "2. Verkstaden granskar arendet.",
-      "3. Du far bekraftad tid och nasta steg.",
+      "1. Din bokning ar registrerad i systemet.",
+      "2. Verkstaden granskar arendet och vald tid.",
+      "3. Du far bekraftad tid, prisbild eller eventuell komplettering.",
       "",
       "Kalenderfilen ar preliminar tills tiden ar bekraftad.",
+      "Du kan svara direkt pa det har mailet om du vill komplettera nagot.",
       "",
       "Detaljer:",
       caseSummaryText(caseItem),

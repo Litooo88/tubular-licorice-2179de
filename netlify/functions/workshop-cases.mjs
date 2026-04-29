@@ -22,6 +22,25 @@ const STAFF = {
 const PAYMENT_STATUSES = new Set(["unpaid", "invoice_ready", "invoiced", "paid"]);
 const PAYMENT_METHODS = new Set(["swish", "card", "cash", "invoice", "bank", "other"]);
 const CONTENT_STATUSES = new Set(["draft", "review", "ready", "published"]);
+const JOB_TYPES = new Set(["puncture", "tire", "brake", "throttle", "electrical", "battery", "service"]);
+const SERVICE_ACTIONS = new Set([
+  "wheel_remove",
+  "tube_replace",
+  "tire_replace",
+  "solid_tire_install",
+  "tubeless_sealant",
+  "brake_adjust",
+  "brake_part_replace",
+  "throttle_replace",
+  "display_replace",
+  "wiring_check",
+  "battery_diagnostics",
+  "bms_check",
+  "test_run",
+  "safety_check",
+]);
+const POSITIONS = new Set(["front", "rear", "motor_wheel", "not_applicable"]);
+const boolValue = (value) => value === true || value === "true" || value === "on" || value === 1 || value === "1";
 
 const requireAdmin = (request) => {
   const expected = process.env.ADMIN_TOKEN || globalThis.Netlify?.env?.get?.("ADMIN_TOKEN");
@@ -89,8 +108,36 @@ export default async (request, context) => {
         body.totalCost === undefined ? current.completion?.totalCost ?? null : numberOrNull(body.totalCost),
       workSummary:
         body.workSummary === undefined ? current.completion?.workSummary || "" : clean(body.workSummary, 3000),
+      invoiceText:
+        body.invoiceText === undefined ? current.completion?.invoiceText || "" : clean(body.invoiceText, 5000),
       pickupSummary:
         body.pickupSummary === undefined ? current.completion?.pickupSummary || "" : clean(body.pickupSummary, 1600),
+      jobType:
+        body.jobType === undefined
+          ? current.completion?.jobType || "service"
+          : JOB_TYPES.has(clean(body.jobType, 40)) ? clean(body.jobType, 40) : current.completion?.jobType || "service",
+      serviceActions:
+        body.serviceActions === undefined
+          ? Array.isArray(current.completion?.serviceActions) ? current.completion.serviceActions : []
+          : Array.isArray(body.serviceActions)
+            ? body.serviceActions.map((value) => clean(value, 40)).filter((value) => SERVICE_ACTIONS.has(value))
+            : [],
+      position:
+        body.position === undefined
+          ? current.completion?.position || "not_applicable"
+          : POSITIONS.has(clean(body.position, 40)) ? clean(body.position, 40) : current.completion?.position || "not_applicable",
+      testRunDone:
+        body.testRunDone === undefined ? Boolean(current.completion?.testRunDone) : boolValue(body.testRunDone),
+      safetyCheckDone:
+        body.safetyCheckDone === undefined ? Boolean(current.completion?.safetyCheckDone) : boolValue(body.safetyCheckDone),
+      extraNoCost:
+        body.extraNoCost === undefined ? Boolean(current.completion?.extraNoCost) : boolValue(body.extraNoCost),
+      customerInformed:
+        body.customerInformed === undefined ? Boolean(current.completion?.customerInformed) : boolValue(body.customerInformed),
+      readyForFortnox:
+        body.readyForFortnox === undefined ? Boolean(current.completion?.readyForFortnox) : boolValue(body.readyForFortnox),
+      internalComment:
+        body.internalComment === undefined ? current.completion?.internalComment || "" : clean(body.internalComment, 2000),
       readyAt:
         body.readyAt === undefined ? current.completion?.readyAt || null : clean(body.readyAt, 80) || null,
       customerNotifiedAt:

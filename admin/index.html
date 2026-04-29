@@ -106,6 +106,10 @@ button:disabled{opacity:.6;cursor:wait}
 .completion-warning{border-radius:8px;padding:10px 12px;margin-top:10px;font-size:12px;line-height:1.5}
 .completion-warning.good{background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#e6ffef}
 .completion-warning.warn{background:rgba(255,194,71,.12);border:1px solid rgba(255,194,71,.4);color:#fff1cf}
+.tick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tick-option{display:flex;align-items:flex-start;gap:8px;padding:10px 11px;border:1px solid #263029;border-radius:8px;background:#060806;color:#f5f7f4;font-size:13px;line-height:1.4}
+.tick-option input{width:18px;height:18px;margin:2px 0 0;accent-color:#00c853}
+.tick-option span{display:block}
 .media-panel{border:1px solid #263029;border-radius:8px;background:#090d09;padding:12px;margin:10px 0}
 .media-panel h4{margin:0 0 10px;font-size:15px}
 .media-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
@@ -144,7 +148,7 @@ textarea{min-height:66px;resize:vertical}
 .contact-state.waiting{color:#cce2ff}
 .contact-state.waiting::before{background:#4ba3ff;box-shadow:0 0 0 3px rgba(75,163,255,.18)}
   @media(max-width:1200px){.board{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions,.media-grid,.content-actions{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}}
+  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions,.media-grid,.content-actions,.tick-grid{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -203,6 +207,50 @@ const statusLabels={new:'Ny',contacted:'Kontaktad',checked_in:'Inl&auml;mnad',di
 const paymentStatusLabels={unpaid:'Ej betald',invoice_ready:'Klar f&ouml;r faktura',invoiced:'Fakturerad',paid:'Betald'};
 const paymentMethodLabels={swish:'Swish',card:'Kort',cash:'Kontant',invoice:'Faktura',bank:'Bank',other:'Annat'};
 const contentStatusLabels={draft:'Utkast',review:'F&ouml;r granskning',ready:'Redo att publicera',published:'Publicerat'};
+const JOB_TYPES={
+  puncture:{label:'Punktering',invoiceTitle:'\u00c5tg\u00e4rd av punktering'},
+  tire:{label:'D\u00e4ck / punkteringsfritt',invoiceTitle:'D\u00e4ckarbete / punkteringsfritt'},
+  brake:{label:'Broms',invoiceTitle:'Bromsarbete'},
+  throttle:{label:'Gas / display / reglage',invoiceTitle:'Gas / display / reglage'},
+  electrical:{label:'Elsystem / fels\u00f6kning',invoiceTitle:'Elsystem / fels\u00f6kning'},
+  battery:{label:'Batteri',invoiceTitle:'Batteriarbete'},
+  service:{label:'Service / genomg\u00e5ng',invoiceTitle:'Service / genomg\u00e5ng'}
+};
+const ACTIONS={
+  wheel_remove:{label:'Demontering av hjul',positionLabels:{front:'Demontering av framhjul',rear:'Demontering av bakhjul',motor_wheel:'Demontering av motorhjul'}},
+  tube_replace:{label:'Byte av slang',positionLabels:{front:'Byte av slang p\u00e5 framhjul',rear:'Byte av slang p\u00e5 bakhjul',motor_wheel:'Byte av slang p\u00e5 motorhjul'}},
+  tire_replace:{label:'Byte av d\u00e4ck',positionLabels:{front:'Byte av d\u00e4ck p\u00e5 framhjul',rear:'Byte av d\u00e4ck p\u00e5 bakhjul',motor_wheel:'Byte av d\u00e4ck p\u00e5 motorhjul'}},
+  solid_tire_install:{label:'Montering av punkteringsfritt d\u00e4ck',positionLabels:{front:'Montering av punkteringsfritt d\u00e4ck p\u00e5 framhjul',rear:'Montering av punkteringsfritt d\u00e4ck p\u00e5 bakhjul',motor_wheel:'Montering av punkteringsfritt d\u00e4ck p\u00e5 motorhjul'}},
+  tubeless_sealant:{label:'Tubeless/slime \u00e5tg\u00e4rd',positionLabels:{front:'Tubeless/slime \u00e5tg\u00e4rd p\u00e5 framhjul',rear:'Tubeless/slime \u00e5tg\u00e4rd p\u00e5 bakhjul',motor_wheel:'Tubeless/slime \u00e5tg\u00e4rd p\u00e5 motorhjul'}},
+  brake_adjust:{label:'Bromsjustering'},
+  brake_part_replace:{label:'Byte av bromsdel'},
+  throttle_replace:{label:'Byte av gashandtag/tumgas'},
+  display_replace:{label:'Byte av display'},
+  wiring_check:{label:'Kontroll av kablage/kontakter'},
+  battery_diagnostics:{label:'Batteridiagnos'},
+  bms_check:{label:'Kontroll av BMS'},
+  test_run:{label:'Funktionstest efter \u00e5tg\u00e4rd'},
+  safety_check:{label:'S\u00e4kerhetskontroll'}
+};
+const POSITIONS={
+  front:{label:'Framhjul'},
+  rear:{label:'Bakhjul'},
+  motor_wheel:{label:'Motorhjul'},
+  not_applicable:{label:'Ej aktuellt'}
+};
+const EXTRA_FLAGS={
+  testRunDone:{label:'Testk\u00f6rd'},
+  safetyCheckDone:{label:'S\u00e4kerhetskontroll utf\u00f6rd'},
+  extraNoCost:{label:'Extra \u00e5tg\u00e4rd utan kostnad'},
+  customerInformed:{label:'Kunden informerad'},
+  readyForFortnox:{label:'Klar f\u00f6r Fortnox'}
+};
+const JOB_TYPE_KEYS=new Set(Object.keys(JOB_TYPES));
+const ACTION_KEYS=new Set(Object.keys(ACTIONS));
+const POSITION_KEYS=new Set(Object.keys(POSITIONS));
+const adminPublicConfig={
+  reviewUrl:'https://www.google.com/search?q=Nordic+E-Mobility+Orebro'
+};
 const tokenInput=document.getElementById('token');
 const boardEl=document.getElementById('board');
 const errorEl=document.getElementById('error');
@@ -223,6 +271,16 @@ statusFilter.addEventListener('change',render);
 searchFilter.addEventListener('input',render);
 
 function money(value){return new Intl.NumberFormat('sv-SE',{style:'currency',currency:'SEK',maximumFractionDigits:0}).format(Number(value||0));}
+function reviewUrl(){return String(adminPublicConfig.reviewUrl||'').trim();}
+async function loadPublicConfig(){
+  try{
+    const response=await fetch('/api/booking-env-status');
+    const data=await response.json().catch(()=>({}));
+    if(response.ok&&data.publicConfig&&data.publicConfig.reviewUrl){
+      adminPublicConfig.reviewUrl=String(data.publicConfig.reviewUrl).trim();
+    }
+  }catch(_error){}
+}
 function dateShort(value){return value?new Date(value).toLocaleString('sv-SE',{dateStyle:'short',timeStyle:'short'}):'Saknas';}
 function html(value){return String(value||'').replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));}
 function showError(message){errorEl.textContent=message;errorEl.style.display=message?'block':'none';}
@@ -242,6 +300,99 @@ function needsBookingDate(value){
   if(!raw)return true;
   if(raw.includes('n&auml;r som helst')||raw.includes('nar som helst')||raw.includes('när som helst'))return true;
   return !(/\d{4}-\d{2}-\d{2}|\d{1,2}[\/-]\d{1,2}/.test(raw));
+}
+function boolValue(value){
+  return value===true || value==='true' || value==='on' || value===1 || value==='1';
+}
+function selectedActionKeys(value){
+  const list=Array.isArray(value)?value:(typeof value==='string'&&value?value.split(','):[]);
+  return [...new Set(list.map((item)=>String(item||'').trim()).filter((item)=>ACTION_KEYS.has(item)))];
+}
+function serviceActionHtml(selected){
+  return Object.entries(ACTIONS).map(([key,config])=>`<label class="tick-option"><input type="checkbox" name="serviceActions" value="${key}" ${selected.includes(key)?'checked':''}><span>${html(config.label)}</span></label>`).join('');
+}
+function extraFlagHtml(values){
+  return Object.entries(EXTRA_FLAGS).map(([key,config])=>`<label class="tick-option"><input type="checkbox" name="${key}" ${values[key]?'checked':''}><span>${html(config.label)}</span></label>`).join('');
+}
+function inferJobType(item){
+  const service=String(item&&item.service||'').toLowerCase();
+  if(service.includes('punkt'))return 'puncture';
+  if(service.includes('d\u00e4ck')||service.includes('tubeless'))return 'tire';
+  if(service.includes('broms'))return 'brake';
+  if(service.includes('display')||service.includes('gas'))return 'throttle';
+  if(service.includes('batteri'))return 'battery';
+  if(service.includes('el')||service.includes('fels\u00f6k'))return 'electrical';
+  return 'service';
+}
+function actionLine(actionId,positionKey){
+  const config=ACTIONS[actionId];
+  if(!config)return'';
+  if(config.positionLabels&&config.positionLabels[positionKey])return config.positionLabels[positionKey];
+  return config.label;
+}
+function buildStructuredCaseData(item,overrides={}){
+  const completion=item.completion||{};
+  const vehicleModel=String(overrides.vehicleModel!==undefined?overrides.vehicleModel:item.vehicle&&item.vehicle.model||'').trim()||'Scooter';
+  const jobTypeRaw=String(overrides.jobType!==undefined?overrides.jobType:(completion.jobType||inferJobType(item))).trim();
+  const jobType=JOB_TYPE_KEYS.has(jobTypeRaw)?jobTypeRaw:'service';
+  const positionRaw=String(overrides.position!==undefined?overrides.position:(completion.position||'not_applicable')).trim();
+  const position=POSITION_KEYS.has(positionRaw)?positionRaw:'not_applicable';
+  const serviceActions=selectedActionKeys(overrides.serviceActions!==undefined?overrides.serviceActions:(completion.serviceActions||[]));
+  const extraFlags={};
+  Object.keys(EXTRA_FLAGS).forEach((key)=>{
+    extraFlags[key]=boolValue(overrides[key]!==undefined?overrides[key]:completion[key]);
+  });
+  return {
+    vehicleModel,
+    jobType,
+    jobTypeLabel:JOB_TYPES[jobType].label,
+    invoiceTitle:JOB_TYPES[jobType].invoiceTitle,
+    serviceActions,
+    actionLines:serviceActions.map((actionId)=>actionLine(actionId,position)).filter(Boolean),
+    position,
+    positionLabel:POSITIONS[position].label,
+    internalComment:String(overrides.internalComment!==undefined?overrides.internalComment:(completion.internalComment||'')).trim(),
+    ...extraFlags
+  };
+}
+function generateWorkSummary(caseData){
+  const parts=[];
+  if(caseData.actionLines.length){
+    parts.push(caseData.actionLines.join(', '));
+  }
+  if(caseData.safetyCheckDone || caseData.serviceActions.includes('safety_check')){
+    parts.push('L\u00e4ttare s\u00e4kerhetskontroll av bromsar, hjul och inf\u00e4stningar utf\u00f6rd');
+  }
+  if(caseData.extraNoCost){
+    parts.push('Extra mindre \u00e5tg\u00e4rd utf\u00f6rd utan extra debitering');
+  }
+  if(caseData.testRunDone || caseData.serviceActions.includes('test_run')){
+    parts.push('Funktionstestad vid utl\u00e4mning');
+  }
+  return parts.length?`${parts.join('. ')}.`:'';
+}
+function generateFortnoxText(caseData){
+  const lines=[
+    `${caseData.vehicleModel} \u2013 ${caseData.invoiceTitle}`,
+    '',
+    'Utf\u00f6rt arbete:'
+  ];
+  if(caseData.actionLines.length){
+    caseData.actionLines.forEach((line)=>lines.push(`- ${line}`));
+  }else{
+    lines.push('- Verkstadsarbete enligt \u00e4rende');
+  }
+  lines.push('');
+  if(caseData.safetyCheckDone || caseData.serviceActions.includes('safety_check')){
+    lines.push('L\u00e4ttare s\u00e4kerhetskontroll av bromsar, hjul och inf\u00e4stningar ing\u00e5r.');
+  }
+  if(caseData.extraNoCost){
+    lines.push('Extra mindre \u00e5tg\u00e4rd utf\u00f6rd utan extra debitering.');
+  }
+  if(caseData.testRunDone || caseData.serviceActions.includes('test_run')){
+    lines.push('Fordonet \u00e4r testat och fungerar vid utl\u00e4mning.');
+  }
+  return lines.filter((line,index,array)=>!(line===''&&array[index-1]==='')).join('\n').trim();
 }
 function labelFrom(value,labels){return labels[value]||value||'Saknas';}
 function notificationLabel(item,type){
@@ -340,25 +491,46 @@ function completionData(item,overrides={}){
   const totalCostRaw=overrides.totalCost!==undefined?overrides.totalCost:completion.totalCost;
   const hasTotal=!(totalCostRaw===null||totalCostRaw===undefined||totalCostRaw==='');
   const totalCost=totalCostRaw===null||totalCostRaw===undefined||totalCostRaw===''?0:Number(totalCostRaw||0);
-  const vehicleModel=String(overrides.vehicleModel!==undefined?overrides.vehicleModel:item.vehicle&&item.vehicle.model||'').trim();
-  const workSummary=String(overrides.workSummary!==undefined?overrides.workSummary:completion.workSummary||'').trim();
+  const structured=buildStructuredCaseData(item,overrides);
+  const workSummaryRaw=String(overrides.workSummary!==undefined?overrides.workSummary:completion.workSummary||'').trim();
+  const generatedWorkSummary=generateWorkSummary(structured);
+  const workSummary=workSummaryRaw||generatedWorkSummary;
+  const invoiceTextRaw=String(overrides.invoiceText!==undefined?overrides.invoiceText:completion.invoiceText||'').trim();
+  const hasStructuredActions=structured.serviceActions.length>0;
+  const invoiceText=invoiceTextRaw||(hasStructuredActions?generateFortnoxText(structured):'');
   const pickupSummary=String(overrides.pickupSummary!==undefined?overrides.pickupSummary:completion.pickupSummary||'').trim()||'Boka en upphämtningstid via länken nedan eller svara på detta meddelande om du vill att vi hjälper dig.';
-  const bookingUrl=pickupBookingUrl(item,{vehicleModel});
+  const bookingUrl=pickupBookingUrl(item,{vehicleModel:structured.vehicleModel});
   const customerNotifiedAt=overrides.customerNotifiedAt!==undefined?overrides.customerNotifiedAt:completion.customerNotifiedAt||null;
   const customerNotifiedVia=String(overrides.customerNotifiedVia!==undefined?overrides.customerNotifiedVia:completion.customerNotifiedVia||'').trim();
   const channelLabel=customerNotifiedVia==='email'?'mail':customerNotifiedVia==='sms'?'SMS':'kundkanal';
   return {
     totalCost,
     totalLabel:hasTotal?`${money(totalCost)} inkl. moms`:'Ej ifyllt än',
-    vehicleModel:vehicleModel||'scooter',
+    vehicleModel:structured.vehicleModel||'scooter',
+    jobType:structured.jobType,
+    jobTypeLabel:structured.jobTypeLabel,
+    position:structured.position,
+    positionLabel:structured.positionLabel,
+    serviceActions:structured.serviceActions,
+    actionLines:structured.actionLines,
+    hasStructuredActions,
+    testRunDone:structured.testRunDone,
+    safetyCheckDone:structured.safetyCheckDone,
+    extraNoCost:structured.extraNoCost,
+    customerInformed:structured.customerInformed,
+    readyForFortnox:structured.readyForFortnox,
+    internalComment:structured.internalComment,
     workSummary,
+    generatedWorkSummary,
+    invoiceText,
     pickupSummary,
     bookingUrl,
     readyAt:overrides.readyAt!==undefined?overrides.readyAt:completion.readyAt||null,
     customerNotifiedAt,
     customerNotifiedVia,
     customerNotifiedLabel:customerNotifiedAt?`${channelLabel} skickat ${dateShort(customerNotifiedAt)}`:'Inte markerat',
-    canDraft:hasTotal && Boolean(workSummary)
+    canDraft:hasTotal && Boolean(workSummary),
+    canDraftFortnox:hasTotal && hasStructuredActions && Boolean(invoiceText) && structured.readyForFortnox
   };
 }
 function paymentData(item,overrides={}){
@@ -388,7 +560,9 @@ function paymentData(item,overrides={}){
     fortnoxCustomerNumber,
     fortnoxInvoiceNumber,
     canSave:Boolean(hasAmount),
-    canDraftFortnox:Boolean(hasAmount && completion.workSummary)
+    canDraftFortnox:Boolean(hasAmount && completion.invoiceText && completion.readyForFortnox),
+    canDraftReceipt:Boolean(hasAmount && status==='paid'),
+    reviewUrl:reviewUrl()
   };
 }
 function readyPaymentLine(item,overrides={}){
@@ -404,6 +578,29 @@ function readyDeliveryState(data){
   if(!data.canDraft)return {className:'warn',text:'Fyll i slutbelopp och utf\u00f6rda \u00e5tg\u00e4rder innan du draftar SMS eller mail.'};
   if(data.customerNotifiedAt)return {className:'good',text:`Klarmeddelandet \u00e4r markerat som skickat via ${data.customerNotifiedVia==='email'?'mail':'SMS'} ${dateShort(data.customerNotifiedAt)}.`};
   return {className:'good',text:'Underlaget \u00e4r redo. Drafta, skicka och markera sedan vilken kanal du anv\u00e4nde.'};
+}
+function paymentReceiptState(data){
+  if(!data.canSave)return {className:'warn',text:'Fyll i belopp innan du draftar betalbekr\u00e4ftelsen.'};
+  if(data.status!=='paid')return {className:'warn',text:'S\u00e4tt betalstatus till Betald innan du skickar betalbekr\u00e4ftelsen till kunden.'};
+  return {className:'good',text:'Betalningen ser registrerad ut. Du kan nu drafta SMS eller mail med belopp, \u00e5tg\u00e4rder och recensionsl\u00e4nk.'};
+}
+function paymentReceiptSubject(item,overrides={}){
+  const data=completionData(item,overrides);
+  return `Tack - betalning mottagen for ${data.vehicleModel} | Nordic E-Mobility`;
+}
+function paymentReceiptSmsTemplate(item,overrides={}){
+  const completion=completionData(item,overrides);
+  const payment=paymentData(item,overrides);
+  const greeting=item.customer&&item.customer.name?`Hej ${item.customer.name}!`:'Hej!';
+  const reviewLine=payment.reviewUrl?`\n\nHar du 30 sekunder far du garna lamna en recension: ${payment.reviewUrl}`:'';
+  return `${greeting}\n\nVi har registrerat din betalning hos Nordic E-Mobility.\n\nFordon: ${completion.vehicleModel}\nUtfort arbete: ${completion.workSummary||item.service||'Verkstadsarbete'}\nBetalt belopp: ${payment.amountLabel}${payment.method?`\nBetalsatt: ${payment.methodLabel}`:''}${payment.reference?`\nReferens: ${payment.reference}`:''}\n\nTack for fortroendet.${reviewLine}\n\nNordic E-Mobility`;
+}
+function paymentReceiptMailTemplate(item,overrides={}){
+  const completion=completionData(item,overrides);
+  const payment=paymentData(item,overrides);
+  const greeting=item.customer&&item.customer.name?`Hej ${item.customer.name},`:'Hej,';
+  const reviewLine=payment.reviewUrl?`\n\nOm du ar nojd far du garna lamna en recension har:\n${payment.reviewUrl}`:'';
+  return `${greeting}\n\nVi har nu registrerat din betalning hos Nordic E-Mobility.\n\nFordon\n${completion.vehicleModel}\n\nUtfort arbete\n${completion.workSummary||item.service||'Verkstadsarbete'}\n\nBetalt belopp\n${payment.amountLabel}${payment.method?`\nBetalsatt: ${payment.methodLabel}`:''}${payment.reference?`\nReferens: ${payment.reference}`:''}\n\nArende\n${shortId(item.id)}\n\nTack for att du valde oss.${reviewLine}\n\nOm du vill boka ny service, upphamtning eller har en fraga ar du alltid valkommen att svara pa detta mail.\n\nVanliga halsningar,\nNordic E-Mobility`;
 }
 function fortnoxDraft(item,overrides={}){
   const completion=completionData(item,overrides);
@@ -447,6 +644,44 @@ function bookkeepingDraft(item,overrides={}){
   return `Betalning registrerad för ${item.customer&&item.customer.name||'kund'} (${completion.vehicleModel}). Belopp ${payment.amountLabel}. Status ${payment.statusLabel}. Betalsätt ${payment.methodLabel}. Referens ${payment.reference||'-'}. Betald ${payment.paidAtLabel}. Ärende ${shortId(item.id)}.`;
 }
 const mediaCategoryLabels={overview:'Översikt',before:'Före',after:'Efter',damage:'Skada',battery:'Batteri / el',parts:'Delar',delivery:'Upphämtning / leverans',workbench:'Verkstadsbord'};
+function fortnoxDraft(item,overrides={}){
+  const completion=completionData(item,overrides);
+  const payment=paymentData(item,overrides);
+  return [
+    'NORDIC E-MOBILITY - FORTNOXUNDERLAG',
+    `Arende: ${shortId(item.id)}`,
+    '',
+    'KUND',
+    `Namn: ${item.customer&&item.customer.name||''}`,
+    `Telefon: ${item.customer&&item.customer.phone||''}`,
+    `E-post: ${item.customer&&item.customer.email||''}`,
+    '',
+    'FORDON / JOBB',
+    `Modell: ${completion.vehicleModel}`,
+    `Tjanst: ${completion.jobTypeLabel||item.service||'Verkstadsarende'}`,
+    `Position: ${completion.positionLabel||'Ej aktuellt'}`,
+    `Utforda atgarder: ${completion.workSummary||item.message||''}`,
+    `Intern kommentar / avvikelse: ${completion.internalComment||'-'}`,
+    `Klar for Fortnox: ${completion.readyForFortnox?'Ja':'Nej'}`,
+    '',
+    'FAKTURA / BETALNING',
+    `Belopp inkl. moms: ${payment.amountLabel}`,
+    `Betalstatus: ${payment.statusLabel}`,
+    `Betalsatt: ${payment.methodLabel}`,
+    `Referens: ${payment.reference||'-'}`,
+    `Betald: ${payment.paidAtLabel}`,
+    `Fortnox kundnr: ${payment.fortnoxCustomerNumber||'-'}`,
+    `Fortnox fakturanr: ${payment.fortnoxInvoiceNumber||'-'}`,
+    '',
+    'FORESLAGEN FAKTURATEXT',
+    `${completion.invoiceText||'Verkstadsarbete enligt arende'}`,
+    '',
+    'INTERNT',
+    `Ansvarig: ${item.assignedTo&&item.assignedTo.name||'Lennart'}`,
+    `Skapad: ${dateShort(item.createdAt)}`,
+    `Klar: ${completion.readyAt?dateShort(completion.readyAt):'Inte markerad klar'}`,
+  ].join('\n');
+}
 function mediaItems(item){
   return Array.isArray(item&&item.media)?[...item.media].sort((a,b)=>String(b.uploadedAt||'').localeCompare(String(a.uploadedAt||''))):[];
 }
@@ -897,14 +1132,55 @@ function caseCard(item){
               <input value="${html(statusLabels[item.status]||item.status)}" readonly>
             </div>
             <div class="full">
+              <label>Jobbtyp</label>
+              <select name="jobType">
+                ${Object.entries(JOB_TYPES).map(([key,config])=>`<option value="${key}" ${completion.jobType===key?'selected':''}>${html(config.label)}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label>Position</label>
+              <select name="position">
+                ${Object.entries(POSITIONS).map(([key,config])=>`<option value="${key}" ${completion.position===key?'selected':''}>${html(config.label)}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label>Fakturatext</label>
+              <input class="invoice-status-input" value="${completion.invoiceText?'Genererad':'Inte genererad &auml;n'}" readonly>
+            </div>
+            <div class="full">
               <label>Utf&ouml;rda &aring;tg&auml;rder</label>
-              <textarea name="workSummary" placeholder="T.ex. bytt slang bak, riktat styre, testk&ouml;rt och kontrollerat bromsar">${html(completion.workSummary||'')}</textarea>
+              <div class="tick-grid">
+                ${serviceActionHtml(completion.serviceActions)}
+              </div>
+            </div>
+            <div class="full">
+              <label>Kontroller &amp; markeringar</label>
+              <div class="tick-grid">
+                ${extraFlagHtml(completion)}
+              </div>
+            </div>
+            <div class="full">
+              <label>Genererad arbetssammanfattning</label>
+              <textarea name="workSummary" readonly placeholder="Byggs n&auml;r du klickar p&aring; Generera Fortnox-text.">${html(completion.workSummary||'')}</textarea>
+              <span class="completion-note">Det h&auml;r f&auml;ltet byggs fr&aring;n jobbtyp, valda &aring;tg&auml;rder och kontroller. Det anv&auml;nds sedan i kundutskick och Fortnox-underlag.</span>
+            </div>
+            <div class="full">
+              <label>Intern kommentar / avvikelse</label>
+              <textarea name="internalComment" placeholder="T.ex. fastrostad axel, kunden valde bort ytterligare arbete, kosmetisk skada redan vid inl&auml;mning.">${html(completion.internalComment||'')}</textarea>
             </div>
             <div class="full">
               <label>Kundinfo om upph&auml;mtning</label>
               <textarea name="pickupSummary" placeholder="T.ex. boka en tid via l&auml;nken nedan eller svara om du vill att vi reserverar en tid">${html(completion.pickupSummary||'')}</textarea>
               <span class="completion-note">Det h&auml;r blir din standardtext i SMS och mail. Slutbeloppet sparas separat i &auml;rendet, men riktig bokf&ouml;ringss&auml;kring kommer med Fortnox-steget.</span>
             </div>
+          </div>
+          <div class="completion-actions">
+            <button type="button" class="secondary generate-fortnox-text">Generera Fortnox-text</button>
+            <button type="button" class="secondary copy-invoice-text">Kopiera fakturatext</button>
+          </div>
+          <div class="completion-preview">
+            <strong>F&ouml;reslagen fakturatext</strong>
+            <textarea name="invoiceText" class="invoice-text-preview" readonly>${html(completion.invoiceText||'')}</textarea>
           </div>
           <div class="contact-inline">
             <div class="fact"><span>Klarmeddelande</span><b class="ready-notified-label">${html(completion.customerNotifiedLabel)}</b></div>
@@ -1000,6 +1276,22 @@ function caseCard(item){
           <div class="completion-preview">
             <strong>Intern betalningsnotering</strong>
             <textarea class="bookkeeping-preview" readonly></textarea>
+          </div>
+          <div class="completion-warning ${paymentReceiptState(payment).className} payment-receipt-state">${paymentReceiptState(payment).text}</div>
+          <div class="completion-actions">
+            <button type="button" class="secondary draft-payment-sms">Drafta betal-SMS</button>
+            <button type="button" class="secondary draft-payment-mail">Drafta betal-mail</button>
+            <button type="button" class="secondary copy-payment-sms">Kopiera betal-SMS</button>
+            <button type="button" class="secondary copy-payment-mail">Kopiera betal-mail</button>
+          </div>
+          <a class="completion-link review-link" href="${html(payment.reviewUrl)}" target="_blank" rel="noopener">${html(payment.reviewUrl)}</a>
+          <div class="completion-preview">
+            <strong>Betal-SMS</strong>
+            <textarea class="payment-sms-preview" readonly></textarea>
+          </div>
+          <div class="completion-preview">
+            <strong>Betal-mail</strong>
+            <textarea class="payment-mail-preview" readonly></textarea>
           </div>
         </form>
       </div>
@@ -1146,8 +1438,35 @@ function caseCard(item){
     return {
       totalCost:data.get('totalCost'),
       workSummary:data.get('workSummary'),
+      invoiceText:data.get('invoiceText'),
       pickupSummary:data.get('pickupSummary'),
+      jobType:data.get('jobType'),
+      serviceActions:data.getAll('serviceActions'),
+      position:data.get('position'),
+      testRunDone:data.get('testRunDone'),
+      safetyCheckDone:data.get('safetyCheckDone'),
+      extraNoCost:data.get('extraNoCost'),
+      customerInformed:data.get('customerInformed'),
+      readyForFortnox:data.get('readyForFortnox'),
+      internalComment:data.get('internalComment'),
       vehicleModel:item.vehicle&&item.vehicle.model||''
+    };
+  }
+  function completionPayload(values){
+    return {
+      totalCost:values.totalCost,
+      workSummary:values.workSummary,
+      invoiceText:values.invoiceText,
+      pickupSummary:values.pickupSummary,
+      jobType:values.jobType,
+      serviceActions:values.serviceActions,
+      position:values.position,
+      testRunDone:boolValue(values.testRunDone),
+      safetyCheckDone:boolValue(values.safetyCheckDone),
+      extraNoCost:boolValue(values.extraNoCost),
+      customerInformed:boolValue(values.customerInformed),
+      readyForFortnox:boolValue(values.readyForFortnox),
+      internalComment:values.internalComment
     };
   }
   function paymentValues(){
@@ -1176,6 +1495,9 @@ function caseCard(item){
   }
   function refreshCompletionPreview(){
     const data=completionData(item,completionValues());
+    completionForm.elements.namedItem('workSummary').value=data.workSummary;
+    completionForm.elements.namedItem('invoiceText').value=data.invoiceText;
+    completionForm.querySelector('.invoice-status-input').value=data.invoiceText?'Genererad':'Inte genererad \u00e4n';
     card.querySelector('.sms-preview').value=readySmsTemplate(item,completionValues());
     card.querySelector('.mail-preview').value=readyMailTemplate(item,completionValues());
     const bookingLink=card.querySelector('.booking-link');
@@ -1188,23 +1510,36 @@ function caseCard(item){
     state.className=`completion-warning ${readyState.className} completion-state`;
     state.innerHTML=readyState.text;
     card.querySelectorAll('.draft-sms,.draft-mail,.copy-sms,.copy-mail,.copy-booking-link,.mark-sms-sent,.mark-mail-sent').forEach((button)=>button.disabled=!data.canDraft);
+    completionForm.querySelector('.copy-invoice-text').disabled=!Boolean(data.invoiceText);
+    if(paymentForm)refreshPaymentPreview();
     return data;
   }
   function refreshPaymentPreview(){
-    const data=paymentData(item,paymentValues());
-    paymentForm.querySelector('.fortnox-preview').value=fortnoxDraft(item,paymentValues());
-    paymentForm.querySelector('.bookkeeping-preview').value=bookkeepingDraft(item,paymentValues());
+    const merged={...completionValues(),...paymentValues()};
+    const data=paymentData(item,merged);
+    paymentForm.querySelector('.fortnox-preview').value=fortnoxDraft(item,merged);
+    paymentForm.querySelector('.bookkeeping-preview').value=bookkeepingDraft(item,merged);
     const state=paymentForm.querySelector('.payment-state');
     const fortnoxReady=data.canDraftFortnox;
     state.className=`completion-warning ${data.canSave&&fortnoxReady?'good':'warn'} payment-state`;
     state.innerHTML=!data.canSave
       ?'Fyll i belopp innan du markerar kunden som betald.'
       :!fortnoxReady
-        ?'Betalning kan sparas nu, men fyll i utförda åtgärder under Klar / hämtning innan du kopierar Fortnox-underlaget.'
+        ?'Betalning kan sparas nu, men markera Klar f&ouml;r Fortnox och generera fakturatext under Klar / h&auml;mtning innan du kopierar Fortnox-underlaget.'
         :'Betalunderlaget är redo att sparas och kopieras vidare till Fortnox.';
     paymentForm.querySelector('.mark-paid').disabled=!data.canSave;
     paymentForm.querySelector('.copy-bookkeeping').disabled=!data.canSave;
     paymentForm.querySelector('.copy-fortnox').disabled=!fortnoxReady;
+    const receiptState=paymentReceiptState(data);
+    const receiptBanner=paymentForm.querySelector('.payment-receipt-state');
+    receiptBanner.className=`completion-warning ${receiptState.className} payment-receipt-state`;
+    receiptBanner.innerHTML=receiptState.text;
+    paymentForm.querySelector('.payment-sms-preview').value=paymentReceiptSmsTemplate(item,merged);
+    paymentForm.querySelector('.payment-mail-preview').value=`${paymentReceiptSubject(item,merged)}\n\n${paymentReceiptMailTemplate(item,merged)}`;
+    const reviewLink=paymentForm.querySelector('.review-link');
+    reviewLink.href=data.reviewUrl;
+    reviewLink.textContent=data.reviewUrl;
+    paymentForm.querySelectorAll('.draft-payment-sms,.draft-payment-mail,.copy-payment-sms,.copy-payment-mail').forEach((button)=>button.disabled=!data.canDraftReceipt);
     return data;
   }
   function refreshContentPreview(){
@@ -1259,7 +1594,7 @@ function caseCard(item){
   }
   async function saveCompletion(markReady=false){
     const values=completionValues();
-    const payload={totalCost:values.totalCost,workSummary:values.workSummary,pickupSummary:values.pickupSummary};
+    const payload=completionPayload(values);
     if(markReady){
       payload.status='ready';
       payload.readyAt=new Date().toISOString();
@@ -1273,9 +1608,7 @@ function caseCard(item){
     await api('/api/cases/'+encodeURIComponent(completionForm.dataset.id),{
       method:'PATCH',
       body:JSON.stringify({
-        totalCost:values.totalCost,
-        workSummary:values.workSummary,
-        pickupSummary:values.pickupSummary,
+        ...completionPayload(values),
         customerNotifiedAt:new Date().toISOString(),
         customerNotifiedVia:via,
         note:`Klarmeddelande skickat till kund via ${via==='email'?'mail':'SMS'}.`
@@ -1347,6 +1680,23 @@ function caseCard(item){
       button.textContent='Spara + markera klar';
     }
   });
+  completionForm.querySelector('.generate-fortnox-text').addEventListener('click',()=>{
+    const values=completionValues();
+    const structured=buildStructuredCaseData(item,values);
+    if(!structured.serviceActions.length){
+      showError('V\u00e4lj minst en utf\u00f6rd \u00e5tg\u00e4rd innan du genererar Fortnox-texten.');
+      return;
+    }
+    completionForm.elements.namedItem('workSummary').value=generateWorkSummary(structured);
+    completionForm.elements.namedItem('invoiceText').value=generateFortnoxText(structured);
+    refreshCompletionPreview();
+    refreshPaymentPreview();
+  });
+  completionForm.querySelector('.copy-invoice-text').addEventListener('click',async()=>{
+    const data=refreshCompletionPreview();
+    if(!data.invoiceText){showError('Generera fakturatexten innan du kopierar den.');return;}
+    try{await copyText(data.invoiceText);}catch(error){showError('Kunde inte kopiera fakturatexten.');}
+  });
   completionForm.querySelector('.draft-sms').addEventListener('click',()=>{
     const data=refreshCompletionPreview();
     if(!data.canDraft){showError('Fyll i slutbelopp och utförda åtgärder innan du draftar SMS.');return;}
@@ -1406,7 +1756,8 @@ function caseCard(item){
       button.textContent=original;
     }
   });
-  completionForm.querySelectorAll('input, textarea').forEach((field)=>field.addEventListener('input',refreshCompletionPreview));
+  completionForm.querySelectorAll('input, textarea, select').forEach((field)=>field.addEventListener('input',refreshCompletionPreview));
+  completionForm.querySelectorAll('select').forEach((field)=>field.addEventListener('change',refreshCompletionPreview));
   refreshCompletionPreview();
   paymentForm.addEventListener('submit',async(event)=>{
     event.preventDefault();
@@ -1438,12 +1789,38 @@ function caseCard(item){
   paymentForm.querySelector('.copy-fortnox').addEventListener('click',async()=>{
     const data=refreshPaymentPreview();
     if(!data.canDraftFortnox){showError('Fyll i utförda åtgärder under Klar / hämtning innan du kopierar Fortnox-underlaget.');return;}
-    try{await copyText(fortnoxDraft(item,paymentValues()));}catch(error){showError('Kunde inte kopiera Fortnox-underlaget.');}
+    try{await copyText(fortnoxDraft(item,{...completionValues(),...paymentValues()}));}catch(error){showError('Kunde inte kopiera Fortnox-underlaget.');}
   });
   paymentForm.querySelector('.copy-bookkeeping').addEventListener('click',async()=>{
     const data=refreshPaymentPreview();
     if(!data.canSave){showError('Fyll i belopp innan du kopierar betalnoteringen.');return;}
     try{await copyText(bookkeepingDraft(item,paymentValues()));}catch(error){showError('Kunde inte kopiera betalnoteringen.');}
+  });
+  paymentForm.querySelector('.draft-payment-sms').addEventListener('click',()=>{
+    const data=refreshPaymentPreview();
+    if(!data.canDraftReceipt){showError('Markera kunden som betald och fyll i belopp innan du draftar betal-SMS.');return;}
+    const phone=smsPhone(item.customer&&item.customer.phone);
+    if(!phone){showError('Kundtelefon saknas p\u00e5 \u00e4rendet.');return;}
+    window.location.href=`sms:${phone}?&body=${encodeURIComponent(paymentReceiptSmsTemplate(item,{...completionValues(),...paymentValues()}))}`;
+  });
+  paymentForm.querySelector('.draft-payment-mail').addEventListener('click',()=>{
+    const data=refreshPaymentPreview();
+    if(!data.canDraftReceipt){showError('Markera kunden som betald och fyll i belopp innan du draftar betal-mail.');return;}
+    const email=String(item.customer&&item.customer.email||'').trim();
+    if(!email){showError('Kundmail saknas p\u00e5 \u00e4rendet.');return;}
+    const merged={...completionValues(),...paymentValues()};
+    window.location.href=`mailto:${email}?subject=${encodeURIComponent(paymentReceiptSubject(item,merged))}&body=${encodeURIComponent(paymentReceiptMailTemplate(item,merged))}`;
+  });
+  paymentForm.querySelector('.copy-payment-sms').addEventListener('click',async()=>{
+    const data=refreshPaymentPreview();
+    if(!data.canDraftReceipt){showError('Markera kunden som betald och fyll i belopp innan du kopierar betal-SMS.');return;}
+    try{await copyText(paymentReceiptSmsTemplate(item,{...completionValues(),...paymentValues()}));}catch(error){showError('Kunde inte kopiera betal-SMS.');}
+  });
+  paymentForm.querySelector('.copy-payment-mail').addEventListener('click',async()=>{
+    const data=refreshPaymentPreview();
+    if(!data.canDraftReceipt){showError('Markera kunden som betald och fyll i belopp innan du kopierar betal-mail.');return;}
+    const merged={...completionValues(),...paymentValues()};
+    try{await copyText(`${paymentReceiptSubject(item,merged)}\n\n${paymentReceiptMailTemplate(item,merged)}`);}catch(error){showError('Kunde inte kopiera betal-mail.');}
   });
   paymentForm.querySelectorAll('input, textarea, select').forEach((field)=>field.addEventListener('input',refreshPaymentPreview));
   paymentForm.querySelectorAll('select').forEach((field)=>field.addEventListener('change',refreshPaymentPreview));
@@ -1588,7 +1965,7 @@ function readyMailTemplate(item,overrides={}){
   return `${greeting}\n\nDin ${data.vehicleModel} \u00e4r nu klar f\u00f6r upph\u00e4mtning hos Nordic E-Mobility.\n\nUtf\u00f6rda \u00e5tg\u00e4rder\n${data.workSummary||'Se underlag i \u00e4rendet.'}\n\nTotalt belopp inkl. moms\n${data.totalLabel}\n${readyPaymentLine(item,overrides)}\n\nBoka upph\u00e4mtning\n${data.bookingUrl}\n\n${data.pickupSummary}\n\nAdress\nPistolv\u00e4gen 6, \u00d6rebro\n\nOm du vill att vi reserverar en tid \u00e5t dig g\u00e5r det bra att svara direkt p\u00e5 detta mail eller SMS.\n\n\u00c4rende\n${shortId(item.id)}\n\nV\u00e4nliga h\u00e4lsningar,\nNordic E-Mobility`;
 }
 
-loadCases();
+loadPublicConfig().finally(loadCases);
 setInterval(()=>{if(!shouldPauseRefresh())loadCases({background:true});},30000);
 </script>
 </body>

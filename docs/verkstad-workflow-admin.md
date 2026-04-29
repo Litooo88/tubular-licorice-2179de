@@ -63,10 +63,22 @@ Det har ar den viktigaste rutinen.
 Ga till `Klar / hamtning` och fyll i:
 
 - `Totalt belopp inkl. moms`
-- `Utforda atgarder`
+- `Jobbtyp`
+- `Position`
+- kryssa i `Utforda atgarder`
+- kryssa i `Kontroller & markeringar`
 - `Kundinfo om upphamtning`
+- `Intern kommentar / avvikelse` vid behov
 
-Tryck sedan:
+Tryck sedan `Generera Fortnox-text`.
+
+Detta bygger automatiskt:
+
+- `Genererad arbetssammanfattning`
+- `Foreslagen fakturatext`
+- underlaget som senare kopieras till Fortnox
+
+Nar texten ser ratt ut:
 
 - `Spara underlag` om du bara vill spara
 - `Spara + markera klar` nar fordonet faktiskt ar fardigt
@@ -78,6 +90,7 @@ Anvand drefter:
 - `Kopiera SMS`
 - `Kopiera mail`
 - `Kopiera hamtlank`
+- `Kopiera fakturatext`
 
 Nar meddelandet verkligen ar skickat:
 
@@ -101,8 +114,28 @@ Om kunden har betalat:
 
 Om du ska skicka vidare till ekonomi eller Fortnox:
 
+- se till att `Klar for Fortnox` ar ikryssad i `Klar / hamtning`
 - anvand `Kopiera Fortnox-underlag`
 - anvand `Kopiera betalnotering`
+
+Nar betalningen ar registrerad och kunden ska fa kvitto/aterkoppling:
+
+- satt `Betalstatus` till `Betald`
+- kontrollera `Belopp att bokfora`
+- anvand sedan:
+  - `Drafta betal-SMS`
+  - `Drafta betal-mail`
+  - `Kopiera betal-SMS`
+  - `Kopiera betal-mail`
+
+Betalbekraftelsen innehaller:
+
+- modell
+- utfort arbete
+- totalt betalt belopp
+- betalsatt
+- eventuell referens
+- lank till Google-recension
 
 Regel:
 - Markera aldrig ett arende som betalt utan att belopp och betalsatt ar ifyllda.

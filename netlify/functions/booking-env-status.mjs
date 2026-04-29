@@ -43,11 +43,19 @@ const expected = [
   "GOOGLE_PRIVATE_KEY",
   "GOOGLE_CALENDAR_TIMEZONE",
   "GOOGLE_CALENDAR_DURATION_MINUTES",
+  "GOOGLE_REVIEW_URL",
 ];
 
 export default async () => {
   const status = Object.fromEntries(expected.map((key) => [key, Boolean(env(key))]));
-  return json({ ok: true, status, googleCalendar: googleCalendarDiagnostics() });
+  return json({
+    ok: true,
+    status,
+    googleCalendar: googleCalendarDiagnostics(),
+    publicConfig: {
+      reviewUrl: clean(env("GOOGLE_REVIEW_URL"), 1000),
+    },
+  });
 };
 
 export const config = {
