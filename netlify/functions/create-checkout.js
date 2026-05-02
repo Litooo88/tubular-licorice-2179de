@@ -56,6 +56,7 @@ exports.handler = async (event) => {
 
     const session = await stripe.checkout.sessions.create({
       locale: "sv",
+            automatic_payment_methods: { enabled: true },
       line_items: [
         {
           price_data: {
