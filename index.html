@@ -1496,19 +1496,29 @@ document.querySelectorAll('.stripe-buy').forEach(btn=>{
     e.preventDefault();
     const pid=this.dataset.product;
     if(!pid)return;
+    const button=this;
     const orig=this.textContent;
-    this.textContent='Laddar...';
-    this.style.pointerEvents='none';
+    let redirecting=false;
+    button.textContent='Laddar...';
+    button.style.pointerEvents='none';
     try{
       const res=await fetch('/.netlify/functions/create-checkout',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({productId:pid})
       });
-      const data=await res.json();
-      if(data.url){window.location.href=data.url}
-      else{alert('Kunde inte starta betalning. Ring oss på 070-024 33 19.');this.textContent=orig;this.style.pointerEvents='auto'}
-    }catch(err){alert('Något gick fel. Ring oss på 070-024 33 19.');this.textContent=orig;this.style.pointerEvents='auto'}
+      const data=await res.json().catch(()=>({}));
+      if(!res.ok||!data.url) throw new Error(data.error||'Kunde inte starta betalning.');
+      redirecting=true;
+      window.location.href=data.url;
+    }catch(err){
+      alert('Kunde inte starta betalning. Ring oss på 070-024 33 19.');
+    }finally{
+      if(!redirecting){
+        button.textContent=orig;
+        button.style.pointerEvents='auto';
+      }
+    }
   });
 });
 
