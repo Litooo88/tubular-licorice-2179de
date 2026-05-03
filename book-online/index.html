@@ -70,14 +70,21 @@ label,.label{font-size:12px;font-weight:900;color:#b8c2ba;text-transform:upperca
 input,select,textarea{width:100%;background:#181d19;border:1px solid #343f36;border-radius:8px;color:#fff;padding:14px 15px;font:inherit}
 input:focus,select:focus,textarea:focus{outline:none;border-color:var(--green);box-shadow:0 0 0 3px rgba(0,200,83,.12)}
 textarea{min-height:120px;resize:vertical}
-.service-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+.service-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
 .service-option{display:block;cursor:pointer}
 .service-option input{position:absolute;opacity:0;pointer-events:none}
 .service-box{height:100%;border:1px solid #2f3a32;background:#0b0f0c;border-radius:8px;padding:16px;transition:border-color .18s,background .18s,transform .18s}
 .service-option input:checked+.service-box{border-color:var(--green);background:rgba(0,200,83,.1)}
+.service-option input:focus-visible+.service-box{outline:2px solid var(--green);outline-offset:3px}
 .service-box strong{display:block;font-size:16px;margin-bottom:8px}
 .service-box span{display:block;color:#aeb8b0;font-size:13px;line-height:1.45}
 .service-box small{display:inline-flex;color:#b9ffd0;font-weight:900;margin-top:12px}
+.service-select-fallback{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.service-icon{display:grid;place-items:center;width:42px;height:42px;border-radius:8px;border:1px solid #344038;color:#b9ffd0;font-size:22px;margin-bottom:12px}
+.partner-strip{display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap;border-top:1px solid #243027;margin-top:26px;padding-top:18px}
+.partner-strip span{font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:#8f9a93;font-weight:900}
+.partner-logo{height:24px;max-width:124px;object-fit:contain;filter:grayscale(1) brightness(1.7);opacity:.86}
+.partner-wordmark{font-size:18px;font-weight:900;letter-spacing:.08em;color:#d6ded8;opacity:.82}
 .addon-panel{margin-top:16px}
 .addon-title{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:10px}
 .addon-title strong{font-size:15px}
@@ -115,7 +122,7 @@ textarea{min-height:120px;resize:vertical}
 .person-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
 .person-actions a{border:1px solid #263029;border-radius:8px;padding:9px;text-align:center}
 footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align:center;color:#8d948f;font-size:13px}
-@media(max-width:940px){.hero-grid,.booking-grid,.hero-proof,.service-grid,.form-grid,.role-grid,.addon-grid,.hours-grid{grid-template-columns:1fr}.side{position:static}.container{padding:0 18px}.hero{padding-top:42px}.booking-panel{padding:18px}.panel-title{display:block}.tag{margin-top:14px}.addon-title{display:block}.addon-title span{text-align:left;margin-top:4px}}
+@media(max-width:940px){.hero-grid,.booking-grid,.hero-proof,.service-grid,.form-grid,.role-grid,.addon-grid,.hours-grid{grid-template-columns:1fr}.side{position:static}.container{padding:0 18px}.hero{padding-top:42px}.booking-panel{padding:18px}.panel-title{display:block}.tag{margin-top:14px}.addon-title{display:block}.addon-title span{text-align:left;margin-top:4px}.partner-strip{justify-content:flex-start}}
 </style>
 <link rel="stylesheet" href="/assets/newsletter-popup.css">
 <link rel="preload" as="image" href="/assets/workshop/workshop-hero.jpg" fetchpriority="high">
@@ -204,17 +211,43 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
       <div class="form-block">
         <div class="block-head"><b>1</b><h3>Vad g&auml;ller det?</h3></div>
         <div class="form-grid">
-          <div class="form-group full">
+          <div class="form-group full service-select-fallback">
             <label for="service">Typ av hj&auml;lp</label>
             <select id="service" name="service">
+              <option value="Punktering / d&auml;ck" data-price="349" data-owner="Lennart">Punktering / d&auml;ck - fr. 349 kr</option>
+              <option value="Service och genomg&aring;ng" data-price="395" data-owner="Lennart">Service och genomg&aring;ng - fr. 395 kr</option>
+              <option value="Fels&ouml;kning" data-price="395" data-owner="Lennart">Fels&ouml;kning - fr. 395 kr</option>
+              <option value="Batteri / BMS / controller" data-price="745" data-owner="Sebastian">Batteri, BMS eller controller - fr. 745 kr</option>
               <option value="Os&auml;ker / bed&ouml;m p&aring; verkstad" data-price="0" data-owner="Lennart">Jag &auml;r os&auml;ker - bed&ouml;m p&aring; verkstad</option>
-              <option value="Punktering (349 kr)" data-price="349" data-owner="Lennart">Punktering / d&auml;ck - fr. 349 kr</option>
-              <option value="Service (399 kr)" data-price="399" data-owner="Lennart">Service och genomg&aring;ng - 399 kr</option>
-              <option value="Felsokning (349 kr)" data-price="349" data-owner="Lennart">Fels&ouml;kning - fr. 349 kr</option>
-              <option value="Batteri / BMS / controller" data-price="699" data-owner="Sebastian">Batteri, BMS eller controller - fr. 699 kr</option>
               <option value="Upphamtning av fardig scooter" data-price="0" data-owner="Lennart">Upph&auml;mtning av f&auml;rdig scooter</option>
             </select>
           </div>
+        </div>
+        <div class="service-grid" id="serviceCards" role="radiogroup" aria-label="V&auml;lj tj&auml;nst">
+          <label class="service-option">
+            <input type="radio" name="serviceChoice" value="Punktering / d&auml;ck" checked>
+            <span class="service-box"><span class="service-icon">◎</span><strong>Punktering / d&auml;ck</strong><span>Slang, d&auml;ck, tubeless och efterdragning.</span><small>fr&aring;n 349 kr</small></span>
+          </label>
+          <label class="service-option">
+            <input type="radio" name="serviceChoice" value="Service och genomg&aring;ng">
+            <span class="service-box"><span class="service-icon">⌘</span><strong>Service &amp; genomg&aring;ng</strong><span>Bromsar, glapp, skruvar och snabb s&auml;kerhetscheck.</span><small>fr&aring;n 395 kr</small></span>
+          </label>
+          <label class="service-option">
+            <input type="radio" name="serviceChoice" value="Fels&ouml;kning">
+            <span class="service-box"><span class="service-icon">⌕</span><strong>Fels&ouml;kning</strong><span>Vi hittar orsaken innan du godk&auml;nner arbete.</span><small>fr&aring;n 395 kr</small></span>
+          </label>
+          <label class="service-option">
+            <input type="radio" name="serviceChoice" value="Batteri / BMS / controller">
+            <span class="service-box"><span class="service-icon">▥</span><strong>Batteri / BMS</strong><span>Laddning, controller, BMS och tyngre elfel.</span><small>fr&aring;n 745 kr</small></span>
+          </label>
+          <label class="service-option">
+            <input type="radio" name="serviceChoice" value="Os&auml;ker / bed&ouml;m p&aring; verkstad">
+            <span class="service-box"><span class="service-icon">?</span><strong>Os&auml;ker</strong><span>V&auml;lj detta om du vill att vi bed&ouml;mer p&aring; plats.</span><small>pris efter bed&ouml;mning</small></span>
+          </label>
+          <label class="service-option">
+            <input type="radio" name="serviceChoice" value="Upphamtning av fardig scooter">
+            <span class="service-box"><span class="service-icon">↗</span><strong>H&auml;mta f&auml;rdig scooter</strong><span>Boka utl&auml;mningstid f&ouml;r ett redan klart &auml;rende.</span><small>ingen startkostnad</small></span>
+          </label>
         </div>
         <div class="addon-panel" aria-label="Tillval">
           <div class="addon-title">
@@ -231,14 +264,22 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
               <span>Extra s&auml;kerhetskontroll<small>Bromsar, skruvar, glapp och d&auml;cktryck +199 kr</small></span>
             </label>
             <label class="addon-option">
-              <input type="checkbox" name="addons" value="tire-sealant" data-label="Punkteringsskydd / t&auml;tningsv&auml;tska" data-price="149">
-              <span>Punkteringsskydd i d&auml;ck<small>T&auml;tningsv&auml;tska vid service +149 kr</small></span>
+              <input type="checkbox" name="addons" value="tire-sealant" data-label="Punkteringsskydd / t&auml;tningsv&auml;tska" data-price="99">
+              <span>Punkteringsskydd i d&auml;ck<small>T&auml;tningsv&auml;tska +99 kr per d&auml;ck</small></span>
             </label>
             <label class="addon-option">
               <input type="checkbox" name="addons" value="contact-clean" data-label="Reng&ouml;ring av laddport och kontakter" data-price="149">
               <span>Reng&ouml;ring av laddport<small>Kontakter och snabb genomg&aring;ng +149 kr</small></span>
             </label>
           </div>
+        </div>
+        <div class="partner-strip" aria-label="Varum&auml;rken vi arbetar med">
+          <span>Vi arbetar med ledande varum&auml;rken</span>
+          <b class="partner-wordmark">KuKirin</b>
+          <b class="partner-wordmark">NAVEE</b>
+          <img class="partner-logo" src="/dualtron-logo.png" alt="Dualtron">
+          <img class="partner-logo" src="/teverun-logo.jpg" alt="Teverun">
+          <b class="partner-wordmark">MONORIM</b>
         </div>
       </div>
 
@@ -313,6 +354,7 @@ footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align
 const bookingForm=document.querySelector('form[name="booking"]');
 const bookingStatus=document.getElementById('bookingStatus');
 const serviceSelect=document.getElementById('service');
+const serviceChoiceInputs=[...document.querySelectorAll('input[name="serviceChoice"]')];
 const messageInput=document.getElementById('message');
 const smsConsent=document.getElementById('smsConsent');
 const logisticsSelect=document.getElementById('logistics');
@@ -357,6 +399,18 @@ function fillTimeOptions(){
   });
 }
 function selectedService(){return serviceSelect?serviceSelect.options[serviceSelect.selectedIndex]:null;}
+function syncServiceChoiceFromSelect(){
+  const service=selectedService();
+  if(!service)return;
+  serviceChoiceInputs.forEach((input)=>{input.checked=input.value===service.value;});
+}
+function setServiceFromChoice(value){
+  if(!serviceSelect||!value)return;
+  const option=[...serviceSelect.options].find((entry)=>entry.value===value);
+  if(option)serviceSelect.value=option.value;
+  syncServiceChoiceFromSelect();
+  updateSummary();
+}
 function ownerFor(service,message){
   if(service&&service.dataset&&service.dataset.owner)return service.dataset.owner;
   const text=(((service&&service.value)||'')+' '+(message||'')).toLowerCase();
@@ -376,6 +430,7 @@ function collectAddons(){
     }));
 }
 function updateSummary(){
+  syncServiceChoiceFromSelect();
   const service=selectedService();
   const price=service?Number(service.dataset.price||0):0;
   const addons=collectAddons();
@@ -392,6 +447,7 @@ function syncPickupService(){
   if(logisticsSelect.value!=='pickup-ready')return;
   const pickupOption=[...serviceSelect.options].find(option=>option.value==='Upphamtning av fardig scooter');
   if(pickupOption)serviceSelect.value=pickupOption.value;
+  syncServiceChoiceFromSelect();
   updateSummary();
 }
 function setSelectValue(select,value){
@@ -426,7 +482,8 @@ function applyPrefillFromUrl(){
 fillDayOptions();
 fillTimeOptions();
 applyPrefillFromUrl();
-if(serviceSelect)serviceSelect.addEventListener('change',updateSummary);
+if(serviceSelect)serviceSelect.addEventListener('change',()=>{syncServiceChoiceFromSelect();updateSummary();});
+serviceChoiceInputs.forEach((input)=>input.addEventListener('change',()=>setServiceFromChoice(input.value)));
 if(logisticsSelect)logisticsSelect.addEventListener('change',syncPickupService);
 addonInputs.forEach((input)=>input.addEventListener('change',updateSummary));
 messageInput.addEventListener('input',updateSummary);

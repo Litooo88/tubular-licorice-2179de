@@ -105,7 +105,7 @@ const ADDON_OPTIONS = [
   {
     id: "tire-sealant",
     label: "Punkteringsskydd / t\u00e4tningsv\u00e4tska",
-    price: 149,
+    price: 99,
   },
   {
     id: "contact-clean",
@@ -184,14 +184,16 @@ const estimateValue = (service) => {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
 
-  if (normalized.includes("avancerad felsokning")) return 699;
-  if (normalized.includes("controller")) return 699;
+  if (normalized.includes("avancerad batteridiagnos")) return 945;
+  if (normalized.includes("avancerad felsokning")) return 945;
+  if (normalized.includes("controller")) return 745;
   if (normalized.includes("batterireparation")) return 999;
-  if (normalized.includes("felsokning")) return 349;
+  if (normalized.includes("batteri") || normalized.includes("bms")) return 745;
+  if (normalized.includes("felsokning")) return 395;
   if (normalized.includes("punktering")) return 349;
-  if (normalized.includes("batteridiagnos")) return 349;
-  if (normalized.includes("regelradgivning")) return 349;
-  if (normalized.includes("service")) return 399;
+  if (normalized.includes("batteridiagnos")) return 745;
+  if (normalized.includes("regelradgivning")) return 395;
+  if (normalized.includes("service")) return 395;
   return 0;
 };
 

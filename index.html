@@ -73,7 +73,7 @@
   "makesOffer": [
     {
       "@type": "Offer",
-      "price": "299",
+      "price": "395",
       "priceCurrency": "SEK",
       "itemOffered": {
         "@type": "Service",
@@ -82,7 +82,7 @@
     },
     {
       "@type": "Offer",
-      "price": "995",
+      "price": "349",
       "priceCurrency": "SEK",
       "itemOffered": {
         "@type": "Service",
@@ -91,7 +91,7 @@
     },
     {
       "@type": "Offer",
-      "price": "349",
+      "price": "745",
       "priceCurrency": "SEK",
       "itemOffered": {
         "@type": "Service",
@@ -288,7 +288,7 @@
       "name": "Vad kostar felsökning av elscooter?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Felsökning startar från 349 kr. Avancerad elektronikfelsökning offereras innan vi går vidare."
+        "text": "Felsökning startar från 395 kr. Avancerad elektronikfelsökning offereras innan vi går vidare."
       }
     },
     {
@@ -415,7 +415,7 @@ nav a:hover{color:#fff}
 /* PRICING */
 .pricing{padding:100px 0;background:#000}
 .pricing-grid{display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-top:44px}
-.pc{background:#111;border:1px solid #222;border-radius:16px;padding:30px;transition:border-color .2s}
+.pc{background:#111;border:1px solid #222;border-radius:8px;padding:30px;transition:border-color .2s}
 .pc:hover{border-color:#00C853}
 .pc-head{display:flex;align-items:center;gap:14px;margin-bottom:22px}
 .pc-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;background:rgba(0,200,83,.1);flex-shrink:0}
@@ -425,7 +425,7 @@ nav a:hover{color:#fff}
 .pr:last-child{border-bottom:none}
 .pr-name{font-size:14px;color:#ccc}
 .pr-val{font-size:14px;font-weight:700;color:#00C853;white-space:nowrap}
-.price-guarantee{text-align:center;padding:28px;margin-top:28px;background:#111;border:1px solid #222;border-radius:16px}
+.price-guarantee{text-align:center;padding:28px;margin-top:28px;background:#111;border:1px solid #222;border-radius:8px}
 .price-guarantee p{font-size:17px;font-weight:600}
 .price-guarantee span{font-size:14px;color:#888;display:block;margin-top:6px}
 
@@ -771,11 +771,11 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   <span class="section-label">Vanliga problem vi löser</span>
   <h2 class="section-title">Känner du igen dig?</h2>
   <div class="problems-grid">
-    <div class="prob"><div class="prob-icon">&#9888;&#65039;</div><div><div class="prob-text">Scootern startar inte</div><div class="prob-fix">Felsökning fr. 349 kr</div></div></div>
-    <div class="prob"><div class="prob-icon">&#128267;</div><div><div class="prob-text">Dålig räckvidd / batteri dör</div><div class="prob-fix">Batteridiagnos 349 kr</div></div></div>
-    <div class="prob"><div class="prob-icon">&#128165;</div><div><div class="prob-text">Punktering — igen</div><div class="prob-fix">Punkteringsfria däck 599 kr</div></div></div>
-    <div class="prob"><div class="prob-icon">&#9889;</div><div><div class="prob-text">Laddar inte / konstiga fel</div><div class="prob-fix">Avancerad felsökning 699 kr</div></div></div>
-    <div class="prob"><div class="prob-icon">&#128168;</div><div><div class="prob-text">Bromsar slitna / gnisslar</div><div class="prob-fix">Service fr. 399 kr</div></div></div>
+    <div class="prob"><div class="prob-icon">&#9888;&#65039;</div><div><div class="prob-text">Scootern startar inte</div><div class="prob-fix">Felsökning fr. 395 kr</div></div></div>
+    <div class="prob"><div class="prob-icon">&#128267;</div><div><div class="prob-text">Dålig räckvidd / batteri dör</div><div class="prob-fix">Batterifelsökning 745 kr</div></div></div>
+    <div class="prob"><div class="prob-icon">&#128165;</div><div><div class="prob-text">Punktering — igen</div><div class="prob-fix">Punkteringsfria däck fr. 749 kr</div></div></div>
+    <div class="prob"><div class="prob-icon">&#9889;</div><div><div class="prob-text">Laddar inte / konstiga fel</div><div class="prob-fix">Avancerad diagnos 945 kr</div></div></div>
+    <div class="prob"><div class="prob-icon">&#128168;</div><div><div class="prob-text">Bromsar slitna / gnisslar</div><div class="prob-fix">Service fr. 395 kr</div></div></div>
     <div class="prob"><div class="prob-icon">&#128295;</div><div><div class="prob-text">Controller / elsystem trasigt</div><div class="prob-fix">Reparation fr. 899 kr</div></div></div>
   </div>
 </div>
@@ -785,41 +785,52 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 <section class="pricing" id="prislista">
 <div class="container">
   <span class="section-label">Prislista</span>
-  <h2 class="section-title">Aktuell prisbild för verkstaden.</h2>
-  <p class="section-sub">Tydliga startpriser, tydliga tillägg och alltid bekräftelse innan vi gör något som kräver mer tid eller delar.</p>
+  <h2 class="section-title">Fasta startpriser utan överraskningar.</h2>
+  <p class="section-sub">Kontroll, tydligt pris och besked innan arbete. Alla priser är inklusive moms och kan speglas mot verkstadens interna prisdatabas.</p>
   <div class="pricing-grid">
     <div class="pc">
-      <div class="pc-head"><div class="pc-icon">&#128295;</div><div><div class="pc-title">Service & reparation</div><div class="pc-desc">Det kunder oftast bokar in först</div></div></div>
-      <div class="pr"><span class="pr-name">Felsökning elscooter</span><span class="pr-val">299 kr</span></div>
-      <div class="pr"><span class="pr-name">Full service</span><span class="pr-val">499 kr</span></div>
-      <div class="pr"><span class="pr-name">Bromsjustering</span><span class="pr-val">199 kr</span></div>
-      <div class="pr"><span class="pr-name">Byte bromsbelägg</span><span class="pr-val">fr. 299 kr</span></div>
-    </div>
-    <div class="pc">
-      <div class="pc-head"><div class="pc-icon">&#128710;</div><div><div class="pc-title">Punktering & däck</div><div class="pc-desc">Från vardagsjobb till tubeless</div></div></div>
+      <div class="pc-head"><div class="pc-icon">&#128710;</div><div><div class="pc-title">Däck & punktering 8.5"</div><div class="pc-desc">Xiaomi m.fl. Kontroll och efterdragning ingår.</div></div></div>
       <div class="pr"><span class="pr-name">Laga punktering</span><span class="pr-val">349 kr</span></div>
-      <div class="pr"><span class="pr-name">Byte däck (ej motorhjul)</span><span class="pr-val">395 kr</span></div>
-      <div class="pr"><span class="pr-name">Montering tubeless (motorhjul)</span><span class="pr-val">449 kr</span></div>
-      <div class="pr"><span class="pr-name">Punkteringsfritt / tubeless</span><span class="pr-val">fr. 349 kr</span></div>
+      <div class="pr"><span class="pr-name">Byte slang inkl. slang</span><span class="pr-val">449 kr</span></div>
+      <div class="pr"><span class="pr-name">Punkteringsfritt däck inkl. montering</span><span class="pr-val">749 kr</span></div>
     </div>
     <div class="pc">
-      <div class="pc-head"><div class="pc-icon">&#128267;</div><div><div class="pc-title">Batteri & el</div><div class="pc-desc">För räckvidd, laddning och tyngre fel</div></div></div>
-      <div class="pr"><span class="pr-name">Batteridiagnos / besiktning</span><span class="pr-val">0 kr</span></div>
-      <div class="pr"><span class="pr-name">Batterireparation</span><span class="pr-val">fr. 995 kr</span></div>
-      <div class="pr"><span class="pr-name">Batteribyggnation</span><span class="pr-val">fr. 3 600 kr</span></div>
-      <div class="pr"><span class="pr-name">Kabel / elfel</span><span class="pr-val">fr. 399 kr</span></div>
+      <div class="pc-head"><div class="pc-icon">&#128710;</div><div><div class="pc-title">Däck & punktering 10"</div><div class="pc-desc">Ninebot, NAVEE m.fl. Mest bokade däckjobben.</div></div></div>
+      <div class="pr"><span class="pr-name">Byte slang inkl. slang</span><span class="pr-val">499 kr</span></div>
+      <div class="pr"><span class="pr-name">Byte däck + slang inkl. allt</span><span class="pr-val">649 kr</span></div>
+      <div class="pr"><span class="pr-name">Punkteringsfritt 10" däck inkl. montering</span><span class="pr-val">845 kr</span></div>
     </div>
     <div class="pc">
-      <div class="pc-head"><div class="pc-icon">&#128666;</div><div><div class="pc-title">Extra tjänster</div><div class="pc-desc">När logistik eller tempo måste upp</div></div></div>
-      <div class="pr"><span class="pr-name">Upphämtning / leverans</span><span class="pr-val">fr. 99 kr</span></div>
-      <div class="pr"><span class="pr-name">Akut service inom 24h</span><span class="pr-val">+200 kr</span></div>
-      <div class="pr"><span class="pr-name">Offert / rådgivning</span><span class="pr-val">Gratis</span></div>
+      <div class="pc-head"><div class="pc-icon">&#9881;</div><div><div class="pc-title">Tubeless / motorhjul</div><div class="pc-desc">Premiumjobb där motorhjul och tätning kräver mer tid.</div></div></div>
+      <div class="pr"><span class="pr-name">Tubeless montering</span><span class="pr-val">595 kr</span></div>
+      <div class="pr"><span class="pr-name">Tubeless + tätningsvätska</span><span class="pr-val">695 kr</span></div>
+      <div class="pr"><span class="pr-name">Komplett däck + montering</span><span class="pr-val">fr. 895 kr</span></div>
+    </div>
+    <div class="pc">
+      <div class="pc-head"><div class="pc-icon">&#128267;</div><div><div class="pc-title">Batteri & felsökning</div><div class="pc-desc">Cell, BMS, laddning och elsystem.</div></div></div>
+      <div class="pr"><span class="pr-name">Batterifelsökning grund</span><span class="pr-val">745 kr</span></div>
+      <div class="pr"><span class="pr-name">Avancerad batteridiagnos</span><span class="pr-val">945 kr</span></div>
+      <div class="pr"><span class="pr-name">Felsökning elsystem</span><span class="pr-val">fr. 395 kr</span></div>
+    </div>
+    <div class="pc">
+      <div class="pc-head"><div class="pc-icon">&#128295;</div><div><div class="pc-title">Service & paket</div><div class="pc-desc">Välj paket som passar dig och din scooter.</div></div></div>
+      <div class="pr"><span class="pr-name">Grundservice</span><span class="pr-val">395 kr</span></div>
+      <div class="pr"><span class="pr-name">Bromsjustering</span><span class="pr-val">295 kr</span></div>
+      <div class="pr"><span class="pr-name">Vår-/höstcheck</span><span class="pr-val">695 kr</span></div>
+      <div class="pr"><span class="pr-name">Hämtning + service + leverans</span><span class="pr-val">995 kr</span></div>
+      <div class="pr"><span class="pr-name">Premium säkerhetsgenomgång</span><span class="pr-val">1 295 kr</span></div>
+    </div>
+    <div class="pc">
+      <div class="pc-head"><div class="pc-icon">&#128666;</div><div><div class="pc-title">Extra tjänster</div><div class="pc-desc">När logistik eller tempo måste upp.</div></div></div>
+      <div class="pr"><span class="pr-name">Upphämtning / leverans</span><span class="pr-val">fr. 199 kr</span></div>
+      <div class="pr"><span class="pr-name">Akutjobb / prio</span><span class="pr-val">+299 kr</span></div>
+      <div class="pr"><span class="pr-name">Offert / rådgivning</span><span class="pr-val">Ingår</span></div>
       <div class="pr"><span class="pr-name">Se hela prislistan</span><span class="pr-val"><a href="/priser/" style="color:inherit;text-decoration:none">Öppna</a></span></div>
     </div>
   </div>
   <div class="price-guarantee">
-    <p>&#128274; Batteriarbeten körs med kampanj just nu.</p>
-    <span>20% rabatt på batteriarbeten och gratis batteribesiktning när jobbet bokas i rätt period.</span>
+    <p>&#128274; Pris före arbete.</p>
+    <span>Du får alltid tydligt pris innan vi börjar. Inga dolda avgifter.</span>
   </div>
 </div>
 </section>
@@ -1301,7 +1312,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   <span class="section-label">Fr&aring;gor kunder googlar</span>
   <h2 class="section-title">Snabba svar innan du bokar</h2>
   <div class="faq-grid">
-    <div class="faq-item"><h3>Vad kostar fels&ouml;kning av elscooter?</h3><p>Fels&ouml;kning startar fr&aring;n 349 kr. Avancerad elektronikfels&ouml;kning offereras innan vi g&aring;r vidare.</p></div>
+    <div class="faq-item"><h3>Vad kostar fels&ouml;kning av elscooter?</h3><p>Fels&ouml;kning startar fr&aring;n 395 kr. Avancerad elektronikfels&ouml;kning offereras innan vi g&aring;r vidare.</p></div>
     <div class="faq-item"><h3>Kan ni laga batterier?</h3><p>Ja, vi testar batteri, BMS, laddport och cellbalans. Om reparation inte &auml;r s&auml;ker rekommenderar vi byte eller skrotning.</p></div>
     <div class="faq-item"><h3>H&auml;mtar ni i &Ouml;rebro?</h3><p>Vi kan h&auml;mta och l&auml;mna efter &ouml;verenskommelse. Ange adress och modell i bokningen.</p></div>
     <div class="faq-item"><h3>S&auml;ljer ni lagliga elscootrar?</h3><p>Vi hj&auml;lper dig skilja mellan laglig pendling, modeller som beh&ouml;ver kontrolleras och prestandamodeller f&ouml;r privat mark.</p></div>
