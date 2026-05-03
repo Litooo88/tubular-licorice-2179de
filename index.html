@@ -1094,7 +1094,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   <p class="section-sub">Alla scootrar levereras inspekterade och redo att köra. Vi är auktoriserade återförsäljare för NAVEE och TEVERUN.</p>
   <div class="legal-note">Produktinfo ska l&auml;sas tillsammans med anv&auml;ndningsomr&aring;de. Modeller med h&ouml;g effekt eller h&ouml;g hastighet kan vara avsedda f&ouml;r privat mark eller inh&auml;gnat omr&aring;de, inte vanlig trafik. <a href="/regler-elscooter/">L&auml;s regelguiden innan k&ouml;p</a>.</div>
 
-  <div class="legal-note" style="margin-bottom:10px;background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.22);color:#dce8df">Betala tryggt med <strong>kort</strong>. <strong>Klarna visas automatiskt</strong> nar checkouten ar kvalificerad. Vi hjälper dig med leverans, showroomfrågor och service efter köpet.</div>
+  <div class="legal-note" style="margin-bottom:10px;background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.22);color:#dce8df">Betala tryggt med <strong>kort, Klarna och andra tillg&auml;ngliga betals&auml;tt</strong>. Stripe visar de alternativ som &auml;r aktiverade och kvalificerade f&ouml;r ordern. Vi hj&auml;lper dig med leverans, showroomfr&aring;gor och service efter k&ouml;pet.</div>
   <!-- NAVEE -->
   <div style="display:flex;align-items:center;gap:12px;margin:40px 0 8px">
     <span style="font-size:20px;font-weight:800;letter-spacing:2px;color:#fff">NAVEE</span>
@@ -1496,19 +1496,29 @@ document.querySelectorAll('.stripe-buy').forEach(btn=>{
     e.preventDefault();
     const pid=this.dataset.product;
     if(!pid)return;
+    const button=this;
     const orig=this.textContent;
-    this.textContent='Laddar...';
-    this.style.pointerEvents='none';
+    let redirecting=false;
+    button.textContent='Laddar...';
+    button.style.pointerEvents='none';
     try{
       const res=await fetch('/.netlify/functions/create-checkout',{
         method:'POST',
         headers:{'Content-Type':'application/json'},
         body:JSON.stringify({productId:pid})
       });
-      const data=await res.json();
-      if(data.url){window.location.href=data.url}
-      else{alert('Kunde inte starta betalning. Ring oss på 070-024 33 19.');this.textContent=orig;this.style.pointerEvents='auto'}
-    }catch(err){alert('Något gick fel. Ring oss på 070-024 33 19.');this.textContent=orig;this.style.pointerEvents='auto'}
+      const data=await res.json().catch(()=>({}));
+      if(!res.ok||!data.url) throw new Error(data.error||'Kunde inte starta betalning.');
+      redirecting=true;
+      window.location.href=data.url;
+    }catch(err){
+      alert('Kunde inte starta betalning. Ring oss på 070-024 33 19.');
+    }finally{
+      if(!redirecting){
+        button.textContent=orig;
+        button.style.pointerEvents='auto';
+      }
+    }
   });
 });
 
