@@ -32,7 +32,7 @@ const looksLikeGooglePrivateKey = (value) => {
   return key.includes("BEGIN PRIVATE KEY") && key.includes("END PRIVATE KEY");
 };
 const googleCalendarConfig = () => {
-  const calendarId = clean(env("GOOGLE_CALENDAR_ID"), 500);
+  const calendarId = clean(env("GOOGLE_CALENDAR_ID") || WORKSHOP_ORGANIZER, 500);
   const serviceEmail = clean(env("GOOGLE_SERVICE_ACCOUNT_EMAIL"), 240);
   const privateKey = clean(env("GOOGLE_PRIVATE_KEY"), 5000).replace(/\\n/g, "\n");
   const missing = [];
@@ -63,6 +63,11 @@ const googleCalendarConfig = () => {
 const WORKSHOP_LOCATION = "Pistolv\u00e4gen 6, \u00d6rebro";
 const WORKSHOP_ORGANIZER = "info@nordicemobility.se";
 const ICS_TIME_ZONE = "Europe/Stockholm";
+const WORKSHOP_ADDRESS = "Pistolv\u00e4gen 6, 702 21 \u00d6rebro";
+const MAPS_LINK = "https://www.google.com/maps/place/Pistolv%C3%A4gen+6,+702+21+%C3%96rebro";
+const REVIEW_LINK = env("GOOGLE_REVIEW_LINK") || "https://www.google.com/search?q=Nordic+E-Mobility+Pistolv%C3%A4gen+6+%C3%96rebro+recension";
+const LOGO_URL = env("SITE_URL") ? `${env("SITE_URL").replace(/\/$/, "")}/nordic_logo_transparent.png` : "https://www.nordicemobility.se/nordic_logo_transparent.png";
+const RETRY_DELAY_MS = 30000;
 
 const STAFF = {
   lennart: {
@@ -162,6 +167,17 @@ const addonSummaryHtml = (addons = []) => {
   return `<p style="margin:0 0 8px"><strong>Tillval:</strong><br>${rows}</p>`;
 };
 
+const emailFooterHtml = () => `
+  <div style="border-top:1px solid #dfe5dc;margin-top:22px;padding-top:18px;color:#53605a;font-size:13px;line-height:1.55">
+    <img src="${htmlEscape(LOGO_URL)}" alt="Nordic E-Mobility" style="display:block;max-width:150px;height:auto;margin:0 0 12px">
+    <strong style="color:#111">Nordic E-Mobility AB</strong><br>
+    ${htmlEscape(WORKSHOP_ADDRESS)}<br>
+    <a href="mailto:info@nordicemobility.se" style="color:#067a35">info@nordicemobility.se</a> &middot;
+    <a href="tel:+46700243319" style="color:#067a35">070-024 33 19</a><br>
+    Lennart: <a href="tel:+46722607753" style="color:#067a35">072-260 77 53</a>
+  </div>
+`;
+
 const estimateValue = (service) => {
   const normalized = service
     .normalize("NFD")
@@ -213,68 +229,89 @@ const uniquePhones = (numbers = []) => {
 };
 
 const shortCaseId = (id) => id.replace(/^case_/, "").slice(0, 18).toUpperCase();
+const firstName = (name) => clean(name, 120).split(/\s+/).filter(Boolean)[0] || "d\u00e4r";
+const isSent = (result) => result?.status === "sent" || result?.status === "created" || result?.status === "checked";
+const isWorkshopAlertSent = (staffSms, workshopEmail) =>
+  (staffSms?.status === "sent" || staffSms?.status === "partial") && isSent(workshopEmail);
+const needsRetry = (result) => ["failed", "not_configured", "invalid_phone"].includes(result?.status);
 
-const formatPreferredDateForSms = (caseItem) => {
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const resultError = (result) => clean(result?.error || result?.reason || result?.status || "okant fel", 240);
+
+const logBookingDelivery = (caseItem, extra = {}) => {
+  const smsSent = isSent(caseItem.notifications?.sms);
+  const emailSent = isSent(caseItem.notifications?.customerEmail);
+  const workshopAlert = isWorkshopAlertSent(caseItem.notifications?.staffSms, caseItem.notifications?.workshopEmail);
+  console.log(`[BOOKING ${caseItem.id}] sms_sent=${smsSent} email_sent=${emailSent} workshop_alert=${workshopAlert}`, {
+    case_id: caseItem.id,
+    sms_sent: smsSent,
+    email_sent: emailSent,
+    workshop_alert: workshopAlert,
+    confirmation_sent: Boolean(caseItem.confirmation_sent),
+    confirmation_missing: Boolean(caseItem.confirmation_missing),
+    sms_status: caseItem.notifications?.sms?.status,
+    email_status: caseItem.notifications?.customerEmail?.status,
+    staff_sms_status: caseItem.notifications?.staffSms?.status,
+    workshop_email_status: caseItem.notifications?.workshopEmail?.status,
+    ...extra,
+  });
+};
+
+const updateConfirmationFlags = (caseItem) => {
+  const smsSent = isSent(caseItem.notifications?.sms);
+  const emailSent = isSent(caseItem.notifications?.customerEmail);
+  const workshopAlert = isWorkshopAlertSent(caseItem.notifications?.staffSms, caseItem.notifications?.workshopEmail);
+  caseItem.confirmation_sent = smsSent && emailSent;
+  caseItem.confirmation_missing = !caseItem.confirmation_sent || !workshopAlert;
+  caseItem.confirmation = {
+    sms_sent: smsSent,
+    email_sent: emailSent,
+    workshop_alert: workshopAlert,
+    missing: caseItem.confirmation_missing,
+    updatedAt: new Date().toISOString(),
+  };
+  return caseItem.confirmation;
+};
+
+const formatPreferredDateOnlyForSms = (caseItem) => {
   const raw = clean(caseItem.preferredDate, 120);
-  const label = isReadyPickup(caseItem) ? "Upphamtning" : "Inlamning";
   const match = raw.match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
-  if (!match) return `${label}: tid saknas`;
+  if (!match) return "tid saknas";
 
   const [, year, month, day, hour, minute] = match.map(Number);
   const date = new Date(year, month - 1, day, hour, minute);
-  if (Number.isNaN(date.getTime())) return `${label}: ${raw}`;
+  if (Number.isNaN(date.getTime())) return raw;
 
-  const formatted = new Intl.DateTimeFormat("sv-SE", {
+  return new Intl.DateTimeFormat("sv-SE", {
     day: "numeric",
     month: "short",
     hour: "2-digit",
     minute: "2-digit",
     hourCycle: "h23",
   }).format(date).replace(".", "");
-
-  return `${label}: ${formatted}`;
 };
 
-const customerDeliverySummary = ({ sms, customerEmail }) => {
-  const smsStatus = clean(sms?.status, 40) || "not_requested";
-  const emailStatus = clean(customerEmail?.status, 40) || "not_requested";
-  const sentChannels = [];
-  const missingChannels = [];
-
-  if (smsStatus === "sent") sentChannels.push("sms");
-  else if (smsStatus !== "not_requested") missingChannels.push(`sms${sms?.error ? `: ${sms.error}` : ""}`);
-
-  if (emailStatus === "sent") sentChannels.push("email");
-  else if (emailStatus !== "not_requested") missingChannels.push(`email${customerEmail?.error ? `: ${customerEmail.error}` : ""}`);
-
-  const status = sentChannels.length === 2 ? "sent" : sentChannels.length === 1 ? "partial" : "attention";
-
-  return {
-    status,
-    sentChannels,
-    missingChannels,
-    needsAttention: sentChannels.length === 0,
-    label:
-      status === "sent"
-        ? "SMS och e-post skickade"
-        : status === "partial"
-          ? `Bekraftelse skickad via ${sentChannels[0] === "sms" ? "SMS" : "e-post"}`
-          : "Ingen kundbekraftelse skickad",
-    nextStep:
-      status === "sent"
-        ? "Kunden har fatt automatisk bekraftelse."
-        : status === "partial"
-          ? "En kanal gick ivag. Komplettera manuellt vid behov."
-          : "Ring eller skicka manuell bekraftelse till kunden nu.",
-  };
+const formatPreferredDateForSms = (caseItem) => {
+  const label = isReadyPickup(caseItem) ? "Upphamtning" : "Inlamning";
+  return `${label}: ${formatPreferredDateOnlyForSms(caseItem)}`;
 };
 
 const smsMessage = (caseItem) =>
-  `Nordic E-Mobility: Vi har tagit emot din bokning. ${formatPreferredDateForSms(caseItem)}. Tjanst: ${caseItem.service}. Arende ${shortCaseId(caseItem.id)}. Vi aterkommer med bekraftad tid, pris och nasta steg. Direktkontakt: Sebastian 070-024 33 19 eller Lennart 072-260 77 53.`;
+  `Hej ${firstName(caseItem.customer.name)}! Din bokning hos Nordic E-Mobility \u00e4r registrerad.\nTid: ${formatPreferredDateOnlyForSms(caseItem)}\nPlats: Pistolv\u00e4gen 6, 702 21 \u00d6rebro\nVi h\u00f6r av oss om n\u00e5got beh\u00f6ver \u00e4ndras. - Nordic E-Mobility`;
 
 const workshopSmsMessage = (caseItem) => {
-  const addonInfo = caseItem.addons?.length ? ` Tillval ${caseItem.addons.length}.` : "";
-  return `Nordic: ${caseItem.customer.name} - ${caseItem.service}. ${formatPreferredDateForSms(caseItem)}. Tel ${caseItem.customer.phone}. Arende ${shortCaseId(caseItem.id)}. Varde ${caseItem.estimatedValue} kr.${addonInfo} Ansvar: ${caseItem.assignedTo.name}.`;
+  const description = clean(caseItem.message, 80);
+  const priority = caseItem.priority === "urgent" ? "Hog" : "Normal";
+  return [
+    `Ny bokning #${shortCaseId(caseItem.id)}`,
+    `Kund: ${caseItem.customer.name} - ${caseItem.customer.phone}`,
+    `Modell: ${caseItem.vehicle.model || "Ej angiven"}`,
+    `Felbeskrivning: ${description || "Saknas"}`,
+    `Inlamning: ${formatPreferredDateOnlyForSms(caseItem)}`,
+    `Arende: ${caseItem.service}`,
+    `Prio: ${priority}`,
+  ].join("\n");
 };
 
 const smsConfig = () => ({
@@ -597,37 +634,26 @@ const customerEmailHtml = (caseItem) => `
     <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #dfe5dc;border-radius:8px;overflow:hidden">
       <div style="background:#061007;color:#fff;padding:22px 24px">
         <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8ff5ae;font-weight:700">Nordic E-Mobility</div>
-        <h1 style="font-size:24px;line-height:1.2;margin:8px 0 0">Din bokning &auml;r mottagen</h1>
+        <h1 style="font-size:24px;line-height:1.2;margin:8px 0 0">Din bokning &auml;r registrerad</h1>
       </div>
       <div style="padding:24px;line-height:1.6">
-        <p>Hej ${htmlEscape(caseItem.customer.name)},</p>
-        <p>${isReadyPickup(caseItem)
-          ? "Din beg&auml;ran om upph&auml;mtning &auml;r nu registrerad. Den tid du valde ligger inne i systemet och g&auml;ller som planerad upph&auml;mtningstid om vi inte meddelar annat."
-          : "Tack f&ouml;r din bokning. Ditt &auml;rende &auml;r nu registrerat hos verkstaden och den tid du valde ligger inne som planerad inl&auml;mningstid."}</p>
-        <p>${isReadyPickup(caseItem)
-          ? "Om vi av n&aring;gon anledning beh&ouml;ver justera tiden eller komplettera informationen kontaktar vi dig direkt."
-          : "Om vi av n&aring;gon anledning beh&ouml;ver justera tiden eller komplettera n&aring;got i &auml;rendet h&ouml;r vi av oss direkt. Annars g&auml;ller tiden du redan har valt."}</p>
-        <div style="margin:18px 0">
-          <div style="border:1px solid #dfe8dc;border-radius:8px;padding:12px;background:#f7faf6;margin-bottom:10px"><strong style="display:block;margin-bottom:6px">1. Bokningen &auml;r registrerad</strong><span style="color:#516055;font-size:14px">Din bokning &auml;r sparad i systemet och har f&aring;tt ett &auml;rendenummer.</span></div>
-          <div style="border:1px solid #dfe8dc;border-radius:8px;padding:12px;background:#f7faf6;margin-bottom:10px"><strong style="display:block;margin-bottom:6px">2. Tiden ligger inne</strong><span style="color:#516055;font-size:14px">Den tid du valde g&auml;ller som planerad inl&auml;mning eller upph&auml;mtning om vi inte kontaktar dig med en &auml;ndring.</span></div>
-          <div style="border:1px solid #dfe8dc;border-radius:8px;padding:12px;background:#f7faf6"><strong style="display:block;margin-bottom:6px">3. Vi h&ouml;r av oss bara vid behov</strong><span style="color:#516055;font-size:14px">Om n&aring;got beh&ouml;ver justeras eller kompletteras meddelar vi dig direkt.</span></div>
-        </div>
+        <p>Hej ${htmlEscape(firstName(caseItem.customer.name))},</p>
+        <p>Vi har registrerat din bokning hos Nordic E-Mobility.</p>
         <div style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:16px;margin:18px 0">
           <p style="margin:0 0 8px"><strong>&Auml;rende:</strong> ${htmlEscape(shortCaseId(caseItem.id))}</p>
           <p style="margin:0 0 8px"><strong>Tj&auml;nst:</strong> ${htmlEscape(caseItem.service)}</p>
           <p style="margin:0 0 8px"><strong>${preferredTimeHtmlLabel(caseItem)}:</strong> ${htmlEscape(formatPreferredDateForEmail(caseItem.preferredDate))}</p>
+          <p style="margin:0 0 8px"><strong>Plats:</strong> ${htmlEscape(WORKSHOP_ADDRESS)}</p>
           <p style="margin:0 0 8px"><strong>Logistik:</strong> ${htmlEscape(logisticsLabel(caseItem.logistics))}</p>
           <p style="margin:0 0 8px"><strong>Fordon:</strong> ${htmlEscape(caseItem.vehicle.model || "Inte angivet")}</p>
           ${caseItem.discountCode ? `<p style="margin:0 0 8px"><strong>Rabattkod:</strong> ${htmlEscape(caseItem.discountCode)}</p>` : ""}
           ${addonSummaryHtml(caseItem.addons)}
           <p style="margin:0"><strong>Startansvar:</strong> ${htmlEscape(caseItem.assignedTo.name)}</p>
         </div>
-        <p><strong>Viktigt:</strong> kalenderfilen som bifogas speglar den tid du valde vid bokningen. Om tiden mot f&ouml;rmodan beh&ouml;ver &auml;ndras meddelar vi dig direkt.</p>
-        <p>Beh&ouml;ver du komplettera n&aring;got innan dess g&aring;r det bra att svara direkt p&aring; det h&auml;r mailet eller ringa verkstaden.</p>
-        <p>Direktkontakt:<br>
-        Sebastian, tekniskt ansvarig: <a href="tel:+46700243319">070-024 33 19</a><br>
-        Lennart, mottagning dagtid: <a href="tel:+46722607753">072-260 77 53</a></p>
-        <p style="margin-bottom:0">Nordic E-Mobility<br>Pistolv&auml;gen 6, &Ouml;rebro</p>
+        <p><a href="${MAPS_LINK}" style="display:inline-block;background:#061007;color:#fff;text-decoration:none;border-radius:8px;padding:12px 16px;font-weight:700">Visa p&aring; Google Maps</a></p>
+        <p><strong>Vad h&auml;nder nu?</strong><br>Vi kontrollerar bokningen och kontaktar dig inom 24 timmar om tiden, prisbed&ouml;mningen eller underlaget beh&ouml;ver justeras. Inget arbete p&aring;b&ouml;rjas utan att du f&aring;tt en prisbed&ouml;mning f&ouml;rst.</p>
+        <p>Efter bes&ouml;ket betyder en recension mycket f&ouml;r oss: <a href="${htmlEscape(REVIEW_LINK)}" style="color:#067a35">l&auml;mna en Google-recension</a>.</p>
+        ${emailFooterHtml()}
       </div>
     </div>
   </div>
@@ -637,24 +663,18 @@ const sendCustomerEmail = async (caseItem) => {
   if (!caseItem.customer.email) return { status: "not_requested" };
   return resendEmail({
     to: [caseItem.customer.email],
-    subject: `Vi har tagit emot din bokning | Nordic E-Mobility | ${shortCaseId(caseItem.id)}`,
+    subject: `Din servicef\u00f6rfr\u00e5gan hos Nordic E-Mobility - ${shortCaseId(caseItem.id)}`,
     html: customerEmailHtml(caseItem),
     text: [
       "Hej " + caseItem.customer.name + ",",
       "",
-      "Tack for din bokning hos Nordic E-Mobility.",
-      isReadyPickup(caseItem)
-        ? "Din begaran om upphamtning ar registrerad. Den tid du valde ligger inne i systemet och galler som planerad upphamtningstid om vi inte meddelar annat."
-        : "Ditt arende ar registrerat hos verkstaden. Den tid du valde ligger inne som planerad inlamningstid.",
+      "Din bokning hos Nordic E-Mobility ar registrerad.",
+      `Tid: ${formatPreferredDateOnlyForSms(caseItem)}`,
+      `Plats: ${WORKSHOP_ADDRESS}`,
+      "Vi kontaktar dig inom 24 timmar om nagot behover andras och gor alltid prisbedomning innan arbete.",
+      `Karta: ${MAPS_LINK}`,
       "",
-      "Detta hander nu:",
-      "1. Din bokning ar registrerad i systemet.",
-      "2. Tiden du valde ligger inne som planerad tid.",
-      "3. Vi hor bara av oss om nagot behover justeras eller kompletteras.",
-      "",
-      "Kalenderfilen speglar den tid du valde vid bokningen.",
-      "Om tiden mot formodan behover andras meddelar vi dig direkt.",
-      "Du kan svara direkt pa det har mailet om du vill komplettera nagot.",
+      "Kalenderfilen \u00e4r prelimin\u00e4r tills tiden \u00e4r bekr\u00e4ftad.",
       "",
       "Detaljer:",
       caseSummaryText(caseItem),
@@ -688,6 +708,61 @@ const sendWorkshopEmail = async (caseItem) => {
     attachments: [buildIcsAttachment(caseItem)],
     idempotencyKey: `${caseItem.id}-workshop-email`,
   });
+};
+
+const sendBookingNotifications = async (caseItem, smsRequested) => {
+  const [sms, staffSms, customerEmail, workshopEmail] = await Promise.all([
+    sendSmsConfirmation(caseItem, smsRequested),
+    sendWorkshopSmsNotification(caseItem),
+    sendCustomerEmail(caseItem),
+    sendWorkshopEmail(caseItem),
+  ]);
+
+  return { sms, staffSms, customerEmail, workshopEmail };
+};
+
+const addNotificationTimeline = (caseItem, notifications, prefix = "") => {
+  const at = new Date().toISOString();
+  if (notifications.sms?.status === "sent") {
+    caseItem.timeline.push({ at: notifications.sms.sentAt || at, event: `${prefix}SMS-bekraftelse skickad till kund.` });
+  } else if (needsRetry(notifications.sms)) {
+    caseItem.timeline.push({ at, event: `${prefix}SMS-bekraftelse misslyckades: ${resultError(notifications.sms)}.` });
+  }
+  if (notifications.staffSms?.status === "sent" || notifications.staffSms?.status === "partial") {
+    caseItem.timeline.push({ at: notifications.staffSms.sentAt || at, event: `${prefix}Intern SMS-avisering skickad.` });
+  } else if (needsRetry(notifications.staffSms)) {
+    caseItem.timeline.push({ at, event: `${prefix}Intern SMS-avisering misslyckades: ${resultError(notifications.staffSms)}.` });
+  }
+  if (notifications.customerEmail?.status === "sent") {
+    caseItem.timeline.push({ at: notifications.customerEmail.sentAt || at, event: `${prefix}E-postbekraftelse skickad till kund.` });
+  } else if (needsRetry(notifications.customerEmail)) {
+    caseItem.timeline.push({ at, event: `${prefix}E-postbekraftelse misslyckades: ${resultError(notifications.customerEmail)}.` });
+  }
+  if (notifications.workshopEmail?.status === "sent") {
+    caseItem.timeline.push({ at: notifications.workshopEmail.sentAt || at, event: `${prefix}Intern e-post skickad till verkstaden.` });
+  } else if (needsRetry(notifications.workshopEmail)) {
+    caseItem.timeline.push({ at, event: `${prefix}Intern e-post misslyckades: ${resultError(notifications.workshopEmail)}.` });
+  }
+};
+
+const retryFailedBookingNotifications = async ({ caseItem, store, smsRequested }) => {
+  if (!caseItem.confirmation_missing) return;
+  await delay(RETRY_DELAY_MS);
+
+  const retryResult = {};
+  if (needsRetry(caseItem.notifications.sms)) retryResult.sms = await sendSmsConfirmation(caseItem, smsRequested);
+  if (needsRetry(caseItem.notifications.staffSms)) retryResult.staffSms = await sendWorkshopSmsNotification(caseItem);
+  if (needsRetry(caseItem.notifications.customerEmail)) retryResult.customerEmail = await sendCustomerEmail(caseItem);
+  if (needsRetry(caseItem.notifications.workshopEmail)) retryResult.workshopEmail = await sendWorkshopEmail(caseItem);
+
+  if (!Object.keys(retryResult).length) return;
+
+  caseItem.notifications = { ...caseItem.notifications, ...retryResult };
+  addNotificationTimeline(caseItem, retryResult, "Retry: ");
+  updateConfirmationFlags(caseItem);
+  caseItem.updatedAt = new Date().toISOString();
+  await store.setJSON(caseItem.id, caseItem);
+  logBookingDelivery(caseItem, { retry: true });
 };
 
 const base64Url = (input) =>
@@ -859,7 +934,7 @@ const createCalendarEvent = async (caseItem) => {
   }
 };
 
-export default async (request) => {
+export default async (request, context) => {
   if (request.method !== "POST") {
     return json({ error: "Method not allowed" }, 405);
   }
@@ -887,6 +962,7 @@ export default async (request) => {
       discountCode: clean(body.discountCode, 40) || null,
       contactMethod: clean(body.contactMethod, 40) || "phone",
       logistics: clean(body.logistics, 80) || "dropoff",
+      pickup_for_case_id: clean(body.pickupCaseId, 160) || null,
       assignedTo,
       customer: {
         name: clean(body.name),
@@ -909,6 +985,15 @@ export default async (request) => {
         customerEmail: { status: body.email ? "pending" : "not_requested" },
         workshopEmail: { status: "pending" },
         calendar: { status: "pending" },
+      },
+      confirmation_sent: false,
+      confirmation_missing: false,
+      confirmation: {
+        sms_sent: false,
+        email_sent: false,
+        workshop_alert: false,
+        missing: false,
+        updatedAt: now,
       },
       timeline: [
         { at: now, event: `Bokning skapad via hemsidan. Startansvar: ${assignedTo.name}` },
@@ -944,6 +1029,16 @@ export default async (request) => {
 
     const store = getStore({ name: "workshop-cases", consistency: "strong" });
     await store.setJSON(id, caseItem);
+    if (caseItem.pickup_for_case_id) {
+      const originalCase = await store.getJSON(caseItem.pickup_for_case_id).catch(() => null);
+      if (originalCase) {
+        originalCase.pickup_booked_at = now;
+        originalCase.pickup_booking_case_id = id;
+        originalCase.timeline = Array.isArray(originalCase.timeline) ? originalCase.timeline : [];
+        originalCase.timeline.push({ at: now, event: `Kund bokade upphamtning: ${shortCaseId(id)}.` });
+        await store.setJSON(originalCase.id, originalCase);
+      }
+    }
 
     const calendar = await createCalendarEvent(caseItem);
     caseItem.notifications.calendar = calendar;
@@ -957,34 +1052,18 @@ export default async (request) => {
     }
     caseItem.timeline.push({ at: calendar.createdAt, event: "Kalenderhandelse skapad for verkstaden." });
 
-    const [sms, staffSms, customerEmail, workshopEmail] = await Promise.all([
-      sendSmsConfirmation(caseItem, smsRequested),
-      sendWorkshopSmsNotification(caseItem),
-      sendCustomerEmail(caseItem),
-      sendWorkshopEmail(caseItem),
-    ]);
-    const customerDelivery = customerDeliverySummary({ sms, customerEmail });
-    caseItem.customerDelivery = customerDelivery;
-    caseItem.notifications = { sms, staffSms, customerEmail, workshopEmail, calendar, calendarAvailability: availability, customerDelivery };
-    if (sms.status === "sent") {
-      caseItem.timeline.push({ at: sms.sentAt, event: "SMS-bekraftelse skickad till kund." });
-    }
-    if (staffSms.status === "sent" || staffSms.status === "partial") {
-      caseItem.timeline.push({ at: staffSms.sentAt, event: "Intern SMS-avisering skickad." });
-    }
-    if (customerEmail.status === "sent") {
-      caseItem.timeline.push({ at: customerEmail.sentAt, event: "E-postbekraftelse skickad till kund." });
-    }
-    if (workshopEmail.status === "sent") {
-      caseItem.timeline.push({ at: workshopEmail.sentAt, event: "Intern e-post skickad till verkstaden." });
-    }
-    if (customerDelivery.status === "partial") {
-      caseItem.timeline.push({ at: new Date().toISOString(), event: `Kundbekraftelse delvis skickad. ${customerDelivery.nextStep}` });
-    }
-    if (customerDelivery.needsAttention) {
-      caseItem.timeline.push({ at: new Date().toISOString(), event: `Kundbekraftelse misslyckades. ${customerDelivery.nextStep}` });
-    }
+    const { sms, staffSms, customerEmail, workshopEmail } = await sendBookingNotifications(caseItem, smsRequested);
+    caseItem.notifications = { sms, staffSms, customerEmail, workshopEmail, calendar, calendarAvailability: availability };
+    addNotificationTimeline(caseItem, caseItem.notifications);
+    updateConfirmationFlags(caseItem);
     await store.setJSON(id, caseItem);
+    logBookingDelivery(caseItem);
+
+    if (caseItem.confirmation_missing) {
+      const retryTask = retryFailedBookingNotifications({ caseItem, store, smsRequested })
+        .catch((error) => console.error(`[BOOKING ${caseItem.id}] retry_failed`, error));
+      if (context?.waitUntil) context.waitUntil(retryTask);
+    }
 
     return json({ ok: true, id, case: caseItem }, 201);
   } catch (error) {
