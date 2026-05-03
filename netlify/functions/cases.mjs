@@ -257,5 +257,5 @@ export default async (request) => {
 };
 
 export const config = {
-  path: ["/api/cases", "/api/cases/:id"],
+  path: ["/api/rescue-cases-disabled", "/api/rescue-cases-disabled/:id"],
 };

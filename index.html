@@ -503,30 +503,6 @@ nav a:hover{color:#fff}
 .navee-shot-btn:hover{border-color:#00C853;color:#00C853}
 .navee-shot-btn--primary:hover{color:#04150a;filter:brightness(1.04)}
 
-/* SHOWROOM */
-.showroom{padding:84px 0;background:#050705;border-top:1px solid #121a14}
-.showroom-grid{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,.9fr);gap:20px;margin-top:36px}
-.showroom-stage{background:#101311;border:1px solid #202822;border-radius:8px;overflow:hidden}
-.showroom-stage-media{aspect-ratio:1.35/1;background:#060806}
-.showroom-stage-media img{width:100%;height:100%;display:block;object-fit:cover}
-.showroom-stage-copy{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:20px;flex-wrap:wrap}
-.showroom-stage-copy h3{margin:8px 0 8px;font-size:28px;line-height:1.08}
-.showroom-stage-copy p{margin:0;max-width:640px;color:#9fb0a1}
-.showroom-kicker{font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:#64dd8a}
-.showroom-thumbs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;padding:0 20px 20px}
-.showroom-thumb{appearance:none;background:#0c100d;border:1px solid #202822;border-radius:8px;padding:8px;cursor:pointer;color:#f6f8f5;text-align:left}
-.showroom-thumb img{width:100%;aspect-ratio:1/1;display:block;border-radius:6px;object-fit:cover;margin-bottom:8px}
-.showroom-thumb strong{display:block;font-size:13px;line-height:1.2}
-.showroom-thumb span{display:block;font-size:12px;color:#8f9b91;margin-top:4px}
-.showroom-thumb.is-active{border-color:#00C853;box-shadow:0 0 0 1px rgba(0,200,83,.25) inset}
-.showroom-aside{display:grid;gap:16px}
-.showroom-card{background:#101311;border:1px solid #202822;border-radius:8px;overflow:hidden}
-.showroom-card img{width:100%;height:240px;display:block;object-fit:cover}
-.showroom-card-copy{padding:18px}
-.showroom-card-copy h3{margin:8px 0 8px;font-size:22px;line-height:1.12}
-.showroom-card-copy p{margin:0;color:#9fb0a1}
-.showroom-note{padding:18px 20px;border-radius:8px;border:1px solid rgba(0,200,83,.22);background:rgba(0,200,83,.07);color:#d7ded8}
-
 /* BLOG */
 .blog{padding:80px 0;background:#0a0a0a}
 .blog-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:20px;margin-top:40px}
@@ -579,9 +555,6 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   .pricing-grid,.problems-grid{grid-template-columns:1fr}
   .trust-grid{grid-template-columns:1fr}
   .calc-wrap{grid-template-columns:1fr}
-  .showroom-grid{grid-template-columns:1fr}
-  .showroom-thumbs{grid-template-columns:1fr}
-  .showroom-stage-copy h3{font-size:24px}
   .blog-grid{grid-template-columns:1fr}
   .navee-lookbook{grid-template-columns:1fr 1fr}
   .navee-shot--feature{grid-column:1 / -1;min-height:320px}
@@ -1094,7 +1067,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   <p class="section-sub">Alla scootrar levereras inspekterade och redo att köra. Vi är auktoriserade återförsäljare för NAVEE och TEVERUN.</p>
   <div class="legal-note">Produktinfo ska l&auml;sas tillsammans med anv&auml;ndningsomr&aring;de. Modeller med h&ouml;g effekt eller h&ouml;g hastighet kan vara avsedda f&ouml;r privat mark eller inh&auml;gnat omr&aring;de, inte vanlig trafik. <a href="/regler-elscooter/">L&auml;s regelguiden innan k&ouml;p</a>.</div>
 
-  <div class="legal-note" style="margin-bottom:10px;background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.22);color:#dce8df">Betala tryggt med <strong>kort, Klarna och andra tillg&auml;ngliga betals&auml;tt</strong>. Stripe visar de alternativ som &auml;r aktiverade och kvalificerade f&ouml;r ordern. Vi hj&auml;lper dig med leverans, showroomfr&aring;gor och service efter k&ouml;pet.</div>
+  <div class="legal-note" style="margin-bottom:10px;background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.22);color:#dce8df">Betala tryggt med <strong>kort, Klarna och andra tillg&auml;ngliga betals&auml;tt</strong>. Stripe visar de alternativ som &auml;r aktiverade och kvalificerade f&ouml;r ordern. Vi hj&auml;lper dig med leverans, r&aring;dgivning och service efter k&ouml;pet.</div>
   <!-- NAVEE -->
   <div style="display:flex;align-items:center;gap:12px;margin:40px 0 8px">
     <span style="font-size:20px;font-weight:800;letter-spacing:2px;color:#fff">NAVEE</span>
@@ -1262,66 +1235,6 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
     <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">I LAGER</div><img width="500" height="500" loading="lazy" decoding="async" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/KuKirin_G3_Pro_36.jpg?v=1774524745" alt="KuKirin G3 Pro" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#128293;'"></div><div class="prod-body"><div class="prod-name">G3 Pro</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1200W &bull; 52V 23Ah &bull; 1 196 Wh &bull; 80 km</div><div class="prod-price">18 990 kr</div><a class="prod-btn stripe-buy" data-product="kukirin-g3-pro" data-price="18990">K&ouml;p nu</a></div></div>
     <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">I LAGER</div><img width="500" height="500" loading="lazy" decoding="async" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/74b96dbb2d19db9758ba306fc55ad040.jpg?v=1708069782" alt="KuKirin G4 Max" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#128293;'"></div><div class="prod-body"><div class="prod-name">G4 Max</div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1600W &bull; 60V 35.2Ah &bull; 2 112 Wh &bull; 95 km</div><div class="prod-price">26 990 kr</div><a class="prod-btn stripe-buy" data-product="kukirin-g4-max" data-price="26990">K&ouml;p nu</a></div></div>
-  </div>
-</div>
-</section>
-
-<!-- SHOWROOM -->
-<section class="showroom" id="showroom">
-<div class="container">
-  <span class="section-label">Showroom / verkstad</span>
-  <h2 class="section-title">Riktiga maskiner. Riktiga vinklar.</h2>
-  <p class="section-sub">Vi bygger upp en mer premium produktupplevelse med egna verkstadsbilder. H&auml;r kan kunden redan nu v&auml;xla mellan flera vyer i st&auml;llet f&ouml;r att bara se generiska katalogbilder.</p>
-  <div class="showroom-grid">
-    <div class="showroom-stage">
-      <div class="showroom-stage-media">
-        <img id="showroomMainImage" loading="lazy" decoding="async" src="/assets/showroom/showroom-custom-full.jpg" alt="Specialbyggd elscooter fotograferad i verkstaden hos Nordic E-Mobility">
-      </div>
-      <div class="showroom-stage-copy">
-        <div>
-          <div class="showroom-kicker" id="showroomAngle">Helvy</div>
-          <h3 id="showroomTitle">Custom-scooter med grova d&auml;ck och riktiga komponenter.</h3>
-          <p id="showroomDescription">V&auml;xla mellan helvy och detaljbilder f&ouml;r att se hur ett verkligt bygge ser ut i verkstaden. Det h&auml;r &auml;r steget innan full 360-visning av toppmodellerna.</p>
-        </div>
-        <a href="/book-online/" class="btn-primary">Fr&aring;ga om liknande bygge</a>
-      </div>
-      <div class="showroom-thumbs">
-        <button class="showroom-thumb is-active" type="button" data-image="/assets/showroom/showroom-custom-full.jpg" data-angle="Helvy" data-title="Custom-scooter med grova d&auml;ck och riktiga komponenter." data-description="Helhetsbilden ger proportion, markfrig&aring;ng och den robusta upps&auml;ttningen direkt.">
-          <img loading="lazy" decoding="async" src="/assets/showroom/showroom-custom-full.jpg" alt="Helvy av custom elscooter">
-          <strong>Helvy</strong>
-          <span>Proportion, stance och helhetsk&auml;nsla.</span>
-        </button>
-        <button class="showroom-thumb" type="button" data-image="/assets/showroom/showroom-custom-rear-detail.jpg" data-angle="Bakdetalj" data-title="Bakdel, st&ouml;td&auml;mpare och inf&auml;stning i n&auml;rbild." data-description="Den h&auml;r vyn lyfter upp finishen i bakpartiet och g&ouml;r det l&auml;ttare att visa upp detaljer som annars f&ouml;rsvinner i katalogbilder.">
-          <img loading="lazy" decoding="async" src="/assets/showroom/showroom-custom-rear-detail.jpg" alt="Detaljbild p&aring; bakhjul, d&auml;mpare och inf&auml;stning">
-          <strong>Bakdetalj</strong>
-          <span>D&auml;mpare, inf&auml;stning och grovt gummi.</span>
-        </button>
-        <button class="showroom-thumb" type="button" data-image="/assets/showroom/showroom-custom-cockpit.jpg" data-angle="Cockpit" data-title="Cockpit, styrk&auml;nsla och frontdetaljer." data-description="Cockpitvyn visar att maskinen &auml;r verklig, p&aring; plats och byggd f&ouml;r anv&auml;ndning - inte bara en render.">
-          <img loading="lazy" decoding="async" src="/assets/showroom/showroom-custom-cockpit.jpg" alt="Cockpitdetalj p&aring; custom elscooter i verkstaden">
-          <strong>Cockpit</strong>
-          <span>Styr, front och n&auml;rvaro p&aring; riktigt.</span>
-        </button>
-      </div>
-    </div>
-    <div class="showroom-aside">
-      <article class="showroom-card">
-        <img loading="lazy" decoding="async" src="/assets/showroom/showroom-group-wide.jpg" alt="Flera premiumscootrar och elcrossar i Nordic E-Mobilitys verkstad">
-        <div class="showroom-card-copy">
-          <div class="showroom-kicker">P&aring; plats i &Ouml;rebro</div>
-          <h3>Flera segment under samma tak.</h3>
-          <p>Showroomk&auml;nslan blir starkare n&auml;r kunderna ser verkliga maskiner, verkliga m&auml;rken och en aktiv verkstadsmilj&ouml; i samma vy.</p>
-        </div>
-      </article>
-      <article class="showroom-card">
-        <img loading="lazy" decoding="async" src="/assets/showroom/showroom-orange-bike.jpg" alt="Orange elcross och prestandascooter i verkstaden">
-        <div class="showroom-card-copy">
-          <div class="showroom-kicker">Premiumk&auml;nsla</div>
-          <h3>Mindre katalog. Mer verklighet.</h3>
-          <p>Egna bilder g&ouml;r sortimentet tryggare och mer levande. N&auml;sta steg &auml;r att fotografera toppmodellerna i full rundserie f&ouml;r riktig 360-visning.</p>
-        </div>
-      </article>
-      <div class="showroom-note">Riktig 360 eller AR kr&auml;ver en komplett serie bilder i j&auml;mna vinklar eller en 3D-scan. Nu har sajten i st&auml;llet f&aring;tt en interaktiv flervy som &auml;r &auml;rlig, snygg och byggd p&aring; riktiga verkstadsbilder.</div>
-    </div>
   </div>
 </div>
 </section>
@@ -1519,24 +1432,6 @@ document.querySelectorAll('.stripe-buy').forEach(btn=>{
         button.style.pointerEvents='auto';
       }
     }
-  });
-});
-
-// === SHOWROOM SWITCHER ===
-document.querySelectorAll('.showroom-thumb').forEach(btn=>{
-  btn.addEventListener('click',()=>{
-    const mainImage=document.getElementById('showroomMainImage');
-    const angle=document.getElementById('showroomAngle');
-    const title=document.getElementById('showroomTitle');
-    const description=document.getElementById('showroomDescription');
-    if(!mainImage||!angle||!title||!description)return;
-    mainImage.src=btn.dataset.image;
-    mainImage.alt=btn.querySelector('img')?.alt||mainImage.alt;
-    angle.textContent=btn.dataset.angle||'Vy';
-    title.textContent=btn.dataset.title||title.textContent;
-    description.textContent=btn.dataset.description||description.textContent;
-    document.querySelectorAll('.showroom-thumb').forEach(item=>item.classList.remove('is-active'));
-    btn.classList.add('is-active');
   });
 });
 
