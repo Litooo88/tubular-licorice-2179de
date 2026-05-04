@@ -33,6 +33,40 @@ button:disabled{opacity:.6;cursor:wait}
 .toolbar{display:flex;gap:10px;align-items:end;justify-content:space-between;flex-wrap:wrap;margin:18px 0}
 .filters{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
 .filters .search-filter{min-width:280px}
+.workshop-tools{display:grid;grid-template-columns:minmax(520px,1.2fr) minmax(420px,.8fr);gap:14px;margin:18px 0}
+.tool-panel{padding:16px}
+.tool-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.tool-head h2{margin:0;font-size:18px}
+.tool-head p{margin:4px 0 0;color:#9ea79f;font-size:13px;line-height:1.45}
+.tool-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+.price-toolbar{display:grid;grid-template-columns:1fr auto auto;gap:8px;margin-bottom:12px}
+.price-table-wrap{max-height:430px;overflow:auto;border:1px solid #263029;border-radius:8px}
+.price-table{width:100%;border-collapse:collapse;min-width:880px}
+.price-table th,.price-table td{padding:8px;border-bottom:1px solid #263029;text-align:left;vertical-align:top}
+.price-table th{position:sticky;top:0;background:#111711;color:#a8b2aa;font-size:11px;text-transform:uppercase;letter-spacing:.08em;z-index:1}
+.price-table input,.price-table select{padding:8px;font-size:13px}
+.price-table .price-active{width:22px;height:22px;accent-color:#00c853}
+.price-name{min-width:230px}
+.price-money{max-width:96px}
+.price-note{min-width:190px}
+.pos-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.pos-grid .full{grid-column:1 / -1}
+.pos-results{display:grid;gap:8px;max-height:220px;overflow:auto;margin:10px 0}
+.pos-result{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;border:1px solid #263029;background:#060806;border-radius:8px;padding:10px;text-align:left;color:#fff}
+.pos-result small{display:block;color:#9ea79f;margin-top:3px;line-height:1.35}
+.pos-lines{border:1px solid #263029;border-radius:8px;margin-top:10px;overflow:hidden}
+.pos-line{display:grid;grid-template-columns:1fr 78px 96px 34px;gap:8px;align-items:center;padding:9px;border-bottom:1px solid #263029;background:#060806}
+.pos-line:last-child{border-bottom:0}
+.pos-line strong{font-size:13px}
+.pos-line small{display:block;color:#9ea79f;margin-top:2px}
+.pos-line input{padding:8px}
+.pos-remove{padding:7px 9px;background:#3b1014;color:#ffe1e3;border:1px solid #7c2730}
+.pos-total{display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(0,200,83,.32);background:rgba(0,200,83,.08);border-radius:8px;padding:12px;margin-top:10px}
+.pos-total b{font-size:24px;color:#9fffc1}
+.pos-buttons{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+.pos-status{display:none;margin-top:10px;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.45}
+.pos-status.ok{display:block;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#e6ffef}
+.pos-status.bad{display:block;background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}
 .board{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;align-items:start}
 .column{padding:12px;min-height:220px}
 .column h2{font-size:14px;margin:0 0 10px;display:flex;align-items:center;justify-content:space-between}
@@ -147,8 +181,9 @@ textarea{min-height:66px;resize:vertical}
 .contact-state.done::before{background:#00c853;box-shadow:0 0 0 3px rgba(0,200,83,.18)}
 .contact-state.waiting{color:#cce2ff}
 .contact-state.waiting::before{background:#4ba3ff;box-shadow:0 0 0 3px rgba(75,163,255,.18)}
-  @media(max-width:1200px){.board{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions,.media-grid,.content-actions,.tick-grid{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}}
+  @media(max-width:1200px){.board,.workshop-tools{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:980px){.workshop-tools{grid-template-columns:1fr}}
+  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions,.media-grid,.content-actions,.tick-grid,.price-toolbar,.pos-grid,.pos-buttons{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}.pos-line{grid-template-columns:1fr 72px}.pos-line .pos-remove{grid-column:1 / -1}}
 </style>
 </head>
 <body>
@@ -191,6 +226,56 @@ textarea{min-height:66px;resize:vertical}
       <div><label for="statusFilter">Status</label><select id="statusFilter"><option value="">Alla</option><option value="new">Ny</option><option value="contacted">Kontaktad</option><option value="waiting_customer">V&auml;ntar kund</option><option value="checked_in">Inl&auml;mnad</option><option value="diagnosing">Diagnos</option><option value="repairing">Reparerar</option><option value="waiting_parts">V&auml;ntar delar</option><option value="ready">Klar</option><option value="done">Avslutad</option></select></div>
     </div>
   </div>
+
+  <section class="workshop-tools">
+    <div class="panel tool-panel">
+      <div class="tool-head">
+        <div>
+          <h2>Prisdatabas</h2>
+          <p>S&ouml;k, justera och f&ouml;rbered artikelnummer f&ouml;r Fortnox. Alla rader sparas bakom admin-token.</p>
+        </div>
+        <div class="tool-actions">
+          <button type="button" class="secondary" id="addPriceRow">Ny prisrad</button>
+          <button type="button" id="savePrices">Spara priser</button>
+        </div>
+      </div>
+      <div class="price-toolbar">
+        <div><label for="priceSearch">S&ouml;k pris</label><input id="priceSearch" placeholder="Punktering, batteri, artikelnummer..."></div>
+        <div><label for="priceCategory">Kategori</label><select id="priceCategory"><option value="">Alla</option></select></div>
+        <div><label>&nbsp;</label><button type="button" class="secondary" id="reloadPrices">Ladda om</button></div>
+      </div>
+      <div class="price-table-wrap">
+        <table class="price-table">
+          <thead><tr><th>Aktiv</th><th>Artikel</th><th>Kategori</th><th>Namn</th><th>Pris</th><th>Enhet</th><th>Fortnox</th><th>Notering</th></tr></thead>
+          <tbody id="priceRows"><tr><td colspan="8">Laddar prisdatabas...</td></tr></tbody>
+        </table>
+      </div>
+      <div class="pos-status" id="priceStatus"></div>
+    </div>
+
+    <div class="panel tool-panel">
+      <div class="tool-head">
+        <div>
+          <h2>Kassa / prisf&ouml;rslag</h2>
+          <p>Touchl&auml;ge f&ouml;r utl&auml;mning: v&auml;lj kund, l&auml;gg prisrader och spara p&aring; &auml;rendet.</p>
+        </div>
+      </div>
+      <div class="pos-grid">
+        <div class="full"><label for="posCase">Kund / &auml;rende</label><select id="posCase"><option value="">V&auml;lj &auml;rende</option></select></div>
+        <div><label for="posPaymentMethod">Betals&auml;tt</label><select id="posPaymentMethod"><option value="swish">Swish</option><option value="card">Kort</option><option value="cash">Kontant</option><option value="invoice">Faktura</option><option value="bank">Bank</option><option value="other">Annat</option></select></div>
+        <div><label for="posReference">Referens</label><input id="posReference" placeholder="Swish-id, kvitto, fakturanr..."></div>
+        <div class="full"><label for="posSearch">L&auml;gg till prisrad</label><input id="posSearch" placeholder="S&ouml;k t.ex. 10 tum, grundservice, batteri"></div>
+      </div>
+      <div class="pos-results" id="posResults"></div>
+      <div class="pos-lines" id="posLines"><div class="empty">Inga prisrader valda.</div></div>
+      <div class="pos-total"><span>Totalt inkl. moms</span><b id="posTotal">0 kr</b></div>
+      <div class="pos-buttons">
+        <button type="button" class="secondary" id="savePosQuote">Spara p&aring; &auml;rende</button>
+        <button type="button" id="savePosPaid">Registrera betalt + avsluta</button>
+      </div>
+      <div class="pos-status" id="posStatus"></div>
+    </div>
+  </section>
 
   <section class="board" id="board"></section>
 </main>
@@ -258,7 +343,21 @@ const calendarResultEl=document.getElementById('calendarResult');
 const ownerFilter=document.getElementById('ownerFilter');
 const statusFilter=document.getElementById('statusFilter');
 const searchFilter=document.getElementById('searchFilter');
+const priceRowsEl=document.getElementById('priceRows');
+const priceSearch=document.getElementById('priceSearch');
+const priceCategory=document.getElementById('priceCategory');
+const priceStatus=document.getElementById('priceStatus');
+const posCase=document.getElementById('posCase');
+const posPaymentMethod=document.getElementById('posPaymentMethod');
+const posReference=document.getElementById('posReference');
+const posSearch=document.getElementById('posSearch');
+const posResults=document.getElementById('posResults');
+const posLinesEl=document.getElementById('posLines');
+const posTotalEl=document.getElementById('posTotal');
+const posStatus=document.getElementById('posStatus');
 let cases=[];
+let priceItems=[];
+let posLines=[];
 let isLoadingCases=false;
 const cardTabState={};
 
@@ -269,6 +368,14 @@ document.getElementById('calendarTest').addEventListener('click',testCalendar);
 ownerFilter.addEventListener('change',render);
 statusFilter.addEventListener('change',render);
 searchFilter.addEventListener('input',render);
+document.getElementById('reloadPrices').addEventListener('click',()=>loadPriceCatalog());
+document.getElementById('addPriceRow').addEventListener('click',addPriceRow);
+document.getElementById('savePrices').addEventListener('click',savePriceCatalog);
+document.getElementById('savePosQuote').addEventListener('click',()=>savePosToCase(false));
+document.getElementById('savePosPaid').addEventListener('click',()=>savePosToCase(true));
+priceSearch.addEventListener('input',()=>{renderPriceCatalog();renderPosResults();});
+priceCategory.addEventListener('change',renderPriceCatalog);
+posSearch.addEventListener('input',renderPosResults);
 
 function money(value){return new Intl.NumberFormat('sv-SE',{style:'currency',currency:'SEK',maximumFractionDigits:0}).format(Number(value||0));}
 function reviewUrl(){return String(adminPublicConfig.reviewUrl||'').trim();}
@@ -817,6 +924,209 @@ async function api(path,options={}){
   return data;
 }
 
+function setPanelStatus(element,message,bad=false){
+  element.textContent=message||'';
+  element.className=`pos-status ${message?(bad?'bad':'ok'):''}`;
+}
+
+function priceCategories(){
+  return [...new Set(priceItems.map((item)=>item.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'sv'));
+}
+
+function updatePriceCategoryOptions(){
+  const current=priceCategory.value;
+  priceCategory.innerHTML='<option value="">Alla</option>'+priceCategories().map((category)=>`<option value="${html(category)}">${html(category)}</option>`).join('');
+  if([...priceCategory.options].some((option)=>option.value===current)) priceCategory.value=current;
+}
+
+function filteredPriceItems(forPos=false){
+  const query=String((forPos?posSearch.value:priceSearch.value)||'').trim().toLowerCase();
+  const category=forPos?'':priceCategory.value;
+  return priceItems
+    .filter((item)=>forPos?item.active!==false:true)
+    .filter((item)=>!category||item.category===category)
+    .filter((item)=>{
+      if(!query) return true;
+      const haystack=[item.sku,item.category,item.name,item.price,item.unit,item.fortnoxArticleNumber,item.notes].join(' ').toLowerCase();
+      return haystack.includes(query);
+    });
+}
+
+function syncPriceItemsFromTable(){
+  const updates=[...priceRowsEl.querySelectorAll('tr[data-index]')].map((row)=>({
+    previousId:row.dataset.id,
+    id:row.dataset.id||row.querySelector('[name="sku"]').value.trim().toUpperCase(),
+    active:row.querySelector('[name="active"]').checked,
+    sku:row.querySelector('[name="sku"]').value.trim().toUpperCase(),
+    category:row.querySelector('[name="category"]').value.trim(),
+    name:row.querySelector('[name="name"]').value.trim(),
+    price:Number(row.querySelector('[name="price"]').value||0),
+    unit:row.querySelector('[name="unit"]').value.trim()||'st',
+    fortnoxArticleNumber:row.querySelector('[name="fortnoxArticleNumber"]').value.trim(),
+    notes:row.querySelector('[name="notes"]').value.trim()
+  })).filter((item)=>item.sku||item.name);
+  updates.forEach((update)=>{
+    const index=priceItems.findIndex((item)=>String(item.id||item.sku)===String(update.previousId));
+    const next={...update,id:update.sku||update.id};
+    delete next.previousId;
+    if(index>=0) priceItems[index]=next;
+    else priceItems.unshift(next);
+  });
+}
+
+function renderPriceCatalog(){
+  updatePriceCategoryOptions();
+  const visible=filteredPriceItems(false);
+  priceRowsEl.innerHTML=visible.length?visible.map((item,index)=>`
+    <tr data-index="${index}" data-id="${html(item.id||item.sku)}">
+      <td><input class="price-active" name="active" type="checkbox" ${item.active!==false?'checked':''}></td>
+      <td><input name="sku" value="${html(item.sku||'')}" placeholder="ARTIKEL"></td>
+      <td><input name="category" value="${html(item.category||'')}" placeholder="Kategori"></td>
+      <td><input class="price-name" name="name" value="${html(item.name||'')}" placeholder="Namn"></td>
+      <td><input class="price-money" name="price" type="number" min="0" step="1" value="${Number(item.price||0)}"></td>
+      <td><input name="unit" value="${html(item.unit||'st')}"></td>
+      <td><input name="fortnoxArticleNumber" value="${html(item.fortnoxArticleNumber||'')}" placeholder="Fortnox"></td>
+      <td><input class="price-note" name="notes" value="${html(item.notes||'')}" placeholder="Intern notering"></td>
+    </tr>`).join(''):'<tr><td colspan="8">Inga prisrader matchar filtret.</td></tr>';
+  priceRowsEl.querySelectorAll('input').forEach((input)=>input.addEventListener('change',()=>{syncPriceItemsFromTable();renderPosResults();}));
+}
+
+async function loadPriceCatalog(){
+  try{
+    setPanelStatus(priceStatus,'Laddar prisdatabas...');
+    const data=await api('/api/price-catalog');
+    priceItems=data.items||[];
+    renderPriceCatalog();
+    renderPosResults();
+    setPanelStatus(priceStatus,`Prisdatabas laddad: ${priceItems.length} rader.`);
+  }catch(error){
+    setPanelStatus(priceStatus,error.message,true);
+  }
+}
+
+function addPriceRow(){
+  syncPriceItemsFromTable();
+  priceItems.unshift({id:`LOCAL-${Date.now()}`,sku:`NY-${priceItems.length+1}`,category:'Ovrigt',name:'Ny prisrad',price:0,unit:'st',vatRate:25,fortnoxArticleNumber:'',active:true,notes:''});
+  priceSearch.value='';
+  priceCategory.value='';
+  renderPriceCatalog();
+}
+
+async function savePriceCatalog(){
+  try{
+    syncPriceItemsFromTable();
+    if(!priceItems.length){setPanelStatus(priceStatus,'Lägg till minst en prisrad innan du sparar.',true);return;}
+    setPanelStatus(priceStatus,'Sparar prisdatabas...');
+    const data=await api('/api/price-catalog',{method:'PUT',body:JSON.stringify({items:priceItems})});
+    priceItems=data.items||priceItems;
+    renderPriceCatalog();
+    renderPosResults();
+    setPanelStatus(priceStatus,`Sparat: ${priceItems.length} prisrader.`);
+  }catch(error){
+    setPanelStatus(priceStatus,error.message,true);
+  }
+}
+
+function updatePosCaseOptions(){
+  const current=posCase.value;
+  const visible=cases
+    .filter((item)=>!['archived'].includes(item.status))
+    .sort((a,b)=>String(b.updatedAt||b.createdAt).localeCompare(String(a.updatedAt||a.createdAt)));
+  posCase.innerHTML='<option value="">Välj ärende</option>'+visible.map((item)=>{
+    const label=[item.customer&&item.customer.name,item.vehicle&&item.vehicle.model,shortId(item.id),statusLabels[item.status]||item.status].filter(Boolean).join(' - ');
+    return `<option value="${html(item.id)}">${html(label)}</option>`;
+  }).join('');
+  if([...posCase.options].some((option)=>option.value===current)) posCase.value=current;
+}
+
+function addPosLine(item){
+  const existing=posLines.find((line)=>line.sku===item.sku);
+  if(existing){
+    existing.qty+=1;
+  }else{
+    posLines.push({sku:item.sku,name:item.name,category:item.category,price:Number(item.price||0),qty:1,unit:item.unit||'st',fortnoxArticleNumber:item.fortnoxArticleNumber||''});
+  }
+  renderPosLines();
+}
+
+function renderPosResults(){
+  const matches=filteredPriceItems(true).slice(0,8);
+  posResults.innerHTML=matches.length?matches.map((item)=>`
+    <button type="button" class="pos-result" data-sku="${html(item.sku)}">
+      <span><strong>${html(item.name)}</strong><small>${html(item.category)} · ${html(item.sku)}${item.fortnoxArticleNumber?` · Fortnox ${html(item.fortnoxArticleNumber)}`:''}</small></span>
+      <b>${money(item.price)}</b>
+    </button>`).join(''):'<div class="empty">Sök i prisdatabasen för att lägga till rader.</div>';
+  posResults.querySelectorAll('.pos-result').forEach((button)=>button.addEventListener('click',()=>{
+    const item=priceItems.find((entry)=>entry.sku===button.dataset.sku);
+    if(item) addPosLine(item);
+  }));
+}
+
+function posTotal(){
+  return posLines.reduce((sum,line)=>sum+(Number(line.price||0)*Number(line.qty||1)),0);
+}
+
+function renderPosLines(){
+  posLinesEl.innerHTML=posLines.length?posLines.map((line,index)=>`
+    <div class="pos-line" data-index="${index}">
+      <div><strong>${html(line.name)}</strong><small>${html(line.sku)} · ${html(line.category||'')}</small></div>
+      <input name="qty" type="number" min="1" step="1" value="${Number(line.qty||1)}" aria-label="Antal">
+      <input name="price" type="number" min="0" step="1" value="${Number(line.price||0)}" aria-label="Pris">
+      <button type="button" class="pos-remove" aria-label="Ta bort">×</button>
+    </div>`).join(''):'<div class="empty">Inga prisrader valda.</div>';
+  posLinesEl.querySelectorAll('.pos-line').forEach((row)=>{
+    const index=Number(row.dataset.index);
+    row.querySelector('[name="qty"]').addEventListener('input',(event)=>{posLines[index].qty=Math.max(1,Number(event.target.value||1));renderPosTotal();});
+    row.querySelector('[name="price"]').addEventListener('input',(event)=>{posLines[index].price=Math.max(0,Number(event.target.value||0));renderPosTotal();});
+    row.querySelector('.pos-remove').addEventListener('click',()=>{posLines.splice(index,1);renderPosLines();});
+  });
+  renderPosTotal();
+}
+
+function renderPosTotal(){
+  posTotalEl.textContent=money(posTotal());
+}
+
+function posWorkSummary(){
+  return posLines.map((line)=>`${line.qty} x ${line.name}`).join(', ');
+}
+
+function posInvoiceText(){
+  return posLines.map((line)=>`${line.fortnoxArticleNumber?`${line.fortnoxArticleNumber} `:''}${line.qty} x ${line.name} à ${money(line.price)}`).join('\n');
+}
+
+async function savePosToCase(markPaid=false){
+  try{
+    if(!posCase.value){setPanelStatus(posStatus,'Välj ett ärende först.',true);return;}
+    if(!posLines.length){setPanelStatus(posStatus,'Lägg till minst en prisrad.',true);return;}
+    const total=posTotal();
+    const payload={
+      totalCost:total,
+      workSummary:posWorkSummary(),
+      invoiceText:posInvoiceText(),
+      paymentAmount:total,
+      paymentMethod:posPaymentMethod.value,
+      paymentReference:posReference.value,
+      paymentStatus:markPaid?'paid':'invoice_ready',
+      readyForFortnox:true,
+      note:markPaid?`Kassa: betalt ${total} kr via ${paymentMethodLabels[posPaymentMethod.value]||posPaymentMethod.value}.`:`Kassa: prisunderlag ${total} kr skapat.`
+    };
+    if(markPaid){
+      payload.paidAt=new Date().toISOString();
+      payload.status='done';
+    }
+    setPanelStatus(posStatus,markPaid?'Registrerar betalning...':'Sparar prisunderlag...');
+    await api('/api/cases/'+encodeURIComponent(posCase.value),{method:'PATCH',body:JSON.stringify(payload)});
+    posLines=[];
+    posReference.value='';
+    renderPosLines();
+    await loadCases();
+    setPanelStatus(posStatus,markPaid?'Betalning registrerad och ärendet avslutat.':'Prisunderlag sparat på ärendet.');
+  }catch(error){
+    setPanelStatus(posStatus,error.message,true);
+  }
+}
+
 function openEditorIds(){
   return [...document.querySelectorAll('.edit-wrap[open] form[data-id]')].map((form)=>form.dataset.id);
 }
@@ -910,6 +1220,7 @@ async function testCalendar(){
 
 function render(){
   const active=cases.filter(item=>!['done','archived'].includes(item.status));
+  updatePosCaseOptions();
   document.getElementById('activeTotal').textContent=active.length;
   document.getElementById('valueTotal').textContent=money(active.reduce((sum,item)=>sum+Number(item.estimatedValue||0),0));
   document.getElementById('newTotal').textContent=cases.filter(item=>item.status==='new').length;
@@ -1965,6 +2276,7 @@ function readyMailTemplate(item,overrides={}){
   return `${greeting}\n\nDin ${data.vehicleModel} \u00e4r nu klar f\u00f6r upph\u00e4mtning hos Nordic E-Mobility.\n\nUtf\u00f6rda \u00e5tg\u00e4rder\n${data.workSummary||'Se underlag i \u00e4rendet.'}\n\nTotalt belopp inkl. moms\n${data.totalLabel}\n${readyPaymentLine(item,overrides)}\n\nBoka upph\u00e4mtning\n${data.bookingUrl}\n\n${data.pickupSummary}\n\nAdress\nPistolv\u00e4gen 6, \u00d6rebro\n\nOm du vill att vi reserverar en tid \u00e5t dig g\u00e5r det bra att svara direkt p\u00e5 detta mail eller SMS.\n\n\u00c4rende\n${shortId(item.id)}\n\nV\u00e4nliga h\u00e4lsningar,\nNordic E-Mobility`;
 }
 
+loadPriceCatalog();
 loadPublicConfig().finally(loadCases);
 setInterval(()=>{if(!shouldPauseRefresh())loadCases({background:true});},30000);
 </script>
