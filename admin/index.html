@@ -4,6 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#060806">
+<link rel="manifest" href="/admin/manifest.webmanifest">
 <title>Verkstadsdashboard | Nordic E-Mobility</title>
 <style>
 *{box-sizing:border-box}
@@ -2279,6 +2281,9 @@ function readyMailTemplate(item,overrides={}){
 loadPriceCatalog();
 loadPublicConfig().finally(loadCases);
 setInterval(()=>{if(!shouldPauseRefresh())loadCases({background:true});},30000);
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/admin/service-worker.js').catch(()=>{});
+}
 </script>
 </body>
 </html>

@@ -1,0 +1,24 @@
+{
+  "name": "Nordic E-Mobility Verkstad",
+  "short_name": "Nordic Verkstad",
+  "description": "Admin, prisdatabas och kassa for Nordic E-Mobility.",
+  "start_url": "/admin/",
+  "scope": "/admin/",
+  "display": "standalone",
+  "background_color": "#060806",
+  "theme_color": "#060806",
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/nordic_logo_transparent.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
