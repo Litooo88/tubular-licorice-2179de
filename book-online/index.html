@@ -457,18 +457,40 @@ function setSelectValue(select,value){
   const option=[...select.options].find((entry)=>String(entry.value).toLowerCase()===String(value).toLowerCase());
   if(option)select.value=option.value;
 }
+function readableModel(value){
+  return String(value||'').replace(/-/g,' ').replace(/\s+/g,' ').trim();
+}
+function setOrderPrefill(model){
+  if(!serviceSelect||!model)return;
+  const label=`Beställning av ${model}`;
+  const value=`Beställning av ${model}`;
+  let option=[...serviceSelect.options].find((entry)=>entry.value===value);
+  if(!option){
+    option=new Option(label,value);
+    option.dataset.price='0';
+    option.dataset.owner='Sebastian';
+    serviceSelect.add(option,0);
+  }
+  serviceSelect.value=value;
+  syncServiceChoiceFromSelect();
+}
 function applyPrefillFromUrl(){
   const params=new URLSearchParams(window.location.search);
   const logistics=params.get('logistics');
   const service=params.get('service');
-  const scooter=params.get('scooter');
+  const model=readableModel(params.get('modell')||params.get('model'));
+  const scooter=readableModel(params.get('scooter'))||model;
   const message=params.get('message');
   const caseId=params.get('caseId');
   if(logistics) setSelectValue(logisticsSelect,logistics);
-  if(service) setSelectValue(serviceSelect,service);
+  if(service&&service.toLowerCase()==='bestallning'&&model) setOrderPrefill(model);
+  else if(service) setSelectValue(serviceSelect,service);
   if(scooter){
     const scooterInput=document.getElementById('scooter');
     if(scooterInput) scooterInput.value=scooter;
+  }
+  if(service&&service.toLowerCase()==='bestallning'&&model&&messageInput&&!messageInput.value){
+    messageInput.value=`Jag vill beställa ${model}. Kontakta mig med leveranstid och nästa steg.`;
   }
   if(message&&messageInput) messageInput.value=message;
   if(caseId&&messageInput&&!messageInput.value.includes(caseId)) messageInput.value=`${messageInput.value ? `${messageInput.value} ` : ''}(Ärende ${caseId})`;
