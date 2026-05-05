@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Prisdatabas | Nordic E-Mobility</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#060806;color:#f5f7f4}.wrap{max-width:1320px;margin:0 auto;padding:24px}a{color:#00c853}h1{font-size:34px;margin:0 0 8px}.muted{color:#9ea79f}.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.nav{display:flex;gap:10px;flex-wrap:wrap}.panel{background:#101410;border:1px solid #28322a;border-radius:8px;padding:18px}label{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#a8b2aa;font-weight:900;margin-bottom:6px}input,select{width:100%;background:#060806;border:1px solid #303a32;border-radius:8px;color:#fff;padding:10px 11px;font:inherit}button{border:0;border-radius:8px;background:#00c853;color:#031006;font-weight:900;padding:11px 14px;cursor:pointer}button.secondary{background:transparent;color:#fff;border:1px solid #d7ded9}.login,.toolbar{display:grid;grid-template-columns:1fr auto auto;gap:10px;align-items:end;margin-bottom:14px}.table-wrap{max-height:68vh;overflow:auto;border:1px solid #263029;border-radius:8px}.price-table{width:100%;border-collapse:collapse;min-width:940px}.price-table th,.price-table td{padding:8px;border-bottom:1px solid #263029;text-align:left;vertical-align:top}.price-table th{position:sticky;top:0;background:#111711;color:#a8b2aa;font-size:11px;text-transform:uppercase;letter-spacing:.08em}.price-table input{padding:8px;font-size:13px}.active{width:22px;height:22px;accent-color:#00c853}.status{display:none;margin-top:12px;border-radius:8px;padding:10px 12px}.status.ok{display:block;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#e6ffef}.status.bad{display:block;background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}@media(max-width:760px){.wrap{padding:14px}.top,.login,.toolbar{display:block}.nav,button{width:100%;margin-top:8px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top"><div><h1>Prisdatabas</h1><p class="muted">Admin-only. Redigera priser och Fortnox-förberedelse här, inte i checkout.</p></div><div class="nav"><a href="/admin/">Admin</a><a href="/checkout/">Checkout</a><a href="/quick-price/">Snabbpris</a><a href="/workshop/">Workshop</a></div></div>
+  <section class="panel">
+    <div class="login"><div><label for="token">Admin-token</label><input id="token" type="password"></div><button id="saveToken">Spara token</button><button class="secondary" id="load">Ladda priser</button></div>
+    <div class="toolbar"><div><label for="search">Sök</label><input id="search" placeholder="Punktering, batteri, artikelnummer..."></div><button class="secondary" id="add">Ny prisrad</button><button id="save">Spara priser</button></div>
+    <div class="table-wrap"><table class="price-table"><thead><tr><th>Aktiv</th><th>Artikel</th><th>Kategori</th><th>Namn</th><th>Pris</th><th>Enhet</th><th>Fortnox</th><th>Notering</th></tr></thead><tbody id="rows"><tr><td colspan="8">Ladda prisdatabasen.</td></tr></tbody></table></div>
+    <div class="status" id="status"></div>
+  </section>
+</main>
+<script>
+const token=document.getElementById('token'),rows=document.getElementById('rows'),statusEl=document.getElementById('status'),search=document.getElementById('search');
+let items=[];
+token.value=localStorage.getItem('nordicAdminToken')||'';
+document.getElementById('saveToken').onclick=()=>{localStorage.setItem('nordicAdminToken',token.value.trim());setStatus('Token sparad.')};
+function html(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function setStatus(msg,bad=false){statusEl.textContent=msg||'';statusEl.className='status '+(msg?(bad?'bad':'ok'):'')}
+async function api(path,options={}){const r=await fetch(path,{...options,headers:{'Content-Type':'application/json','x-admin-token':token.value.trim(),...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Kunde inte läsa data.');return d}
+function sync(){[...rows.querySelectorAll('tr[data-id]')].forEach(row=>{const id=row.dataset.id;const i=items.findIndex(x=>String(x.id||x.sku)===id);if(i<0)return;items[i]={id:row.querySelector('[name=sku]').value.trim().toUpperCase(),sku:row.querySelector('[name=sku]').value.trim().toUpperCase(),active:row.querySelector('[name=active]').checked,category:row.querySelector('[name=category]').value.trim(),name:row.querySelector('[name=name]').value.trim(),price:Number(row.querySelector('[name=price]').value||0),unit:row.querySelector('[name=unit]').value.trim()||'st',fortnoxArticleNumber:row.querySelector('[name=fortnox]').value.trim(),notes:row.querySelector('[name=notes]').value.trim()}})}
+function render(){const q=search.value.trim().toLowerCase();const visible=items.filter(x=>!q||[x.sku,x.category,x.name,x.price,x.fortnoxArticleNumber,x.notes].join(' ').toLowerCase().includes(q));rows.innerHTML=visible.length?visible.map(x=>`<tr data-id="${html(x.id||x.sku)}"><td><input class="active" name="active" type="checkbox" ${x.active!==false?'checked':''}></td><td><input name="sku" value="${html(x.sku)}"></td><td><input name="category" value="${html(x.category)}"></td><td><input name="name" value="${html(x.name)}"></td><td><input name="price" type="number" min="0" step="1" value="${Number(x.price||0)}"></td><td><input name="unit" value="${html(x.unit||'st')}"></td><td><input name="fortnox" value="${html(x.fortnoxArticleNumber||'')}"></td><td><input name="notes" value="${html(x.notes||'')}"></td></tr>`).join(''):'<tr><td colspan="8">Inga rader matchar.</td></tr>'}
+async function load(){try{setStatus('Laddar...');const d=await api('/api/price-catalog');items=d.items||[];render();setStatus(`Laddat ${items.length} prisrader.`)}catch(e){setStatus(e.message,true)}}
+async function save(){try{sync();setStatus('Sparar...');const d=await api('/api/price-catalog',{method:'PUT',body:JSON.stringify({items})});items=d.items||items;render();setStatus('Prisdatabasen är sparad.')}catch(e){setStatus(e.message,true)}}
+document.getElementById('load').onclick=load;document.getElementById('save').onclick=save;search.oninput=render;document.getElementById('add').onclick=()=>{sync();items.unshift({id:`NY-${Date.now()}`,sku:`NY-${items.length+1}`,category:'Ovrigt',name:'Ny prisrad',price:0,unit:'st',active:true,fortnoxArticleNumber:'',notes:''});search.value='';render()};load();
+</script>
+</body>
+</html>

@@ -1,0 +1,213 @@
+# Codex handoff - Nordic E-Mobility
+
+This file is the first stop for any new Codex session on this project.
+
+Keep it current. When a larger feature, rescue operation, deploy-sensitive fix, admin workflow change, payment change, or data-model change is made, update this file in the same PR before handing work back to Sebastian.
+
+## Hard rules
+
+- Work in the real repo only: `E:\nordic-emobility-github-push` or its future renamed path `E:\nordic-emobility-site`.
+- Never work in `C:\Users\Sebas\Downloads\nordic-emobility-site\working\`.
+- Never create new production edits under a nested `working\` folder.
+- Before changing code: `git fetch origin`, switch to `main`, pull fast-forward, then create a new branch.
+- Use focused branches, commit intentionally, push to GitHub, and open a PR against `main`.
+- Do not revert unrelated local files or old temp files unless Sebastian explicitly asks.
+- If a change affects admin, bookings, payments, notifications, Netlify Functions, or data shape, run syntax/build checks and update this handoff.
+
+## Current project state
+
+- The May 1 booking confirmation work was rescued from Downloads and merged.
+- Booking confirmation now has structured send status for SMS/email/workshop alert and confirmation flags.
+- Admin route collision was fixed by disabling the rescued duplicate `cases.mjs` route; live admin cases API is `netlify/functions/workshop-cases.mjs` at `/api/cases`.
+- Public customer scooter/showroom image section was removed from the public website. Customer images/content support must stay internal to admin.
+- Stripe Checkout uses `automatic_payment_methods: { enabled: true }`; Klarna and other methods are controlled in the Stripe Dashboard.
+- The public price list and booking service prices were aligned with Sebastian's provided workshop pricing.
+- Admin has a first version of a price database and touch-friendly POS/pricing workflow.
+- Admin can be installed as a browser app on the workshop Windows touch computer through `/admin/`.
+
+## Important files
+
+- `admin/index.html` - main workshop admin, cases board, price database, POS/pricing workflow, content tooling.
+- `admin/manifest.webmanifest` - makes admin installable as a browser app.
+- `admin/service-worker.js` - caches the admin shell, but API data remains live.
+- `book-online/index.html` - customer booking flow and service choices.
+- `index.html` - public homepage and public price list.
+- `netlify/functions/booking.mjs` - booking creation, notifications, calendar handling, case creation.
+- `netlify/functions/workshop-cases.mjs` - live `/api/cases` admin endpoint.
+- `netlify/functions/price-catalog.mjs` - live `/api/price-catalog` endpoint backed by Netlify Blobs.
+- `netlify/functions/create-checkout.js` - Stripe Checkout for scooter purchases.
+- `netlify.toml` and `_redirects` - Netlify routing/config.
+
+## Architecture notes
+
+- Admin auth uses `ADMIN_TOKEN` sent as `x-admin-token`.
+- Workshop cases are stored in Netlify Blobs store `workshop-cases`.
+- Price catalog is stored in Netlify Blobs store `price-catalog`.
+- `/api/cases` supports listing, patching, deleting cases, and stores completion/payment/content fields.
+- `/api/price-catalog` supports GET and PUT/POST of price rows.
+- Booking flow creates cases and should send customer SMS, customer email, workshop SMS, workshop email, and calendar event when configured.
+- POS/pricing workflow currently writes selected price rows into case fields:
+  - `completion.totalCost`
+  - `completion.workSummary`
+  - `completion.invoiceText`
+  - `completion.readyForFortnox`
+  - `payment.amount`
+  - `payment.status`
+  - `payment.method`
+  - `payment.reference`
+- Fortnox is not live-integrated yet. Current Fortnox support is article-number fields and copyable invoice/faktura text.
+
+## Business rules
+
+- Customer images are internal content support only and must not become a public gallery/showroom without explicit approval.
+- Customers must see clear start prices before booking.
+- Workshop must confirm final price before work when the final cost may differ.
+- Price rows should include Fortnox article numbers when known, to prepare for future sync.
+- Klarna/payment methods should be enabled in Stripe Dashboard, not hardcoded one by one unless there is a specific reason.
+- The workshop touch computer is expected to stay logged into admin, so avoid risky one-click destructive actions.
+- Admin flows should minimize duplicate sends and accidental customer notifications.
+
+## Operational roles
+
+Sebastian = admin/owner.
+- Can edit price database.
+- Can close cases.
+- Can send payment instructions.
+- Can change final prices.
+- Can manage Fortnox/export/payment preparation.
+
+Lennart = workshop operator.
+- Should primarily use /workshop.
+- Should see only what is needed to perform work.
+- Should not edit the price database.
+- Should not send final payment messages unless explicitly allowed.
+- Should document work with photos and short notes.
+- Should mark cases as “Ready for Sebastian review” before final customer communication.
+
+## Core UI routes
+
+/admin
+- Full case overview and admin control.
+
+/workshop
+- Simplified touch-friendly workshop mode for Lennart.
+- Shows active/inlämnade jobs.
+- Focus: what to do, photos, short notes, next status.
+
+/checkout
+- Final payment/receipt flow.
+- Used when job is done or customer pays.
+
+/prices
+- Admin-only price database.
+- Not part of normal workshop flow.
+
+/quick-price
+- Simple price calculator for drop-in customers.
+- Used to give correct estimated price without modifying the full price database.
+
+## Recent merged work
+
+### Admin view split - Task 1 in progress
+
+- Started splitting the previous "everything on one page" admin into purpose-specific routes.
+- `/admin/` is now intended to be full case overview/admin control only.
+- `/prices/` owns price database editing.
+- `/checkout/` owns final payment/receipt flow and reads price rows without editing the catalog.
+- `/workshop/` and `/quick-price/` have route shells for the next focused implementation tasks.
+- Continue incrementally: build `/quick-price` next, then `/workshop`, then harden `/checkout`.
+
+### Booking confirmation rescue
+
+- Rescued `booking.mjs`.
+- Added/kept structured booking notification status.
+- Added confirmation sent/missing flags.
+- Added customer SMS/email templates and workshop notifications.
+- Added pickup flow parameters.
+
+### Admin and public cleanup
+
+- Fixed `/api/cases` collision by keeping `workshop-cases.mjs` as the active route.
+- Removed public customer scooter image/showroom section.
+
+### Payments and booking prices
+
+- Switched Stripe Checkout to dynamic/automatic payment methods.
+- Updated booking service cards and backend estimates:
+  - Punktering/dack: from 349 kr
+  - Service/genomgang: from 395 kr
+  - Felsokning: from 395 kr
+  - Batteri/BMS/controller: from 745 kr
+  - Osaker/bedom pa verkstad: estimate 0
+  - Hamta fardig scooter: estimate 0
+- Updated addon `tire-sealant` to 99 kr.
+
+### Price database and POS
+
+- Added `netlify/functions/price-catalog.mjs`.
+- Seeded initial workshop catalog from the approved pricing.
+- Added admin price database panel.
+- Added POS/pricing panel for attaching price rows to a case.
+- Added save-as-quote and register-paid-and-close flows.
+- Added installable admin browser app support.
+
+## Next priorities
+
+1. Test `/admin/` after Netlify deploy on the workshop touch computer.
+2. Verify `/api/price-catalog` can read/write with `ADMIN_TOKEN` in production.
+3. Test POS flow on a real or test case:
+   - add price rows
+   - save quote
+   - register paid
+   - inspect timeline and case fields
+4. Improve touch mode:
+   - larger buttons
+   - quicker case search
+   - fewer scroll-heavy panels
+   - better receipt/paid state feedback
+5. Strengthen Fortnox preparation:
+   - add required article number warnings
+   - export/copy CSV-like rows
+   - later build real Fortnox API integration
+6. Finish thanks/review/coupon flow:
+   - trigger after paid/done
+   - unique `SCOOTER-XXXXXX` coupons
+   - expiry and redemption tracking
+7. Review admin notification buttons and reduce accidental duplicate sends.
+
+## Start procedure for a new Codex session
+
+Run from the real repo:
+
+```powershell
+git fetch origin
+git switch main
+git pull --ff-only
+git status --short
+```
+
+Then read this file, inspect the files relevant to the task, and create a branch:
+
+```powershell
+git switch -c short-task-name
+```
+
+Before final handoff:
+
+```powershell
+git diff --check
+npm run build
+```
+
+Also run `node --check` on any changed Netlify Function or extracted inline admin script when applicable.
+
+## Remote/continuity note
+
+Codex does not automatically carry this chat history into a new computer/session. The durable handoff is:
+
+- GitHub commits and branches.
+- PR descriptions.
+- This file.
+- Docs under `docs/`.
+
+If Sebastian starts Codex on the workshop computer, tell the new session to read `docs/codex-handoff.md` first.
