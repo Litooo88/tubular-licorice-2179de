@@ -108,6 +108,15 @@ Lennart = workshop operator.
 
 ## Recent merged work
 
+### Admin view split - Task 1 in progress
+
+- Started splitting the previous "everything on one page" admin into purpose-specific routes.
+- `/admin/` is now intended to be full case overview/admin control only.
+- `/prices/` owns price database editing.
+- `/checkout/` owns final payment/receipt flow and reads price rows without editing the catalog.
+- `/workshop/` and `/quick-price/` have route shells for the next focused implementation tasks.
+- Continue incrementally: build `/quick-price` next, then `/workshop`, then harden `/checkout`.
+
 ### Booking confirmation rescue
 
 - Rescued `booking.mjs`.

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Checkout | Nordic E-Mobility</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#060806;color:#f5f7f4}.wrap{max-width:1180px;margin:0 auto;padding:24px}a{color:#00c853}.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}.nav{display:flex;gap:10px;flex-wrap:wrap}.muted{color:#9ea79f}.panel{background:#101410;border:1px solid #28322a;border-radius:8px;padding:18px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}label{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#a8b2aa;font-weight:900;margin-bottom:6px}input,select,textarea{width:100%;background:#060806;border:1px solid #303a32;border-radius:8px;color:#fff;padding:12px;font:inherit}button{border:0;border-radius:8px;background:#00c853;color:#031006;font-weight:900;padding:13px 15px;cursor:pointer}button.secondary{background:transparent;color:#fff;border:1px solid #d7ded9}.results,.lines{display:grid;gap:8px;margin-top:10px}.result,.line{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid #263029;background:#060806;border-radius:8px;padding:12px}.line{grid-template-columns:1fr 76px 94px 36px}.line input{padding:8px}.remove{background:#3b1014;color:#ffe1e3;border:1px solid #7c2730;padding:8px}.total{display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(0,200,83,.32);background:rgba(0,200,83,.08);border-radius:8px;padding:14px;margin-top:10px}.total b{font-size:28px;color:#9fffc1}.actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:10px}.status{display:none;margin-top:12px;border-radius:8px;padding:10px 12px}.status.ok{display:block;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#e6ffef}.status.bad{display:block;background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}.paid{display:inline-flex;border-radius:999px;background:rgba(0,200,83,.14);border:1px solid rgba(0,200,83,.4);color:#baffcf;padding:5px 10px;font-weight:900}@media(max-width:860px){.wrap{padding:14px}.top,.grid,.actions{display:block}.nav,button{width:100%;margin-top:8px}.line{grid-template-columns:1fr 72px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top"><div><h1>Checkout</h1><p class="muted">Finalt betalflöde. Prisdatabasen redigeras inte här.</p></div><div class="nav"><a href="/admin/">Admin</a><a href="/workshop/">Workshop</a><a href="/prices/">Priser</a><a href="/quick-price/">Snabbpris</a></div></div>
+  <section class="panel">
+    <div class="grid">
+      <div><label for="token">Admin-token</label><input id="token" type="password"></div>
+      <div><label>&nbsp;</label><button id="load">Ladda checkout-data</button></div>
+      <div><label for="caseSelect">Kund / ärende</label><select id="caseSelect"><option value="">Välj ärende</option></select></div>
+      <div><label for="method">Betalsätt</label><select id="method"><option value="swish">Swish</option><option value="card">Kort</option><option value="cash">Kontant</option><option value="invoice">Faktura</option></select></div>
+      <div><label for="reference">Betalreferens</label><input id="reference" placeholder="Swish ID, kvitto, fakturanr..."></div>
+      <div><label for="search">Lägg till prisrad</label><input id="search" placeholder="Sök tjänst, kategori eller artikel"></div>
+    </div>
+    <div class="results" id="results"></div>
+    <div class="lines" id="lines"><div class="muted">Inga prisrader valda.</div></div>
+    <div class="total"><span>Totalt inkl. moms</span><b id="total">0 kr</b></div>
+    <textarea id="paymentText" readonly placeholder="Betaltext visas här"></textarea>
+    <div class="actions"><button class="secondary" id="copyPayment">Kopiera betaltext</button><button class="secondary" id="saveInstruction">Skicka betalningsinstruktion</button><button id="markPaid">Markera betald + avsluta ärende</button></div>
+    <div class="status" id="status"></div>
+  </section>
+</main>
+<script>
+const token=document.getElementById('token'),caseSelect=document.getElementById('caseSelect'),method=document.getElementById('method'),reference=document.getElementById('reference'),search=document.getElementById('search'),results=document.getElementById('results'),linesEl=document.getElementById('lines'),totalEl=document.getElementById('total'),paymentText=document.getElementById('paymentText'),statusEl=document.getElementById('status');
+let cases=[],catalog=[],lines=[];
+token.value=localStorage.getItem('nordicAdminToken')||'';
+function html(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function money(v){return new Intl.NumberFormat('sv-SE',{style:'currency',currency:'SEK',maximumFractionDigits:0}).format(Number(v||0))}
+function shortId(id){return String(id||'').replace(/^case_/,'').slice(0,18).toUpperCase()}
+function status(msg,bad=false){statusEl.textContent=msg||'';statusEl.className='status '+(msg?(bad?'bad':'ok'):'')}
+async function api(path,options={}){const r=await fetch(path,{...options,headers:{'Content-Type':'application/json','x-admin-token':token.value.trim(),...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Kunde inte läsa data.');return d}
+function total(){return lines.reduce((s,l)=>s+Number(l.qty||1)*Number(l.price||0),0)}
+function selectedCase(){return cases.find(c=>c.id===caseSelect.value)}
+function invoiceText(){return lines.map(l=>`${l.fortnoxArticleNumber?`${l.fortnoxArticleNumber} `:''}${l.qty} x ${l.name} à ${money(l.price)}`).join('\n')}
+function workSummary(){return lines.map(l=>`${l.qty} x ${l.name}`).join(', ')}
+function swishText(){const item=selectedCase();return `Swisha ${total()} kr till 070-024 33 19.\nMeddelande: ${shortId(item&&item.id)}`}
+function refresh(){totalEl.textContent=money(total());paymentText.value=method.value==='swish'?swishText():`Betalning ${money(total())}. Ärende: ${shortId(caseSelect.value)}. Betalsätt: ${method.options[method.selectedIndex].text}.`;renderLines()}
+function renderCases(){caseSelect.innerHTML='<option value="">Välj ärende</option>'+cases.filter(c=>!['archived','done'].includes(c.status)).map(c=>`<option value="${html(c.id)}">${html([c.customer&&c.customer.name,c.vehicle&&c.vehicle.model,shortId(c.id),c.payment&&c.payment.status==='paid'?'BETALD':''].filter(Boolean).join(' - '))}</option>`).join('')}
+function renderResults(){const q=search.value.trim().toLowerCase();const visible=catalog.filter(x=>x.active!==false).filter(x=>!q||[x.name,x.category,x.sku,x.notes].join(' ').toLowerCase().includes(q)).slice(0,10);results.innerHTML=visible.map(x=>`<button type="button" class="result" data-sku="${html(x.sku)}"><span><strong>${html(x.name)}</strong><br><small>${html(x.category)} · ${html(x.sku)}</small></span><b>${money(x.price)}</b></button>`).join('')||'<div class="muted">Sök i prisdatabasen.</div>';results.querySelectorAll('button').forEach(b=>b.onclick=()=>{const x=catalog.find(i=>i.sku===b.dataset.sku);if(!x)return;const e=lines.find(l=>l.sku===x.sku);if(e)e.qty+=1;else lines.push({sku:x.sku,name:x.name,category:x.category,price:x.price,qty:1,fortnoxArticleNumber:x.fortnoxArticleNumber||''});refresh()})}
+function renderLines(){linesEl.innerHTML=lines.length?lines.map((l,i)=>`<div class="line" data-i="${i}"><div><strong>${html(l.name)}</strong><br><small>${html(l.sku)} · ${html(l.category)}</small></div><input name="qty" type="number" min="1" value="${l.qty}"><input name="price" type="number" min="0" value="${l.price}"><button class="remove">×</button></div>`).join(''):'<div class="muted">Inga prisrader valda.</div>';linesEl.querySelectorAll('.line').forEach(row=>{const i=Number(row.dataset.i);row.querySelector('[name=qty]').oninput=e=>{lines[i].qty=Math.max(1,Number(e.target.value||1));refresh()};row.querySelector('[name=price]').oninput=e=>{lines[i].price=Math.max(0,Number(e.target.value||0));refresh()};row.querySelector('.remove').onclick=()=>{lines.splice(i,1);refresh()}})}
+async function load(){try{localStorage.setItem('nordicAdminToken',token.value.trim());status('Laddar...');const [c,p]=await Promise.all([api('/api/cases'),api('/api/price-catalog')]);cases=c.cases||[];catalog=p.items||[];renderCases();renderResults();refresh();status('Checkout-data laddad.')}catch(e){status(e.message,true)}}
+async function save(markPaid=false){try{if(!caseSelect.value)throw new Error('Välj ärende.');if(!lines.length)throw new Error('Lägg till minst en prisrad.');const payload={totalCost:total(),workSummary:workSummary(),invoiceText:invoiceText(),paymentAmount:total(),paymentMethod:method.value,paymentReference:reference.value,paymentStatus:markPaid?'paid':'invoice_ready',readyForFortnox:true,note:markPaid?`Checkout: betalt ${total()} kr via ${method.value}.`:'Checkout: betalningsinstruktion förberedd.'};if(markPaid){payload.status='done';payload.paidAt=new Date().toISOString()}await api('/api/cases/'+encodeURIComponent(caseSelect.value),{method:'PATCH',body:JSON.stringify(payload)});status(markPaid?'BETALD - ärendet avslutat.':'Betalningsinstruktion markerad på ärendet.');await load()}catch(e){status(e.message,true)}}
+document.getElementById('load').onclick=load;search.oninput=renderResults;method.onchange=refresh;caseSelect.onchange=refresh;document.getElementById('copyPayment').onclick=()=>navigator.clipboard.writeText(paymentText.value).then(()=>status('Betaltext kopierad.')).catch(()=>status('Kunde inte kopiera.',true));document.getElementById('saveInstruction').onclick=()=>save(false);document.getElementById('markPaid').onclick=()=>save(true);load();
+</script>
+</body>
+</html>
