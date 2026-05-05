@@ -117,6 +117,15 @@ Lennart = workshop operator.
 - `/workshop/` and `/quick-price/` have route shells for the next focused implementation tasks.
 - Continue incrementally: build `/quick-price` next, then `/workshop`, then harden `/checkout`.
 
+### Quick price - Task 2
+
+- `/quick-price/` is the drop-in estimate tool.
+- It reads active rows from `/api/price-catalog`; do not hardcode service prices here.
+- It can build a temporary estimate, copy estimate text, generate copyable SMS text when phone is present, and create an internal case from the estimate.
+- Creating a quick-price case uses `POST /api/cases` and stores selected price rows on `completion.priceRows`.
+- It must not send SMS automatically.
+- It must not edit the price catalog.
+
 ### Booking confirmation rescue
 
 - Rescued `booking.mjs`.

@@ -1,1 +1,95 @@
-<!DOCTYPE html><html lang="sv"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="robots" content="noindex, nofollow"><title>Snabbpris | Nordic E-Mobility</title><style>*{box-sizing:border-box}body{margin:0;font-family:Inter,Arial,sans-serif;background:#060806;color:#f5f7f4}.wrap{max-width:980px;margin:0 auto;padding:24px}a{color:#00c853}.panel{background:#101410;border:1px solid #28322a;border-radius:8px;padding:18px}.muted{color:#9ea79f}.nav{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:16px}</style></head><body><main class="wrap"><div class="nav"><a href="/admin/">Admin</a><a href="/workshop/">Workshop</a><a href="/checkout/">Checkout</a><a href="/prices/">Priser</a></div><section class="panel"><h1>Snabbpris</h1><p class="muted">Nästa steg: touchvänlig drop-in-kalkylator som bara läser från /api/price-catalog. Ingen prisredigering här.</p></section></main></body></html>
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Snabbpris | Nordic E-Mobility</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Inter,Arial,sans-serif;background:#060806;color:#f5f7f4}
+a{color:#00c853}.wrap{max-width:1180px;margin:0 auto;padding:24px}
+.top{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}
+h1{font-size:34px;margin:0 0 8px}.muted{color:#9ea79f;line-height:1.5}.nav{display:flex;gap:10px;flex-wrap:wrap}
+.panel{background:#101410;border:1px solid #28322a;border-radius:8px;padding:18px}
+.layout{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(360px,.9fr);gap:14px}
+label{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#a8b2aa;font-weight:900;margin-bottom:6px}
+input,select,textarea{width:100%;background:#060806;border:1px solid #303a32;border-radius:8px;color:#fff;padding:14px;font:inherit}
+button{border:0;border-radius:8px;background:#00c853;color:#031006;font-weight:900;padding:15px 16px;cursor:pointer;font-size:16px}
+button.secondary{background:transparent;color:#fff;border:1px solid #d7ded9}
+button:disabled{opacity:.6;cursor:wait}.toolbar{display:grid;grid-template-columns:1fr 210px;gap:10px;margin-bottom:12px}
+.results{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;max-height:620px;overflow:auto}
+.price-card{display:grid;gap:7px;text-align:left;border:1px solid #263029;background:#060806;color:#f5f7f4;border-radius:8px;padding:16px;min-height:118px}
+.price-card strong{font-size:17px}.price-card small{color:#9ea79f;line-height:1.4}.price-card b{color:#9fffc1;font-size:22px}
+.estimate-lines{display:grid;gap:8px;margin:12px 0}.line{display:grid;grid-template-columns:1fr 76px 96px 36px;gap:8px;align-items:center;border:1px solid #263029;background:#060806;border-radius:8px;padding:10px}
+.line strong{font-size:14px}.line small{display:block;color:#9ea79f;margin-top:3px}.line input{padding:9px}.remove{background:#3b1014;color:#ffe1e3;border:1px solid #7c2730;padding:8px}
+.total{display:flex;justify-content:space-between;align-items:center;border:1px solid rgba(0,200,83,.32);background:rgba(0,200,83,.08);border-radius:8px;padding:15px;margin-top:10px}
+.total b{font-size:32px;color:#9fffc1}.warning{border:1px solid rgba(255,194,71,.4);background:rgba(255,194,71,.12);border-radius:8px;padding:12px;margin:12px 0;color:#fff1cf;font-weight:900}
+.customer-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.customer-grid .full{grid-column:1/-1}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}.actions .wide{grid-column:1/-1}
+.status{display:none;margin-top:12px;border-radius:8px;padding:11px 12px;line-height:1.45}.status.ok{display:block;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#e6ffef}.status.bad{display:block;background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}
+@media(max-width:900px){.wrap{padding:14px}.top,.layout{display:block}.nav{margin-top:10px}.toolbar,.results,.customer-grid,.actions{grid-template-columns:1fr}.line{grid-template-columns:1fr 72px}.remove{grid-column:1/-1}.panel{margin-bottom:14px}}
+</style>
+</head>
+<body>
+<main class="wrap">
+  <div class="top">
+    <div><h1>Snabbpris</h1><p class="muted">Drop-in-kalkylator för korrekt preliminärt pris utan att redigera prisdatabasen.</p></div>
+    <div class="nav"><a href="/admin/">Admin</a><a href="/workshop/">Workshop</a><a href="/checkout/">Checkout</a><a href="/prices/">Priser</a></div>
+  </div>
+
+  <div class="layout">
+    <section class="panel">
+      <div class="toolbar">
+        <div><label for="search">Sök tjänst, kategori eller nyckelord</label><input id="search" autocomplete="off" placeholder="Ex. 10 tum, batteri, grundservice"></div>
+        <div><label for="category">Kategori</label><select id="category"><option value="">Alla</option></select></div>
+      </div>
+      <div class="results" id="results"><div class="muted">Laddar prisdatabas...</div></div>
+    </section>
+
+    <aside class="panel">
+      <h2>Prisförslag</h2>
+      <div class="warning">Preliminärt pris. Slutpris bekräftas alltid innan arbete.</div>
+      <div class="estimate-lines" id="lines"><div class="muted">Tryck på prisrader för att bygga förslaget.</div></div>
+      <div class="total"><span>Totalt inkl. moms</span><b id="total">0 kr</b></div>
+      <div class="customer-grid">
+        <div><label for="name">Namn</label><input id="name" placeholder="Drop-in kund"></div>
+        <div><label for="phone">Telefon, valfritt</label><input id="phone" inputmode="tel" placeholder="070-123 45 67"></div>
+        <div class="full"><label for="vehicle">Scooter / modell</label><input id="vehicle" placeholder="Ex. Xiaomi Pro 2, NAVEE, Ninebot"></div>
+        <div class="full"><label for="note">Kort notering</label><textarea id="note" placeholder="Vad kunden vill få gjort eller vad vi såg vid snabb bedömning."></textarea></div>
+      </div>
+      <textarea id="smsText" readonly placeholder="SMS-text visas här om telefon fylls i."></textarea>
+      <div class="actions">
+        <button type="button" class="secondary" id="copyEstimate">Kopiera prisförslag</button>
+        <button type="button" class="secondary" id="copySms">Kopiera SMS-text</button>
+        <button type="button" class="wide" id="createCase">Skapa ärende från prisförslag</button>
+      </div>
+      <div class="status" id="status"></div>
+    </aside>
+  </div>
+</main>
+
+<script>
+const search=document.getElementById('search'),category=document.getElementById('category'),results=document.getElementById('results'),linesEl=document.getElementById('lines'),totalEl=document.getElementById('total'),nameInput=document.getElementById('name'),phoneInput=document.getElementById('phone'),vehicleInput=document.getElementById('vehicle'),noteInput=document.getElementById('note'),smsText=document.getElementById('smsText'),statusEl=document.getElementById('status');
+let catalog=[],lines=[];
+function html(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function money(v){return new Intl.NumberFormat('sv-SE',{style:'currency',currency:'SEK',maximumFractionDigits:0}).format(Number(v||0))}
+function token(){return localStorage.getItem('nordicAdminToken')||''}
+function setStatus(message,bad=false){statusEl.textContent=message||'';statusEl.className='status '+(message?(bad?'bad':'ok'):'')}
+async function api(path,options={}){const r=await fetch(path,{...options,headers:{'Content-Type':'application/json','x-admin-token':token(),...(options.headers||{})}});const d=await r.json().catch(()=>({}));if(!r.ok)throw new Error(d.error||'Kunde inte läsa data.');return d}
+function total(){return lines.reduce((sum,line)=>sum+Number(line.qty||1)*Number(line.price||0),0)}
+function categories(){return [...new Set(catalog.map(item=>item.category).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'sv'))}
+function renderCategories(){const current=category.value;category.innerHTML='<option value="">Alla</option>'+categories().map(value=>`<option value="${html(value)}">${html(value)}</option>`).join('');if([...category.options].some(option=>option.value===current))category.value=current}
+function filtered(){const q=search.value.trim().toLowerCase();return catalog.filter(item=>item.active!==false).filter(item=>!category.value||item.category===category.value).filter(item=>!q||[item.name,item.category,item.sku,item.notes,item.price].join(' ').toLowerCase().includes(q))}
+function addLine(item){const existing=lines.find(line=>line.sku===item.sku);if(existing)existing.qty+=1;else lines.push({sku:item.sku,name:item.name,category:item.category,price:Number(item.price||0),qty:1,unit:item.unit||'st',fortnoxArticleNumber:item.fortnoxArticleNumber||''});renderLines()}
+function renderResults(){const items=filtered();results.innerHTML=items.length?items.map(item=>`<button type="button" class="price-card" data-sku="${html(item.sku)}"><strong>${html(item.name)}</strong><small>${html(item.category)} · ${html(item.sku)}${item.notes?`<br>${html(item.notes)}`:''}</small><b>${money(item.price)}</b></button>`).join(''):'<div class="muted">Inga prisrader matchar sökningen.</div>';results.querySelectorAll('.price-card').forEach(button=>button.addEventListener('click',()=>{const item=catalog.find(entry=>entry.sku===button.dataset.sku);if(item)addLine(item)}))}
+function renderLines(){linesEl.innerHTML=lines.length?lines.map((line,index)=>`<div class="line" data-index="${index}"><div><strong>${html(line.name)}</strong><small>${html(line.sku)} · ${html(line.category)}</small></div><input name="qty" type="number" min="1" step="1" value="${Number(line.qty||1)}" aria-label="Antal"><input name="price" type="number" min="0" step="1" value="${Number(line.price||0)}" aria-label="Pris"><button type="button" class="remove" aria-label="Ta bort">×</button></div>`).join(''):'<div class="muted">Tryck på prisrader för att bygga förslaget.</div>';linesEl.querySelectorAll('.line').forEach(row=>{const index=Number(row.dataset.index);row.querySelector('[name="qty"]').addEventListener('input',event=>{lines[index].qty=Math.max(1,Number(event.target.value||1));refreshEstimate()});row.querySelector('[name="price"]').addEventListener('input',event=>{lines[index].price=Math.max(0,Number(event.target.value||0));refreshEstimate()});row.querySelector('.remove').addEventListener('click',()=>{lines.splice(index,1);renderLines()})});refreshEstimate()}
+function estimateText(){const customer=nameInput.value.trim()||'kund';const rows=lines.map(line=>`- ${line.qty} x ${line.name}: ${money(Number(line.qty||1)*Number(line.price||0))}`).join('\n');return `Prisförslag för ${customer}\n${vehicleInput.value.trim()?`Modell: ${vehicleInput.value.trim()}\n`:''}${rows||'- Inga prisrader valda'}\nTotalt preliminärt pris inkl. moms: ${money(total())}\n\nPreliminärt pris. Slutpris bekräftas alltid innan arbete.\nNordic E-Mobility`}
+function refreshEstimate(){totalEl.textContent=money(total());smsText.value=phoneInput.value.trim()?`Hej! Här är preliminärt prisförslag från Nordic E-Mobility:\n\n${estimateText()}`:''}
+async function loadCatalog(){try{setStatus('Laddar prisdatabas...');const data=await api('/api/price-catalog');catalog=data.items||[];renderCategories();renderResults();setStatus(`Prisdatabas laddad: ${catalog.length} rader.`)}catch(error){setStatus(`${error.message} Logga in i /admin eller /prices först så admin-token finns sparad.`,true)}}
+async function copyText(text,emptyMessage){if(!text.trim()){setStatus(emptyMessage,true);return}await navigator.clipboard.writeText(text);setStatus('Kopierat.')}
+async function createCase(){try{if(!lines.length){setStatus('Lägg till minst en prisrad först.',true);return}const payload={source:'quick-price',customerName:nameInput.value.trim()||'Drop-in kund',customerPhone:phoneInput.value.trim(),vehicleModel:vehicleInput.value.trim(),message:noteInput.value.trim(),priceRows:lines,totalCost:total(),workSummary:lines.map(line=>`${line.qty} x ${line.name}`).join(', '),invoiceText:lines.map(line=>`${line.fortnoxArticleNumber?`${line.fortnoxArticleNumber} `:''}${line.qty} x ${line.name} à ${money(line.price)}`).join('\n'),note:'Ärende skapat från snabbpris.'};setStatus('Skapar ärende...');const data=await api('/api/cases',{method:'POST',body:JSON.stringify(payload)});setStatus(`Ärende skapat: ${data.case&&data.case.id?data.case.id:'klart'}.`) }catch(error){setStatus(error.message,true)}}
+search.addEventListener('input',renderResults);category.addEventListener('change',renderResults);[nameInput,phoneInput,vehicleInput,noteInput].forEach(input=>input.addEventListener('input',refreshEstimate));document.getElementById('copyEstimate').addEventListener('click',()=>copyText(estimateText(),'Lägg till minst en prisrad först.'));document.getElementById('copySms').addEventListener('click',()=>copyText(smsText.value,'Fyll i telefonnummer först.'));document.getElementById('createCase').addEventListener('click',createCase);loadCatalog();renderLines();
+</script>
+</body>
+</html>

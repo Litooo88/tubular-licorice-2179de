@@ -59,6 +59,22 @@ const requireAdmin = (request) => {
 
 const loadCase = async (store, id) => store.get(id, { type: "json" });
 
+const normalizePriceRows = (rows = []) =>
+  Array.isArray(rows)
+    ? rows.map((row) => ({
+        sku: clean(row.sku, 80),
+        name: clean(row.name, 180),
+        category: clean(row.category, 120),
+        qty: Math.max(1, Number(row.qty || 1)),
+        price: Math.max(0, numberOrNull(row.price) ?? 0),
+        unit: clean(row.unit, 40) || "st",
+        fortnoxArticleNumber: clean(row.fortnoxArticleNumber, 80),
+      })).filter((row) => row.sku && row.name)
+    : [];
+
+const priceRowsTotal = (rows = []) =>
+  rows.reduce((sum, row) => sum + Number(row.price || 0) * Number(row.qty || 1), 0);
+
 export default async (request, context) => {
   const auth = requireAdmin(request);
   if (!auth.ok) return auth.response;
@@ -89,6 +105,77 @@ export default async (request, context) => {
         value: cases.reduce((sum, item) => sum + Number(item.estimatedValue || 0), 0),
       },
     });
+  }
+
+  if (request.method === "POST") {
+    if (id) return json({ error: "Use POST /api/cases without id." }, 400);
+
+    const body = await request.json().catch(() => ({}));
+    const now = new Date().toISOString();
+    const caseId = `case_${now.replace(/[:.]/g, "-")}_${Math.random().toString(36).slice(2, 8)}`;
+    const priceRows = normalizePriceRows(body.priceRows);
+    const totalCost = body.totalCost === undefined ? priceRowsTotal(priceRows) : numberOrNull(body.totalCost) ?? priceRowsTotal(priceRows);
+    const customerName = clean(body.customerName || body.name, 140) || "Drop-in kund";
+    const customerPhone = clean(body.customerPhone || body.phone, 80);
+    const vehicleModel = clean(body.vehicleModel || body.vehicle || body.scooter, 180);
+    const workSummary = clean(body.workSummary, 3000) || priceRows.map((row) => `${row.qty} x ${row.name}`).join(", ");
+    const invoiceText = clean(body.invoiceText, 5000) || priceRows.map((row) => `${row.fortnoxArticleNumber ? `${row.fortnoxArticleNumber} ` : ""}${row.qty} x ${row.name}`).join("\n");
+
+    const next = {
+      id: caseId,
+      createdAt: now,
+      updatedAt: now,
+      status: "contacted",
+      source: clean(body.source, 80) || "admin",
+      channel: "internal",
+      priority: clean(body.priority, 40) || "normal",
+      preferredContactTime: null,
+      preferredDate: null,
+      discountCode: null,
+      contactMethod: customerPhone ? "sms" : "phone",
+      logistics: "dropoff",
+      assignedTo: STAFF.lennart,
+      customer: {
+        name: customerName,
+        phone: customerPhone,
+        email: clean(body.customerEmail || body.email, 180),
+      },
+      vehicle: {
+        model: vehicleModel,
+      },
+      service: priceRows.length ? "Snabbpris / drop-in" : "Drop-in",
+      addons: [],
+      estimatedValue: totalCost,
+      message: clean(body.message, 3000),
+      intakeAt: null,
+      promisedAt: null,
+      notes: body.note ? [{ at: now, text: clean(body.note, 1200) }] : [],
+      notifications: {},
+      confirmation_sent: false,
+      confirmation_missing: false,
+      completion: {
+        totalCost,
+        workSummary,
+        invoiceText,
+        priceRows,
+        readyForFortnox: false,
+        updatedAt: now,
+      },
+      payment: {
+        status: "unpaid",
+        amount: totalCost,
+        method: "",
+        reference: "",
+        updatedAt: now,
+      },
+      timeline: [
+        { at: now, event: `Internt ärende skapat från ${clean(body.source, 80) || "admin"}.` },
+        ...(priceRows.length ? [{ at: now, event: `Prisförslag: ${totalCost} kr inkl. moms (${priceRows.length} rader).` }] : []),
+      ],
+    };
+
+    await store.setJSON(caseId, next);
+    return json({ ok: true, case: next }, 201);
   }
 
   if (request.method === "PATCH") {
