@@ -75,6 +75,24 @@ const normalizePriceRows = (rows = []) =>
 const priceRowsTotal = (rows = []) =>
   rows.reduce((sum, row) => sum + Number(row.price || 0) * Number(row.qty || 1), 0);
 
+const normalizeWorkshopState = (current = {}, value = {}) => {
+  if (!value || typeof value !== "object") return current;
+  return {
+    ...current,
+    workDone: value.workDone === undefined ? current.workDone || "" : clean(value.workDone, 3000),
+    partsUsed: value.partsUsed === undefined ? current.partsUsed || "" : clean(value.partsUsed, 2000),
+    issuesFound: value.issuesFound === undefined ? current.issuesFound || "" : clean(value.issuesFound, 3000),
+    nextAction: value.nextAction === undefined ? current.nextAction || "" : clean(value.nextAction, 1200),
+    needsSebastianReview:
+      value.needsSebastianReview === undefined
+        ? Boolean(current.needsSebastianReview)
+        : boolValue(value.needsSebastianReview),
+    reviewRequestedAt:
+      value.reviewRequestedAt === undefined ? current.reviewRequestedAt || null : clean(value.reviewRequestedAt, 80) || null,
+    updatedAt: new Date().toISOString(),
+  };
+};
+
 export default async (request, context) => {
   const auth = requireAdmin(request);
   if (!auth.ok) return auth.response;
@@ -324,6 +342,7 @@ export default async (request, context) => {
       completion: nextCompletion,
       payment: nextPayment,
       content: nextContent,
+      workshop: body.workshop === undefined ? current.workshop || {} : normalizeWorkshopState(current.workshop || {}, body.workshop),
     };
 
     if (body.assignedTo) {
@@ -384,6 +403,15 @@ export default async (request, context) => {
       timeline.push({
         at: now,
         event: `Content uppdaterat: ${nextContent.status}${targetInfo}.`,
+      });
+    }
+
+    if (body.workshop !== undefined) {
+      timeline.push({
+        at: now,
+        event: next.workshop?.needsSebastianReview
+          ? "Workshop flaggade: Needs Sebastian review."
+          : "Workshoplogg/status uppdaterad.",
       });
     }
 

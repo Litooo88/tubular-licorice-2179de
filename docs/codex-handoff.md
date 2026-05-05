@@ -126,6 +126,21 @@ Lennart = workshop operator.
 - It must not send SMS automatically.
 - It must not edit the price catalog.
 
+### Workshop mode - Task 3
+
+- `/workshop/` is Lennart's simplified daily work mode.
+- It shows active/inlamnade cases only and excludes price database, final checkout controls, and customer message buttons.
+- Each job shows customer, model, problem, approved work, "do not do without approval", and next action.
+- Photo workflow uses existing `/api/cases/:id/media` with internal categories `before`, `during`, and `after`.
+- Short workshop log is stored on `case.workshop`:
+  - `workDone`
+  - `partsUsed`
+  - `issuesFound`
+  - `nextAction`
+  - `needsSebastianReview`
+  - `reviewRequestedAt`
+- "Needs Sebastian review" sets `workshop.needsSebastianReview=true`, stores an internal note, and adds a timeline event.
+
 ### Booking confirmation rescue
 
 - Rescued `booking.mjs`.
