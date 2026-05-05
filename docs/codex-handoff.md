@@ -67,6 +67,45 @@ Keep it current. When a larger feature, rescue operation, deploy-sensitive fix, 
 - The workshop touch computer is expected to stay logged into admin, so avoid risky one-click destructive actions.
 - Admin flows should minimize duplicate sends and accidental customer notifications.
 
+## Operational roles
+
+Sebastian = admin/owner.
+- Can edit price database.
+- Can close cases.
+- Can send payment instructions.
+- Can change final prices.
+- Can manage Fortnox/export/payment preparation.
+
+Lennart = workshop operator.
+- Should primarily use /workshop.
+- Should see only what is needed to perform work.
+- Should not edit the price database.
+- Should not send final payment messages unless explicitly allowed.
+- Should document work with photos and short notes.
+- Should mark cases as “Ready for Sebastian review” before final customer communication.
+
+## Core UI routes
+
+/admin
+- Full case overview and admin control.
+
+/workshop
+- Simplified touch-friendly workshop mode for Lennart.
+- Shows active/inlämnade jobs.
+- Focus: what to do, photos, short notes, next status.
+
+/checkout
+- Final payment/receipt flow.
+- Used when job is done or customer pays.
+
+/prices
+- Admin-only price database.
+- Not part of normal workshop flow.
+
+/quick-price
+- Simple price calculator for drop-in customers.
+- Used to give correct estimated price without modifying the full price database.
+
 ## Recent merged work
 
 ### Booking confirmation rescue
