@@ -49,7 +49,7 @@ exports.handler = async (event) => {
           currency: 'sek',
           product_data: {
             name: product.name,
-            description: 'Elscooter — Nordic E-Mobility AB, Örebro',
+            description: 'Elscooter — Nordic E-Mobility, Örebro',
           },
           unit_amount: product.price,
         },
@@ -63,7 +63,7 @@ exports.handler = async (event) => {
       },
       phone_number_collection: { enabled: true },
       custom_text: {
-        submit: { message: 'Nordic E-Mobility AB — Pistolvägen 6, 702 21 Örebro. Vi kontaktar dig om leverans.' },
+        submit: { message: 'Nordic E-Mobility — Pistolvägen 6, 702 21 Örebro. Vi kontaktar dig om leverans.' },
       },
     });
 

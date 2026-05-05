@@ -170,7 +170,7 @@ const addonSummaryHtml = (addons = []) => {
 const emailFooterHtml = () => `
   <div style="border-top:1px solid #dfe5dc;margin-top:22px;padding-top:18px;color:#53605a;font-size:13px;line-height:1.55">
     <img src="${htmlEscape(LOGO_URL)}" alt="Nordic E-Mobility" style="display:block;max-width:150px;height:auto;margin:0 0 12px">
-    <strong style="color:#111">Nordic E-Mobility AB</strong><br>
+    <strong style="color:#111">Nordic E-Mobility</strong><br>
     ${htmlEscape(WORKSHOP_ADDRESS)}<br>
     <a href="mailto:info@nordicemobility.se" style="color:#067a35">info@nordicemobility.se</a> &middot;
     <a href="tel:+46700243319" style="color:#067a35">070-024 33 19</a><br>

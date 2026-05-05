@@ -62,7 +62,7 @@ exports.handler = async (event) => {
             currency: "sek",
             product_data: {
               name: product.name,
-              description: "Elscooter - Nordic E-Mobility AB, Orebro",
+              description: "Elscooter - Nordic E-Mobility, Orebro",
             },
             unit_amount: product.price,
           },
