@@ -28,6 +28,21 @@ button:disabled{opacity:.6;cursor:wait}
 .calendar-result code{color:#fff;background:#050805;border:1px solid #263029;border-radius:6px;padding:2px 5px}
 .notice{padding:14px 16px;margin:0 0 14px;color:#d6ded8;line-height:1.5}
 .notice strong{color:#fff}
+.sms-panel{padding:16px;margin:0 0 14px}
+.sms-panel h2{margin:0 0 6px;font-size:18px}
+.sms-panel p{margin:0;color:#9ea79f;font-size:13px;line-height:1.45}
+.sms-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:12px;margin-top:12px}
+.sms-grid .full{grid-column:1 / -1}
+.sms-actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.sms-status{display:none;margin-top:10px;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.45}
+.sms-status.ok{display:block;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#e6ffef}
+.sms-status.bad{display:block;background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}
+.quote-box{border:1px solid rgba(0,200,83,.28);background:rgba(0,200,83,.06);border-radius:8px;padding:12px;margin-top:12px}
+.quote-box h4{margin:0 0 6px;font-size:15px}
+.quote-box p{margin:0 0 10px;color:#b9c3bb;font-size:13px;line-height:1.45}
+.quote-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.quote-grid .full{grid-column:1 / -1}
+.quote-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
 .stat{padding:16px}
 .stat span{display:block;color:#99a39b;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
@@ -185,7 +200,7 @@ textarea{min-height:66px;resize:vertical}
 .contact-state.waiting::before{background:#4ba3ff;box-shadow:0 0 0 3px rgba(75,163,255,.18)}
   @media(max-width:1200px){.board,.workshop-tools{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:980px){.workshop-tools{grid-template-columns:1fr}}
-  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions,.media-grid,.content-actions,.tick-grid,.price-toolbar,.pos-grid,.pos-buttons{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}.pos-line{grid-template-columns:1fr 72px}.pos-line .pos-remove{grid-column:1 / -1}}
+  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions,.media-grid,.content-actions,.tick-grid,.price-toolbar,.pos-grid,.pos-buttons,.sms-grid,.quote-grid{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}.pos-line{grid-template-columns:1fr 72px}.pos-line .pos-remove,.sms-grid .full,.quote-grid .full{grid-column:1 / -1}}
 </style>
 </head>
 <body>
@@ -214,6 +229,37 @@ textarea{min-height:66px;resize:vertical}
   <div class="error" id="error"></div>
   <div class="calendar-result" id="calendarResult"></div>
   <section class="panel notice"><strong>Automatiskt fl&ouml;de:</strong> Nya bokningar sparas h&auml;r, kunden ska f&aring; SMS och e-post direkt, och verkstaden f&aring;r avisering. Om ett kort markeras med r&ouml;d kundbekr&auml;ftelse beh&ouml;ver kunden f&ouml;ljas upp manuellt direkt.</section>
+
+  <section class="panel sms-panel">
+    <h2>SMS till kund</h2>
+    <p>V&auml;lj ett aktivt &auml;rende, skriv eller bygg en mall och skicka SMS direkt fr&aring;n admin. Utskicket sparas i kundens timeline.</p>
+    <div class="sms-grid">
+      <div>
+        <label for="smsCaseSelect">Kund / &auml;rende</label>
+        <select id="smsCaseSelect"><option value="">Ladda kunder f&ouml;rst</option></select>
+      </div>
+      <div>
+        <label for="smsTemplateSelect">Mall</label>
+        <select id="smsTemplateSelect">
+          <option value="custom">Valfri text</option>
+          <option value="quote">Prisf&ouml;rslag / inv&auml;ntar OK</option>
+          <option value="need_info">Beh&ouml;ver mer info</option>
+          <option value="delay">F&ouml;rsening / v&auml;ntar del</option>
+          <option value="pickup">Klar f&ouml;r upph&auml;mtning</option>
+        </select>
+      </div>
+      <div class="full">
+        <label for="smsMessageText">SMS-text</label>
+        <textarea id="smsMessageText" maxlength="918" placeholder="Skriv SMS-text h&auml;r..."></textarea>
+      </div>
+    </div>
+    <div class="sms-actions">
+      <button type="button" class="secondary" id="smsApplyTemplate">Bygg mall</button>
+      <button type="button" class="secondary" id="smsCopyDraft">Kopiera utkast</button>
+      <button type="button" id="smsSendButton">Skicka SMS</button>
+    </div>
+    <div class="sms-status" id="smsDeskStatus"></div>
+  </section>
 
   <section class="stats">
     <div class="panel stat"><span>Aktiva</span><b id="activeTotal">0</b></div>
@@ -301,6 +347,10 @@ const calendarResultEl=document.getElementById('calendarResult');
 const ownerFilter=document.getElementById('ownerFilter');
 const statusFilter=document.getElementById('statusFilter');
 const searchFilter=document.getElementById('searchFilter');
+const smsCaseSelect=document.getElementById('smsCaseSelect');
+const smsTemplateSelect=document.getElementById('smsTemplateSelect');
+const smsMessageText=document.getElementById('smsMessageText');
+const smsDeskStatus=document.getElementById('smsDeskStatus');
 let cases=[];
 let isLoadingCases=false;
 const cardTabState={};
@@ -312,6 +362,9 @@ document.getElementById('calendarTest').addEventListener('click',testCalendar);
 ownerFilter.addEventListener('change',render);
 statusFilter.addEventListener('change',render);
 searchFilter.addEventListener('input',render);
+document.getElementById('smsApplyTemplate').addEventListener('click',()=>{smsMessageText.value=smsTemplateFor(selectedSmsCase(),smsTemplateSelect.value);showSmsDeskStatus('',false);});
+document.getElementById('smsCopyDraft').addEventListener('click',async()=>{try{await copyText(smsMessageText.value);showSmsDeskStatus('SMS-utkast kopierat.',false)}catch(error){showSmsDeskStatus(error.message,true)}});
+document.getElementById('smsSendButton').addEventListener('click',sendDeskSms);
 function money(value){return new Intl.NumberFormat('sv-SE',{style:'currency',currency:'SEK',maximumFractionDigits:0}).format(Number(value||0));}
 function reviewUrl(){return String(adminPublicConfig.reviewUrl||'').trim();}
 async function loadPublicConfig(){
@@ -327,6 +380,53 @@ function dateShort(value){return value?new Date(value).toLocaleString('sv-SE',{d
 function html(value){return String(value||'').replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));}
 function showError(message){errorEl.textContent=message;errorEl.style.display=message?'block':'none';}
 function showCalendarResult(result,bad=false){calendarResultEl.classList.toggle('bad',bad);calendarResultEl.innerHTML=result;calendarResultEl.style.display=result?'block':'none';}
+function showSmsDeskStatus(message,bad=false){smsDeskStatus.className=`sms-status ${message?(bad?'bad':'ok'):''}`;smsDeskStatus.textContent=message;smsDeskStatus.style.display=message?'block':'none';}
+function selectedSmsCase(){return cases.find((item)=>item.id===smsCaseSelect.value)||null;}
+function smsCustomerLabel(item){
+  const name=item.customer&&item.customer.name||'Okänd kund';
+  const phone=item.customer&&item.customer.phone||'saknar telefon';
+  const model=item.vehicle&&item.vehicle.model||'okänd modell';
+  return `${name} - ${model} - ${phone} - ${shortId(item.id)}`;
+}
+function updateSmsCaseOptions(){
+  const previous=smsCaseSelect.value;
+  const active=cases.filter((item)=>!['done','archived'].includes(item.status));
+  smsCaseSelect.innerHTML=active.length
+    ? active.map((item)=>`<option value="${html(item.id)}">${html(smsCustomerLabel(item))}</option>`).join('')
+    : '<option value="">Inga aktiva kunder</option>';
+  if(active.some((item)=>item.id===previous)) smsCaseSelect.value=previous;
+}
+function smsTemplateFor(item,type='custom'){
+  if(!item)return'';
+  const name=(item.customer&&item.customer.name||'').split(/\s+/).filter(Boolean)[0]||'där';
+  const model=item.vehicle&&item.vehicle.model||'scooter';
+  const owner=(item.assignedTo&&item.assignedTo.key)==='sebastian'
+    ? {name:'Sebastian',phone:'070-024 33 19'}
+    : {name:'Lennart',phone:'072-260 77 53'};
+  const amount=item.quote&&item.quote.amount?`${Math.round(Number(item.quote.amount))} kr`:'[pris] kr';
+  if(type==='quote')return `Hej ${name}! Vi har felsökt din ${model}.\nPrisförslag: ${amount} inkl. moms.\nÅtgärd: [kort åtgärd].\nSvara JA om du godkänner, eller ring ${owner.name} på ${owner.phone}.\n/ Nordic E-Mobility`;
+  if(type==='need_info')return `Hej ${name}! Vi behöver lite mer information om din ${model} innan vi går vidare. Svara gärna här eller ring ${owner.name} på ${owner.phone}.\n/ Nordic E-Mobility`;
+  if(type==='delay')return `Hej ${name}! Snabb uppdatering om din ${model}: vi inväntar del/återkoppling innan vi kan gå vidare. Vi hör av oss så fort nästa steg är klart.\n/ Nordic E-Mobility`;
+  if(type==='pickup')return `Hej ${name}! Din ${model} är klar för upphämtning. Svara gärna med vilken tid som passar, eller boka via länken du fått tidigare.\n/ Nordic E-Mobility`;
+  return smsMessageText.value||`Hej ${name}! `;
+}
+async function sendDeskSms(){
+  const item=selectedSmsCase();
+  const message=String(smsMessageText.value||'').trim();
+  if(!item){showSmsDeskStatus('Välj kund först.',true);return;}
+  if(!message){showSmsDeskStatus('Skriv SMS-text först.',true);return;}
+  if(!confirm(`Skicka SMS till ${item.customer&&item.customer.name||'kund'}?`))return;
+  const button=document.getElementById('smsSendButton');
+  const original=button.textContent;
+  button.disabled=true;
+  button.textContent='Skickar...';
+  try{
+    const result=await api('/api/cases/'+encodeURIComponent(item.id),{method:'PATCH',body:JSON.stringify({action:'send_sms',message})});
+    showSmsDeskStatus(result.ok?'SMS skickat och loggat på ärendet.':'SMS kunde inte skickas. Kontrollera 46elks/env.',!result.ok);
+    await loadCases({background:true});
+  }catch(error){showSmsDeskStatus(error.message,true)}
+  finally{button.disabled=false;button.textContent=original}
+}
 function localInput(value){if(!value)return'';const d=new Date(value);if(Number.isNaN(d.getTime()))return'';const p=(n)=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;}
 function displayDate(value){
   if(!value)return'Saknas';
@@ -786,6 +886,16 @@ function readyMailTemplate(item,overrides={}){
   const greeting=item.customer&&item.customer.name?`Hej ${item.customer.name},`:'Hej,';
   return `${greeting}\n\nDin ${data.vehicleModel} är nu klar för upphämtning hos Nordic E-Mobility.\n\nUtförda åtgärder\n${data.workSummary||'Se underlag i ärendet.'}\n\nTotalt belopp inkl. moms\n${data.totalLabel}\n\nBoka upphämtning\n${data.bookingUrl}\n\n${data.pickupSummary}\n\nAdress\nPistolvägen 6, Örebro\n\nOm du vill att vi reserverar en tid åt dig går det bra att svara direkt på detta mail eller SMS.\n\nVänliga hälsningar,\nNordic E-Mobility`;
 }
+function quoteSmsTemplate(item,overrides={}){
+  const first=(item.customer&&item.customer.name||'').split(/\s+/).filter(Boolean)[0]||'där';
+  const model=item.vehicle&&item.vehicle.model||'scooter';
+  const owner=String(overrides.quoteOwner||item.quote&&item.quote.contactOwner||item.assignedTo&&item.assignedTo.key||'lennart')==='sebastian'
+    ? {name:'Sebastian',phone:'070-024 33 19'}
+    : {name:'Lennart',phone:'072-260 77 53'};
+  const amount=overrides.quoteAmount||item.quote&&item.quote.amount||'[pris]';
+  const summary=String(overrides.quoteSummary||item.quote&&item.quote.summary||'[kort åtgärd]').trim();
+  return `Hej ${first}! Vi har felsökt din ${model}.\nPrisförslag: ${amount} kr inkl. moms.\nÅtgärd: ${summary}.\nSvara JA om du godkänner, eller ring ${owner.name} på ${owner.phone}.\n/ Nordic E-Mobility`;
+}
 function contentDrafts(item,overrides={}){
   const data=completionData(item,overrides);
   const model=data.vehicleModel;
@@ -951,6 +1061,7 @@ async function testCalendar(){
 }
 
 function render(){
+  updateSmsCaseOptions();
   const active=cases.filter(item=>!['done','archived'].includes(item.status));
   document.getElementById('activeTotal').textContent=active.length;
   document.getElementById('valueTotal').textContent=money(active.reduce((sum,item)=>sum+Number(item.estimatedValue||0),0));
@@ -1156,6 +1267,24 @@ function caseCard(item){
         <div class="contact-inline">
           <div class="fact"><span>Kundtelefon</span><b><a href="${html(customerPhoneHref)}">${html(customerPhone)}</a></b></div>
           <div class="fact"><span>Kundmail</span><b><a href="${html(customerEmailHref)}">${html(customerEmailAddress)}</a></b></div>
+        </div>
+        <div class="quote-box">
+          <h4>Prisf&ouml;rslag via SMS</h4>
+          <p>F&ouml;r fels&ouml;kta fordon d&auml;r kunden ska godk&auml;nna pris innan &aring;tg&auml;rd. SMS:et ber kunden svara JA eller ringa Sebastian/Lennart.</p>
+          <form class="quote-form" data-id="${html(item.id)}">
+            <div class="quote-grid">
+              <div><label>Pris inkl. moms</label><input name="quoteAmount" type="number" min="0" step="1" value="${item.quote&&item.quote.amount?Number(item.quote.amount):''}" placeholder="T.ex. 1295"></div>
+              <div><label>Svar till</label><select name="quoteOwner"><option value="lennart" ${(item.quote&&item.quote.contactOwner)==='sebastian'?'':'selected'}>Lennart</option><option value="sebastian" ${(item.quote&&item.quote.contactOwner)==='sebastian'?'selected':''}>Sebastian</option></select></div>
+              <div class="full"><label>&Aring;tg&auml;rd / prisf&ouml;rslag</label><textarea name="quoteSummary" placeholder="T.ex. byte av slang bak + bromsjustering.">${html(item.quote&&item.quote.summary||'')}</textarea></div>
+              <div class="full"><label>SMS-preview</label><textarea class="quote-preview" readonly>${html(quoteSmsTemplate(item))}</textarea></div>
+            </div>
+            <div class="quote-actions">
+              <button type="button" class="secondary refresh-quote">Uppdatera preview</button>
+              <button type="button" class="secondary copy-quote">Kopiera SMS</button>
+              <button type="button" class="send-quote">Skicka prisf&ouml;rslag</button>
+            </div>
+            <div class="completion-note">Senast skickat: ${item.quote&&item.quote.sentAt?html(dateShort(item.quote.sentAt)):'Inte skickat'}${item.quote&&item.quote.status?` &middot; Status: ${html(item.quote.status)}`:''}</div>
+          </form>
         </div>
       </div>
     </div>
@@ -1439,6 +1568,7 @@ function caseCard(item){
     });
   });
   const form=card.querySelector('.edit-wrap form');
+  const quoteForm=card.querySelector('.quote-form');
   const completionForm=card.querySelector('.completion-form');
   const paymentForm=card.querySelector('.payment-form');
   const mediaForm=card.querySelector('.media-form');
@@ -1474,6 +1604,47 @@ function caseCard(item){
       await loadCases();
     }catch(error){showError(error.message)}
     finally{button.disabled=false;button.textContent='Spara \u00e4ndringar'}
+  });
+  function quoteValues(){
+    const data=new FormData(quoteForm);
+    return {
+      quoteAmount:data.get('quoteAmount'),
+      quoteOwner:data.get('quoteOwner'),
+      quoteSummary:data.get('quoteSummary')
+    };
+  }
+  function refreshQuotePreview(){
+    quoteForm.querySelector('.quote-preview').value=quoteSmsTemplate(item,quoteValues());
+  }
+  quoteForm.querySelectorAll('input,select,textarea[name="quoteSummary"]').forEach((field)=>field.addEventListener('input',refreshQuotePreview));
+  quoteForm.querySelector('.refresh-quote').addEventListener('click',refreshQuotePreview);
+  quoteForm.querySelector('.copy-quote').addEventListener('click',async()=>{
+    refreshQuotePreview();
+    try{await copyText(quoteForm.querySelector('.quote-preview').value)}catch(error){showError(error.message)}
+  });
+  quoteForm.querySelector('.send-quote').addEventListener('click',async()=>{
+    refreshQuotePreview();
+    const values=quoteValues();
+    if(!values.quoteAmount||!values.quoteSummary){showError('Fyll i pris och åtgärd innan du skickar prisförslag.');return;}
+    if(!confirm(`Skicka prisförslag till ${item.customer&&item.customer.name||'kund'}?`))return;
+    const button=quoteForm.querySelector('.send-quote');
+    const original=button.textContent;
+    button.disabled=true;
+    button.textContent='Skickar...';
+    try{
+      const result=await api('/api/cases/'+encodeURIComponent(item.id),{
+        method:'PATCH',
+        body:JSON.stringify({
+          action:'send_quote_sms',
+          amount:values.quoteAmount,
+          summary:values.quoteSummary,
+          contactOwner:values.quoteOwner
+        })
+      });
+      if(!result.ok) showError('Prisförslag sparades men SMS kunde inte bekräftas som skickat. Kontrollera 46elks.');
+      await loadCases();
+    }catch(error){showError(error.message)}
+    finally{button.disabled=false;button.textContent=original}
   });
   function completionValues(){
     const data=new FormData(completionForm);
