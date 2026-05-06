@@ -7,6 +7,44 @@ const json = (body, status = 200) =>
   });
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
+const normalizePhone = (phone) => {
+  const compact = clean(phone, 80).replace(/[^\d+]/g, "");
+  if (!compact) return "";
+  if (compact.startsWith("+")) return compact;
+  if (compact.startsWith("00")) return `+${compact.slice(2)}`;
+  if (compact.startsWith("46")) return `+${compact}`;
+  if (compact.startsWith("0")) return `+46${compact.slice(1)}`;
+  return compact.length >= 7 ? `+46${compact}` : "";
+};
+const firstName = (name) => clean(name, 140).split(/\s+/).filter(Boolean)[0] || "d\u00e4r";
+const smsConfig = () => ({
+  username: process.env.ELKS_USERNAME || process.env.SMS_API_USERNAME || globalThis.Netlify?.env?.get?.("ELKS_USERNAME") || globalThis.Netlify?.env?.get?.("SMS_API_USERNAME") || "",
+  password: process.env.ELKS_PASSWORD || process.env.SMS_API_PASSWORD || globalThis.Netlify?.env?.get?.("ELKS_PASSWORD") || globalThis.Netlify?.env?.get?.("SMS_API_PASSWORD") || "",
+  from: (process.env.SMS_FROM || globalThis.Netlify?.env?.get?.("SMS_FROM") || "NordicEMob").slice(0, 11),
+});
+const postSms = async ({ to, message }) => {
+  const normalizedTo = normalizePhone(to);
+  const { username, password, from } = smsConfig();
+  if (!normalizedTo) return { status: "invalid_phone", to: "" };
+  if (!message) return { status: "missing_message", to: normalizedTo };
+  if (!username || !password) return { status: "not_configured", to: normalizedTo };
+  try {
+    const response = await fetch("https://api.46elks.com/a1/sms", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ from, to: normalizedTo, message, dontlog: "message" }),
+      signal: AbortSignal.timeout(8000),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) return { status: "failed", provider: "46elks", to: normalizedTo, error: clean(body.error || response.statusText, 180) };
+    return { status: "sent", provider: "46elks", to: normalizedTo, id: clean(body.id, 120), sentAt: new Date().toISOString() };
+  } catch (error) {
+    return { status: "failed", provider: "46elks", to: normalizedTo, error: clean(error?.message || "sms failed", 180) };
+  }
+};
 const numberOrNull = (value) => {
   if (value === undefined) return undefined;
   if (value === null || value === "") return null;
@@ -74,6 +112,19 @@ const normalizePriceRows = (rows = []) =>
 
 const priceRowsTotal = (rows = []) =>
   rows.reduce((sum, row) => sum + Number(row.price || 0) * Number(row.qty || 1), 0);
+
+const quoteSmsText = ({ caseItem, amount, summary, contactOwner }) => {
+  const owner = contactOwner === "sebastian" ? STAFF.sebastian : STAFF.lennart;
+  const model = clean(caseItem.vehicle?.model, 160) || "scooter";
+  const rounded = Math.round(Number(amount || 0));
+  return [
+    `Hej ${firstName(caseItem.customer?.name)}! Vi har fels\u00f6kt din ${model}.`,
+    `Prisf\u00f6rslag: ${rounded} kr inkl. moms.`,
+    `\u00c5tg\u00e4rd: ${clean(summary, 320)}`,
+    `Svara JA om du godk\u00e4nner, eller ring ${owner.name} p\u00e5 ${owner.phone}.`,
+    "/ Nordic E-Mobility",
+  ].join("\n");
+};
 
 const normalizeWorkshopState = (current = {}, value = {}) => {
   if (!value || typeof value !== "object") return current;
@@ -206,6 +257,85 @@ export default async (request, context) => {
     const now = new Date().toISOString();
     const currentPayment = current.payment || {};
     const currentContent = current.content || {};
+
+    if (body.action === "send_sms") {
+      const message = clean(body.message, 918);
+      if (!message) return json({ error: "SMS-text saknas." }, 400);
+      const result = await postSms({ to: current.customer?.phone, message });
+      const entry = {
+        at: result.sentAt || now,
+        type: "manual_sms",
+        to: normalizePhone(current.customer?.phone),
+        status: result.status,
+        provider: result.provider || "46elks",
+        message,
+        caseId: current.id,
+      };
+      const next = {
+        ...current,
+        updatedAt: now,
+        outboundMessages: [...(Array.isArray(current.outboundMessages) ? current.outboundMessages : []), entry],
+        notifications: {
+          ...(current.notifications || {}),
+          manualSms: {
+            status: result.status,
+            lastSentAt: result.sentAt || now,
+            to: entry.to,
+            provider: entry.provider,
+            error: result.error || "",
+          },
+        },
+        timeline: [
+          ...(Array.isArray(current.timeline) ? current.timeline : []),
+          { at: result.sentAt || now, event: `Manuellt SMS ${result.status === "sent" ? "skickat" : "misslyckades"} till kund.` },
+        ],
+      };
+      await store.setJSON(id, next);
+      return json({ ok: result.status === "sent", result, case: next });
+    }
+
+    if (body.action === "send_quote_sms") {
+      const amount = numberOrNull(body.amount);
+      const summary = clean(body.summary, 500);
+      const contactOwner = clean(body.contactOwner, 40) === "sebastian" ? "sebastian" : "lennart";
+      if (!amount || amount <= 0) return json({ error: "Prisf\u00f6rslag m\u00e5ste ha belopp." }, 400);
+      if (!summary) return json({ error: "\u00c5tg\u00e4rd/sammanfattning saknas." }, 400);
+      const message = quoteSmsText({ caseItem: current, amount, summary, contactOwner });
+      const result = await postSms({ to: current.customer?.phone, message });
+      const quote = {
+        ...(current.quote || {}),
+        status: result.status === "sent" ? "sent" : "failed",
+        amount,
+        summary,
+        contactOwner,
+        message,
+        sentAt: result.sentAt || now,
+        sms: result,
+      };
+      const entry = {
+        at: result.sentAt || now,
+        type: "quote_sms",
+        to: normalizePhone(current.customer?.phone),
+        status: result.status,
+        provider: result.provider || "46elks",
+        message,
+        caseId: current.id,
+        quote: { amount, summary, contactOwner },
+      };
+      const next = {
+        ...current,
+        updatedAt: now,
+        status: current.status === "new" ? "waiting_customer" : current.status,
+        quote,
+        outboundMessages: [...(Array.isArray(current.outboundMessages) ? current.outboundMessages : []), entry],
+        timeline: [
+          ...(Array.isArray(current.timeline) ? current.timeline : []),
+          { at: result.sentAt || now, event: `Prisf\u00f6rslag ${result.status === "sent" ? "skickat" : "misslyckades"} via SMS: ${Math.round(amount)} kr.` },
+        ],
+      };
+      await store.setJSON(id, next);
+      return json({ ok: result.status === "sent", result, case: next });
+    }
 
     const nextCompletion = {
       ...(current.completion || {}),
