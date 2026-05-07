@@ -175,6 +175,27 @@ Lennart = workshop operator.
 - Added save-as-quote and register-paid-and-close flows.
 - Added installable admin browser app support.
 
+### Sprint 1 public fixes
+
+- Corrected legal wording from `Nordic E-Mobility AB` to `Nordic E-Mobility`.
+- Footers include org.nr, VAT, F-skatt, and address.
+- Removed Wix logo hotlinks and use local logo assets.
+- Product/order buttons route to `/book-online?service=bestallning&modell=...`.
+- `/book-online/` prefills order/service/model fields from URL parameters.
+- Added `AutomotiveBusiness` JSON-LD on main public pages.
+- Repaired public text encoding after mojibake appeared on live pages.
+
+### Admin SMS and quote flow
+
+- `/admin/` has a top-level `SMS till kund` panel with customer/case dropdown, templates, free text, copy draft, and send.
+- Manual SMS sends use `PATCH /api/cases/:id` with `action: "send_sms"`.
+- Customer cards have `Prisförslag via SMS` in the contact tab for diagnosis/quote flows.
+- Quote SMS sends use `PATCH /api/cases/:id` with `action: "send_quote_sms"`.
+- Quote data is stored on `case.quote`.
+- Outbound SMS logs are stored on `case.outboundMessages`.
+- Timeline records manual SMS and quote SMS attempts.
+- Important: if `SMS_FROM` is `NordicEMob` or another alphanumeric sender, customers generally cannot reply to the SMS. Two-way replies require a 46elks virtual number and an inbound webhook/inbox flow.
+
 ## Next priorities
 
 1. Test `/admin/` after Netlify deploy on the workshop touch computer.
@@ -198,6 +219,25 @@ Lennart = workshop operator.
    - unique `SCOOTER-XXXXXX` coupons
    - expiry and redemption tracking
 7. Review admin notification buttons and reduce accidental duplicate sends.
+8. Build two-way SMS inbox when a 46elks virtual number is available:
+   - set `SMS_FROM` to the virtual number
+   - add `/api/sms-inbound` webhook
+   - match inbound messages to cases by phone number
+   - show conversations and unread replies in `/admin/`
+   - auto-detect quote approval when customer replies `JA`
+
+## If Codex Starts In Downloads
+
+If the current workspace is `C:\Users\Sebas\Downloads\nordic-emobility-site` or any `working\` folder, stop immediately. That is not the deploy repo. Switch to:
+
+```powershell
+Set-Location E:\nordic-emobility-github-push
+git fetch origin
+git switch main
+git pull --ff-only
+```
+
+The live Netlify/GitHub-backed site is tied to `https://github.com/Litooo88/tubular-licorice-2179de.git`.
 
 ## Start procedure for a new Codex session
 
