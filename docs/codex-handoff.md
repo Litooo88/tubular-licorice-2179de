@@ -196,6 +196,15 @@ Lennart = workshop operator.
 - Timeline records manual SMS and quote SMS attempts.
 - Important: if `SMS_FROM` is `NordicEMob` or another alphanumeric sender, customers generally cannot reply to the SMS. Two-way replies require a 46elks virtual number and an inbound webhook/inbox flow.
 
+### GA4 tracking install
+
+- GA4 is installed through the shared static loader `/assets/analytics.js`.
+- Current Measurement ID is `G-WR90FZDZ4S`.
+- Every published `index.html` includes `window.NORDIC_ANALYTICS` config and the shared loader before `</head>`.
+- The loader sends manual `page_view` events for initial page load and future history route changes.
+- GTM support is prepared through `gtmContainerId` in the same config, but no GTM container is active yet.
+- Operational notes and Sebastian verification steps live in `docs/analytics-tracking.md`.
+
 ## Next priorities
 
 1. Test `/admin/` after Netlify deploy on the workshop touch computer.
