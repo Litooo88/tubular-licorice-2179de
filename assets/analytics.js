@@ -1,6 +1,6 @@
 (function () {
   var config = window.NORDIC_ANALYTICS || {};
-  var measurementId = config.ga4MeasurementId || "G-WR90FZDZ4S";
+  var measurementId = config.ga4MeasurementId || "G-WR90F2DZ4S";
   var gtmContainerId = config.gtmContainerId || "";
   var debugMode = Boolean(config.debugMode);
   var lastTrackedPath = "";
