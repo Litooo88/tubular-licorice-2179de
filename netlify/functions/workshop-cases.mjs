@@ -7,6 +7,21 @@ const json = (body, status = 200) =>
   });
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
+const env = (name) => {
+  try {
+    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
+  } catch {
+    return process.env[name] || "";
+  }
+};
+const htmlEscape = (value) =>
+  clean(value, 5000).replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#039;",
+  })[char]);
 const normalizePhone = (phone) => {
   const compact = clean(phone, 80).replace(/[^\d+]/g, "");
   if (!compact) return "";
@@ -17,10 +32,14 @@ const normalizePhone = (phone) => {
   return compact.length >= 7 ? `+46${compact}` : "";
 };
 const firstName = (name) => clean(name, 140).split(/\s+/).filter(Boolean)[0] || "d\u00e4r";
+const shortCaseId = (id) => clean(id, 120).replace(/^case_/, "").slice(0, 18).toUpperCase();
+const SITE_URL = (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
+const REVIEW_LINK = env("GOOGLE_REVIEW_URL") || env("GOOGLE_REVIEW_LINK") || "https://www.google.com/search?q=Nordic+E-Mobility+Orebro";
+const LOGO_URL = `${SITE_URL}/nordic_logo_transparent.png`;
 const smsConfig = () => ({
-  username: process.env.ELKS_USERNAME || process.env.SMS_API_USERNAME || globalThis.Netlify?.env?.get?.("ELKS_USERNAME") || globalThis.Netlify?.env?.get?.("SMS_API_USERNAME") || "",
-  password: process.env.ELKS_PASSWORD || process.env.SMS_API_PASSWORD || globalThis.Netlify?.env?.get?.("ELKS_PASSWORD") || globalThis.Netlify?.env?.get?.("SMS_API_PASSWORD") || "",
-  from: (process.env.SMS_FROM || globalThis.Netlify?.env?.get?.("SMS_FROM") || "NordicEMob").slice(0, 11),
+  username: env("ELKS_USERNAME") || env("SMS_API_USERNAME"),
+  password: env("ELKS_PASSWORD") || env("SMS_API_PASSWORD"),
+  from: (env("SMS_FROM") || "NordicEMob").slice(0, 11),
 });
 const postSms = async ({ to, message }) => {
   const normalizedTo = normalizePhone(to);
@@ -44,6 +63,28 @@ const postSms = async ({ to, message }) => {
   } catch (error) {
     return { status: "failed", provider: "46elks", to: normalizedTo, error: clean(error?.message || "sms failed", 180) };
   }
+};
+const resendEmail = async ({ to, subject, html, text, idempotencyKey }) => {
+  const apiKey = env("RESEND_API_KEY");
+  const from = env("EMAIL_FROM");
+  const replyTo = env("EMAIL_REPLY_TO") || env("WORKSHOP_EMAIL") || "";
+  if (!to || !to.length) return { status: "not_requested" };
+  if (!apiKey || !from || !clean(apiKey, 220).startsWith("re_")) return { status: "not_configured" };
+  const payload = { from, to, subject, html, text };
+  if (replyTo) payload.reply_to = replyTo;
+  const response = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${apiKey}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": idempotencyKey,
+    },
+    body: JSON.stringify(payload),
+    signal: AbortSignal.timeout(8000),
+  });
+  const body = await response.json().catch(() => ({}));
+  if (!response.ok) return { status: "failed", provider: "resend", error: clean(body.message || body.error || response.statusText, 180) };
+  return { status: "sent", provider: "resend", id: clean(body.id, 120), sentAt: new Date().toISOString() };
 };
 const numberOrNull = (value) => {
   if (value === undefined) return undefined;
@@ -79,6 +120,74 @@ const SERVICE_ACTIONS = new Set([
 ]);
 const POSITIONS = new Set(["front", "rear", "motor_wheel", "not_applicable"]);
 const boolValue = (value) => value === true || value === "true" || value === "on" || value === 1 || value === "1";
+
+const footerHtml = () => `
+  <div style="border-top:1px solid #dfe5dc;margin-top:22px;padding-top:18px;color:#53605a;font-size:13px;line-height:1.55">
+    <img src="${htmlEscape(LOGO_URL)}" alt="Nordic E-Mobility" style="display:block;max-width:150px;height:auto;margin:0 0 12px">
+    <strong style="color:#111">Nordic E-Mobility</strong><br>
+    Pistolv&auml;gen 6, 702 21 &Ouml;rebro<br>
+    <a href="mailto:info@nordicemobility.se" style="color:#067a35">info@nordicemobility.se</a> &middot;
+    <a href="tel:+46700243319" style="color:#067a35">070-024 33 19</a>
+  </div>
+`;
+
+const shellHtml = (title, body) => `
+  <div style="margin:0;background:#f4f6f2;padding:24px;font-family:Arial,sans-serif;color:#111">
+    <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #dfe5dc;border-radius:8px;overflow:hidden">
+      <div style="background:#061007;color:#fff;padding:22px 24px">
+        <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8ff5ae;font-weight:700">Nordic E-Mobility</div>
+        <h1 style="font-size:24px;line-height:1.2;margin:8px 0 0">${title}</h1>
+      </div>
+      <div style="padding:24px;line-height:1.6">${body}${footerHtml()}</div>
+    </div>
+  </div>
+`;
+
+const couponCode = (caseItem) => `SCOOTER-${Buffer.from(caseItem.id).toString("base64url").slice(-6).toUpperCase()}`;
+
+const sendThankYou = async (caseItem) => {
+  const code = caseItem.coupon?.code || couponCode(caseItem);
+  const validUntil = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const summary = clean(caseItem.completion?.workSummary || caseItem.workshop?.workDone || caseItem.service, 1600);
+  const email = await resendEmail({
+    to: caseItem.customer?.email ? [caseItem.customer.email] : [],
+    subject: `Tack for fortroendet, ${firstName(caseItem.customer?.name)}`,
+    html: shellHtml(
+      `Tack f&ouml;r f&ouml;rtroendet, ${htmlEscape(firstName(caseItem.customer?.name))}`,
+      `<p>Vi hoppas att allt k&auml;nns bra efter bes&ouml;ket.</p>
+       <div style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:16px;margin:18px 0">
+         <p style="margin:0 0 8px"><strong>Utf&ouml;rt arbete:</strong><br>${htmlEscape(summary).replace(/\n/g, "<br>")}</p>
+         <p style="margin:0"><strong>Datum:</strong> ${new Date().toLocaleDateString("sv-SE")}</p>
+       </div>
+       <p><a href="${htmlEscape(REVIEW_LINK)}" style="display:inline-block;background:#00c853;color:#031006;text-decoration:none;border-radius:8px;padding:12px 16px;font-weight:700">L&auml;mna en recension</a></p>
+       <p style="margin:18px 0 0">F&ouml;lj oss g&auml;rna f&ouml;r tips, servicebilder och erbjudanden:<br>
+         <a href="https://www.facebook.com/nordicemobility" style="color:#067a35">Facebook</a> &middot;
+         <a href="https://www.instagram.com/nordicemobility" style="color:#067a35">Instagram</a>
+       </p>
+       <p><strong>10 % p&aring; n&auml;sta inl&auml;mning:</strong><br>Kod: <strong>${htmlEscape(code)}</strong><br>Giltig till ${htmlEscape(validUntil)}.</p>`,
+    ),
+    text: `Tack for fortroendet, ${firstName(caseItem.customer?.name)}!\n\nUtfort arbete:\n${summary}\n\nLamna recension: ${REVIEW_LINK}\nFacebook: https://www.facebook.com/nordicemobility\nInstagram: https://www.instagram.com/nordicemobility\n\n10 % pa nasta inlamning: ${code}. Giltig till ${validUntil}.`,
+    idempotencyKey: `${caseItem.id}-thank-you`,
+  });
+  return { email, coupon: { code, percent: 10, validUntil, used: false, caseId: caseItem.id }, sentAt: new Date().toISOString() };
+};
+
+const paymentSmsText = ({ caseItem, amount }) =>
+  `Hej ${firstName(caseItem.customer?.name)}! Swisha ${Math.round(Number(amount || 0))} kr till 070-024 33 19. Meddelande: ${shortCaseId(caseItem.id)}. Tack! / Nordic E-Mobility`;
+
+const workshopReviewSmsText = (caseItem) => {
+  const workshop = caseItem.workshop || {};
+  const lines = [
+    `Workshoplogg ${shortCaseId(caseItem.id)}`,
+    `Kund: ${clean(caseItem.customer?.name, 80) || "Okand"} - ${clean(caseItem.customer?.phone, 40) || "telefon saknas"}`,
+    `Modell: ${clean(caseItem.vehicle?.model, 80) || "Okand"}`,
+    workshop.workDone ? `Gjort: ${clean(workshop.workDone, 260)}` : "",
+    workshop.partsUsed ? `Delar: ${clean(workshop.partsUsed, 180)}` : "",
+    workshop.issuesFound ? `Avvikelse: ${clean(workshop.issuesFound, 180)}` : "",
+    workshop.nextAction ? `Nasta: ${clean(workshop.nextAction, 160)}` : "",
+  ].filter(Boolean);
+  return clean(lines.join("\n"), 900);
+};
 
 const requireAdmin = (request) => {
   const expected = process.env.ADMIN_TOKEN || globalThis.Netlify?.env?.get?.("ADMIN_TOKEN");
@@ -133,6 +242,12 @@ const normalizeWorkshopState = (current = {}, value = {}) => {
     workDone: value.workDone === undefined ? current.workDone || "" : clean(value.workDone, 3000),
     partsUsed: value.partsUsed === undefined ? current.partsUsed || "" : clean(value.partsUsed, 2000),
     issuesFound: value.issuesFound === undefined ? current.issuesFound || "" : clean(value.issuesFound, 3000),
+    serviceActions:
+      value.serviceActions === undefined
+        ? Array.isArray(current.serviceActions) ? current.serviceActions : []
+        : Array.isArray(value.serviceActions)
+          ? value.serviceActions.map((item) => clean(item, 40)).filter((item) => SERVICE_ACTIONS.has(item))
+          : [],
     nextAction: value.nextAction === undefined ? current.nextAction || "" : clean(value.nextAction, 1200),
     needsSebastianReview:
       value.needsSebastianReview === undefined
@@ -337,6 +452,86 @@ export default async (request, context) => {
       return json({ ok: result.status === "sent", result, case: next });
     }
 
+    if (body.action === "send_payment_instruction") {
+      const amount = numberOrNull(body.amount ?? body.paymentAmount ?? current.completion?.totalCost ?? current.payment?.amount);
+      if (!amount || amount <= 0) return json({ error: "Belopp saknas for betalningsinstruktion." }, 400);
+      const priceRows = normalizePriceRows(body.priceRows);
+      const message = clean(body.message, 918) || paymentSmsText({ caseItem: current, amount });
+      const result = await postSms({ to: current.customer?.phone, message });
+      const nextCompletion = {
+        ...(current.completion || {}),
+        totalCost: amount,
+        workSummary: body.workSummary === undefined ? current.completion?.workSummary || "" : clean(body.workSummary, 3000),
+        invoiceText: body.invoiceText === undefined ? current.completion?.invoiceText || "" : clean(body.invoiceText, 5000),
+        priceRows: priceRows.length ? priceRows : Array.isArray(current.completion?.priceRows) ? current.completion.priceRows : [],
+        updatedAt: now,
+      };
+      const nextPayment = {
+        ...(current.payment || {}),
+        status: "invoice_ready",
+        method: PAYMENT_METHODS.has(clean(body.paymentMethod, 40)) ? clean(body.paymentMethod, 40) : "swish",
+        amount,
+        reference: clean(body.paymentReference, 160),
+        instructionSentAt: result.sentAt || now,
+        instructionMessage: message,
+        updatedAt: now,
+      };
+      const entry = {
+        at: result.sentAt || now,
+        type: "payment_instruction_sms",
+        to: normalizePhone(current.customer?.phone),
+        status: result.status,
+        provider: result.provider || "46elks",
+        message,
+        caseId: current.id,
+      };
+      const next = {
+        ...current,
+        updatedAt: now,
+        status: current.status === "done" ? current.status : "ready",
+        completion: nextCompletion,
+        payment: nextPayment,
+        outboundMessages: [...(Array.isArray(current.outboundMessages) ? current.outboundMessages : []), entry],
+        timeline: [
+          ...(Array.isArray(current.timeline) ? current.timeline : []),
+          { at: result.sentAt || now, event: `Betalningsinstruktion ${result.status === "sent" ? "skickad" : "misslyckades"} via SMS: ${Math.round(amount)} kr.` },
+        ],
+      };
+      await store.setJSON(id, next);
+      return json({ ok: result.status === "sent", result, case: next });
+    }
+
+    if (body.action === "submit_workshop_log") {
+      const workshop = normalizeWorkshopState(current.workshop || {}, body.workshop || {});
+      const next = {
+        ...current,
+        updatedAt: now,
+        workshop: {
+          ...workshop,
+          submittedToSebastianAt: now,
+          needsSebastianReview: true,
+          reviewRequestedAt: workshop.reviewRequestedAt || now,
+        },
+      };
+      const result = await postSms({ to: env("SEBASTIAN_SMS_TO") || STAFF.sebastian.phone, message: workshopReviewSmsText(next) });
+      next.notifications = {
+        ...(current.notifications || {}),
+        workshopLogSms: {
+          status: result.status,
+          to: result.to,
+          provider: result.provider || "46elks",
+          sentAt: result.sentAt || now,
+          error: result.error || "",
+        },
+      };
+      next.timeline = [
+        ...(Array.isArray(current.timeline) ? current.timeline : []),
+        { at: result.sentAt || now, event: `Workshoplogg ${result.status === "sent" ? "skickad" : "kunde inte skickas"} till Sebastian via SMS.` },
+      ];
+      await store.setJSON(id, next);
+      return json({ ok: result.status === "sent", result, case: next });
+    }
+
     const nextCompletion = {
       ...(current.completion || {}),
       totalCost:
@@ -373,6 +568,10 @@ export default async (request, context) => {
         body.readyForFortnox === undefined ? Boolean(current.completion?.readyForFortnox) : boolValue(body.readyForFortnox),
       internalComment:
         body.internalComment === undefined ? current.completion?.internalComment || "" : clean(body.internalComment, 2000),
+      priceRows:
+        body.priceRows === undefined
+          ? Array.isArray(current.completion?.priceRows) ? current.completion.priceRows : []
+          : normalizePriceRows(body.priceRows),
       readyAt:
         body.readyAt === undefined ? current.completion?.readyAt || null : clean(body.readyAt, 80) || null,
       customerNotifiedAt:
@@ -546,6 +745,16 @@ export default async (request, context) => {
     }
 
     next.timeline = timeline;
+
+    if ((next.status === "done" || next.payment?.status === "paid") && next.notifications?.thankYou?.status !== "sent") {
+      const thankYou = await sendThankYou(next);
+      next.coupon = thankYou.coupon;
+      next.notifications = {
+        ...(next.notifications || {}),
+        thankYou: { status: thankYou.email.status, ...thankYou },
+      };
+      next.timeline.push({ at: thankYou.sentAt || now, event: "Tackmail med rabattkod skickat efter avslutat/betalt arende." });
+    }
 
     await store.setJSON(id, next);
     return json({ ok: true, case: next });
