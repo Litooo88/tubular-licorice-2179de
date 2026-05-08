@@ -205,6 +205,15 @@ Lennart = workshop operator.
 - GTM support is prepared through `gtmContainerId` in the same config, but no GTM container is active yet.
 - Operational notes and Sebastian verification steps live in `docs/analytics-tracking.md`.
 
+### 46elks voice fallback
+
+- Added `/api/voice-start` in `netlify/functions/voice-start.mjs` for incoming 46elks calls.
+- Current public 46elks fixed voice number is `+46101385498`.
+- Flow is Sebastian first, then Lennart fallback, then optional missed-call SMS if both miss the call.
+- Defaults use Sebastian `+46700243319`, Lennart `+46722607753`, and 18 seconds per person.
+- Override with Netlify env vars `VOICE_CALLER_ID`, `VOICE_SEBASTIAN_PHONE`, `VOICE_LENNART_PHONE`, `VOICE_TIMEOUT_SECONDS`, and `VOICE_MISSED_SMS_TO`.
+- Setup/test notes live in `docs/46elks-voice-fallback.md`.
+
 ## Next priorities
 
 1. Test `/admin/` after Netlify deploy on the workshop touch computer.
