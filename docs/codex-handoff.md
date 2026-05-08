@@ -214,6 +214,13 @@ Lennart = workshop operator.
 - Override with Netlify env vars `VOICE_CALLER_ID`, `VOICE_SEBASTIAN_PHONE`, `VOICE_LENNART_PHONE`, `VOICE_TIMEOUT_SECONDS`, and `VOICE_MISSED_SMS_TO`.
 - Setup/test notes live in `docs/46elks-voice-fallback.md`.
 
+### Public workshop phone number
+
+- Public website contact CTAs now present one workshop number: `010-138 54 98` (`+46101385498`).
+- Public Sebastian/Lennart direct phone CTAs were removed from customer-facing pages.
+- Booking customer confirmations and public email footer point to the workshop number.
+- Internal booking/workshop SMS routing still uses staff mobiles where needed; do not replace those with the public number unless the notification flow is changed.
+
 ## Next priorities
 
 1. Test `/admin/` after Netlify deploy on the workshop touch computer.
