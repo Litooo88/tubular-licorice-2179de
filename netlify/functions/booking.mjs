@@ -173,8 +173,7 @@ const emailFooterHtml = () => `
     <strong style="color:#111">Nordic E-Mobility</strong><br>
     ${htmlEscape(WORKSHOP_ADDRESS)}<br>
     <a href="mailto:info@nordicemobility.se" style="color:#067a35">info@nordicemobility.se</a> &middot;
-    <a href="tel:+46700243319" style="color:#067a35">070-024 33 19</a><br>
-    Lennart: <a href="tel:+46722607753" style="color:#067a35">072-260 77 53</a>
+    Verkstad: <a href="tel:+46101385498" style="color:#067a35">010-138 54 98</a>
   </div>
 `;
 
@@ -681,7 +680,7 @@ const sendCustomerEmail = async (caseItem) => {
       "Detaljer:",
       caseSummaryText(caseItem),
       "",
-      "Direktkontakt: Sebastian 070-024 33 19 eller Lennart 072-260 77 53.",
+      "Direktkontakt verkstad: 010-138 54 98.",
     ].join("\n"),
     attachments: [buildIcsAttachment(caseItem)],
     idempotencyKey: `${caseItem.id}-customer-email`,
