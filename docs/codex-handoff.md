@@ -221,6 +221,14 @@ Lennart = workshop operator.
 - Booking customer confirmations and public email footer point to the workshop number.
 - Internal booking/workshop SMS routing still uses staff mobiles where needed; do not replace those with the public number unless the notification flow is changed.
 
+### Public workshop chat
+
+- Public pages load `/assets/workshop-chat.js`, which adds the `Chatta med verkstaden` widget.
+- The widget posts to `/api/workshop-chat` in `netlify/functions/workshop-chat.mjs`.
+- Chat submissions create `website_chat` cases in the existing `workshop-cases` store and send 46elks SMS alerts to Lennart + Sebastian.
+- Battery/electrical/error-code chats are assigned to Sebastian; simpler workshop chats default to Lennart.
+- Operational notes and next-step livechat limitations live in `docs/workshop-chat.md`.
+
 ## Next priorities
 
 1. Test `/admin/` after Netlify deploy on the workshop touch computer.
