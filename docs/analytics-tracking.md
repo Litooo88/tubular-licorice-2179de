@@ -2,7 +2,7 @@
 
 ## Current GA4 property
 
-- GA4 Measurement ID: `G-WR90FZDZ4S`
+- GA4 Measurement ID: `G-WR90F2DZ4S`
 - Live site target: `https://www.nordicemobility.se`
 - Implementation type: static Netlify site with a shared browser loader
 
@@ -18,7 +18,7 @@ Every published `index.html` includes this config before `</head>`:
 
 ```html
 <script>
-window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90FZDZ4S",gtmContainerId:"",debugMode:new URLSearchParams(window.location.search).has("ga_debug")};
+window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debugMode:new URLSearchParams(window.location.search).has("ga_debug")};
 </script>
 <script src="/assets/analytics.js" defer></script>
 ```
@@ -34,7 +34,7 @@ This supports future client-side route changes without double-counting normal st
 
 ## Change Measurement ID
 
-Change `ga4MeasurementId` in the page config from `G-WR90FZDZ4S` to the new ID.
+Change `ga4MeasurementId` in the page config from `G-WR90F2DZ4S` to the new ID.
 
 Also update the fallback ID in `/assets/analytics.js` so pages still work if a config is missed.
 
@@ -43,7 +43,7 @@ Also update the fallback ID in `/assets/analytics.js` so pages still work if a c
 When a GTM container exists, set `gtmContainerId`:
 
 ```js
-window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90FZDZ4S",gtmContainerId:"GTM-XXXXXXX",debugMode:new URLSearchParams(window.location.search).has("ga_debug")};
+window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"GTM-XXXXXXX",debugMode:new URLSearchParams(window.location.search).has("ga_debug")};
 ```
 
 If GA4 is later managed fully inside GTM, remove or disable the direct GA4 page-view send in `/assets/analytics.js` to avoid duplicate Analytics traffic.
@@ -66,7 +66,7 @@ Search Console does not replace GA4 and does not send page-view analytics events
 
 ## Sebastian realtime check after deploy
 
-1. Open GA4 with the account that has access to the property using `G-WR90FZDZ4S`.
+1. Open GA4 with the account that has access to the property using `G-WR90F2DZ4S`.
 2. Go to Reports > Realtime.
 3. Open `https://www.nordicemobility.se/book-online/?ga_debug=1` in a normal browser tab.
 4. Open `https://www.nordicemobility.se/kontakt/?ga_debug=1`.
@@ -76,5 +76,5 @@ For detailed event checks, go to Admin > Data display > DebugView and use the sa
 
 If nothing appears after deploy, check browser DevTools > Network for:
 
-- `https://www.googletagmanager.com/gtag/js?id=G-WR90FZDZ4S`
+- `https://www.googletagmanager.com/gtag/js?id=G-WR90F2DZ4S`
 - a GA4 collect request to `google-analytics.com/g/collect` or `region1.google-analytics.com/g/collect`

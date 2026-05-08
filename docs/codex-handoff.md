@@ -199,7 +199,7 @@ Lennart = workshop operator.
 ### GA4 tracking install
 
 - GA4 is installed through the shared static loader `/assets/analytics.js`.
-- Current Measurement ID is `G-WR90FZDZ4S`.
+- Current Measurement ID is `G-WR90F2DZ4S`.
 - Every published `index.html` includes `window.NORDIC_ANALYTICS` config and the shared loader before `</head>`.
 - The loader sends manual `page_view` events for initial page load and future history route changes.
 - GTM support is prepared through `gtmContainerId` in the same config, but no GTM container is active yet.
