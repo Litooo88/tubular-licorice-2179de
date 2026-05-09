@@ -234,6 +234,9 @@ Lennart = workshop operator.
 
 - Product cards on the homepage must be clickable for information, not only order buttons.
 - Homepage `index.html` has a product detail modal that reads the clicked `.prod` card and shows image, specs, price/status, rule-guide link, call link, and order/question CTA.
+- Homepage hero intentionally presents two immediate paths: `Verkstaden` and `Nya elscootrar`.
+- `/nya-elscootrar/` is the focused sales page for new scooters, trade-in, KuKirin G4 Special, NAVEE/Teverun partner picks, Monorim/Nemob Special upgrades, helmets, and accessories.
+- KuKirin G4 Special must not be described as dual motor. Current public copy uses 2000W, 60V 20Ah, 1200Wh, up to 75 km.
 
 ## Next priorities
 
