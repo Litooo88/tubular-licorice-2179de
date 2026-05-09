@@ -516,14 +516,31 @@ nav a:hover{color:#fff}
 /* PRODUCTS */
 .products{padding:80px 0;background:#000}
 .products-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:40px}
-.prod{background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;transition:border-color .2s}
+.prod{background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;transition:border-color .2s;cursor:pointer}
 .prod:hover{border-color:#00C853}
+.prod:focus-within{outline:2px solid rgba(0,200,83,.45);outline-offset:3px}
 .prod-img{height:180px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;color:#444;font-size:12px;aspect-ratio:1.25/1}.prod-img img{width:100%;height:100%;object-fit:contain;display:block;padding:10px}
 .prod-body{padding:14px}
 .prod-name{font-size:12px;font-weight:600;line-height:1.3;margin-bottom:4px}
 .prod-price{font-size:15px;font-weight:800;color:#00C853}
 .prod-btn{display:block;width:100%;padding:9px;margin-top:10px;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#00C853;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all .2s;text-decoration:none}
 .prod-btn:hover{background:#00C853;color:#000}
+.product-modal{position:fixed;inset:0;z-index:10000;display:none;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);padding:24px;align-items:center;justify-content:center}
+.product-modal.is-open{display:flex}
+.product-dialog{width:min(860px,100%);max-height:min(760px,calc(100vh - 40px));overflow:auto;background:#0d0f0e;border:1px solid #26342b;border-radius:8px;box-shadow:0 30px 90px rgba(0,0,0,.55);color:#fff}
+.product-dialog-head{display:flex;justify-content:space-between;gap:16px;padding:18px 20px;border-bottom:1px solid #202820}
+.product-dialog-head h3{font-size:24px;margin:0 0 5px}
+.product-close{width:38px;height:38px;border-radius:999px;border:1px solid #344238;background:#162018;color:#fff;font-size:24px;cursor:pointer}
+.product-dialog-body{display:grid;grid-template-columns:minmax(220px,320px) 1fr;gap:22px;padding:20px}
+.product-dialog-body img{width:100%;aspect-ratio:1/1;object-fit:contain;background:#111;border:1px solid #222;border-radius:8px}
+.product-detail-list{display:grid;gap:10px;margin:14px 0}
+.product-detail-list li{list-style:none;border:1px solid #222;background:#111;border-radius:8px;padding:11px 12px;color:#d7ddd9;font-size:14px}
+.product-detail-list strong{display:block;color:#fff;margin-bottom:3px}
+.product-dialog-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.product-dialog-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 18px;border-radius:6px;text-decoration:none;font-weight:800}
+.product-dialog-actions .buy{background:#00C853;color:#021307}
+.product-dialog-actions .ask{border:1px solid #344238;color:#fff}
+@media(max-width:640px){.product-modal{padding:12px}.product-dialog-body{grid-template-columns:1fr}.product-dialog-head h3{font-size:20px}}
 .navee-lookbook{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:14px;margin:10px 0 28px}
 .navee-shot{position:relative;min-height:250px;border-radius:12px;overflow:hidden;border:1px solid #1c241e;background:#111;display:flex;align-items:flex-end}
 .navee-shot--feature{grid-row:span 2;min-height:0}
@@ -1395,6 +1412,31 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 <!-- STICKY MOBILE -->
 <div class="sticky-cta"><div class="sticky-inner"><a href="/book-online" class="btn-primary">Boka nu</a><a href="tel:+46101385498" class="btn-secondary">Ring</a></div></div>
 
+<div class="product-modal" id="productModal" aria-hidden="true">
+  <div class="product-dialog" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
+    <div class="product-dialog-head">
+      <div>
+        <h3 id="productModalTitle">Produktinformation</h3>
+        <p id="productModalPrice" style="color:#00C853;font-weight:900;margin:0"></p>
+      </div>
+      <button class="product-close" type="button" aria-label="St&auml;ng produktinformation">&times;</button>
+    </div>
+    <div class="product-dialog-body">
+      <img id="productModalImage" alt="">
+      <div>
+        <p id="productModalSummary" style="color:#d7ddd9;line-height:1.6;margin:0 0 12px"></p>
+        <ul class="product-detail-list" id="productModalDetails"></ul>
+        <p style="color:#9aa59e;font-size:13px;line-height:1.55;margin-top:12px">Vi hj&auml;lper dig v&auml;lja r&auml;tt modell utifr&aring;n r&auml;ckvidd, vikt, laglighet och hur den ska anv&auml;ndas. Kontrollera alltid regelguiden innan k&ouml;p av prestandamodell.</p>
+        <div class="product-dialog-actions">
+          <a class="buy" id="productModalBuy" href="/book-online">Best&auml;ll / fr&aring;ga</a>
+          <a class="ask" href="/regler-elscooter/">L&auml;s regelguiden</a>
+          <a class="ask" href="tel:+46101385498">Ring verkstaden</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <script>
 const w=document.getElementById('weight'),wV=document.getElementById('weightVal'),t=document.getElementById('terrain'),sm=document.getElementById('scooterModel'),ub=document.getElementById('upgradeBat'),uV=document.getElementById('upgradeVal');
 const products=[
@@ -1450,6 +1492,67 @@ function calcCompare(){
   mp.innerHTML=h;
 }
 calcCompare();
+
+// === PRODUCT DETAILS ===
+const productModal=document.getElementById('productModal');
+const productModalTitle=document.getElementById('productModalTitle');
+const productModalPrice=document.getElementById('productModalPrice');
+const productModalImage=document.getElementById('productModalImage');
+const productModalSummary=document.getElementById('productModalSummary');
+const productModalDetails=document.getElementById('productModalDetails');
+const productModalBuy=document.getElementById('productModalBuy');
+function productInfoFromCard(card){
+  const name=card.querySelector('.prod-name')?.textContent.trim()||'Produkt';
+  const price=card.querySelector('.prod-price')?.textContent.trim()||'Kontakta oss';
+  const lines=[...card.querySelectorAll('.prod-body > div')]
+    .map((node)=>node.textContent.trim())
+    .filter((text)=>text&&text!==name&&text!==price);
+  const spec=lines[0]||'Specifikation saknas.';
+  const description=lines.slice(1).join(' ')||'Kontakta verkstaden om du vill veta om modellen passar din k&ouml;rning, r&auml;ckvidd och lokala regler.';
+  const img=card.querySelector('img');
+  const link=card.querySelector('.prod-btn');
+  return {name,price,spec,description,imgSrc:img?.getAttribute('src')||'',imgAlt:img?.getAttribute('alt')||name,href:link?.getAttribute('href')||'/book-online'};
+}
+function openProductModal(card){
+  const info=productInfoFromCard(card);
+  productModalTitle.textContent=info.name;
+  productModalPrice.textContent=info.price;
+  productModalImage.src=info.imgSrc;
+  productModalImage.alt=info.imgAlt;
+  productModalSummary.textContent=info.description;
+  productModalDetails.innerHTML=[
+    `<li><strong>Specifikation</strong>${info.spec}</li>`,
+    `<li><strong>Pris / status</strong>${info.price}</li>`,
+    `<li><strong>N&auml;sta steg</strong>Klicka p&aring; best&auml;ll/fr&aring;ga s&aring; skapas en order- eller r&aring;dgivningsf&ouml;rfr&aring;gan till verkstaden.</li>`
+  ].join('');
+  productModalBuy.href=info.href;
+  productModalBuy.textContent=/bevaka|fråga/i.test(card.querySelector('.prod-btn')?.textContent||'')?'Fråga / bevaka':'Beställ / fråga';
+  productModal.classList.add('is-open');
+  productModal.setAttribute('aria-hidden','false');
+  productModal.querySelector('.product-close').focus();
+}
+function closeProductModal(){
+  productModal.classList.remove('is-open');
+  productModal.setAttribute('aria-hidden','true');
+}
+document.querySelectorAll('.prod').forEach((card)=>{
+  card.tabIndex=0;
+  card.setAttribute('role','button');
+  card.setAttribute('aria-label','Visa produktinformation');
+  card.addEventListener('click',(event)=>{
+    if(event.target.closest('a,button'))return;
+    openProductModal(card);
+  });
+  card.addEventListener('keydown',(event)=>{
+    if(event.key==='Enter'||event.key===' '){
+      event.preventDefault();
+      openProductModal(card);
+    }
+  });
+});
+productModal.querySelector('.product-close').addEventListener('click',closeProductModal);
+productModal.addEventListener('click',(event)=>{if(event.target===productModal)closeProductModal()});
+document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&productModal.classList.contains('is-open'))closeProductModal()});
 
 // === MOBILE NAV ===
 function closeMobileNav(){document.getElementById('mobileNav').classList.remove('open');document.querySelector('.hamburger').classList.remove('active')}

@@ -227,7 +227,13 @@ Lennart = workshop operator.
 - The widget posts to `/api/workshop-chat` in `netlify/functions/workshop-chat.mjs`.
 - Chat submissions create `website_chat` cases in the existing `workshop-cases` store and send 46elks SMS alerts to Lennart + Sebastian.
 - Battery/electrical/error-code chats are assigned to Sebastian; simpler workshop chats default to Lennart.
+- Chat SMS alerts should link to `/admin/?case=<case-id>&tab=contact`, where the card opens with a `Svara på chatt / SMS` reply box.
 - Operational notes and next-step livechat limitations live in `docs/workshop-chat.md`.
+
+### Public product details
+
+- Product cards on the homepage must be clickable for information, not only order buttons.
+- Homepage `index.html` has a product detail modal that reads the clicked `.prod` card and shows image, specs, price/status, rule-guide link, call link, and order/question CTA.
 
 ## Next priorities
 

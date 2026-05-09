@@ -274,6 +274,7 @@ export default async (request, context) => {
       const next = {
         ...current,
         updatedAt: now,
+        status: ["new", "contacted"].includes(current.status) ? "waiting_customer" : current.status,
         outboundMessages: [...(Array.isArray(current.outboundMessages) ? current.outboundMessages : []), entry],
         notifications: {
           ...(current.notifications || {}),
@@ -288,6 +289,7 @@ export default async (request, context) => {
         timeline: [
           ...(Array.isArray(current.timeline) ? current.timeline : []),
           { at: result.sentAt || now, event: `Manuellt SMS ${result.status === "sent" ? "skickat" : "misslyckades"} till kund.` },
+          ...(result.status === "sent" && ["new", "contacted"].includes(current.status) ? [{ at: result.sentAt || now, event: "Status ändrad till väntar kund efter SMS-svar." }] : []),
         ],
       };
       await store.setJSON(id, next);
