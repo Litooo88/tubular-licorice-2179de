@@ -32,7 +32,7 @@ const STAFF = {
 };
 
 const topicLabels = {
-  puncture: "Punktering / dack",
+  puncture: "Punktering / däck",
   battery: "Batteri / laddar inte",
   brakes: "Bromsar",
   error: "Felkod / display",
@@ -41,7 +41,7 @@ const topicLabels = {
 };
 
 const topicService = {
-  puncture: "Chat: Punktering / dack",
+  puncture: "Chat: Punktering / däck",
   battery: "Chat: Batteri / laddning",
   brakes: "Chat: Bromsar",
   error: "Chat: Felkod / display",
@@ -100,13 +100,14 @@ const postSms = async ({ to, message }) => {
 const notificationMessage = ({ caseId, topicLabel, customerName, phone, model, message, page }) => {
   const siteUrl = (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
   const shortId = caseId.replace(/^case_/, "").slice(0, 18).toUpperCase();
+  const adminUrl = `${siteUrl}/admin/?case=${encodeURIComponent(caseId)}&tab=contact`;
   return [
     `Ny chatt ${shortId}`,
     `Typ: ${topicLabel}`,
     `Kund: ${customerName || "Okand"} ${normalizePhone(phone)}`,
     model ? `Modell: ${model}` : "",
     `Text: ${clean(message, 220)}`,
-    `Admin: ${siteUrl}/admin/`,
+    `Svara: ${adminUrl}`,
     page ? `Sida: ${clean(page, 120)}` : "",
   ].filter(Boolean).join("\n");
 };
