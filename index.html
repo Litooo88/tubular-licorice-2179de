@@ -539,6 +539,7 @@ nav a:hover{color:#fff}
 .product-close{width:38px;height:38px;border-radius:999px;border:1px solid #344238;background:#162018;color:#fff;font-size:24px;cursor:pointer}
 .product-dialog-body{display:grid;grid-template-columns:minmax(220px,320px) 1fr;gap:22px;padding:20px}
 .product-dialog-body img{width:100%;aspect-ratio:1/1;object-fit:contain;background:#111;border:1px solid #222;border-radius:8px}
+.product-gallery-stage{position:relative}.product-gallery-stage img{display:block}.product-gallery-nav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:999px;border:1px solid #344238;background:rgba(0,0,0,.72);color:#fff;font-size:22px;cursor:pointer}.product-gallery-prev{left:8px}.product-gallery-next{right:8px}.product-gallery-thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}.product-gallery-thumbs button{border:1px solid #27352b;background:#111;border-radius:6px;padding:3px;cursor:pointer}.product-gallery-thumbs button.is-active{border-color:#00C853}.product-gallery-thumbs img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:4px;padding:0}
 .product-detail-list{display:grid;gap:10px;margin:14px 0}
 .product-detail-list li{list-style:none;border:1px solid #222;background:#111;border-radius:8px;padding:11px 12px;color:#d7ddd9;font-size:14px}
 .product-detail-list strong{display:block;color:#fff;margin-bottom:3px}
@@ -1437,7 +1438,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <button class="product-close" type="button" aria-label="St&auml;ng produktinformation">&times;</button>
     </div>
     <div class="product-dialog-body">
-      <img id="productModalImage" alt="">
+      <div>
+        <div class="product-gallery-stage">
+          <button class="product-gallery-nav product-gallery-prev" type="button" aria-label="F&ouml;reg&aring;ende bild">&#8249;</button>
+          <img id="productModalImage" alt="">
+          <button class="product-gallery-nav product-gallery-next" type="button" aria-label="N&auml;sta bild">&#8250;</button>
+        </div>
+        <div class="product-gallery-thumbs" id="productModalThumbs"></div>
+      </div>
       <div>
         <p id="productModalSummary" style="color:#d7ddd9;line-height:1.6;margin:0 0 12px"></p>
         <ul class="product-detail-list" id="productModalDetails"></ul>
@@ -1516,6 +1524,46 @@ const productModalImage=document.getElementById('productModalImage');
 const productModalSummary=document.getElementById('productModalSummary');
 const productModalDetails=document.getElementById('productModalDetails');
 const productModalBuy=document.getElementById('productModalBuy');
+const productModalThumbs=document.getElementById('productModalThumbs');
+const productGalleries={
+  'kukirin g4 special edition':[
+    'https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272',
+    'https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp',
+    'https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp',
+    'https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp'
+  ],
+  'g4 special edition':[
+    'https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272',
+    'https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp',
+    'https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp',
+    'https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp'
+  ],
+  'xt5 ultra':[
+    '/assets/products/navee/xt5-ultra-drive.jpg',
+    'https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png',
+    'https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png'
+  ],
+  'navee xt5 ultra':[
+    '/assets/products/navee/xt5-ultra-drive.jpg',
+    'https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png',
+    'https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png'
+  ],
+  'fighter mini pro ekfv':[
+    'https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png',
+    'https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Fighter_mini_pro_08209532-0091-46c1-bc73-ec7a5507dd4f.png?v=1760331427&width=2048',
+    'https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&width=2048',
+    'https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&width=2048'
+  ]
+};
+let productGalleryImages=[];
+let productGalleryIndex=0;
+function galleryKey(name){return name.toLowerCase().replace(/\s+/g,' ').trim()}
+function renderProductGallery(){
+  if(!productGalleryImages.length)return;
+  productModalImage.src=productGalleryImages[productGalleryIndex];
+  productModalThumbs.innerHTML=productGalleryImages.map((src,index)=>`<button type="button" class="${index===productGalleryIndex?'is-active':''}" aria-label="Visa bild ${index+1}"><img src="${src}" alt=""></button>`).join('');
+  productModalThumbs.querySelectorAll('button').forEach((button,index)=>button.addEventListener('click',()=>{productGalleryIndex=index;renderProductGallery()}));
+}
 function productInfoFromCard(card){
   const name=card.querySelector('.prod-name')?.textContent.trim()||'Produkt';
   const price=card.querySelector('.prod-price')?.textContent.trim()||'Kontakta oss';
@@ -1526,14 +1574,18 @@ function productInfoFromCard(card){
   const description=lines.slice(1).join(' ')||'Kontakta verkstaden om du vill veta om modellen passar din k&ouml;rning, r&auml;ckvidd och lokala regler.';
   const img=card.querySelector('img');
   const link=card.querySelector('.prod-btn');
-  return {name,price,spec,description,imgSrc:img?.getAttribute('src')||'',imgAlt:img?.getAttribute('alt')||name,href:link?.getAttribute('href')||'/book-online'};
+  const baseImage=img?.getAttribute('src')||'';
+  const gallery=productGalleries[galleryKey(name)]||[baseImage].filter(Boolean);
+  return {name,price,spec,description,imgSrc:baseImage,imgAlt:img?.getAttribute('alt')||name,href:link?.getAttribute('href')||'/book-online',gallery};
 }
 function openProductModal(card){
   const info=productInfoFromCard(card);
   productModalTitle.textContent=info.name;
   productModalPrice.textContent=info.price;
-  productModalImage.src=info.imgSrc;
+  productGalleryImages=info.gallery.length?info.gallery:[info.imgSrc].filter(Boolean);
+  productGalleryIndex=0;
   productModalImage.alt=info.imgAlt;
+  renderProductGallery();
   productModalSummary.textContent=info.description;
   productModalDetails.innerHTML=[
     `<li><strong>Specifikation</strong>${info.spec}</li>`,
@@ -1566,6 +1618,8 @@ document.querySelectorAll('.prod').forEach((card)=>{
   });
 });
 productModal.querySelector('.product-close').addEventListener('click',closeProductModal);
+productModal.querySelector('.product-gallery-prev').addEventListener('click',()=>{if(!productGalleryImages.length)return;productGalleryIndex=(productGalleryIndex-1+productGalleryImages.length)%productGalleryImages.length;renderProductGallery()});
+productModal.querySelector('.product-gallery-next').addEventListener('click',()=>{if(!productGalleryImages.length)return;productGalleryIndex=(productGalleryIndex+1)%productGalleryImages.length;renderProductGallery()});
 productModal.addEventListener('click',(event)=>{if(event.target===productModal)closeProductModal()});
 document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&productModal.classList.contains('is-open'))closeProductModal()});
 
