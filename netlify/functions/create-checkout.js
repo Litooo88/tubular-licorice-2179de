@@ -36,6 +36,58 @@ const PRODUCTS = {
   "kukirin-g4-max": { name: "KuKirin G4 Max", price: 2699000 },
 };
 
+const SCOOTER_PROMO = {
+  code: "NEMOB30",
+  couponId: "nemob30-scooter-10",
+  name: "NEMOB30 - 10% rabatt pa elscooter",
+  percentOff: 10,
+  maxRedemptions: 5,
+};
+
+const ensureScooterPromoCode = async () => {
+  const existingCodes = await stripe.promotionCodes.list({
+    code: SCOOTER_PROMO.code,
+    limit: 1,
+  });
+  const existingCode = existingCodes.data[0];
+
+  if (existingCode) {
+    return existingCode.id;
+  }
+
+  let coupon;
+  try {
+    coupon = await stripe.coupons.retrieve(SCOOTER_PROMO.couponId);
+  } catch (err) {
+    if (err?.code !== "resource_missing") {
+      throw err;
+    }
+    coupon = await stripe.coupons.create({
+      id: SCOOTER_PROMO.couponId,
+      name: SCOOTER_PROMO.name,
+      percent_off: SCOOTER_PROMO.percentOff,
+      duration: "once",
+      max_redemptions: SCOOTER_PROMO.maxRedemptions,
+      metadata: {
+        campaign: SCOOTER_PROMO.code,
+        scope: "elscooter_checkout",
+      },
+    });
+  }
+
+  const promoCode = await stripe.promotionCodes.create({
+    coupon: coupon.id,
+    code: SCOOTER_PROMO.code,
+    max_redemptions: SCOOTER_PROMO.maxRedemptions,
+    metadata: {
+      campaign: SCOOTER_PROMO.code,
+      scope: "elscooter_checkout",
+    },
+  });
+
+  return promoCode.id;
+};
+
 exports.handler = async (event) => {
   if (event.httpMethod !== "POST") {
     return { statusCode: 405, body: "Method Not Allowed" };
@@ -53,6 +105,7 @@ exports.handler = async (event) => {
     }
 
     const origin = event.headers.origin || "https://www.nordicemobility.se";
+    await ensureScooterPromoCode();
 
     const session = await stripe.checkout.sessions.create({
       locale: "sv",
@@ -71,6 +124,7 @@ exports.handler = async (event) => {
       ],
       mode: "payment",
       automatic_payment_methods: { enabled: true },
+      allow_promotion_codes: true,
       success_url: `${origin}/?purchase=success`,
       cancel_url: `${origin}/#produkter`,
       shipping_address_collection: {
