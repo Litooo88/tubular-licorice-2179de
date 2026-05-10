@@ -385,6 +385,12 @@ nav a:hover{color:#fff}
 .hero .subtitle{font-size:19px;color:#bbb;max-width:540px;line-height:1.6;margin-bottom:32px}
 .hero-buttons{display:flex;gap:16px;flex-wrap:wrap;align-items:start;margin-bottom:36px}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.3);padding:8px 16px;border-radius:100px;font-size:14px;font-weight:600;color:#00C853;margin-bottom:24px}
+.hero-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:900px;margin:34px 0 28px}
+.hero-choice{display:block;background:rgba(10,14,11,.86);border:1px solid #253227;border-radius:8px;padding:24px;color:#fff;text-decoration:none;transition:.2s}
+.hero-choice:hover{border-color:#00C853;transform:translateY(-2px)}
+.hero-choice small{display:block;color:#00C853;font-weight:900;letter-spacing:.12em;text-transform:uppercase;font-size:11px;margin-bottom:8px}
+.hero-choice strong{display:block;font-size:24px;line-height:1.1;margin-bottom:10px}
+.hero-choice span{display:block;color:#c6d0ca;line-height:1.55;font-size:14px}
 .hero-proof{display:flex;gap:28px;flex-wrap:wrap}
 .hero-proof-item{display:flex;align-items:center;gap:8px;font-size:14px;color:#aaa}
 .hero-proof-item .chk{color:#00C853;font-weight:700}
@@ -612,7 +618,8 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   .navee-lookbook{grid-template-columns:1fr 1fr}
   .navee-shot--feature{grid-column:1 / -1;min-height:320px}
   .navee-shot-title{font-size:24px}
-  .products .products-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px}
+.products .products-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px}
+.hero-choices{grid-template-columns:1fr}
   .prod{display:flex;flex-direction:column;min-width:0}
   .prod-img{width:100%;height:auto!important;aspect-ratio:1/1;min-height:0}
   .prod-img img{width:100%!important;height:100%!important;object-fit:contain!important;padding:8px}
@@ -689,7 +696,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <a href="/priser/">Prislista</a>
     <a href="#hallbarhet">H&#229;llbarhet</a>
     <a href="#batteri">Batteri</a>
-    <a href="#produkter">Produkter</a>
+    <a href="/nya-elscootrar/">Nya elscootrar</a>
     <a href="/regler-elscooter/">Regler</a>
     <a href="#blogg">Blogg</a>
     <a href="/kontakt/">Kontakt</a>
@@ -705,7 +712,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   <a href="/priser/" onclick="closeMobileNav()">Prislista</a>
   <a href="#hallbarhet" onclick="closeMobileNav()">H&#229;llbarhet</a>
   <a href="#batteri" onclick="closeMobileNav()">Batteri</a>
-  <a href="#produkter" onclick="closeMobileNav()">Produkter</a>
+  <a href="/nya-elscootrar/" onclick="closeMobileNav()">Nya elscootrar</a>
   <a href="/regler-elscooter/" onclick="closeMobileNav()">Regler</a>
   <a href="#blogg" onclick="closeMobileNav()">Blogg</a>
   <a href="/kontakt/" onclick="closeMobileNav()">Kontakt</a>
@@ -716,24 +723,32 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 <!-- HERO -->
 <section class="hero" id="boka">
 <div class="container">
-            <div class="hero-badge">10% rabatt via nyhetsbrevet</div>
-  <h1>Problem med din elscooter? <span class="accent">Vi fixar den snabbt — utan krångel</span></h1>
-  <p class="subtitle">Boka online på 30 sekunder. Vi hämtar, felsöker och ger dig fast pris innan vi gör något.</p>
+  <div class="hero-badge">Verkstad + nya elscootrar i Örebro</div>
+  <h1>Behöver du fixa din scooter — eller är det dags för en ny?</h1>
+  <p class="subtitle">Välj väg direkt. Vi hjälper dig med service, felsökning och batteri, men också med nya elscootrar, inbyte, Monorim-uppgraderingar och rätt tillbehör.</p>
+  <div class="hero-choices">
+    <a class="hero-choice" href="/book-online">
+      <small>Verkstaden</small>
+      <strong>Boka service, felsökning eller batterihjälp</strong>
+      <span>Snabb bokning, tydligt pris innan arbete och möjlighet att ringa verkstaden direkt.</span>
+    </a>
+    <a class="hero-choice" href="/nya-elscootrar/">
+      <small>Nya elscootrar</small>
+      <strong>Se vårt utbud, kampanjer och inbyte</strong>
+      <span>Partnerfavoriter, KuKirin G4 Special, NAVEE, Teverun, hjälm på köpet och Monorim/Nemob Special.</span>
+    </a>
+  </div>
   <div class="hero-buttons">
     <div>
-                <a href="/book-online" class="btn-primary">Boka felsökning online &#8594;</a>
+      <a href="/book-online" class="btn-primary">Boka verkstadstid &#8594;</a>
       <span class="btn-hint">Tar 30 sek &#183; Inget bindande &#183; Pris innan arbete</span>
     </div>
-    <a href="tel:+46101385498" class="btn-secondary">Ring nu — få hjälp direkt</a>
+    <a href="/nya-elscootrar/" class="btn-secondary">Se nya elscootrar</a>
   </div>
   <div class="hero-proof">
-    <div class="hero-proof-item"><span class="chk">&#10003;</span> Svar inom 24h</div>
-    <div class="hero-proof-item"><span class="chk">&#10003;</span> Fast pris innan vi börjar</div>
-    <div class="hero-proof-item"><span class="chk">&#10003;</span> Specialister på batteri & el</div>
-  </div>
-  <div class="hero-stars">
-    <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-    <div class="star-text"><strong>5.0 på Google</strong> — Riktiga recensioner från kunder i Örebro</div>
+    <div class="hero-proof-item"><span class="chk">&#10003;</span> Vi kan köpa in din gamla scooter</div>
+    <div class="hero-proof-item"><span class="chk">&#10003;</span> Rabatt på ny scooter vid inbyte</div>
+    <div class="hero-proof-item"><span class="chk">&#10003;</span> Service och delar efter köpet</div>
   </div>
 </div>
 </section>
@@ -1032,7 +1047,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <option value="374" data-watts="350" data-name="KuKirin S1 Max">KuKirin S1 Max &#8212; 350W (374 Wh)</option>
             <option value="720" data-watts="800" data-name="KuKirin G2">KuKirin G2 &#8212; 800W (720 Wh)</option>
             <option value="874" data-watts="800" data-name="KuKirin M4 Max">KuKirin M4 Max &#8212; 800W (874 Wh)</option>
-            <option value="960" data-watts="2000" data-name="KuKirin G4 SE">KuKirin G4 Special Edition &#8212; 2&#215;1000W (960 Wh)</option>
+            <option value="1200" data-watts="2000" data-name="KuKirin G4 SE">KuKirin G4 Special Edition &#8212; 2000W (1200 Wh)</option>
             <option value="864" data-watts="1200" data-name="KuKirin G3">KuKirin G3 &#8212; 1200W (864 Wh)</option>
             <option value="960" data-watts="1000" data-name="KuKirin G2 Max">KuKirin G2 Max &#8212; 1000W (960 Wh)</option>
             <option value="1196" data-watts="2400" data-name="KuKirin G3 Pro">KuKirin G3 Pro &#8212; 2&#215;1200W (1196 Wh)</option>
@@ -1293,7 +1308,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   <!-- KuKirin Mellanklass -->
   <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Mellanklass &mdash; Kraft &amp; r&auml;ckvidd</div>
   <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
-    <div class="prod" style="border-color:#ff6d00"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#ff6d00;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">SPECIAL EDITION</div><img width="500" height="500" loading="lazy" decoding="async" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272" alt="KuKirin G4 Special Edition" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#128293;'"></div><div class="prod-body"><div class="prod-name">G4 <span style="font-size:9px;color:#ff6d00">SPECIAL EDITION</span></div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1000W &bull; 48V 20Ah &bull; 960 Wh &bull; 75 km</div><div class="prod-price">9 950 kr</div><a href="/book-online?service=bestallning&modell=KuKirin-G4-Special" class="prod-btn" data-product="kukirin-g4-special" data-price="9950" style="background:rgba(255,109,0,.15);border-color:rgba(255,109,0,.4);color:#ff6d00">K&ouml;p nu &mdash; Special Edition</a></div></div>
+<div class="prod" style="border-color:#ff6d00"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#ff6d00;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">SPECIAL EDITION</div><img width="500" height="500" loading="lazy" decoding="async" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272" alt="KuKirin G4 Special Edition" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#128293;'"></div><div class="prod-body"><div class="prod-name">G4 <span style="font-size:9px;color:#ff6d00">SPECIAL EDITION</span></div><div style="font-size:11px;color:#888;margin:4px 0">2000W &bull; 60V 20Ah &bull; 1200 Wh &bull; upp till 75 km</div><div style="font-size:11px;color:#ffcf9c;line-height:1.5;margin-bottom:10px">Nordic E-Mobility Special: svart crosshj&auml;lm ing&aring;r vid k&ouml;p.</div><div class="prod-price">9 950 kr</div><a href="/book-online?service=bestallning&modell=KuKirin-G4-Special" class="prod-btn" data-product="kukirin-g4-special" data-price="9950" style="background:rgba(255,109,0,.15);border-color:rgba(255,109,0,.4);color:#ff6d00">K&ouml;p nu &mdash; hj&auml;lm ing&aring;r</a></div></div>
     <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">I LAGER</div><img width="500" height="500" loading="lazy" decoding="async" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/1_7da8cb39-a62d-45ec-ba6c-326fde3ce614.jpg?v=1718356445" alt="KuKirin G3" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">G3</div><div style="font-size:11px;color:#888;margin:4px 0">1200W &bull; 48V 18Ah &bull; 864 Wh &bull; 70 km</div><div class="prod-price">10 490 kr</div><a href="/book-online?service=bestallning&modell=KuKirin-G3" class="prod-btn" data-product="kukirin-g3" data-price="10490">K&ouml;p nu</a></div></div>
     <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">I LAGER</div><img width="500" height="500" loading="lazy" decoding="async" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2_Max_29.jpg?v=1774526365" alt="KuKirin G2 Max" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">G2 Max</div><div style="font-size:11px;color:#888;margin:4px 0">1000W &bull; 48V 20Ah &bull; 960 Wh &bull; 80 km</div><div class="prod-price">10 990 kr</div><a href="/book-online?service=bestallning&modell=KuKirin-G2-Max" class="prod-btn" data-product="kukirin-g2-max" data-price="10990">K&ouml;p nu</a></div></div>
   </div>
@@ -1392,7 +1407,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     </div>
     <div>
       <div class="f-hd">Information</div>
-      <ul class="f-links"><li><a href="/guider/">Guider</a></li><li><a href="#produkter">Produkter</a></li><li><a href="/regler-elscooter/">Regler</a></li><li><a href="/foretag-serviceavtal/">Företag</a></li><li><a href="/om-oss/">Om oss</a></li><li><a href="/villkor/">Villkor</a></li><li><a href="/integritet/">Integritet</a></li></ul>
+<ul class="f-links"><li><a href="/guider/">Guider</a></li><li><a href="/nya-elscootrar/">Nya elscootrar</a></li><li><a href="/regler-elscooter/">Regler</a></li><li><a href="/foretag-serviceavtal/">Företag</a></li><li><a href="/om-oss/">Om oss</a></li><li><a href="/villkor/">Villkor</a></li><li><a href="/integritet/">Integritet</a></li></ul>
     </div>
     <div>
       <div class="f-hd">Kontakt</div>
@@ -1455,7 +1470,7 @@ const products=[
   {name:'KuKirin S1 Max',wh:374,price:'4 990 kr',brand:'KUKIRIN'},
   {name:'KuKirin G2',wh:720,price:'7 990 kr',brand:'KUKIRIN'},
   {name:'KuKirin M4 Max',wh:874,price:'7 490 kr',brand:'KUKIRIN'},
-  {name:'KuKirin G4 Special Edition',wh:960,price:'9 950 kr',brand:'KUKIRIN'},
+  {name:'KuKirin G4 Special Edition',wh:1200,price:'9 950 kr',brand:'KUKIRIN'},
   {name:'KuKirin G3',wh:864,price:'10 490 kr',brand:'KUKIRIN'},
   {name:'KuKirin G2 Max',wh:960,price:'10 990 kr',brand:'KUKIRIN'},
   {name:'KuKirin G3 Pro',wh:1196,price:'18 990 kr',brand:'KUKIRIN'},
