@@ -43,4 +43,4 @@ export interface CallLogRow {
   recording_url?: string | null;
 }
 
-export type Operator = "sebastian" | "lennart" | "lennart-fallback";
+export type Operator = "sebastian" | "sebastian-fallback" | "lennart";

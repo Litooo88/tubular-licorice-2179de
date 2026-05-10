@@ -30,8 +30,8 @@ export function introIvr(env: Env, reqUrl: URL, payload: ElksPayload) {
     digits: 1,
     timeout: 8,
     repeat: 1,
-    "1": withParams(new URL("/route/sebastian", base), { ...params, ivr_choice: "1" }),
-    "2": withParams(new URL("/route/lennart", base), { ...params, ivr_choice: "2" }),
+    "1": withParams(new URL("/route/lennart", base), { ...params, ivr_choice: "1" }),
+    "2": withParams(new URL("/route/sebastian", base), { ...params, ivr_choice: "2" }),
     next: withParams(new URL("/route/from-ivr", base), params)
   };
 }
@@ -59,13 +59,13 @@ export function holdThenDial(env: Env, reqUrl: URL, operator: Operator, payload:
 }
 
 export function dial(env: Env, reqUrl: URL, operator: Operator, payload: ElksPayload) {
-  const isSebastian = operator === "sebastian";
+  const isSebastian = operator === "sebastian" || operator === "sebastian-fallback";
   const number = isSebastian ? env.SEBASTIAN_NUMBER : env.LENNART_NUMBER;
   const callid = callId(payload, reqUrl);
   const from = caller(payload, reqUrl);
   const ivr = String(ivrChoice(payload, reqUrl) || reqUrl.searchParams.get("ivr_choice") || "default");
-  const nextPath = isSebastian ? "/dial/lennart-fallback" : "/voicemail";
-  const attempt = operator === "lennart-fallback" ? "lennart" : operator;
+  const nextPath = operator === "lennart" ? "/dial/sebastian-fallback" : "/voicemail";
+  const attempt = isSebastian ? "sebastian" : "lennart";
 
   return {
     connect: number,
