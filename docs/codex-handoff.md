@@ -214,6 +214,13 @@ Lennart = workshop operator.
 - Override with Netlify env vars `VOICE_CALLER_ID`, `VOICE_SEBASTIAN_PHONE`, `VOICE_LENNART_PHONE`, `VOICE_TIMEOUT_SECONDS`, and `VOICE_MISSED_SMS_TO`.
 - Setup/test notes live in `docs/46elks-voice-fallback.md`.
 
+### Cloudflare 46elks callflow worker
+
+- `nemob-callflow/` contains a standalone Cloudflare Workers TypeScript implementation for the richer 46elks IVR flow.
+- It uses D1 for `call_log`, KV binding for future transient state, 46elks SMS notifications, office-hours routing, voicemail recording callbacks, `/stats`, and a daily cron purge for call logs older than 90 days.
+- The implementation follows current 46elks docs for IVR/record action syntax and documents that 46elks officially recommends IP firewalling for callback-origin verification. The optional HMAC check is custom and off by default via `REQUIRE_ELKS_SIGNATURE=false`.
+- Deploy steps, required `wrangler secret put` commands, MP3 prompt text, and test scenarios live in `nemob-callflow/README.md`.
+
 ### Public workshop phone number
 
 - Public website contact CTAs now present one workshop number: `010-138 54 98` (`+46101385498`).
