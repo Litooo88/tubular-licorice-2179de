@@ -1,20 +1,40 @@
-const SWEDISH_PUBLIC_HOLIDAYS_2026 = new Set([
-  "2026-01-01",
-  "2026-01-06",
-  "2026-04-03",
-  "2026-04-05",
-  "2026-04-06",
-  "2026-05-01",
-  "2026-05-14",
-  "2026-05-24",
-  "2026-06-06",
-  "2026-06-19",
-  "2026-06-20",
-  "2026-10-31",
-  "2026-12-24",
-  "2026-12-25",
-  "2026-12-26",
-  "2026-12-31"
+// Svenska helgdagar — uppdatera årligen i december för nästa år.
+// Bygger in 2026 + 2027 nu. Sätt påminnelse i kalender 2027-12-15 för 2028-listan.
+const SWEDISH_PUBLIC_HOLIDAYS = new Set([
+  // 2026
+  "2026-01-01", // Nyårsdagen
+  "2026-01-06", // Trettondedag jul
+  "2026-04-03", // Långfredag
+  "2026-04-05", // Påskdagen
+  "2026-04-06", // Annandag påsk
+  "2026-05-01", // Första maj
+  "2026-05-14", // Kristi himmelsfärds dag
+  "2026-05-24", // Pingstdagen
+  "2026-06-06", // Sveriges nationaldag
+  "2026-06-19", // Midsommarafton (klämdag)
+  "2026-06-20", // Midsommardagen
+  "2026-10-31", // Alla helgons dag
+  "2026-12-24", // Julafton
+  "2026-12-25", // Juldagen
+  "2026-12-26", // Annandag jul
+  "2026-12-31", // Nyårsafton
+  // 2027
+  "2027-01-01", // Nyårsdagen
+  "2027-01-06", // Trettondedag jul
+  "2027-03-26", // Långfredag
+  "2027-03-28", // Påskdagen
+  "2027-03-29", // Annandag påsk
+  "2027-05-01", // Första maj (lördag)
+  "2027-05-06", // Kristi himmelsfärds dag
+  "2027-05-16", // Pingstdagen
+  "2027-06-06", // Sveriges nationaldag (söndag)
+  "2027-06-25", // Midsommarafton
+  "2027-06-26", // Midsommardagen
+  "2027-11-06", // Alla helgons dag
+  "2027-12-24", // Julafton
+  "2027-12-25", // Juldagen
+  "2027-12-26", // Annandag jul
+  "2027-12-31"  // Nyårsafton
 ]);
 
 export function stockholmParts(now: Date, tz = "Europe/Stockholm") {
@@ -40,7 +60,7 @@ export function stockholmParts(now: Date, tz = "Europe/Stockholm") {
 export function isOfficeHours(now: Date, tz = "Europe/Stockholm"): boolean {
   const local = stockholmParts(now, tz);
   if (local.weekday === "lör" || local.weekday === "sön") return false;
-  if (SWEDISH_PUBLIC_HOLIDAYS_2026.has(local.date)) return false;
+  if (SWEDISH_PUBLIC_HOLIDAYS.has(local.date)) return false;
   const minutes = local.hour * 60 + local.minute;
   return minutes >= 9 * 60 && minutes < 18 * 60;
 }

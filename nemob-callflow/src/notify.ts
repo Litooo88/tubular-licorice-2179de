@@ -22,11 +22,29 @@ async function sendSms(env: Env, to: string, message: string): Promise<void> {
   }
 }
 
+/**
+ * Spam-skydd: bekräfta att numret ser ut som ett svenskt mobilnummer.
+ * Förhindrar SMS-bombning av spam-uppringare, fasta nummer, internationella
+ * nummer (som kan vara dyrare per SMS), och returkanaler som inte tar emot SMS.
+ *
+ * Svenska mobilnummer börjar alltid med +467X följt av 8 siffror (totalt 11 tecken).
+ */
+function isLikelySwedishMobile(e164: string): boolean {
+  return /^\+467\d{8}$/.test(e164);
+}
+
 export function notifySebastian(env: Env, message: string, ctx: ExecutionContext): void {
   ctx.waitUntil(sendSms(env, env.SEBASTIAN_NUMBER, message));
 }
 
 export function notifyCaller(env: Env, to: string, ctx: ExecutionContext): void {
+  // P0-skydd: skicka inte SMS till okända / icke-svenska / icke-mobila nummer.
+  // Sparar SMS-credits och undviker rejections från 46elks.
+  if (!isLikelySwedishMobile(to)) {
+    console.log(`Skipping caller SMS to non-Swedish-mobile: ${to}`);
+    return;
+  }
+
   const message = [
     "Hej! Tack for ditt samtal till Nordic E-Mobility.",
     "Vi ar upptagna just nu men har sett att du ringt.",
