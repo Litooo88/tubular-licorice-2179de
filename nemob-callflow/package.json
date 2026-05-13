@@ -7,7 +7,7 @@
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
     "check": "tsc --noEmit",
-    "voice:openai": "node scripts/generate-voice-prompts.mjs",
+    "voice:elevenlabs": "node scripts/generate-voice-prompts.mjs",
     "test:scenarios": "bash test/scenarios.sh"
   },
   "devDependencies": {
