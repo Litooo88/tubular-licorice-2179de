@@ -18,12 +18,12 @@ flowchart TD
   B --> C{"Office hours Mon-Fri 09-18?"}
   C -- "No" --> V["Outside-hours prompt"]
   V --> R["Voicemail recording"]
-  C -- "Yes" --> I["IVR welcome: 1 workshop, 2 sales"]
-  I -- "1 or no input" --> S["Hold audio, then Sebastian"]
-  I -- "2" --> L["Hold audio, then Lennart"]
-  S -- "No answer" --> LF["Lennart fallback"]
-  L -- "No answer" --> R
-  LF -- "No answer" --> R
+  C -- "Yes" --> I["IVR welcome: 1 workshop/service, 2 sales/new scooter"]
+  I -- "1 or no input" --> L["Hold audio, then Lennart"]
+  I -- "2" --> S["Hold audio, then Sebastian"]
+  L -- "No answer" --> SF["Sebastian fallback"]
+  S -- "No answer" --> R
+  SF -- "No answer" --> R
   R --> N["SMS Sebastian + transactional SMS to caller"]
   S --> D1["D1 call_log"]
   L --> D1
@@ -122,15 +122,31 @@ Required scripts:
 
 Welcome:
 
-> Valkommen till Nordic E-Mobility. Tryck 1 for verkstad, tryck 2 for forsaljning. Vi kopplar dig direkt.
+> Du hör en automatisk röst från Nordic E-Mobility. Välkommen. Tryck 1 för verkstad, service och bokning. Tryck 2 för ny elscooter, försäljning eller inbyte. Vi kopplar dig direkt.
+
+Recommended AI voice generation:
+
+- Generate the prompt MP3s with a calm Swedish voice in OpenAI TTS, ElevenLabs, or another licensed TTS tool.
+- OpenAI's TTS docs require clear disclosure that the voice is AI-generated, so the scripts say "automatisk röst".
+- Export mono MP3, 8 kHz or 16 kHz, 64 kbps if possible.
+- Do not use a celebrity/imitation voice. Use a neutral brand voice.
+
+OpenAI generation helper:
+
+```bash
+cd nemob-callflow
+OPENAI_API_KEY=sk-... npm run voice:openai
+```
+
+The files are written to `nemob-callflow/dist/prompts/` and then need to be uploaded to stable public HTTPS URLs.
 
 Voicemail, mandatory consent:
 
-> Du har kommit till Nordic E-Mobilitys rostbrevlada. Lamna ditt namn, telefonnummer och vad det galler efter pipet. Genom att lamna ett meddelande godkanner du att samtalet spelas in och lagras i 90 dagar for att vi ska kunna aterkomma. Tryck fyrkant nar du ar klar.
+> Du hör en automatisk röst från Nordic E-Mobility. Du har kommit till vår röstbrevlåda. Lämna ditt namn, telefonnummer och vad det gäller efter pipet. Genom att lämna ett meddelande godkänner du att samtalet spelas in och lagras i 90 dagar för att vi ska kunna återkomma. Tryck fyrkant när du är klar.
 
 Outside hours:
 
-> Hej! Du har ringt utanfor vara oppettider man-fre 9-18. Lamna ett meddelande efter pipet sa hor vi av oss pa morgonen.
+> Du hör en automatisk röst från Nordic E-Mobility. Du har ringt utanför våra öppettider måndag till fredag 9 till 18. Lämna ett meddelande efter pipet så hör vi av oss på morgonen.
 
 Hold:
 
@@ -138,11 +154,11 @@ Hold:
 
 ## Operator Instructions
 
-Sebastian is called first for option 1 and default/no-input calls.
+Lennart is called first for option 1 and default/no-input calls.
 
-Lennart is called directly for option 2 and as fallback when Sebastian misses option 1.
+Sebastian is called for option 2 sales/new-scooter calls and as fallback when Lennart misses option 1.
 
-Do not use mid-call DTMF transfer. If Sebastian needs to transfer a live call, use the phone's native carrier transfer/conference feature. On iOS/Android this is usually done by adding Lennart as a second call and merging/transferring according to carrier support.
+Do not use mid-call DTMF transfer. If Lennart gets a technical question he cannot answer, he should use the phone's native carrier transfer/conference feature to bring Sebastian into the call. On iOS/Android this is usually done by adding Sebastian as a second call and merging/transferring according to carrier support.
 
 Both Sebastian and Lennart should save `010-138 54 98` as "NEMOB Verkstad" so routed work calls are obvious.
 

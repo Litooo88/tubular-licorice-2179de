@@ -130,6 +130,9 @@ Lennart = workshop operator.
 
 - `/workshop/` is Lennart's simplified daily work mode.
 - It shows active/inlamnade cases only and excludes price database, final checkout controls, and customer message buttons.
+- Each collapsed job card shows customer contact info first and a clear `Starta` button.
+- Opening a job pauses auto-refresh so Lennart is not bounced back to the top while typing or scrolling.
+- Expanded jobs use a step-by-step workflow: start work, check approved boundaries, quick documentation buttons, photos, and final status actions.
 - Each job shows customer, model, problem, approved work, "do not do without approval", and next action.
 - Photo workflow uses existing `/api/cases/:id/media` with internal categories `before`, `during`, and `after`.
 - Short workshop log is stored on `case.workshop`:
@@ -218,6 +221,8 @@ Lennart = workshop operator.
 
 - `nemob-callflow/` contains a standalone Cloudflare Workers TypeScript implementation for the richer 46elks IVR flow.
 - It uses D1 for `call_log`, KV binding for future transient state, 46elks SMS notifications, office-hours routing, voicemail recording callbacks, `/stats`, and a daily cron purge for call logs older than 90 days.
+- Current route intent: option 1/default = Lennart/workshop first, then Sebastian fallback, then voicemail. Option 2 = Sebastian/sales, then voicemail.
+- AI voice prompt generation helper lives in `nemob-callflow/scripts/generate-voice-prompts.mjs` and uses OpenAI TTS when `OPENAI_API_KEY` is available.
 - The implementation follows current 46elks docs for IVR/record action syntax and documents that 46elks officially recommends IP firewalling for callback-origin verification. The optional HMAC check is custom and off by default via `REQUIRE_ELKS_SIGNATURE=false`.
 - Deploy steps, required `wrangler secret put` commands, MP3 prompt text, and test scenarios live in `nemob-callflow/README.md`.
 

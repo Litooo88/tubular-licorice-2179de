@@ -26,21 +26,21 @@ assert_contains() {
   echo "PASS: $label"
 }
 
-echo "Scenario 1: office-hours IVR option 1 -> Sebastian"
+echo "Scenario 1: office-hours IVR option 1 -> Lennart workshop"
 resp=$(post_form "/route/from-ivr" "callid=test-1&from=$CALLER&to=$TO&result=1")
-assert_contains "$resp" '"/dial/sebastian' "routes option 1 to Sebastian dial"
+assert_contains "$resp" '"/dial/lennart' "routes option 1 to Lennart dial"
 
-echo "Scenario 2: Sebastian misses -> Lennart fallback"
-resp=$(post_form "/dial/sebastian?callid=test-2&from=$CALLER&ivr_choice=1" "callid=test-2&from=$CALLER&to=$TO")
-assert_contains "$resp" '"/dial/lennart-fallback' "Sebastian dial has Lennart fallback"
+echo "Scenario 2: Lennart misses -> Sebastian fallback"
+resp=$(post_form "/dial/lennart?callid=test-2&from=$CALLER&ivr_choice=1" "callid=test-2&from=$CALLER&to=$TO")
+assert_contains "$resp" '"/dial/sebastian-fallback' "Lennart dial has Sebastian fallback"
 
 echo "Scenario 3: both miss -> voicemail"
-resp=$(post_form "/dial/lennart-fallback?callid=test-3&from=$CALLER&ivr_choice=1" "callid=test-3&from=$CALLER&to=$TO")
-assert_contains "$resp" '"/voicemail' "Lennart fallback has voicemail next"
+resp=$(post_form "/dial/sebastian-fallback?callid=test-3&from=$CALLER&ivr_choice=1" "callid=test-3&from=$CALLER&to=$TO")
+assert_contains "$resp" '"/voicemail' "Sebastian fallback has voicemail next"
 
-echo "Scenario 4: IVR option 2 -> Lennart"
+echo "Scenario 4: IVR option 2 -> Sebastian sales"
 resp=$(post_form "/route/from-ivr" "callid=test-4&from=$CALLER&to=$TO&result=2")
-assert_contains "$resp" '"/dial/lennart' "routes option 2 to Lennart dial"
+assert_contains "$resp" '"/dial/sebastian' "routes option 2 to Sebastian dial"
 
 echo "Scenario 5: voicemail record action"
 resp=$(post_form "/voicemail?callid=test-5&from=$CALLER&ivr_choice=outside_hours" "callid=test-5&from=$CALLER&to=$TO")

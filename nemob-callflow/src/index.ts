@@ -49,14 +49,14 @@ async function handleVoice(req: Request, env: Env, url: URL): Promise<Response> 
 
 async function handleRoute(req: Request, env: Env, url: URL, route: string): Promise<Response> {
   return guarded(req, env, url, async (payload) => {
-    let operator: Operator = route === "lennart" ? "lennart" : "sebastian";
+    let operator: Operator = route === "sebastian" ? "sebastian" : "lennart";
     const choice = ivrChoice(payload, url);
-    if (route === "from-ivr" && choice === "2") operator = "lennart";
+    if (route === "from-ivr" && choice === "2") operator = "sebastian";
     await logCall(env, {
       callid: callId(payload, url),
       caller_e164: caller(payload, url),
       status: "route",
-      ivr_choice: choice || (operator === "lennart" ? "2" : "default")
+      ivr_choice: choice || (operator === "sebastian" ? "2" : "default")
     });
     return json(holdThenDial(env, url, operator, payload));
   });
@@ -109,9 +109,6 @@ async function handleHangup(req: Request, env: Env, ctx: ExecutionContext, url: 
       status: answered ? "answered" : "missed",
       ivr_choice: ivrChoice(payload, url)
     });
-    if (answeredBy === "lennart") {
-      notifySebastian(env, `Lennart tog samtal fran ${from} kl ${stockholmTime()}, varaktighet ${duration}s.`, ctx);
-    }
     return json({ ok: true });
   });
 }
@@ -124,7 +121,7 @@ async function handleStats(req: Request, env: Env, url: URL): Promise<Response> 
       SUM(CASE WHEN date(timestamp) = date('now') THEN 1 ELSE 0 END) AS calls_today,
       SUM(CASE WHEN date(timestamp) = date('now') AND status IN ('missed','voicemail') THEN 1 ELSE 0 END) AS missed_today,
       AVG(CASE WHEN date(timestamp) = date('now') AND duration_s IS NOT NULL THEN duration_s ELSE NULL END) AS avg_duration_s,
-      SUM(CASE WHEN date(timestamp) = date('now') AND answered_by = 'lennart' THEN 1 ELSE 0 END) AS fallback_calls,
+      SUM(CASE WHEN date(timestamp) = date('now') AND answered_by = 'sebastian' AND ivr_choice = '1' THEN 1 ELSE 0 END) AS fallback_calls,
       SUM(CASE WHEN date(timestamp) = date('now') AND ivr_choice = 'outside_hours' THEN 1 ELSE 0 END) AS outside_hours_calls,
       SUM(CASE WHEN date(timestamp) = date('now') AND ivr_choice != 'outside_hours' THEN 1 ELSE 0 END) AS office_hours_calls
     FROM call_log
@@ -148,8 +145,8 @@ export default {
     if (url.pathname === "/route/sebastian") return handleRoute(req, env, url, "sebastian");
     if (url.pathname === "/route/lennart") return handleRoute(req, env, url, "lennart");
     if (url.pathname === "/dial/sebastian") return handleDial(req, env, url, "sebastian");
+    if (url.pathname === "/dial/sebastian-fallback") return handleDial(req, env, url, "sebastian-fallback");
     if (url.pathname === "/dial/lennart") return handleDial(req, env, url, "lennart");
-    if (url.pathname === "/dial/lennart-fallback") return handleDial(req, env, url, "lennart-fallback");
     if (url.pathname === "/voicemail") return handleVoicemail(req, env, url);
     if (url.pathname === "/record") return handleRecord(req, env, url);
     if (url.pathname === "/event/voicemail-saved") return handleVoicemailSaved(req, env, ctx, url);
