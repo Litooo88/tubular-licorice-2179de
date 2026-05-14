@@ -1576,7 +1576,7 @@ function productInfoFromCard(card){
   const link=card.querySelector('.prod-btn');
   const baseImage=img?.getAttribute('src')||'';
   const gallery=productGalleries[galleryKey(name)]||[baseImage].filter(Boolean);
-  return {name,price,spec,description,imgSrc:baseImage,imgAlt:img?.getAttribute('alt')||name,href:link?.getAttribute('href')||'/book-online',gallery};
+  return {name,price,spec,description,imgSrc:baseImage,imgAlt:img?.getAttribute('alt')||name,href:link?.getAttribute('href')||'/book-online',productId:link?.dataset.product||'',gallery};
 }
 function openProductModal(card){
   const info=productInfoFromCard(card);
@@ -1593,6 +1593,7 @@ function openProductModal(card){
     `<li><strong>N&auml;sta steg</strong>Klicka p&aring; best&auml;ll/fr&aring;ga s&aring; skapas en order- eller r&aring;dgivningsf&ouml;rfr&aring;gan till verkstaden.</li>`
   ].join('');
   productModalBuy.href=info.href;
+  if(info.productId){productModalBuy.dataset.product=info.productId}else{delete productModalBuy.dataset.product}
   productModalBuy.textContent=/bevaka|fråga/i.test(card.querySelector('.prod-btn')?.textContent||'')?'Fråga / bevaka':'Beställ / fråga';
   productModal.classList.add('is-open');
   productModal.setAttribute('aria-hidden','false');
@@ -1668,6 +1669,7 @@ if(window.location.search.includes('purchase=success')){
 }
 </script>
 <script src="/assets/newsletter-popup.js" defer></script>
+<script src="/assets/product-checkout.js" defer></script>
 <script src="/assets/workshop-chat.js" defer></script>
 </body>
 </html>
