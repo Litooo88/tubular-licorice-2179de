@@ -88,7 +88,6 @@ exports.handler = async (event) => {
         },
       ],
       mode: "payment",
-      automatic_payment_methods: { enabled: true },
       success_url: `${origin}/?purchase=success`,
       cancel_url: `${origin}/#produkter`,
       shipping_address_collection: {
