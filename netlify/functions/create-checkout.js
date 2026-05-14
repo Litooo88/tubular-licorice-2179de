@@ -120,8 +120,10 @@ exports.handler = async (event) => {
       : undefined;
     return {
       statusCode: 500,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         error: "Kunde inte skapa betalningssession. Forsok igen.",
+        detail: err?.code || err?.type || err?.message || "",
         debug,
       }),
     };
