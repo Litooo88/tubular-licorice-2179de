@@ -95,6 +95,16 @@ h1{font-size:74px;line-height:.98;letter-spacing:0;max-width:940px}
 .card-actions,.service-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:15px}
 .card-actions .btn,.service-actions .btn{min-height:40px;font-size:13px;padding:0 12px}
 .rule-note{margin-top:18px;border:1px solid rgba(255,138,28,.35);background:rgba(255,138,28,.08);border-radius:8px;padding:16px;color:#ffd9b3;font-size:14px}
+.teverun-spotlight{margin-top:24px;border:1px solid rgba(0,200,83,.24);background:linear-gradient(135deg,rgba(0,200,83,.11),rgba(255,255,255,.03));border-radius:8px;padding:22px}
+.teverun-head{display:flex;justify-content:space-between;gap:18px;align-items:end;margin-bottom:16px}
+.teverun-head h3{font-size:28px;line-height:1.08;margin-top:6px}
+.teverun-head p{color:#c8d4cd;max-width:620px}
+.teverun-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.teverun-card{border:1px solid rgba(255,255,255,.12);background:#0e1410;border-radius:8px;padding:16px;display:grid;gap:10px}
+.teverun-card strong{font-size:18px}
+.teverun-card p{color:#c3cec7;font-size:14px}
+.stock-line{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:#97a59d;font-size:13px}
+.stock-dot{width:8px;height:8px;border-radius:99px;background:var(--green)}
 .service-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
 .service-card{display:flex;flex-direction:column;min-height:220px}
 .service-card .service-actions{margin-top:auto}
@@ -121,6 +131,8 @@ h1{font-size:74px;line-height:.98;letter-spacing:0;max-width:940px}
   .links{display:none}
   .hero-grid,.wide-layout{grid-template-columns:1fr}
   .quick-grid,.grid,.grid.three,.service-grid,.problem-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .teverun-grid{grid-template-columns:1fr}
+  .teverun-head{display:block}
   .section-head{display:block}
   .section-head p{margin-top:10px}
   h1{font-size:54px}
@@ -197,6 +209,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <h2 id="quick-title">Vad behöver du hjälp med?</h2>
       <div class="quick-grid">
         <a class="quick-card" href="#nya-elscootrar">Köpa ny scooter <span>→</span></a>
+        <a class="quick-card" href="#teverun-fighter">Teverun Fighter <span>→</span></a>
         <a class="quick-card" href="#dack-punktering">Punktering / däck <span>→</span></a>
         <a class="quick-card" href="#bromsar-sakerhet">Bromsar <span>→</span></a>
         <a class="quick-card" href="#batteri-rackvidd">Batteri / laddar inte <span>→</span></a>
@@ -234,6 +247,38 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           <img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg" alt="Teverun Fighter Eleven Plus elscooter">
           <div class="card-body"><span class="tag orange">Bekräftad hos leverantör</span><h3>Teverun Fighter Eleven+</h3><p class="spec">2x1600W • 60V 35Ah LG • 2100Wh</p><p class="copy">Premiumprestanda där vi hjälper dig kontrollera användning, regler och tillgänglighet innan affär.</p><div class="price">39 990 kr</div><div class="card-actions"><a class="btn ghost" href="/book-online?service=bestallning&modell=Teverun-Fighter-Eleven-Plus" data-product="teverun-fighter-eleven-plus">Köp / fråga Fighter Eleven+</a></div></div>
         </article>
+      </div>
+      <div class="teverun-spotlight" id="teverun-fighter">
+        <div class="teverun-head">
+          <div>
+            <span class="eyebrow">TEVERUN FIGHTER</span>
+            <h3>Premiumvalen vi vill att fler kunder ska titta på.</h3>
+          </div>
+          <p>Fighter-serien passar kunden som vill ha stabilare byggkänsla, starkare komponenter och en scooter som inte känns som en engångspryl. Vi hjälper till med rätt modell, regler, leverans och service efter köpet.</p>
+        </div>
+        <div class="teverun-grid">
+          <article class="teverun-card">
+            <span class="tag orange">Huvudmodell</span>
+            <strong>Fighter Eleven+</strong>
+            <p>För kunden som vill ha riktig premiumprestanda och lång livslängd. Lager bekräftat hos leverantör, vi hjälper dig kontrollera om modellen passar ditt användningsområde.</p>
+            <div class="stock-line"><span class="stock-dot"></span><span>I lager hos Teverun enligt senaste kontroll</span></div>
+            <div class="card-actions"><a class="btn primary" href="/book-online?service=bestallning&modell=Teverun-Fighter-Eleven-Plus" data-product="teverun-fighter-eleven-plus">Köp / fråga Eleven+</a></div>
+          </article>
+          <article class="teverun-card">
+            <span class="tag">Smart premium</span>
+            <strong>Fighter Mini Pro</strong>
+            <p>Ett starkt mellansteg för kunden som vill ha mycket Teverun-känsla men inte behöver största modellen. Bra att jämföra mot Eleven+ innan köp.</p>
+            <div class="stock-line"><span class="stock-dot"></span><span>I lager hos Teverun enligt senaste kontroll</span></div>
+            <div class="card-actions"><a class="btn ghost" href="/book-online?service=bestallning&modell=Teverun-Fighter-Mini-Pro">Fråga om Mini Pro</a></div>
+          </article>
+          <article class="teverun-card">
+            <span class="tag">Kompakt val</span>
+            <strong>Fighter Mini</strong>
+            <p>För kunden som vill ha kompaktare format men ändå gå upp i kvalitet, bromskänsla och komponentnivå jämfört med enklare modeller.</p>
+            <div class="stock-line"><span class="stock-dot"></span><span>I lager hos Teverun enligt senaste kontroll</span></div>
+            <div class="card-actions"><a class="btn ghost" href="/book-online?service=bestallning&modell=Teverun-Fighter-Mini">Fråga om Fighter Mini</a></div>
+          </article>
+        </div>
       </div>
       <p class="rule-note">Obs: Prestandamodeller och ombyggda fordon kan omfattas av särskilda regler. Fråga oss eller läs <a href="/regler-elscooter/">regelguiden</a> innan du väljer modell för allmän väg.</p>
     </div>
