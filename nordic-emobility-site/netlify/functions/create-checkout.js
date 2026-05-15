@@ -63,7 +63,7 @@ exports.handler = async (event) => {
       },
       phone_number_collection: { enabled: true },
       custom_text: {
-        submit: { message: 'Nordic E-Mobility — Pistolvägen 6, 702 21 Örebro. Vi kontaktar dig om leverans.' },
+        submit: { message: 'Nordic E-Mobility - Pistolvagen 6, 702 21 Orebro. Villkor, returer och garanti finns pa https://www.nordicemobility.se/villkor/. Vi kontaktar dig om leverans.' },
       },
     });
 

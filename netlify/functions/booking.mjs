@@ -1011,6 +1011,9 @@ export default async (request, context) => {
     if (body.ownershipConfirm !== "yes") {
       return json({ error: "Du maste intyga att fordonet inte ar stoldgods." }, 400);
     }
+    if (body.termsConfirm !== "yes") {
+      return json({ error: "Du maste godkanna villkoren innan bokningen skickas." }, 400);
+    }
 
     const availability = await checkCalendarAvailability(caseItem);
     caseItem.notifications.calendarAvailability = availability;
