@@ -45,13 +45,33 @@ const tokenInput=document.getElementById('token'),jobsEl=document.getElementById
 let cases=[],activeCaseId=null,isEditing=false,lastUserEdit=0;
 const statusLabels={new:'Ny',contacted:'Kontaktad',checked_in:'Inlämnad',diagnosing:'Diagnos',repairing:'Pågår',waiting_parts:'Väntar del',waiting_customer:'Paus/review',ready:'Ready for payment',done:'Avslutad'};
 const photoLabels={before:'Före',during:'Under arbete',after:'Efter'};
+const actionLabels={
+  wheel_remove:['Demontering av hjul','Hjul demonterat för åtkomst.'],
+  tube_replace:['Byte av slang','Slang bytt och lufttryck kontrollerat.'],
+  tire_replace:['Byte av däck','Däck bytt och monterat.'],
+  solid_tire_install:['Montering punkteringsfritt däck','Punkteringsfritt däck monterat.'],
+  tubeless_sealant:['Tubeless/slime-åtgärd','Tätningsvätska/slime åtgärdad.'],
+  brake_adjust:['Bromsjustering','Bromsar justerade och funktionstestade.'],
+  brake_part_replace:['Byte av bromsdel','Bromsdel bytt.'],
+  throttle_replace:['Byte av gashandtag/tumgas','Gashandtag/tumgas bytt och testat.'],
+  display_replace:['Byte av display','Display bytt och funktionstestad.'],
+  wiring_check:['Kontroll kablage/kontakter','Kablage och kontakter kontrollerade.'],
+  battery_diagnostics:['Batteridiagnos','Batteri/BMS kontrollerat.'],
+  bms_check:['Kontroll av BMS','BMS kontrollerat.'],
+  test_run:['Funktionstest','Funktionstest genomfört.'],
+  safety_check:['Säkerhetskontroll','Säkerhetskontroll utförd.']
+};
 tokenInput.value=localStorage.getItem('nordicAdminToken')||'';
 function html(v){return String(v||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function shortId(id){return String(id||'').replace(/^case_/,'').slice(0,18).toUpperCase()}
 function setStatus(msg,bad=false){statusEl.textContent=msg||'';statusEl.className='status '+(msg?(bad?'bad':'ok'):'')}
+function cardStatus(card,msg,bad=false){const el=card.querySelector('.card-status');el.textContent=msg||'';el.className='card-status '+(msg?'show ':'')+(bad?'bad':'')}
+function info(text,card){if(card)cardStatus(card,text);else setStatus(text)}
 async function api(path,options={}){const response=await fetch(path,{...options,headers:{'Content-Type':'application/json','x-admin-token':tokenInput.value.trim(),...(options.headers||{})}});const data=await response.json().catch(()=>({}));if(!response.ok)throw new Error(data.error||'Kunde inte läsa data.');return data}
 function activeCases(){const allowed=['checked_in','diagnosing','repairing','waiting_parts','waiting_customer','ready'];return cases.filter(item=>allowed.includes(item.status))}
 function approvedWork(item){const rows=item.completion&&Array.isArray(item.completion.priceRows)?item.completion.priceRows:[];if(rows.length)return rows.map(row=>`${row.qty||1} x ${row.name}`).join(', ');return item.completion&&item.completion.workSummary||item.service||'Inte specificerat ännu'}
+function doNotDo(item){const internal=item.completion&&item.completion.internalComment;return internal||'Gör inget utanför godkänt arbete/pris utan Sebastian eller kundgodkännande.'}
+function nextAction(item){if(item.workshop&&item.workshop.needsSebastianReview)return'Stoppa och invänta Sebastian review.';if(item.status==='waiting_parts')return'Vänta på del, dokumentera vad som saknas.';if(item.status==='ready')return'Redo för betalning/utlämning. Gå till Checkout när kunden hämtar.';if(item.status==='repairing')return'Fortsätt jobbet och dokumentera före/under/efter.';return'Tryck Start job när arbetet faktiskt påbörjas.'}
 function doNotDo(item){return item.completion&&item.completion.internalComment||'Gör inget utanför godkänt arbete/pris utan Sebastian eller kundgodkännande.'}
 function nextAction(item){const workshop=item.workshop||{};if(workshop.needsSebastianReview)return'Stoppa och invänta Sebastian review.';if(item.status==='waiting_parts')return'Vänta på del, dokumentera vad som saknas.';if(item.status==='ready')return'Redo för betalning/utlämning. Sebastian tar final kundkommunikation.';if(item.status==='repairing')return'Fortsätt jobbet och dokumentera före/under/efter.';return'Tryck Starta och följ stegen.'}
 function mediaFor(item,category){return (Array.isArray(item.media)?item.media:[]).filter(entry=>entry.category===category).slice(0,3)}
