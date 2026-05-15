@@ -45,8 +45,8 @@ const prompts = [
     text: [
       "Du hör en automatisk röst från Nordic E-Mobility.",
       "",
-      "Du har ringt utanför våra öppettider, måndag till fredag 9 till 18.",
-      "Lämna ditt namn, telefonnummer och vad det gäller efter pipet, så hör vi av oss nästa arbetsdag.",
+      "Du har ringt n\u00e4r vi inte kan svara direkt.",
+      "L\u00e4mna ditt namn, telefonnummer och vad det g\u00e4ller efter pipet, s\u00e5 h\u00f6r vi av oss s\u00e5 snart vi kan.",
       "",
       "Genom att lämna ett meddelande godkänner du att samtalet spelas in och lagras i 90 dagar för att vi ska kunna återkomma."
     ].join("\n")
