@@ -105,6 +105,14 @@ h1{font-size:74px;line-height:.98;letter-spacing:0;max-width:940px}
 .teverun-card p{color:#c3cec7;font-size:14px}
 .stock-line{display:flex;flex-wrap:wrap;gap:8px;align-items:center;color:#97a59d;font-size:13px}
 .stock-dot{width:8px;height:8px;border-radius:99px;background:var(--green)}
+.order-list{margin-top:24px;border:1px solid var(--line);background:#0c110d;border-radius:8px;padding:20px}
+.order-list h3{font-size:26px;margin-bottom:6px}
+.order-list p{color:#c3cec7;margin-bottom:16px}
+.order-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.order-item{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;border:1px solid rgba(255,255,255,.1);background:#111712;border-radius:8px;padding:12px}
+.order-item strong{display:block;font-size:14px}
+.order-item span{display:block;color:#93a098;font-size:13px;margin-top:2px}
+.order-item .btn{min-height:36px;font-size:12px;padding:0 10px}
 .service-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px}
 .service-card{display:flex;flex-direction:column;min-height:220px}
 .service-card .service-actions{margin-top:auto}
@@ -131,6 +139,7 @@ h1{font-size:74px;line-height:.98;letter-spacing:0;max-width:940px}
   .links{display:none}
   .hero-grid,.wide-layout{grid-template-columns:1fr}
   .quick-grid,.grid,.grid.three,.service-grid,.problem-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .order-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
   .teverun-grid{grid-template-columns:1fr}
   .teverun-head{display:block}
   .section-head{display:block}
@@ -147,7 +156,7 @@ h1{font-size:74px;line-height:.98;letter-spacing:0;max-width:940px}
   .section-head h2{font-size:30px}
   .final-cta h2{font-size:32px}
   .hero-actions .btn,.section-actions .btn{width:100%}
-  .quick-grid,.grid,.grid.three,.service-grid,.problem-list,.process,.faq-grid{grid-template-columns:1fr}
+  .quick-grid,.grid,.grid.three,.service-grid,.problem-list,.process,.faq-grid,.order-grid{grid-template-columns:1fr}
   .card img{height:170px}
   .section{padding:48px 0}
   .media-panel img{min-height:260px}
@@ -210,6 +219,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <div class="quick-grid">
         <a class="quick-card" href="#nya-elscootrar">Köpa ny scooter <span>→</span></a>
         <a class="quick-card" href="#teverun-fighter">Teverun Fighter <span>→</span></a>
+        <a class="quick-card" href="#bestall-scooter">Beställ modell <span>→</span></a>
         <a class="quick-card" href="#dack-punktering">Punktering / däck <span>→</span></a>
         <a class="quick-card" href="#bromsar-sakerhet">Bromsar <span>→</span></a>
         <a class="quick-card" href="#batteri-rackvidd">Batteri / laddar inte <span>→</span></a>
@@ -233,15 +243,15 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <div class="grid">
         <article class="card">
           <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272" alt="KuKirin G4 Special Edition elscooter">
-          <div class="card-body"><span class="tag orange">Nordic Special</span><h3>KuKirin G4 Special Edition</h3><p class="spec">2000W • 60V 20Ah • upp till 75 km</p><p class="copy">Kampanjmodellen med kraftig känsla och svart crosshjälm på köpet enligt nuvarande erbjudande.</p><div class="price">9 950 kr</div><div class="card-actions"><a class="btn ghost" href="/book-online?service=bestallning&modell=KuKirin-G4-Special">Fråga om G4 Special</a></div></div>
+          <div class="card-body"><span class="tag orange">Nordic Special</span><h3>KuKirin G4 Special Edition</h3><p class="spec">2000W • 60V 20Ah • upp till 75 km</p><p class="copy">Kampanjmodellen med kraftig känsla och svart crosshjälm på köpet enligt nuvarande erbjudande.</p><div class="price">9 950 kr</div><div class="card-actions"><a class="btn ghost" href="/book-online?service=bestallning&modell=KuKirin-G4-Special" data-product="kukirin-g4-special">Köp / fråga G4 Special</a></div></div>
         </article>
         <article class="card">
           <img loading="lazy" src="/assets/products/navee/xt5-ultra-drive.jpg" alt="NAVEE XT5 Ultra elscooter i körning">
-          <div class="card-body"><span class="tag">NAVEE</span><h3>NAVEE XT5 Ultra</h3><p class="spec">2x500W • 899Wh • premiumvardag</p><p class="copy">Bekväm och smart premiumvardag för dig som vill ha modern känsla, komfort och verkstadsstöd.</p><div class="price">16 990 kr</div><div class="card-actions"><a class="btn ghost" href="/book-online?service=bestallning&modell=NAVEE-XT5-Ultra">Fråga om NAVEE</a></div></div>
+          <div class="card-body"><span class="tag">NAVEE</span><h3>NAVEE XT5 Ultra</h3><p class="spec">2x500W • 899Wh • premiumvardag</p><p class="copy">Bekväm och smart premiumvardag för dig som vill ha modern känsla, komfort och verkstadsstöd.</p><div class="price">16 990 kr</div><div class="card-actions"><a class="btn ghost" href="/book-online?service=bestallning&modell=NAVEE-XT5-Ultra" data-product="navee-xt5-ultra">Köp / fråga NAVEE</a></div></div>
         </article>
         <article class="card">
           <img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png" alt="Teverun Fighter Mini Pro eKFV elscooter">
-          <div class="card-body"><span class="tag">Teverun</span><h3>Fighter Mini Pro eKFV</h3><p class="spec">2x250W Bosch • 52V 30.8Ah Samsung • TFT</p><p class="copy">Kompakt premiumspår för kunden som vill ha stark komponentkänsla och seriös byggkvalitet.</p><div class="price">27 990 kr</div><div class="card-actions"><a class="btn ghost" href="/book-online?service=bestallning&modell=Teverun-Fighter-Mini-Pro-eKFV">Fråga om Teverun</a></div></div>
+          <div class="card-body"><span class="tag">Teverun</span><h3>Fighter Mini Pro eKFV</h3><p class="spec">2x250W Bosch • 52V 30.8Ah Samsung • TFT</p><p class="copy">Kompakt premiumspår för kunden som vill ha stark komponentkänsla och seriös byggkvalitet.</p><div class="price">27 990 kr</div><div class="card-actions"><a class="btn ghost" href="/book-online?service=bestallning&modell=Teverun-Fighter-Mini-Pro-eKFV" data-product="teverun-fighter-mini-pro-ekfv">Köp / fråga Teverun</a></div></div>
         </article>
         <article class="card">
           <img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg" alt="Teverun Fighter Eleven Plus elscooter">
@@ -269,7 +279,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <strong>Fighter Mini Pro</strong>
             <p>Ett starkt mellansteg för kunden som vill ha mycket Teverun-känsla men inte behöver största modellen. Bra att jämföra mot Eleven+ innan köp.</p>
             <div class="stock-line"><span class="stock-dot"></span><span>I lager hos Teverun enligt senaste kontroll</span></div>
-            <div class="card-actions"><a class="btn ghost" href="/book-online?service=bestallning&modell=Teverun-Fighter-Mini-Pro">Fråga om Mini Pro</a></div>
+            <div class="card-actions"><a class="btn ghost" href="/book-online?service=bestallning&modell=Teverun-Fighter-Mini-Pro-eKFV" data-product="teverun-fighter-mini-pro-ekfv">Köp / fråga Mini Pro</a></div>
           </article>
           <article class="teverun-card">
             <span class="tag">Kompakt val</span>
@@ -281,6 +291,36 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </div>
       </div>
       <p class="rule-note">Obs: Prestandamodeller och ombyggda fordon kan omfattas av särskilda regler. Fråga oss eller läs <a href="/regler-elscooter/">regelguiden</a> innan du väljer modell för allmän väg.</p>
+      <div class="order-list" id="bestall-scooter">
+        <h3>Alla modeller kan starta köp direkt.</h3>
+        <p>Välj modell här om du redan vet vad du vill ha. Vi tar betalningen tryggt och kontaktar dig om leverans, upphämtning och efterservice.</p>
+        <div class="order-grid">
+          <div class="order-item"><div><strong>NAVEE UT5 Ultra X</strong><span>23 490 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=NAVEE-UT5-Ultra-X" data-product="navee-ut5-ultra-x">Köp</a></div>
+          <div class="order-item"><div><strong>NAVEE XT5 Ultra</strong><span>16 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=NAVEE-XT5-Ultra" data-product="navee-xt5-ultra">Köp</a></div>
+          <div class="order-item"><div><strong>NAVEE NT5 Ultra X</strong><span>13 490 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=NAVEE-NT5-Ultra-X" data-product="navee-nt5-ultra-x">Köp</a></div>
+          <div class="order-item"><div><strong>NAVEE ST3 Pro SE</strong><span>10 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=NAVEE-ST3-Pro-SE" data-product="navee-st3-pro">Köp</a></div>
+          <div class="order-item"><div><strong>NAVEE ST3 SE</strong><span>8 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=NAVEE-ST3-SE" data-product="navee-st3">Köp</a></div>
+          <div class="order-item"><div><strong>NAVEE N65i</strong><span>8 499 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=NAVEE-N65i" data-product="navee-n65i">Köp</a></div>
+          <div class="order-item"><div><strong>NAVEE V50i Pro</strong><span>5 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=NAVEE-V50i-Pro" data-product="navee-v50i-pro">Köp</a></div>
+          <div class="order-item"><div><strong>NAVEE G5</strong><span>5 490 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=NAVEE-G5" data-product="navee-g5">Köp</a></div>
+          <div class="order-item"><div><strong>NAVEE V25i Pro II</strong><span>4 490 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=NAVEE-V25i-Pro-II" data-product="navee-v25i-pro-ii">Köp</a></div>
+          <div class="order-item"><div><strong>NAVEE K100 Max</strong><span>3 499 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=NAVEE-K100-Max" data-product="navee-k100-max">Köp</a></div>
+          <div class="order-item"><div><strong>Teverun Space Lite</strong><span>12 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=Teverun-Space-Lite" data-product="teverun-space-lite">Köp</a></div>
+          <div class="order-item"><div><strong>Teverun Blade Mini Ultra</strong><span>17 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=Teverun-Blade-Mini-Ultra" data-product="teverun-blade-mini-ultra">Köp</a></div>
+          <div class="order-item"><div><strong>Teverun Blade GT II</strong><span>24 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=Teverun-Blade-GT-II" data-product="teverun-blade-gt-ii">Köp</a></div>
+          <div class="order-item"><div><strong>Teverun Fighter Mini Pro eKFV</strong><span>27 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=Teverun-Fighter-Mini-Pro-eKFV" data-product="teverun-fighter-mini-pro-ekfv">Köp</a></div>
+          <div class="order-item"><div><strong>Teverun Fighter Eleven+</strong><span>39 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=Teverun-Fighter-Eleven-Plus" data-product="teverun-fighter-eleven-plus">Köp</a></div>
+          <div class="order-item"><div><strong>Teverun Supreme 7260R</strong><span>54 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=Teverun-Supreme-7260R" data-product="teverun-supreme-7260r">Köp</a></div>
+          <div class="order-item"><div><strong>KuKirin S1 Max</strong><span>4 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=KuKirin-S1-Max" data-product="kukirin-s1-max">Köp</a></div>
+          <div class="order-item"><div><strong>KuKirin G2</strong><span>7 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=KuKirin-G2" data-product="kukirin-g2">Köp</a></div>
+          <div class="order-item"><div><strong>KuKirin M4 Max</strong><span>7 490 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=KuKirin-M4-Max" data-product="kukirin-m4-max">Köp</a></div>
+          <div class="order-item"><div><strong>KuKirin G4 Special Edition</strong><span>9 950 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=KuKirin-G4-Special" data-product="kukirin-g4-special">Köp</a></div>
+          <div class="order-item"><div><strong>KuKirin G3</strong><span>10 490 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=KuKirin-G3" data-product="kukirin-g3">Köp</a></div>
+          <div class="order-item"><div><strong>KuKirin G2 Max</strong><span>10 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=KuKirin-G2-Max" data-product="kukirin-g2-max">Köp</a></div>
+          <div class="order-item"><div><strong>KuKirin G3 Pro</strong><span>18 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=KuKirin-G3-Pro" data-product="kukirin-g3-pro">Köp</a></div>
+          <div class="order-item"><div><strong>KuKirin G4 Max</strong><span>26 990 kr</span></div><a class="btn ghost" href="/book-online?service=bestallning&modell=KuKirin-G4-Max" data-product="kukirin-g4-max">Köp</a></div>
+        </div>
+      </div>
     </div>
   </section>
 

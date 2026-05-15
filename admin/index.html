@@ -357,6 +357,8 @@ const smsMessageText=document.getElementById('smsMessageText');
 const smsDeskStatus=document.getElementById('smsDeskStatus');
 let cases=[];
 let isLoadingCases=false;
+let lastUserActivityAt=Date.now();
+const AUTO_REFRESH_IDLE_MS=5*60*1000;
 const cardTabState={};
 const initialParams=new URLSearchParams(window.location.search);
 const initialCaseId=initialParams.get('case')||'';
@@ -370,6 +372,9 @@ document.getElementById('calendarTest').addEventListener('click',testCalendar);
 ownerFilter.addEventListener('change',render);
 statusFilter.addEventListener('change',render);
 searchFilter.addEventListener('input',render);
+['input','keydown','pointerdown','scroll','focusin'].forEach((eventName)=>{
+  window.addEventListener(eventName,()=>{lastUserActivityAt=Date.now();},{capture:true,passive:true});
+});
 document.getElementById('smsApplyTemplate').addEventListener('click',()=>{smsMessageText.value=smsTemplateFor(selectedSmsCase(),smsTemplateSelect.value);showSmsDeskStatus('',false);});
 document.getElementById('smsCopyDraft').addEventListener('click',async()=>{try{await copyText(smsMessageText.value);showSmsDeskStatus('SMS-utkast kopierat.',false)}catch(error){showSmsDeskStatus(error.message,true)}});
 document.getElementById('smsSendButton').addEventListener('click',sendDeskSms);
@@ -1019,7 +1024,9 @@ function restoreEditorState(openIds=[],focusedField=null){
 function shouldPauseRefresh(){
   const active=document.activeElement;
   const fileBusy=[...document.querySelectorAll('input[type="file"]')].some((input)=>input.files&&input.files.length);
+  const userRecentlyActive=Date.now()-lastUserActivityAt<AUTO_REFRESH_IDLE_MS;
   return document.hidden
+    || userRecentlyActive
     || fileBusy
     || Boolean(document.querySelector('.edit-wrap[open]'))
     || Boolean(active&&active.closest&&active.closest('.edit-wrap'))
@@ -1032,6 +1039,8 @@ async function loadCases(options={}){
   const openIds=openEditorIds();
   const focusedField=focusedEditorField();
   const background=Boolean(options.background);
+  const scrollX=window.scrollX;
+  const scrollY=window.scrollY;
   try{
     isLoadingCases=true;
     showError('');
@@ -1041,6 +1050,7 @@ async function loadCases(options={}){
     render();
     focusInitialCase();
     restoreEditorState(openIds,focusedField);
+    if(background) window.scrollTo(scrollX,scrollY);
     document.getElementById('lastUpdated').textContent='Uppdaterad '+new Date().toLocaleTimeString('sv-SE');
   }catch(error){showError(error.message)}
   finally{
