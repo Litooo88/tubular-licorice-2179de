@@ -357,7 +357,13 @@ const smsMessageText=document.getElementById('smsMessageText');
 const smsDeskStatus=document.getElementById('smsDeskStatus');
 let cases=[];
 let isLoadingCases=false;
+let lastUserActivityAt=Date.now();
+const AUTO_REFRESH_IDLE_MS=5*60*1000;
 const cardTabState={};
+const initialParams=new URLSearchParams(window.location.search);
+const initialCaseId=initialParams.get('case')||'';
+const initialCaseTab=initialParams.get('tab')||'contact';
+let initialCaseFocused=false;
 
 tokenInput.value=localStorage.getItem('nordicAdminToken')||'';
 document.getElementById('saveToken').addEventListener('click',()=>{localStorage.setItem('nordicAdminToken',tokenInput.value.trim());loadCases();});
@@ -366,6 +372,9 @@ document.getElementById('calendarTest').addEventListener('click',testCalendar);
 ownerFilter.addEventListener('change',render);
 statusFilter.addEventListener('change',render);
 searchFilter.addEventListener('input',render);
+['input','keydown','pointerdown','scroll','focusin'].forEach((eventName)=>{
+  window.addEventListener(eventName,()=>{lastUserActivityAt=Date.now();},{capture:true,passive:true});
+});
 document.getElementById('smsApplyTemplate').addEventListener('click',()=>{smsMessageText.value=smsTemplateFor(selectedSmsCase(),smsTemplateSelect.value);showSmsDeskStatus('',false);});
 document.getElementById('smsCopyDraft').addEventListener('click',async()=>{try{await copyText(smsMessageText.value);showSmsDeskStatus('SMS-utkast kopierat.',false)}catch(error){showSmsDeskStatus(error.message,true)}});
 document.getElementById('smsSendButton').addEventListener('click',sendDeskSms);
@@ -900,6 +909,14 @@ function quoteSmsTemplate(item,overrides={}){
   const summary=String(overrides.quoteSummary||item.quote&&item.quote.summary||'[kort åtgärd]').trim();
   return `Hej ${first}! Vi har felsökt din ${model}.\nPrisförslag: ${amount} kr inkl. moms.\nÅtgärd: ${summary}.\nSvara JA om du godkänner, eller ring ${owner.name} på ${owner.phone}.\n/ Nordic E-Mobility`;
 }
+function chatReplyTemplate(item){
+  const first=(item.customer&&item.customer.name||'').split(/\s+/).filter(Boolean)[0]||'där';
+  const service=String(item.service||'din fråga').replace(/^Chat:\s*/,'').toLowerCase();
+  if(item.channel==='chat'||item.source==='website_chat'){
+    return `Hej ${first}! Tack för ditt meddelande om ${service}. Vi kan hjälpa dig med detta. Vill du komma förbi verkstaden på Pistolvägen 6, eller vill du att vi bokar en tid åt dig?\n/ Nordic E-Mobility`;
+  }
+  return `Hej ${first}! Vi återkommer om ditt ärende. Svara gärna här om du vill komplettera med modell, bild eller önskad tid.\n/ Nordic E-Mobility`;
+}
 function contentDrafts(item,overrides={}){
   const data=completionData(item,overrides);
   const model=data.vehicleModel;
@@ -1007,7 +1024,9 @@ function restoreEditorState(openIds=[],focusedField=null){
 function shouldPauseRefresh(){
   const active=document.activeElement;
   const fileBusy=[...document.querySelectorAll('input[type="file"]')].some((input)=>input.files&&input.files.length);
+  const userRecentlyActive=Date.now()-lastUserActivityAt<AUTO_REFRESH_IDLE_MS;
   return document.hidden
+    || userRecentlyActive
     || fileBusy
     || Boolean(document.querySelector('.edit-wrap[open]'))
     || Boolean(active&&active.closest&&active.closest('.edit-wrap'))
@@ -1020,6 +1039,8 @@ async function loadCases(options={}){
   const openIds=openEditorIds();
   const focusedField=focusedEditorField();
   const background=Boolean(options.background);
+  const scrollX=window.scrollX;
+  const scrollY=window.scrollY;
   try{
     isLoadingCases=true;
     showError('');
@@ -1027,7 +1048,9 @@ async function loadCases(options={}){
     const data=await api('/api/cases');
     cases=data.cases||[];
     render();
+    focusInitialCase();
     restoreEditorState(openIds,focusedField);
+    if(background) window.scrollTo(scrollX,scrollY);
     document.getElementById('lastUpdated').textContent='Uppdaterad '+new Date().toLocaleTimeString('sv-SE');
   }catch(error){showError(error.message)}
   finally{
@@ -1088,6 +1111,7 @@ function render(){
         item.customer&&item.customer.name,
         item.customer&&item.customer.phone,
         item.customer&&item.customer.email,
+        item.id,
         item.vehicle&&item.vehicle.model,
         item.service,
         item.message
@@ -1108,6 +1132,25 @@ function render(){
     items.forEach(item=>col.appendChild(caseCard(item)));
     boardEl.appendChild(col);
   });
+}
+
+function focusInitialCase(){
+  if(initialCaseFocused||!initialCaseId)return;
+  const target=cases.find((item)=>item.id===initialCaseId);
+  if(!target)return;
+  initialCaseFocused=true;
+  ownerFilter.value='';
+  statusFilter.value='';
+  searchFilter.value=initialCaseId;
+  cardTabState[initialCaseId]=initialCaseTab;
+  render();
+  setTimeout(()=>{
+    const form=boardEl.querySelector(`form[data-id="${initialCaseId}"]`);
+    const card=form&&form.closest('.case');
+    if(card)card.scrollIntoView({behavior:'smooth',block:'start'});
+    const reply=card&&card.querySelector('.chat-reply textarea');
+    if(reply)reply.focus({preventScroll:true});
+  },50);
 }
 
 function caseCard(item){
@@ -1272,6 +1315,15 @@ function caseCard(item){
           <div class="fact"><span>Kundtelefon</span><b><a href="${html(customerPhoneHref)}">${html(customerPhone)}</a></b></div>
           <div class="fact"><span>Kundmail</span><b><a href="${html(customerEmailHref)}">${html(customerEmailAddress)}</a></b></div>
         </div>
+        <form class="quote-box chat-reply" data-id="${html(item.id)}">
+          <h4>Svara p&aring; chatt / SMS</h4>
+          <p>Skickar ett riktigt SMS via 46elks till kunden och markerar &auml;rendet som v&auml;ntar p&aring; kund.</p>
+          <textarea name="replyMessage" placeholder="Skriv svaret till kunden...">${html(chatReplyTemplate(item))}</textarea>
+          <div class="quote-actions">
+            <button type="button" class="secondary copy-chat-reply">Kopiera svar</button>
+            <button type="button" class="send-chat-reply">Skicka SMS-svar</button>
+          </div>
+        </form>
         <div class="quote-box">
           <h4>Prisf&ouml;rslag via SMS</h4>
           <p>F&ouml;r fels&ouml;kta fordon d&auml;r kunden ska godk&auml;nna pris innan &aring;tg&auml;rd. SMS:et ber kunden svara JA eller ringa Sebastian/Lennart.</p>
@@ -1572,6 +1624,7 @@ function caseCard(item){
     });
   });
   const form=card.querySelector('.edit-wrap form');
+  const replyForm=card.querySelector('.chat-reply');
   const quoteForm=card.querySelector('.quote-form');
   const completionForm=card.querySelector('.completion-form');
   const paymentForm=card.querySelector('.payment-form');
@@ -1608,6 +1661,28 @@ function caseCard(item){
       await loadCases();
     }catch(error){showError(error.message)}
     finally{button.disabled=false;button.textContent='Spara \u00e4ndringar'}
+  });
+  replyForm.querySelector('.copy-chat-reply').addEventListener('click',async()=>{
+    try{await copyText(replyForm.elements.replyMessage.value)}catch(error){showError(error.message)}
+  });
+  replyForm.querySelector('.send-chat-reply').addEventListener('click',async()=>{
+    const message=String(replyForm.elements.replyMessage.value||'').trim();
+    if(!message){showError('Skriv ett svar innan du skickar SMS.');return;}
+    if(!item.customer||!item.customer.phone){showError('Kundtelefon saknas på ärendet.');return;}
+    if(!confirm(`Skicka SMS-svar till ${item.customer&&item.customer.name||'kund'}?`))return;
+    const button=replyForm.querySelector('.send-chat-reply');
+    const original=button.textContent;
+    button.disabled=true;
+    button.textContent='Skickar...';
+    try{
+      const result=await api('/api/cases/'+encodeURIComponent(item.id),{
+        method:'PATCH',
+        body:JSON.stringify({action:'send_sms',message})
+      });
+      if(!result.ok) showError('SMS-svaret sparades men kunde inte bekräftas som skickat. Kontrollera 46elks.');
+      await loadCases();
+    }catch(error){showError(error.message)}
+    finally{button.disabled=false;button.textContent=original}
   });
   function quoteValues(){
     const data=new FormData(quoteForm);

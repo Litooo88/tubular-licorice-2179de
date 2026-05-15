@@ -1,0 +1,18 @@
+{
+  "name": "nemob-callflow",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "tsc --noEmit",
+    "voice:elevenlabs": "node scripts/generate-voice-prompts.mjs",
+    "test:scenarios": "bash test/scenarios.sh"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260510.0",
+    "typescript": "^5.6.3",
+    "wrangler": "^4.14.0"
+  }
+}

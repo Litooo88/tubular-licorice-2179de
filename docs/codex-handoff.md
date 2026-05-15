@@ -130,6 +130,9 @@ Lennart = workshop operator.
 
 - `/workshop/` is Lennart's simplified daily work mode.
 - It shows active/inlamnade cases only and excludes price database, final checkout controls, and customer message buttons.
+- Each collapsed job card shows customer contact info first and a clear `Starta` button.
+- Opening a job pauses auto-refresh so Lennart is not bounced back to the top while typing or scrolling.
+- Expanded jobs use a step-by-step workflow: start work, check approved boundaries, quick documentation buttons, photos, and final status actions.
 - Each job shows customer, model, problem, approved work, "do not do without approval", and next action.
 - Photo workflow uses existing `/api/cases/:id/media` with internal categories `before`, `during`, and `after`.
 - Short workshop log is stored on `case.workshop`:
@@ -204,6 +207,49 @@ Lennart = workshop operator.
 - The loader sends manual `page_view` events for initial page load and future history route changes.
 - GTM support is prepared through `gtmContainerId` in the same config, but no GTM container is active yet.
 - Operational notes and Sebastian verification steps live in `docs/analytics-tracking.md`.
+
+### 46elks voice fallback
+
+- Added `/api/voice-start` in `netlify/functions/voice-start.mjs` for incoming 46elks calls.
+- Current public 46elks fixed voice number is `+46101385498`.
+- Flow is Sebastian first, then Lennart fallback, then optional missed-call SMS if both miss the call.
+- Defaults use Sebastian `+46700243319`, Lennart `+46722607753`, and 18 seconds per person.
+- Override with Netlify env vars `VOICE_CALLER_ID`, `VOICE_SEBASTIAN_PHONE`, `VOICE_LENNART_PHONE`, `VOICE_TIMEOUT_SECONDS`, and `VOICE_MISSED_SMS_TO`.
+- Setup/test notes live in `docs/46elks-voice-fallback.md`.
+
+### Cloudflare 46elks callflow worker
+
+- `nemob-callflow/` contains a standalone Cloudflare Workers TypeScript implementation for the richer 46elks IVR flow.
+- It uses D1 for `call_log`, KV binding for future transient state, 46elks SMS notifications, office-hours routing, voicemail recording callbacks, `/stats`, and a daily cron purge for call logs older than 90 days.
+- Current route intent: option 1/default = Lennart/workshop first, then Sebastian fallback, then voicemail. Option 2 = Sebastian/sales, then voicemail.
+- AI voice prompt generation helper lives in `nemob-callflow/scripts/generate-voice-prompts.mjs` and uses OpenAI TTS when `OPENAI_API_KEY` is available.
+- The implementation follows current 46elks docs for IVR/record action syntax and documents that 46elks officially recommends IP firewalling for callback-origin verification. The optional HMAC check is custom and off by default via `REQUIRE_ELKS_SIGNATURE=false`.
+- Deploy steps, required `wrangler secret put` commands, MP3 prompt text, and test scenarios live in `nemob-callflow/README.md`.
+
+### Public workshop phone number
+
+- Public website contact CTAs now present one workshop number: `010-138 54 98` (`+46101385498`).
+- Public Sebastian/Lennart direct phone CTAs were removed from customer-facing pages.
+- Booking customer confirmations and public email footer point to the workshop number.
+- Internal booking/workshop SMS routing still uses staff mobiles where needed; do not replace those with the public number unless the notification flow is changed.
+
+### Public workshop chat
+
+- Public pages load `/assets/workshop-chat.js`, which adds the `Chatta med verkstaden` widget.
+- The widget posts to `/api/workshop-chat` in `netlify/functions/workshop-chat.mjs`.
+- Chat submissions create `website_chat` cases in the existing `workshop-cases` store and send 46elks SMS alerts to Lennart + Sebastian.
+- Battery/electrical/error-code chats are assigned to Sebastian; simpler workshop chats default to Lennart.
+- Chat SMS alerts should link to `/admin/?case=<case-id>&tab=contact`, where the card opens with a `Svara på chatt / SMS` reply box.
+- Operational notes and next-step livechat limitations live in `docs/workshop-chat.md`.
+
+### Public product details
+
+- Product cards on the homepage must be clickable for information, not only order buttons.
+- Homepage `index.html` has a product detail modal that reads the clicked `.prod` card and shows image, specs, price/status, rule-guide link, call link, and order/question CTA.
+- Homepage hero intentionally presents two immediate paths: `Verkstaden` and `Nya elscootrar`.
+- `/nya-elscootrar/` is the focused sales page for new scooters, trade-in, KuKirin G4 Special, NAVEE/Teverun partner picks, Monorim/Nemob Special upgrades, helmets, and accessories.
+- KuKirin G4 Special must not be described as dual motor. Current public copy uses 2000W, 60V 20Ah, 1200Wh, up to 75 km.
+- Product detail modals support image galleries/carousels. Add exported customer/project images as local assets or stable public URLs before wiring them into the gallery arrays; Google Photos album links are not directly usable by the static site.
 
 ## Next priorities
 

@@ -1,0 +1,15 @@
+name = "nemob-callflow"
+main = "src/index.ts"
+compatibility_date = "2026-05-08"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "nemob-callflow"
+database_id = "fbd51da9-2c1b-48bd-a1e0-a0c3967e821d"
+
+[[kv_namespaces]]
+binding = "CALLFLOW_KV"
+id = "7816083f46ed486e86c9c48d57b87a2d"
+
+[triggers]
+crons = ["0 3 * * *"]

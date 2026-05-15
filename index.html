@@ -29,7 +29,7 @@
   "image": "https://www.nordicemobility.se/assets/workshop/workshop-hero.jpg",
   "@id": "https://www.nordicemobility.se",
   "url": "https://www.nordicemobility.se",
-  "telephone": "+46700243319",
+  "telephone": "+46101385498",
   "priceRange": "349-54990 SEK",
   "address": {
     "@type": "PostalAddress",
@@ -68,7 +68,7 @@
   "name": "Nordic E-Mobility",
   "description": "Specialistverkstad för elscootrar, elcyklar och batterisystem i Örebro.",
   "url": "https://www.nordicemobility.se/",
-  "telephone": "+46700243319",
+  "telephone": "+46101385498",
   "email": "info@nordicemobility.se",
   "image": "https://www.nordicemobility.se/assets/workshop/workshop-hero.jpg",
   "priceRange": "349-54990 SEK",
@@ -385,6 +385,12 @@ nav a:hover{color:#fff}
 .hero .subtitle{font-size:19px;color:#bbb;max-width:540px;line-height:1.6;margin-bottom:32px}
 .hero-buttons{display:flex;gap:16px;flex-wrap:wrap;align-items:start;margin-bottom:36px}
 .hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.3);padding:8px 16px;border-radius:100px;font-size:14px;font-weight:600;color:#00C853;margin-bottom:24px}
+.hero-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;max-width:900px;margin:34px 0 28px}
+.hero-choice{display:block;background:rgba(10,14,11,.86);border:1px solid #253227;border-radius:8px;padding:24px;color:#fff;text-decoration:none;transition:.2s}
+.hero-choice:hover{border-color:#00C853;transform:translateY(-2px)}
+.hero-choice small{display:block;color:#00C853;font-weight:900;letter-spacing:.12em;text-transform:uppercase;font-size:11px;margin-bottom:8px}
+.hero-choice strong{display:block;font-size:24px;line-height:1.1;margin-bottom:10px}
+.hero-choice span{display:block;color:#c6d0ca;line-height:1.55;font-size:14px}
 .hero-proof{display:flex;gap:28px;flex-wrap:wrap}
 .hero-proof-item{display:flex;align-items:center;gap:8px;font-size:14px;color:#aaa}
 .hero-proof-item .chk{color:#00C853;font-weight:700}
@@ -516,14 +522,32 @@ nav a:hover{color:#fff}
 /* PRODUCTS */
 .products{padding:80px 0;background:#000}
 .products-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:40px}
-.prod{background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;transition:border-color .2s}
+.prod{background:#111;border:1px solid #222;border-radius:12px;overflow:hidden;transition:border-color .2s;cursor:pointer}
 .prod:hover{border-color:#00C853}
+.prod:focus-within{outline:2px solid rgba(0,200,83,.45);outline-offset:3px}
 .prod-img{height:180px;background:#1a1a1a;display:flex;align-items:center;justify-content:center;color:#444;font-size:12px;aspect-ratio:1.25/1}.prod-img img{width:100%;height:100%;object-fit:contain;display:block;padding:10px}
 .prod-body{padding:14px}
 .prod-name{font-size:12px;font-weight:600;line-height:1.3;margin-bottom:4px}
 .prod-price{font-size:15px;font-weight:800;color:#00C853}
 .prod-btn{display:block;width:100%;padding:9px;margin-top:10px;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#00C853;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;text-align:center;transition:all .2s;text-decoration:none}
 .prod-btn:hover{background:#00C853;color:#000}
+.product-modal{position:fixed;inset:0;z-index:10000;display:none;background:rgba(0,0,0,.78);backdrop-filter:blur(8px);padding:24px;align-items:center;justify-content:center}
+.product-modal.is-open{display:flex}
+.product-dialog{width:min(860px,100%);max-height:min(760px,calc(100vh - 40px));overflow:auto;background:#0d0f0e;border:1px solid #26342b;border-radius:8px;box-shadow:0 30px 90px rgba(0,0,0,.55);color:#fff}
+.product-dialog-head{display:flex;justify-content:space-between;gap:16px;padding:18px 20px;border-bottom:1px solid #202820}
+.product-dialog-head h3{font-size:24px;margin:0 0 5px}
+.product-close{width:38px;height:38px;border-radius:999px;border:1px solid #344238;background:#162018;color:#fff;font-size:24px;cursor:pointer}
+.product-dialog-body{display:grid;grid-template-columns:minmax(220px,320px) 1fr;gap:22px;padding:20px}
+.product-dialog-body img{width:100%;aspect-ratio:1/1;object-fit:contain;background:#111;border:1px solid #222;border-radius:8px}
+.product-gallery-stage{position:relative}.product-gallery-stage img{display:block}.product-gallery-nav{position:absolute;top:50%;transform:translateY(-50%);width:36px;height:36px;border-radius:999px;border:1px solid #344238;background:rgba(0,0,0,.72);color:#fff;font-size:22px;cursor:pointer}.product-gallery-prev{left:8px}.product-gallery-next{right:8px}.product-gallery-thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}.product-gallery-thumbs button{border:1px solid #27352b;background:#111;border-radius:6px;padding:3px;cursor:pointer}.product-gallery-thumbs button.is-active{border-color:#00C853}.product-gallery-thumbs img{width:100%;aspect-ratio:1/1;object-fit:cover;border-radius:4px;padding:0}
+.product-detail-list{display:grid;gap:10px;margin:14px 0}
+.product-detail-list li{list-style:none;border:1px solid #222;background:#111;border-radius:8px;padding:11px 12px;color:#d7ddd9;font-size:14px}
+.product-detail-list strong{display:block;color:#fff;margin-bottom:3px}
+.product-dialog-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.product-dialog-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 18px;border-radius:6px;text-decoration:none;font-weight:800}
+.product-dialog-actions .buy{background:#00C853;color:#021307}
+.product-dialog-actions .ask{border:1px solid #344238;color:#fff}
+@media(max-width:640px){.product-modal{padding:12px}.product-dialog-body{grid-template-columns:1fr}.product-dialog-head h3{font-size:20px}}
 .navee-lookbook{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:14px;margin:10px 0 28px}
 .navee-shot{position:relative;min-height:250px;border-radius:12px;overflow:hidden;border:1px solid #1c241e;background:#111;display:flex;align-items:flex-end}
 .navee-shot--feature{grid-row:span 2;min-height:0}
@@ -595,7 +619,8 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   .navee-lookbook{grid-template-columns:1fr 1fr}
   .navee-shot--feature{grid-column:1 / -1;min-height:320px}
   .navee-shot-title{font-size:24px}
-  .products .products-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px}
+.products .products-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:12px}
+.hero-choices{grid-template-columns:1fr}
   .prod{display:flex;flex-direction:column;min-width:0}
   .prod-img{width:100%;height:auto!important;aspect-ratio:1/1;min-height:0}
   .prod-img img{width:100%!important;height:100%!important;object-fit:contain!important;padding:8px}
@@ -672,7 +697,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <a href="/priser/">Prislista</a>
     <a href="#hallbarhet">H&#229;llbarhet</a>
     <a href="#batteri">Batteri</a>
-    <a href="#produkter">Produkter</a>
+    <a href="/nya-elscootrar/">Nya elscootrar</a>
     <a href="/regler-elscooter/">Regler</a>
     <a href="#blogg">Blogg</a>
     <a href="/kontakt/">Kontakt</a>
@@ -688,35 +713,43 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   <a href="/priser/" onclick="closeMobileNav()">Prislista</a>
   <a href="#hallbarhet" onclick="closeMobileNav()">H&#229;llbarhet</a>
   <a href="#batteri" onclick="closeMobileNav()">Batteri</a>
-  <a href="#produkter" onclick="closeMobileNav()">Produkter</a>
+  <a href="/nya-elscootrar/" onclick="closeMobileNav()">Nya elscootrar</a>
   <a href="/regler-elscooter/" onclick="closeMobileNav()">Regler</a>
   <a href="#blogg" onclick="closeMobileNav()">Blogg</a>
   <a href="/kontakt/" onclick="closeMobileNav()">Kontakt</a>
-  <a href="tel:0700243319" style="color:#aaa;font-size:16px">070-024 33 19</a>
+  <a href="tel:+46101385498" style="color:#aaa;font-size:16px">010-138 54 98</a>
   <a href="/book-online" class="nav-cta">Boka service nu</a>
 </div>
 
 <!-- HERO -->
 <section class="hero" id="boka">
 <div class="container">
-            <div class="hero-badge">10% rabatt via nyhetsbrevet</div>
-  <h1>Problem med din elscooter? <span class="accent">Vi fixar den snabbt — utan krångel</span></h1>
-  <p class="subtitle">Boka online på 30 sekunder. Vi hämtar, felsöker och ger dig fast pris innan vi gör något.</p>
+  <div class="hero-badge">Verkstad + nya elscootrar i Örebro</div>
+  <h1>Behöver du fixa din scooter — eller är det dags för en ny?</h1>
+  <p class="subtitle">Välj väg direkt. Vi hjälper dig med service, felsökning och batteri, men också med nya elscootrar, inbyte, Monorim-uppgraderingar och rätt tillbehör.</p>
+  <div class="hero-choices">
+    <a class="hero-choice" href="/book-online">
+      <small>Verkstaden</small>
+      <strong>Boka service, felsökning eller batterihjälp</strong>
+      <span>Snabb bokning, tydligt pris innan arbete och möjlighet att ringa verkstaden direkt.</span>
+    </a>
+    <a class="hero-choice" href="/nya-elscootrar/">
+      <small>Nya elscootrar</small>
+      <strong>Se vårt utbud, kampanjer och inbyte</strong>
+      <span>Partnerfavoriter, KuKirin G4 Special, NAVEE, Teverun, hjälm på köpet och Monorim/Nemob Special.</span>
+    </a>
+  </div>
   <div class="hero-buttons">
     <div>
-                <a href="/book-online" class="btn-primary">Boka felsökning online &#8594;</a>
+      <a href="/book-online" class="btn-primary">Boka verkstadstid &#8594;</a>
       <span class="btn-hint">Tar 30 sek &#183; Inget bindande &#183; Pris innan arbete</span>
     </div>
-    <a href="tel:0700243319" class="btn-secondary">Ring nu — få hjälp direkt</a>
+    <a href="/nya-elscootrar/" class="btn-secondary">Se nya elscootrar</a>
   </div>
   <div class="hero-proof">
-    <div class="hero-proof-item"><span class="chk">&#10003;</span> Svar inom 24h</div>
-    <div class="hero-proof-item"><span class="chk">&#10003;</span> Fast pris innan vi börjar</div>
-    <div class="hero-proof-item"><span class="chk">&#10003;</span> Specialister på batteri & el</div>
-  </div>
-  <div class="hero-stars">
-    <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
-    <div class="star-text"><strong>5.0 på Google</strong> — Riktiga recensioner från kunder i Örebro</div>
+    <div class="hero-proof-item"><span class="chk">&#10003;</span> Vi kan köpa in din gamla scooter</div>
+    <div class="hero-proof-item"><span class="chk">&#10003;</span> Rabatt på ny scooter vid inbyte</div>
+    <div class="hero-proof-item"><span class="chk">&#10003;</span> Service och delar efter köpet</div>
   </div>
 </div>
 </section>
@@ -926,7 +959,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div class="proof-card-copy">
           <span class="proof-eyebrow">Batteri / BMS</span>
           <h3>R&auml;ckvidd, laddning och cellh&auml;lsa.</h3>
-          <p>Tyngre elfel g&aring;r till Sebastian f&ouml;r batteri, BMS, controller och avancerad diagnos.</p>
+          <p>Tyngre elfel g&aring;r till tekniskt ansvarig f&ouml;r batteri, BMS, controller och avancerad diagnos.</p>
         </div>
       </article>
       <article class="proof-card">
@@ -934,14 +967,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div class="proof-card-copy">
           <span class="proof-eyebrow">Aktiv verkstad</span>
           <h3>Snabba jobb f&aring;r tydlig mottagning.</h3>
-          <p>Lennart tar golvet, mottagning och smidiga jobb s&aring; att varje &auml;rende hamnar r&auml;tt direkt.</p>
+          <p>Verkstaden tar golv, mottagning och smidiga jobb s&aring; att varje &auml;rende hamnar r&auml;tt direkt.</p>
         </div>
       </article>
     </div>
   </div>
   <ul class="proof-metrics">
     <li><strong>Aktivt &auml;rende direkt</strong>Varje bokning skapar ett verkstads&auml;rende i dashboarden.</li>
-    <li><strong>Roller som kunden f&ouml;rst&aring;r</strong>Lennart sk&ouml;ter golvet. Sebastian tar det tyngre elsystemet.</li>
+        <li><strong>Tydlig intern process</strong>Verkstaden styr varje &auml;rende till r&auml;tt kompetens utan att kunden beh&ouml;ver ringa flera personer.</li>
     <li><strong>B&auml;ttre Google-signaler</strong>Mer lokalt verkstadsinneh&aring;ll, tydligare tj&auml;nster och riktiga case fr&aring;n &Ouml;rebro.</li>
   </ul>
   <div class="legal-note"><strong>Regelkoll:</strong> Alla elscootrar passar inte p&aring; allm&auml;n v&auml;g. En elsparkcykel som ska r&auml;knas som cykel beh&ouml;ver normalt vara konstruerad f&ouml;r max 20 km/h och max 250 W kontinuerlig m&auml;rkeffekt. L&auml;s v&aring;r <a href="/regler-elscooter/">guide om regler f&ouml;r elscooter</a> innan du k&ouml;per en prestandamodell.</div>
@@ -955,7 +988,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p>Boka online och ange rabattkod om du har en. Vi hämtar och lämnar i Örebro.</p>
   <div class="cta-btns">
                 <div><a href="/book-online" class="btn-primary">Boka service online &#8594;</a><span class="btn-hint">Tar 30 sek &#183; Inget bindande</span></div>
-    <a href="tel:0700243319" class="btn-secondary">Ring nu — få hjälp direkt</a>
+    <a href="tel:+46101385498" class="btn-secondary">Ring nu — få hjälp direkt</a>
   </div>
 </div>
 </section>
@@ -1015,7 +1048,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <option value="374" data-watts="350" data-name="KuKirin S1 Max">KuKirin S1 Max &#8212; 350W (374 Wh)</option>
             <option value="720" data-watts="800" data-name="KuKirin G2">KuKirin G2 &#8212; 800W (720 Wh)</option>
             <option value="874" data-watts="800" data-name="KuKirin M4 Max">KuKirin M4 Max &#8212; 800W (874 Wh)</option>
-            <option value="960" data-watts="2000" data-name="KuKirin G4 SE">KuKirin G4 Special Edition &#8212; 2&#215;1000W (960 Wh)</option>
+            <option value="1200" data-watts="2000" data-name="KuKirin G4 SE">KuKirin G4 Special Edition &#8212; 2000W (1200 Wh)</option>
             <option value="864" data-watts="1200" data-name="KuKirin G3">KuKirin G3 &#8212; 1200W (864 Wh)</option>
             <option value="960" data-watts="1000" data-name="KuKirin G2 Max">KuKirin G2 Max &#8212; 1000W (960 Wh)</option>
             <option value="1196" data-watts="2400" data-name="KuKirin G3 Pro">KuKirin G3 Pro &#8212; 2&#215;1200W (1196 Wh)</option>
@@ -1276,7 +1309,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   <!-- KuKirin Mellanklass -->
   <div style="font-size:11px;font-weight:700;color:#555;letter-spacing:2px;text-transform:uppercase;margin:24px 0 10px">Mellanklass &mdash; Kraft &amp; r&auml;ckvidd</div>
   <div class="products-grid" style="grid-template-columns:repeat(4,1fr)">
-    <div class="prod" style="border-color:#ff6d00"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#ff6d00;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">SPECIAL EDITION</div><img width="500" height="500" loading="lazy" decoding="async" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272" alt="KuKirin G4 Special Edition" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#128293;'"></div><div class="prod-body"><div class="prod-name">G4 <span style="font-size:9px;color:#ff6d00">SPECIAL EDITION</span></div><div style="font-size:11px;color:#888;margin:4px 0">2&times;1000W &bull; 48V 20Ah &bull; 960 Wh &bull; 75 km</div><div class="prod-price">9 950 kr</div><a href="/book-online?service=bestallning&modell=KuKirin-G4-Special" class="prod-btn" data-product="kukirin-g4-special" data-price="9950" style="background:rgba(255,109,0,.15);border-color:rgba(255,109,0,.4);color:#ff6d00">K&ouml;p nu &mdash; Special Edition</a></div></div>
+<div class="prod" style="border-color:#ff6d00"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#ff6d00;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">SPECIAL EDITION</div><img width="500" height="500" loading="lazy" decoding="async" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272" alt="KuKirin G4 Special Edition" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#128293;'"></div><div class="prod-body"><div class="prod-name">G4 <span style="font-size:9px;color:#ff6d00">SPECIAL EDITION</span></div><div style="font-size:11px;color:#888;margin:4px 0">2000W &bull; 60V 20Ah &bull; 1200 Wh &bull; upp till 75 km</div><div style="font-size:11px;color:#ffcf9c;line-height:1.5;margin-bottom:10px">Nordic E-Mobility Special: svart crosshj&auml;lm ing&aring;r vid k&ouml;p.</div><div class="prod-price">9 950 kr</div><a href="/book-online?service=bestallning&modell=KuKirin-G4-Special" class="prod-btn" data-product="kukirin-g4-special" data-price="9950" style="background:rgba(255,109,0,.15);border-color:rgba(255,109,0,.4);color:#ff6d00">K&ouml;p nu &mdash; hj&auml;lm ing&aring;r</a></div></div>
     <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">I LAGER</div><img width="500" height="500" loading="lazy" decoding="async" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/1_7da8cb39-a62d-45ec-ba6c-326fde3ce614.jpg?v=1718356445" alt="KuKirin G3" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">G3</div><div style="font-size:11px;color:#888;margin:4px 0">1200W &bull; 48V 18Ah &bull; 864 Wh &bull; 70 km</div><div class="prod-price">10 490 kr</div><a href="/book-online?service=bestallning&modell=KuKirin-G3" class="prod-btn" data-product="kukirin-g3" data-price="10490">K&ouml;p nu</a></div></div>
     <div class="prod" style="border-color:rgba(0,200,83,.3)"><div class="prod-img" style="background:linear-gradient(135deg,#1a1508,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden"><div style="position:absolute;top:8px;right:8px;background:#00C853;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">I LAGER</div><img width="500" height="500" loading="lazy" decoding="async" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2_Max_29.jpg?v=1774526365" alt="KuKirin G2 Max" style="max-height:100%;max-width:100%;object-fit:contain" onerror="this.outerHTML='&#9889;'"></div><div class="prod-body"><div class="prod-name">G2 Max</div><div style="font-size:11px;color:#888;margin:4px 0">1000W &bull; 48V 20Ah &bull; 960 Wh &bull; 80 km</div><div class="prod-price">10 990 kr</div><a href="/book-online?service=bestallning&modell=KuKirin-G2-Max" class="prod-btn" data-product="kukirin-g2-max" data-price="10990">K&ouml;p nu</a></div></div>
   </div>
@@ -1311,7 +1344,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p>Boka online och ange rabattkod om du har en. Vi hämtar och lämnar i Örebro.</p>
   <div class="cta-btns">
                 <div><a href="/book-online" class="btn-primary">Boka service online &#8594;</a><span class="btn-hint">Tar 30 sek &#183; Inget bindande</span></div>
-    <a href="tel:0700243319" class="btn-secondary">Ring nu — få hjälp direkt</a>
+    <a href="tel:+46101385498" class="btn-secondary">Ring nu — få hjälp direkt</a>
   </div>
   <div class="hero-stars" style="justify-content:center;margin-top:24px;border:none;padding:0">
     <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
@@ -1342,7 +1375,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <span style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;color:#aaa">Nora</span>
     <span style="background:#111;border:1px solid #222;border-radius:8px;padding:10px 18px;font-size:13px;font-weight:600;color:#aaa">Lax&aring;</span>
   </div>
-  <p style="text-align:center;margin-top:20px;font-size:14px;color:#666">Skicka in din scooter med post eller bes&ouml;k oss p&aring; Pistolv&auml;gen 6, 702 21 &Ouml;rebro. <a href="tel:0700243319" style="color:#00C853;text-decoration:none;font-weight:600">Ring 070-024 33 19</a> f&ouml;r transport&ouml;verenskommelse.</p>
+  <p style="text-align:center;margin-top:20px;font-size:14px;color:#666">Skicka in din scooter med post eller bes&ouml;k oss p&aring; Pistolv&auml;gen 6, 702 21 &Ouml;rebro. <a href="tel:+46101385498" style="color:#00C853;text-decoration:none;font-weight:600">Ring 010-138 54 98</a> f&ouml;r transport&ouml;verenskommelse.</p>
 </div>
 </section>
 
@@ -1375,14 +1408,13 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     </div>
     <div>
       <div class="f-hd">Information</div>
-      <ul class="f-links"><li><a href="/guider/">Guider</a></li><li><a href="#produkter">Produkter</a></li><li><a href="/regler-elscooter/">Regler</a></li><li><a href="/foretag-serviceavtal/">Företag</a></li><li><a href="/om-oss/">Om oss</a></li><li><a href="/villkor/">Villkor</a></li><li><a href="/integritet/">Integritet</a></li></ul>
+<ul class="f-links"><li><a href="/guider/">Guider</a></li><li><a href="/nya-elscootrar/">Nya elscootrar</a></li><li><a href="/regler-elscooter/">Regler</a></li><li><a href="/foretag-serviceavtal/">Företag</a></li><li><a href="/om-oss/">Om oss</a></li><li><a href="/villkor/">Villkor</a></li><li><a href="/integritet/">Integritet</a></li></ul>
     </div>
     <div>
       <div class="f-hd">Kontakt</div>
       <ul class="f-links">
         <li><a href="mailto:info@nordicemobility.se">info@nordicemobility.se</a></li>
-        <li><a href="tel:0700243319">070-024 33 19</a></li>
-        <li><a href="tel:0722607753">Lennart: 072-260 77 53</a></li>
+        <li><a href="tel:+46101385498">Verkstad: 010-138 54 98</a></li>
         <li style="margin-top:10px"><a href="https://maps.google.com/?q=Pistolvägen+6+702+21+Örebro" target="_blank">Pistolvägen 6, 702 21 Örebro</a></li>
         <li>Org.nr: 880809-6658</li>
       </ul>
@@ -1394,7 +1426,39 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 </footer>
 
 <!-- STICKY MOBILE -->
-<div class="sticky-cta"><div class="sticky-inner"><a href="/book-online" class="btn-primary">Boka nu</a><a href="tel:0700243319" class="btn-secondary">Ring</a></div></div>
+<div class="sticky-cta"><div class="sticky-inner"><a href="/book-online" class="btn-primary">Boka nu</a><a href="tel:+46101385498" class="btn-secondary">Ring</a></div></div>
+
+<div class="product-modal" id="productModal" aria-hidden="true">
+  <div class="product-dialog" role="dialog" aria-modal="true" aria-labelledby="productModalTitle">
+    <div class="product-dialog-head">
+      <div>
+        <h3 id="productModalTitle">Produktinformation</h3>
+        <p id="productModalPrice" style="color:#00C853;font-weight:900;margin:0"></p>
+      </div>
+      <button class="product-close" type="button" aria-label="St&auml;ng produktinformation">&times;</button>
+    </div>
+    <div class="product-dialog-body">
+      <div>
+        <div class="product-gallery-stage">
+          <button class="product-gallery-nav product-gallery-prev" type="button" aria-label="F&ouml;reg&aring;ende bild">&#8249;</button>
+          <img id="productModalImage" alt="">
+          <button class="product-gallery-nav product-gallery-next" type="button" aria-label="N&auml;sta bild">&#8250;</button>
+        </div>
+        <div class="product-gallery-thumbs" id="productModalThumbs"></div>
+      </div>
+      <div>
+        <p id="productModalSummary" style="color:#d7ddd9;line-height:1.6;margin:0 0 12px"></p>
+        <ul class="product-detail-list" id="productModalDetails"></ul>
+        <p style="color:#9aa59e;font-size:13px;line-height:1.55;margin-top:12px">Vi hj&auml;lper dig v&auml;lja r&auml;tt modell utifr&aring;n r&auml;ckvidd, vikt, laglighet och hur den ska anv&auml;ndas. Kontrollera alltid regelguiden innan k&ouml;p av prestandamodell.</p>
+        <div class="product-dialog-actions">
+          <a class="buy" id="productModalBuy" href="/book-online">Best&auml;ll / fr&aring;ga</a>
+          <a class="ask" href="/regler-elscooter/">L&auml;s regelguiden</a>
+          <a class="ask" href="tel:+46101385498">Ring verkstaden</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
 
 <script>
 const w=document.getElementById('weight'),wV=document.getElementById('weightVal'),t=document.getElementById('terrain'),sm=document.getElementById('scooterModel'),ub=document.getElementById('upgradeBat'),uV=document.getElementById('upgradeVal');
@@ -1414,7 +1478,7 @@ const products=[
   {name:'KuKirin S1 Max',wh:374,price:'4 990 kr',brand:'KUKIRIN'},
   {name:'KuKirin G2',wh:720,price:'7 990 kr',brand:'KUKIRIN'},
   {name:'KuKirin M4 Max',wh:874,price:'7 490 kr',brand:'KUKIRIN'},
-  {name:'KuKirin G4 Special Edition',wh:960,price:'9 950 kr',brand:'KUKIRIN'},
+  {name:'KuKirin G4 Special Edition',wh:1200,price:'9 950 kr',brand:'KUKIRIN'},
   {name:'KuKirin G3',wh:864,price:'10 490 kr',brand:'KUKIRIN'},
   {name:'KuKirin G2 Max',wh:960,price:'10 990 kr',brand:'KUKIRIN'},
   {name:'KuKirin G3 Pro',wh:1196,price:'18 990 kr',brand:'KUKIRIN'},
@@ -1452,6 +1516,114 @@ function calcCompare(){
 }
 calcCompare();
 
+// === PRODUCT DETAILS ===
+const productModal=document.getElementById('productModal');
+const productModalTitle=document.getElementById('productModalTitle');
+const productModalPrice=document.getElementById('productModalPrice');
+const productModalImage=document.getElementById('productModalImage');
+const productModalSummary=document.getElementById('productModalSummary');
+const productModalDetails=document.getElementById('productModalDetails');
+const productModalBuy=document.getElementById('productModalBuy');
+const productModalThumbs=document.getElementById('productModalThumbs');
+const productGalleries={
+  'kukirin g4 special edition':[
+    'https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272',
+    'https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp',
+    'https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp',
+    'https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp'
+  ],
+  'g4 special edition':[
+    'https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272',
+    'https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp',
+    'https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp',
+    'https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp'
+  ],
+  'xt5 ultra':[
+    '/assets/products/navee/xt5-ultra-drive.jpg',
+    'https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png',
+    'https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png'
+  ],
+  'navee xt5 ultra':[
+    '/assets/products/navee/xt5-ultra-drive.jpg',
+    'https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png',
+    'https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png'
+  ],
+  'fighter mini pro ekfv':[
+    'https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png',
+    'https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Fighter_mini_pro_08209532-0091-46c1-bc73-ec7a5507dd4f.png?v=1760331427&width=2048',
+    'https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&width=2048',
+    'https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&width=2048'
+  ]
+};
+let productGalleryImages=[];
+let productGalleryIndex=0;
+function galleryKey(name){return name.toLowerCase().replace(/\s+/g,' ').trim()}
+function renderProductGallery(){
+  if(!productGalleryImages.length)return;
+  productModalImage.src=productGalleryImages[productGalleryIndex];
+  productModalThumbs.innerHTML=productGalleryImages.map((src,index)=>`<button type="button" class="${index===productGalleryIndex?'is-active':''}" aria-label="Visa bild ${index+1}"><img src="${src}" alt=""></button>`).join('');
+  productModalThumbs.querySelectorAll('button').forEach((button,index)=>button.addEventListener('click',()=>{productGalleryIndex=index;renderProductGallery()}));
+}
+function productInfoFromCard(card){
+  const name=card.querySelector('.prod-name')?.textContent.trim()||'Produkt';
+  const price=card.querySelector('.prod-price')?.textContent.trim()||'Kontakta oss';
+  const lines=[...card.querySelectorAll('.prod-body > div')]
+    .map((node)=>node.textContent.trim())
+    .filter((text)=>text&&text!==name&&text!==price);
+  const spec=lines[0]||'Specifikation saknas.';
+  const description=lines.slice(1).join(' ')||'Kontakta verkstaden om du vill veta om modellen passar din k&ouml;rning, r&auml;ckvidd och lokala regler.';
+  const img=card.querySelector('img');
+  const link=card.querySelector('.prod-btn');
+  const baseImage=img?.getAttribute('src')||'';
+  const gallery=productGalleries[galleryKey(name)]||[baseImage].filter(Boolean);
+  return {name,price,spec,description,imgSrc:baseImage,imgAlt:img?.getAttribute('alt')||name,href:link?.getAttribute('href')||'/book-online',productId:link?.dataset.product||'',gallery};
+}
+function openProductModal(card){
+  const info=productInfoFromCard(card);
+  productModalTitle.textContent=info.name;
+  productModalPrice.textContent=info.price;
+  productGalleryImages=info.gallery.length?info.gallery:[info.imgSrc].filter(Boolean);
+  productGalleryIndex=0;
+  productModalImage.alt=info.imgAlt;
+  renderProductGallery();
+  productModalSummary.textContent=info.description;
+  productModalDetails.innerHTML=[
+    `<li><strong>Specifikation</strong>${info.spec}</li>`,
+    `<li><strong>Pris / status</strong>${info.price}</li>`,
+    `<li><strong>N&auml;sta steg</strong>Klicka p&aring; best&auml;ll/fr&aring;ga s&aring; skapas en order- eller r&aring;dgivningsf&ouml;rfr&aring;gan till verkstaden.</li>`
+  ].join('');
+  productModalBuy.href=info.href;
+  if(info.productId){productModalBuy.dataset.product=info.productId}else{delete productModalBuy.dataset.product}
+  productModalBuy.textContent=/bevaka|fråga/i.test(card.querySelector('.prod-btn')?.textContent||'')?'Fråga / bevaka':'Beställ / fråga';
+  productModal.classList.add('is-open');
+  productModal.setAttribute('aria-hidden','false');
+  productModal.querySelector('.product-close').focus();
+}
+function closeProductModal(){
+  productModal.classList.remove('is-open');
+  productModal.setAttribute('aria-hidden','true');
+}
+document.querySelectorAll('.prod').forEach((card)=>{
+  card.tabIndex=0;
+  card.setAttribute('role','button');
+  card.setAttribute('aria-label','Visa produktinformation');
+  card.addEventListener('click',(event)=>{
+    if(event.target.closest('a,button'))return;
+    openProductModal(card);
+  });
+  card.addEventListener('keydown',(event)=>{
+    if(event.key==='Enter'||event.key===' '){
+      event.preventDefault();
+      openProductModal(card);
+    }
+  });
+});
+productModal.querySelector('.product-close').addEventListener('click',closeProductModal);
+productModal.querySelector('.product-gallery-prev').addEventListener('click',()=>{if(!productGalleryImages.length)return;productGalleryIndex=(productGalleryIndex-1+productGalleryImages.length)%productGalleryImages.length;renderProductGallery()});
+productModal.querySelector('.product-gallery-next').addEventListener('click',()=>{if(!productGalleryImages.length)return;productGalleryIndex=(productGalleryIndex+1)%productGalleryImages.length;renderProductGallery()});
+productModal.addEventListener('click',(event)=>{if(event.target===productModal)closeProductModal()});
+document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&productModal.classList.contains('is-open'))closeProductModal()});
+
 // === MOBILE NAV ===
 function closeMobileNav(){document.getElementById('mobileNav').classList.remove('open');document.querySelector('.hamburger').classList.remove('active')}
 
@@ -1477,7 +1649,7 @@ document.querySelectorAll('.stripe-buy').forEach(btn=>{
       redirecting=true;
       window.location.href=data.url;
     }catch(err){
-      alert('Kunde inte starta betalning. Ring oss på 070-024 33 19.');
+      alert('Kunde inte starta betalning. Ring verkstaden på 010-138 54 98.');
     }finally{
       if(!redirecting){
         button.textContent=orig;
@@ -1497,5 +1669,7 @@ if(window.location.search.includes('purchase=success')){
 }
 </script>
 <script src="/assets/newsletter-popup.js" defer></script>
+<script src="/assets/product-checkout.js" defer></script>
+<script src="/assets/workshop-chat.js" defer></script>
 </body>
 </html>

@@ -1,7 +1,15 @@
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+const Stripe = require("stripe");
+
+const env = (name) => {
+  try {
+    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
+  } catch {
+    return process.env[name] || "";
+  }
+};
 
 const adminDebugAllowed = (event) => {
-  const expected = process.env.ADMIN_TOKEN || "";
+  const expected = env("ADMIN_TOKEN");
   const provided = event.headers["x-admin-token"] || event.headers["X-Admin-Token"] || "";
   return Boolean(expected && provided && expected === provided);
 };
@@ -44,6 +52,7 @@ exports.handler = async (event) => {
   try {
     const { productId } = JSON.parse(event.body);
     const product = PRODUCTS[productId];
+    const stripeSecretKey = env("STRIPE_SECRET_KEY");
 
     if (!product) {
       return {
@@ -52,7 +61,16 @@ exports.handler = async (event) => {
       };
     }
 
+    if (!stripeSecretKey) {
+      return {
+        statusCode: 503,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ error: "Stripe är inte konfigurerat i Netlify. Saknar STRIPE_SECRET_KEY." }),
+      };
+    }
+
     const origin = event.headers.origin || "https://www.nordicemobility.se";
+    const stripe = Stripe(stripeSecretKey);
 
     const session = await stripe.checkout.sessions.create({
       locale: "sv",
@@ -70,7 +88,6 @@ exports.handler = async (event) => {
         },
       ],
       mode: "payment",
-      automatic_payment_methods: { enabled: true },
       success_url: `${origin}/?purchase=success`,
       cancel_url: `${origin}/#produkter`,
       shipping_address_collection: {
@@ -102,8 +119,10 @@ exports.handler = async (event) => {
       : undefined;
     return {
       statusCode: 500,
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         error: "Kunde inte skapa betalningssession. Forsok igen.",
+        detail: err?.code || err?.type || err?.message || "",
         debug,
       }),
     };
