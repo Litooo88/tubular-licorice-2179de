@@ -167,10 +167,10 @@ wrangler secret put ELKS_ALLOWED_IPS
 # Klistra in: 176.10.154.199,85.24.146.132,185.39.146.243,2001:9b0:2:902::199
 
 wrangler secret put SEBASTIAN_NUMBER
-# Klistra in: +46700243319 (eller ditt aktuella mobilnummer)
+# Klistra in: +46101385498 (eller ditt aktuella mobilnummer)
 
 wrangler secret put LENNART_NUMBER
-# Klistra in: +46722607753
+# Klistra in: +46101385498
 
 wrangler secret put ADMIN_KEY
 # Klistra in: en-slumpmässig-hemlig-string-32-tecken

@@ -77,8 +77,8 @@ ELKS_PASSWORD             # 46elks API password
 ELKS_FROM_NUMBER          # Verkstadsnummer in E.164 (the public number)
 ELKS_WEBHOOK_SECRET       # Shared secret for HMAC validation of incoming
 ELKS_ALLOWED_IPS          # Comma-sep 46elks IP ranges (verify current list at 46elks docs)
-SEBASTIAN_NUMBER          # E.164, e.g. +46700243319
-LENNART_NUMBER            # E.164, e.g. +46722607753
+SEBASTIAN_NUMBER          # E.164, e.g. +46101385498
+LENNART_NUMBER            # E.164, e.g. +46101385498
 APPS_SCRIPT_WEBHOOK_URL   # Backup logging endpoint (optional)
 INTRO_MP3_URL             # Public URL to welcome.mp3
 HOLD_MUSIC_MP3_URL        # Public URL to hold-music.mp3 (5-second loop max)

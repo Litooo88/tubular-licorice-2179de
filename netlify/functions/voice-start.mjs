@@ -25,8 +25,8 @@ const normalizePhone = (value) => {
 };
 
 const voiceConfig = () => ({
-  sebastian: normalizePhone(env("VOICE_SEBASTIAN_PHONE")) || "+46700243319",
-  lennart: normalizePhone(env("VOICE_LENNART_PHONE")) || "+46722607753",
+  sebastian: normalizePhone(env("VOICE_SEBASTIAN_PHONE")),
+  lennart: normalizePhone(env("VOICE_LENNART_PHONE")),
   workshopNumber: normalizePhone(env("VOICE_CALLER_ID")) || "+46101385498",
   timeout: Math.max(8, Math.min(30, Number(env("VOICE_TIMEOUT_SECONDS") || 18))),
 });
@@ -57,7 +57,7 @@ const smsConfig = () => ({
 });
 
 const smsRecipients = () => {
-  const configured = (env("VOICE_MISSED_SMS_TO") || env("WORKSHOP_SMS_TO") || "+46700243319")
+  const configured = (env("VOICE_MISSED_SMS_TO") || env("WORKSHOP_SMS_TO") || "+46101385498")
     .split(",")
     .map((item) => normalizePhone(item))
     .filter(Boolean);
@@ -120,6 +120,10 @@ export default async (request) => {
   const baseUrl = `${url.origin}${url.pathname}`;
 
   if (!stage) {
+    if (!callConfig.sebastian) {
+      console.log("voice_start_missing_operator", { callid: body.callid || body.id, operator: "sebastian" });
+      return json(hangupAction());
+    }
     const action = connectAction({
       to: callConfig.sebastian,
       callerid: callConfig.workshopNumber,
@@ -134,6 +138,15 @@ export default async (request) => {
     const result = clean(body.result || body.state, 40);
     console.log("voice_step_sebastian", { callid: body.callid || body.id, from: body.from, result, why: body.why });
     if (result === "success") return json(hangupAction());
+    if (!callConfig.lennart) {
+      const sms = await sendMissedCallSms({
+        customerNumber: normalizePhone(body.from),
+        result: result || "lennart_not_configured",
+        callid: clean(body.callid || body.id, 120),
+      });
+      console.log("voice_missing_lennart_sms", sms);
+      return json(hangupAction());
+    }
     return json(connectAction({
       to: callConfig.lennart,
       callerid: callConfig.workshopNumber,

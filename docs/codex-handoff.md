@@ -213,7 +213,7 @@ Lennart = workshop operator.
 - Added `/api/voice-start` in `netlify/functions/voice-start.mjs` for incoming 46elks calls.
 - Current public 46elks fixed voice number is `+46101385498`.
 - Flow is Sebastian first, then Lennart fallback, then optional missed-call SMS if both miss the call.
-- Defaults use Sebastian `+46700243319`, Lennart `+46722607753`, and 18 seconds per person.
+- Sebastian/Lennart routing numbers must be configured through Netlify env vars; private mobile fallbacks are not stored in the repo. Default timeout is 18 seconds per person.
 - Override with Netlify env vars `VOICE_CALLER_ID`, `VOICE_SEBASTIAN_PHONE`, `VOICE_LENNART_PHONE`, `VOICE_TIMEOUT_SECONDS`, and `VOICE_MISSED_SMS_TO`.
 - Setup/test notes live in `docs/46elks-voice-fallback.md`.
 

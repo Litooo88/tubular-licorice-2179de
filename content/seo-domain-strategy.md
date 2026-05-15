@@ -18,7 +18,7 @@ Keep `elscooterservice.se` live as a tightly focused service site, but make Nord
 The site should:
 
 - Link prominently to `nordicemobility.se/book-online/`
-- Use consistent NAP: Nordic E-Mobility, Pistolvagen 6, Orebro, 070-024 33 19
+- Use consistent NAP: Nordic E-Mobility, Pistolvägen 6, Orebro, 010-138 54 98
 - Avoid duplicate copy from Nordic pages
 - Target narrow searches Nordic does not fully own yet
 - Include local service pages that point users to Nordic booking

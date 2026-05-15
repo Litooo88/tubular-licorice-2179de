@@ -125,8 +125,8 @@ export function outsideHoursVoicemail(env: Env, reqUrl: URL, payload: ElksPayloa
 **Fil:** `.env.example` rad 7-8
 
 ```
-SEBASTIAN_NUMBER=+46700243319
-LENNART_NUMBER=+46722607753
+SEBASTIAN_NUMBER=+46101385498
+LENNART_NUMBER=+46101385498
 ```
 
 **Problem:** `.env.example` är en mall som ska committas till git. Personliga mobilnummer ska INTE ligga där.

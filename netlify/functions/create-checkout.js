@@ -94,10 +94,17 @@ exports.handler = async (event) => {
         allowed_countries: ["SE"],
       },
       phone_number_collection: { enabled: true },
+      consent_collection: {
+        terms_of_service: "required",
+      },
       custom_text: {
+        terms_of_service_acceptance: {
+          message:
+            "Jag godkanner Nordic E-Mobilitys villkor, returpolicy och garantipolicy: https://www.nordicemobility.se/villkor/",
+        },
         submit: {
           message:
-            "Betala tryggt med kort, Klarna eller andra tillgangliga betalsatt. Nordic E-Mobility kontaktar dig om leverans, showroom och efterservice.",
+            "Betala tryggt med kort, Klarna eller andra tillgangliga betalsatt. Villkor, returer och garanti finns pa https://www.nordicemobility.se/villkor/. Nordic E-Mobility kontaktar dig om leverans, showroom och efterservice.",
         },
       },
     });

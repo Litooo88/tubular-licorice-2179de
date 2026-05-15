@@ -100,7 +100,7 @@ const footerHtml = () => `
     <strong style="color:#111">Nordic E-Mobility</strong><br>
     Pistolv&auml;gen 6, 702 21 &Ouml;rebro<br>
     <a href="mailto:info@nordicemobility.se" style="color:#067a35">info@nordicemobility.se</a> &middot;
-    <a href="tel:+46700243319" style="color:#067a35">070-024 33 19</a>
+    <a href="tel:+46101385498" style="color:#067a35">010-138 54 98</a>
   </div>
 `;
 
@@ -194,8 +194,8 @@ const applyPatch = (caseItem, body) => {
   }
   if (body.vehicleModel) caseItem.vehicle = { ...(caseItem.vehicle || {}), model: clean(body.vehicleModel, 160) };
   if (body.assignedTo) {
-    const sebastian = { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "070-024 33 19" };
-    const lennart = { key: "lennart", name: "Lennart", role: "Golv, mottagning och snabba jobb", phone: "072-260 77 53" };
+    const sebastian = { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "010-138 54 98" };
+    const lennart = { key: "lennart", name: "Lennart", role: "Golv, mottagning och snabba jobb", phone: "010-138 54 98" };
     caseItem.assignedTo = body.assignedTo === "sebastian" ? sebastian : lennart;
   }
   if (body.note) {

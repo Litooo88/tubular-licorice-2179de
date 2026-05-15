@@ -94,8 +94,8 @@ const numberOrNull = (value) => {
 };
 
 const STAFF = {
-  lennart: { key: "lennart", name: "Lennart", role: "Golv, mottagning och snabba jobb", phone: "072-260 77 53" },
-  sebastian: { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "070-024 33 19" },
+  lennart: { key: "lennart", name: "Lennart", role: "Golv, mottagning och snabba jobb", phone: "010-138 54 98" },
+  sebastian: { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "010-138 54 98" },
 };
 
 const PAYMENT_STATUSES = new Set(["unpaid", "invoice_ready", "invoiced", "paid"]);
