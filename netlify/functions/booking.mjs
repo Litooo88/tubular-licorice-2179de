@@ -74,18 +74,18 @@ const STAFF = {
     key: "lennart",
     name: "Lennart",
     role: "Golv, mottagning och snabba jobb",
-    phone: "072-260 77 53",
+    phone: "010-138 54 98",
   },
   sebastian: {
     key: "sebastian",
     name: "Sebastian",
     role: "Tung felsokning, batteri och elsystem",
-    phone: "070-024 33 19",
+    phone: "010-138 54 98",
   },
 };
 
 const LOGISTICS_LABELS = {
-  dropoff: "Kund lamnar in pa Pistolvagen 6",
+  dropoff: "Kund lamnar in pa Pistolvägen 6",
   "pickup-ready": "Upphamtning av fardig scooter",
   "pickup-question": "Fraga om hamtning/lamning",
   "not-sure": "Ej bestamt",

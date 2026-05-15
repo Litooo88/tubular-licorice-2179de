@@ -31,10 +31,10 @@ Save changes, then test with real calls.
 The function has safe defaults for the current workshop setup, but these env vars can override it later:
 
 - `VOICE_CALLER_ID` - 46elks number shown to Sebastian/Lennart. Default: `+46101385498`.
-- `VOICE_SEBASTIAN_PHONE` - Sebastian mobile. Default: `+46700243319`.
-- `VOICE_LENNART_PHONE` - Lennart mobile. Default: `+46722607753`.
+- `VOICE_SEBASTIAN_PHONE` - Sebastian mobile, configured in Netlify env. No private mobile fallback is stored in the repo.
+- `VOICE_LENNART_PHONE` - Lennart mobile, configured in Netlify env. No private mobile fallback is stored in the repo.
 - `VOICE_TIMEOUT_SECONDS` - seconds per person. Default: `18`.
-- `VOICE_MISSED_SMS_TO` - comma-separated missed-call SMS recipients. Fallback: `WORKSHOP_SMS_TO`, then Sebastian.
+- `VOICE_MISSED_SMS_TO` - comma-separated missed-call SMS recipients. Fallback: `WORKSHOP_SMS_TO`, then the public workshop number if nothing else is configured.
 
 Missed-call SMS uses existing 46elks SMS env vars:
 

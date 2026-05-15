@@ -153,7 +153,7 @@ export default async (request) => {
       method: "POST",
       body: JSON.stringify({
         summary: "Nordic E-Mobility kalendertest",
-        location: "Pistolvagen 6, Orebro",
+        location: "Pistolvägen 6, Orebro",
         description: "Automatiskt test. Skapas och raderas direkt av adminpanelen.",
         start: { dateTime: start.toISOString(), timeZone: "Europe/Stockholm" },
         end: { dateTime: end.toISOString(), timeZone: "Europe/Stockholm" },

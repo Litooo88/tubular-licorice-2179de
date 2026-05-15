@@ -414,8 +414,8 @@ function smsTemplateFor(item,type='custom'){
   const name=(item.customer&&item.customer.name||'').split(/\s+/).filter(Boolean)[0]||'där';
   const model=item.vehicle&&item.vehicle.model||'scooter';
   const owner=(item.assignedTo&&item.assignedTo.key)==='sebastian'
-    ? {name:'Sebastian',phone:'070-024 33 19'}
-    : {name:'Lennart',phone:'072-260 77 53'};
+    ? {name:'Sebastian',phone:'010-138 54 98'}
+    : {name:'Lennart',phone:'010-138 54 98'};
   const amount=item.quote&&item.quote.amount?`${Math.round(Number(item.quote.amount))} kr`:'[pris] kr';
   if(type==='quote')return `Hej ${name}! Vi har felsökt din ${model}.\nPrisförslag: ${amount} inkl. moms.\nÅtgärd: [kort åtgärd].\nSvara JA om du godkänner, eller ring ${owner.name} på ${owner.phone}.\n/ Nordic E-Mobility`;
   if(type==='need_info')return `Hej ${name}! Vi behöver lite mer information om din ${model} innan vi går vidare. Svara gärna här eller ring ${owner.name} på ${owner.phone}.\n/ Nordic E-Mobility`;
@@ -607,7 +607,7 @@ function smsPhone(value){
 function customerTemplate(item){
   const name=item.customer&&item.customer.name?item.customer.name:'';
   const greeting=name?`Hej ${name}!`:'Hej!';
-  return `${greeting}\n\nVi har tagit emot din serviceförfrågan hos Nordic E-Mobility. Ärende: ${shortId(item.id)}.\n\nDetta är inte en bekräftad verkstadstid förrän vi har återkommit med tid, pris och nästa steg.\n\nSnabb kontakt: Sebastian 070-024 33 19 eller Lennart 072-260 77 53.\n\n/Nordic E-Mobility`;
+  return `${greeting}\n\nVi har tagit emot din serviceförfrågan hos Nordic E-Mobility. Ärende: ${shortId(item.id)}.\n\nDetta är inte en bekräftad verkstadstid förrän vi har återkommit med tid, pris och nästa steg.\n\nSnabb kontakt: Sebastian 010-138 54 98 eller Lennart 010-138 54 98.\n\n/Nordic E-Mobility`;
 }
 function smsHref(item){
   const phone=smsPhone(item.customer&&item.customer.phone);
@@ -624,7 +624,7 @@ function customerTemplate(item){
   const greeting=name?`Hej ${name}!`:'Hej!';
   const timeLabel=item.logistics==='pickup-ready'?'Upph\u00e4mtning':'\u00d6nskad inl\u00e4mning';
   const addons=addonText(item);
-  return `${greeting}\n\nVi har tagit emot din bokning hos Nordic E-Mobility. \u00c4rende: ${shortId(item.id)}.\n\n${timeLabel}: ${displayDate(item.preferredDate)}\nTj\u00e4nst: ${item.service||'Servicef\u00f6rfr\u00e5gan'}${item.discountCode?`\nRabattkod: ${item.discountCode}`:''}${addons?`\nTillval: ${addons}`:''}\n\nVi g\u00e5r nu igenom underlaget och \u00e5terkommer med bekr\u00e4ftad tid, pris och n\u00e4sta steg innan arbete p\u00e5b\u00f6rjas.\n\nDirektkontakt: Sebastian 070-024 33 19 eller Lennart 072-260 77 53.\n\nNordic E-Mobility`;
+  return `${greeting}\n\nVi har tagit emot din bokning hos Nordic E-Mobility. \u00c4rende: ${shortId(item.id)}.\n\n${timeLabel}: ${displayDate(item.preferredDate)}\nTj\u00e4nst: ${item.service||'Servicef\u00f6rfr\u00e5gan'}${item.discountCode?`\nRabattkod: ${item.discountCode}`:''}${addons?`\nTillval: ${addons}`:''}\n\nVi g\u00e5r nu igenom underlaget och \u00e5terkommer med bekr\u00e4ftad tid, pris och n\u00e4sta steg innan arbete p\u00e5b\u00f6rjas.\n\nDirektkontakt: Sebastian 010-138 54 98 eller Lennart 010-138 54 98.\n\nNordic E-Mobility`;
 }
 function mailHref(item){
   const email=String(item.customer&&item.customer.email||'').trim();
@@ -897,14 +897,14 @@ function readyMailSubject(item,overrides={}){
 function readyMailTemplate(item,overrides={}){
   const data=completionData(item,overrides);
   const greeting=item.customer&&item.customer.name?`Hej ${item.customer.name},`:'Hej,';
-  return `${greeting}\n\nDin ${data.vehicleModel} är nu klar för upphämtning hos Nordic E-Mobility.\n\nUtförda åtgärder\n${data.workSummary||'Se underlag i ärendet.'}\n\nTotalt belopp inkl. moms\n${data.totalLabel}\n\nBoka upphämtning\n${data.bookingUrl}\n\n${data.pickupSummary}\n\nAdress\nPistolvägen 6, Örebro\n\nOm du vill att vi reserverar en tid åt dig går det bra att svara direkt på detta mail eller SMS.\n\nVänliga hälsningar,\nNordic E-Mobility`;
+  return `${greeting}\n\nDin ${data.vehicleModel} är nu klar för upphämtning hos Nordic E-Mobility.\n\nUtförda åtgärder\n${data.workSummary||'Se underlag i ärendet.'}\n\nTotalt belopp inkl. moms\n${data.totalLabel}\n\nBoka upphämtning\n${data.bookingUrl}\n\n${data.pickupSummary}\n\nAdress\nPistolvägen 6, 702 21 Örebro\n\nOm du vill att vi reserverar en tid åt dig går det bra att svara direkt på detta mail eller SMS.\n\nVänliga hälsningar,\nNordic E-Mobility`;
 }
 function quoteSmsTemplate(item,overrides={}){
   const first=(item.customer&&item.customer.name||'').split(/\s+/).filter(Boolean)[0]||'där';
   const model=item.vehicle&&item.vehicle.model||'scooter';
   const owner=String(overrides.quoteOwner||item.quote&&item.quote.contactOwner||item.assignedTo&&item.assignedTo.key||'lennart')==='sebastian'
-    ? {name:'Sebastian',phone:'070-024 33 19'}
-    : {name:'Lennart',phone:'072-260 77 53'};
+    ? {name:'Sebastian',phone:'010-138 54 98'}
+    : {name:'Lennart',phone:'010-138 54 98'};
   const amount=overrides.quoteAmount||item.quote&&item.quote.amount||'[pris]';
   const summary=String(overrides.quoteSummary||item.quote&&item.quote.summary||'[kort åtgärd]').trim();
   return `Hej ${first}! Vi har felsökt din ${model}.\nPrisförslag: ${amount} kr inkl. moms.\nÅtgärd: ${summary}.\nSvara JA om du godkänner, eller ring ${owner.name} på ${owner.phone}.\n/ Nordic E-Mobility`;
@@ -975,7 +975,7 @@ function calendarHref(item){
     `DTSTART:${icsDate(safeStart)}`,
     `DTEND:${icsDate(end)}`,
     `SUMMARY:${icsEscape(summary)}`,
-    'LOCATION:Pistolvägen 6, Örebro',
+    'LOCATION:Pistolvägen 6, 702 21 Örebro',
     `DESCRIPTION:${icsEscape(description)}`,
     'END:VEVENT',
     'END:VCALENDAR'
@@ -1154,7 +1154,7 @@ function focusInitialCase(){
 }
 
 function caseCard(item){
-  const owner=item.assignedTo||{key:'lennart',name:'Lennart',phone:'072-260 77 53'};
+  const owner=item.assignedTo||{key:'lennart',name:'Lennart',phone:'010-138 54 98'};
   const contactState=contactStateMeta(item);
   const delivery=customerDeliveryMeta(item);
   const customerPhone=item.customer&&item.customer.phone||'Saknas';
