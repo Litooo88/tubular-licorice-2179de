@@ -238,6 +238,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 
 
 
+
+
+
+
   <section class="section" id="nya-elscootrar">
     <div class="wrap">
       <style>
@@ -246,22 +250,56 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         .catalog-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
         .catalog-actions a{border:1px solid var(--line-strong);background:#101410;border-radius:999px;padding:9px 12px;text-decoration:none;font-size:13px;font-weight:900}
         .product-card{position:relative}
-        .product-media{height:210px;display:flex;align-items:center;justify-content:center;background:#111712;position:relative;text-decoration:none}
+        .product-media{height:210px;display:flex;align-items:center;justify-content:center;background:#111712;position:relative;text-decoration:none;cursor:zoom-in}
+        .product-media::after{content:"Visa bilder";position:absolute;right:10px;bottom:10px;border:1px solid rgba(255,255,255,.24);background:rgba(0,0,0,.7);color:#fff;border-radius:999px;padding:6px 9px;font-size:11px;font-weight:900;opacity:0;transform:translateY(4px);transition:.18s}
+        .product-media:hover::after,.product-media:focus-visible::after{opacity:1;transform:none}
         .product-media .tag{position:absolute;top:10px;left:10px;z-index:2;margin:0}
         .product-media img{height:100%;width:100%;object-fit:contain;padding:12px;background:transparent}
         .product-thumbs{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;padding:8px;background:#0b100c;border-top:1px solid var(--line)}
-        .product-thumbs img{height:58px;width:100%;object-fit:contain;background:#111712;border:1px solid var(--line);border-radius:6px;padding:4px}
+        .product-thumbs button{height:58px;width:100%;border:1px solid var(--line);border-radius:6px;background:#111712;padding:4px;cursor:zoom-in}
+        .product-thumbs img{height:100%;width:100%;object-fit:contain}
         .product-thumbs-empty{display:block;color:#8d9a91;font-size:12px;min-height:42px}
         .product-meta{display:flex;justify-content:space-between;gap:8px;color:#90a097;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
         .product-legal{margin-top:10px;color:#ffd9b3;font-size:12px;line-height:1.45}
         .klarna,.stock-copy{font-size:12px;color:#9eaaa2;margin-top:-6px;margin-bottom:10px}
+        .payment-methods{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px}
+        .payment-methods.compact{gap:5px;margin:8px 0 10px}
+        .pay-logo{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border-radius:5px;padding:4px 7px;background:#f4f6f5;color:#071008;font-size:11px;font-weight:950;line-height:1;letter-spacing:0}
+        .pay-logo.klarna{background:#ffb3c7;color:#111}
+        .pay-logo.apple{background:#fff;color:#000}
+        .pay-logo.gpay{background:#fff;color:#1f1f1f}
+        .pay-logo.card{background:#15251a;color:#dfffea;border:1px solid rgba(0,200,83,.24)}
+        .pay-logo.stripe{background:#635bff;color:#fff}
         .catalog-brand{margin-top:36px}
         .brand-row{display:flex;justify-content:space-between;align-items:end;gap:18px;margin-bottom:16px;border-top:1px solid var(--line);padding-top:22px}
         .brand-row h3{font-size:30px;line-height:1.1}
         .brand-row p{color:var(--muted);max-width:520px}
         .fighter-push{margin-top:24px;border:1px solid rgba(255,138,28,.34);background:linear-gradient(135deg,rgba(255,138,28,.13),rgba(0,200,83,.07));border-radius:8px;padding:22px}
         .accessory-card .product-media{height:190px}
+        .catalog-product-modal{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);padding:18px}
+        .catalog-product-modal.is-open{display:flex}
+        .catalog-product-dialog{width:min(920px,100%);max-height:calc(100vh - 36px);overflow:auto;background:#0d0f0e;border:1px solid #26342b;border-radius:8px;color:#fff;box-shadow:0 30px 90px rgba(0,0,0,.55)}
+        .catalog-modal-head{display:flex;justify-content:space-between;gap:14px;padding:18px 20px;border-bottom:1px solid #202820}
+        .catalog-modal-head h3{margin:0 0 5px;font-size:24px}
+        .catalog-modal-close{width:38px;height:38px;border-radius:999px;border:1px solid #344238;background:#162018;color:#fff;font-size:24px;cursor:pointer;flex:0 0 auto}
+        .catalog-modal-body{display:grid;grid-template-columns:minmax(240px,380px) 1fr;gap:22px;padding:20px}
+        .catalog-modal-stage{position:relative;background:#111712;border:1px solid #243026;border-radius:8px}
+        .catalog-modal-stage img{width:100%;aspect-ratio:1/1;object-fit:contain;padding:12px;display:block}
+        .catalog-modal-nav{position:absolute;top:50%;transform:translateY(-50%);width:38px;height:38px;border-radius:999px;border:1px solid #344238;background:rgba(0,0,0,.72);color:#fff;font-size:22px;cursor:pointer}
+        .catalog-modal-prev{left:8px}.catalog-modal-next{right:8px}
+        .catalog-modal-thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}
+        .catalog-modal-thumbs button{border:1px solid #27352b;background:#111;border-radius:6px;padding:3px;cursor:pointer}
+        .catalog-modal-thumbs button.is-active{border-color:#00C853}
+        .catalog-modal-thumbs img{width:100%;aspect-ratio:1/1;object-fit:contain;border-radius:4px}
+        .catalog-modal-list{display:grid;gap:10px;margin:14px 0;padding:0}
+        .catalog-modal-list li{list-style:none;border:1px solid #222;background:#111;border-radius:8px;padding:11px 12px;color:#d7ddd9;font-size:14px}
+        .catalog-modal-list strong{display:block;color:#fff;margin-bottom:3px}
+        .catalog-modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+        .catalog-modal-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 18px;border-radius:6px;text-decoration:none;font-weight:900}
+        .catalog-modal-actions .buy{background:#00C853;color:#021307}
+        .catalog-modal-actions .ask{border:1px solid #344238;color:#fff}
         @media(max-width:980px){.catalog-intro{grid-template-columns:1fr}.brand-row{display:block}.brand-row p{margin-top:8px}}
+        @media(max-width:700px){.catalog-modal-body{grid-template-columns:1fr}.catalog-modal-head h3{font-size:20px}}
       </style>
       <div class="section-head">
         <div>
@@ -284,16 +322,24 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div class="catalog-note">
           <h3>Köp med verkstadsstöd</h3>
           <p>Betala tryggt via checkout. Vi kontaktar kunden om leverans, montering, hjälm, inbyte och efterservice. Prestandamodeller markeras försiktigt så de inte säljs som vanliga trafikfordon utan kontroll.</p>
+          <div class="payment-methods" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
         </div>
       </div>
       <div class="grid three catalog-grid">
 
         <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/xt5-ultra-drive.jpg&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-XT5-Ultra" data-product="navee-xt5-ultra" aria-label="Köp nu NAVEE XT5 Ultra">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-XT5-Ultra" data-open-product aria-label="Visa bilder och information om NAVEE XT5 Ultra">
             <span class="tag ">NAVEE rek.</span>
             <img loading="lazy" src="/assets/products/navee/xt5-ultra-drive.jpg" alt="NAVEE XT5 Ultra">
           </a>
-          <div class="product-thumbs"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png" alt="NAVEE XT5 Ultra extra bild 2"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png" alt="NAVEE XT5 Ultra extra bild 3"></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE XT5 Ultra bild 2"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png" alt="NAVEE XT5 Ultra extra bild 2"></button><button type="button" data-open-product aria-label="Visa NAVEE XT5 Ultra bild 3"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png" alt="NAVEE XT5 Ultra extra bild 3"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>NAVEE</span><span>I LAGER</span></div>
             <h3>NAVEE XT5 Ultra</h3>
@@ -302,6 +348,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">16 990 kr</div>
             <p class="klarna">Ca 708 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-XT5-Ultra" data-product="navee-xt5-ultra">Köp nu</a>
@@ -310,11 +364,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/n65i-drive.jpg&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/07/N65i-500x500.png&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-N65i" data-product="navee-n65i" aria-label="Köp nu NAVEE N65i">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-N65i" data-open-product aria-label="Visa bilder och information om NAVEE N65i">
             <span class="tag ">Mellansegment</span>
             <img loading="lazy" src="/assets/products/navee/n65i-drive.jpg" alt="NAVEE N65i">
           </a>
-          <div class="product-thumbs"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/07/N65i-500x500.png" alt="NAVEE N65i extra bild 2"></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE N65i bild 2"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/07/N65i-500x500.png" alt="NAVEE N65i extra bild 2"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>NAVEE</span><span>I LAGER</span></div>
             <h3>NAVEE N65i</h3>
@@ -323,6 +377,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">8 499 kr</div>
             <p class="klarna">Ca 355 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-N65i" data-product="navee-n65i">Köp nu</a>
@@ -331,11 +393,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/v50i-pro-drive.jpg&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/07/4-V50i-Pro.png&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-V50i-Pro" data-product="navee-v50i-pro" aria-label="Köp nu NAVEE V50i Pro">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-V50i-Pro" data-open-product aria-label="Visa bilder och information om NAVEE V50i Pro">
             <span class="tag ">Pendling</span>
             <img loading="lazy" src="/assets/products/navee/v50i-pro-drive.jpg" alt="NAVEE V50i Pro">
           </a>
-          <div class="product-thumbs"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/07/4-V50i-Pro.png" alt="NAVEE V50i Pro extra bild 2"></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE V50i Pro bild 2"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/07/4-V50i-Pro.png" alt="NAVEE V50i Pro extra bild 2"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>NAVEE</span><span>I LAGER</span></div>
             <h3>NAVEE V50i Pro</h3>
@@ -344,6 +406,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">5 990 kr</div>
             <p class="klarna">Ca 250 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-V50i-Pro" data-product="navee-v50i-pro">Köp nu</a>
@@ -352,11 +422,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png&quot;,&quot;https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Eleven" data-product="teverun-fighter-eleven-plus" aria-label="Köp nu Teverun Fighter Eleven+">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Eleven" data-open-product aria-label="Visa bilder och information om Teverun Fighter Eleven+">
             <span class="tag ">I LAGER</span>
             <img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png" alt="Teverun Fighter Eleven+">
           </a>
-          <div class="product-thumbs"><img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg" alt="Teverun Fighter Eleven+ extra bild 2"></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Eleven+ bild 2"><img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg" alt="Teverun Fighter Eleven+ extra bild 2"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>Teverun</span><span>I LAGER</span></div>
             <h3>Teverun Fighter Eleven+</h3>
@@ -365,6 +435,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">39 990 kr</div>
             <p class="klarna">Ca 1 667 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Finns hos leverantor, leverans 1-2 veckor</p>
             <div class="card-actions">
               <a class="btn primary" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Eleven" data-product="teverun-fighter-eleven-plus">Köp nu</a>
@@ -373,7 +451,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2-1104.jpg?v=1741748721&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G2" data-product="kukirin-g2" aria-label="Köp nu KuKirin G2">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G2" data-open-product aria-label="Visa bilder och information om KuKirin G2">
             <span class="tag orange">Budget</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2-1104.jpg?v=1741748721" alt="KuKirin G2">
           </a>
@@ -386,6 +464,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">7 990 kr</div>
             <p class="klarna">Ca 333 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-G2" data-product="kukirin-g2">Köp nu</a>
@@ -394,11 +480,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G4-Special-Edition" data-product="kukirin-g4-special" aria-label="Köp nu KuKirin G4 Special Edition">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G4-Special-Edition" data-open-product aria-label="Visa bilder och information om KuKirin G4 Special Edition">
             <span class="tag orange">Special Edition</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272" alt="KuKirin G4 Special Edition">
           </a>
-          <div class="product-thumbs"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp" alt="KuKirin G4 Special Edition extra bild 2"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp" alt="KuKirin G4 Special Edition extra bild 3"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp" alt="KuKirin G4 Special Edition extra bild 4"></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 2"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp" alt="KuKirin G4 Special Edition extra bild 2"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 3"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp" alt="KuKirin G4 Special Edition extra bild 3"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 4"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp" alt="KuKirin G4 Special Edition extra bild 4"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>KuKirin</span><span>I LAGER</span></div>
             <h3>KuKirin G4 Special Edition</h3>
@@ -407,6 +493,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">9 950 kr</div>
             <p class="klarna">Ca 415 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-G4-Special-Edition" data-product="kukirin-g4-special">Köp nu</a>
@@ -425,11 +519,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div class="grid three catalog-grid">
 
         <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Fighter_mini_pro_08209532-0091-46c1-bc73-ec7a5507dd4f.png?v=1760331427&amp;width=2048&quot;,&quot;https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&amp;width=2048&quot;,&quot;https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&amp;width=2048&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Mini-Pro-eKFV" data-product="teverun-fighter-mini-pro-ekfv" aria-label="Köp nu Teverun Fighter Mini Pro eKFV">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Mini-Pro-eKFV" data-open-product aria-label="Visa bilder och information om Teverun Fighter Mini Pro eKFV">
             <span class="tag ">Fighter</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Fighter_mini_pro_08209532-0091-46c1-bc73-ec7a5507dd4f.png?v=1760331427&amp;width=2048" alt="Teverun Fighter Mini Pro eKFV">
           </a>
-          <div class="product-thumbs"><img loading="lazy" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&amp;width=2048" alt="Teverun Fighter Mini Pro eKFV extra bild 2"><img loading="lazy" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&amp;width=2048" alt="Teverun Fighter Mini Pro eKFV extra bild 3"></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Mini Pro eKFV bild 2"><img loading="lazy" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&amp;width=2048" alt="Teverun Fighter Mini Pro eKFV extra bild 2"></button><button type="button" data-open-product aria-label="Visa Teverun Fighter Mini Pro eKFV bild 3"><img loading="lazy" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&amp;width=2048" alt="Teverun Fighter Mini Pro eKFV extra bild 3"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>Teverun</span><span>I LAGER</span></div>
             <h3>Teverun Fighter Mini Pro eKFV</h3>
@@ -438,6 +532,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Regelstatus beror på exakt version och användning. Vi kontrollerar innan affär.</p>
             <div class="price">27 990 kr</div>
             <p class="klarna">Ca 1 167 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Mini-Pro-eKFV" data-product="teverun-fighter-mini-pro-ekfv">Köp nu</a>
@@ -446,11 +548,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png&quot;,&quot;https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Eleven" data-product="teverun-fighter-eleven-plus" aria-label="Köp nu Teverun Fighter Eleven+">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Eleven" data-open-product aria-label="Visa bilder och information om Teverun Fighter Eleven+">
             <span class="tag ">I LAGER</span>
             <img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png" alt="Teverun Fighter Eleven+">
           </a>
-          <div class="product-thumbs"><img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg" alt="Teverun Fighter Eleven+ extra bild 2"></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Eleven+ bild 2"><img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg" alt="Teverun Fighter Eleven+ extra bild 2"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>Teverun</span><span>I LAGER</span></div>
             <h3>Teverun Fighter Eleven+</h3>
@@ -459,6 +561,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">39 990 kr</div>
             <p class="klarna">Ca 1 667 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Finns hos leverantor, leverans 1-2 veckor</p>
             <div class="card-actions">
               <a class="btn primary" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Eleven" data-product="teverun-fighter-eleven-plus">Köp nu</a>
@@ -479,7 +589,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div class="grid three catalog-grid">
 
         <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-UT5-Ultra-X" data-product="navee-ut5-ultra-x" aria-label="Köp nu NAVEE UT5 Ultra X">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-UT5-Ultra-X" data-open-product aria-label="Visa bilder och information om NAVEE UT5 Ultra X">
             <span class="tag ">Premium</span>
             <img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png" alt="NAVEE UT5 Ultra X">
           </a>
@@ -492,6 +602,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">23 490 kr</div>
             <p class="klarna">Ca 979 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-UT5-Ultra-X" data-product="navee-ut5-ultra-x">Köp nu</a>
@@ -500,11 +618,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/xt5-ultra-drive.jpg&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-XT5-Ultra" data-product="navee-xt5-ultra" aria-label="Köp nu NAVEE XT5 Ultra">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-XT5-Ultra" data-open-product aria-label="Visa bilder och information om NAVEE XT5 Ultra">
             <span class="tag ">NAVEE rek.</span>
             <img loading="lazy" src="/assets/products/navee/xt5-ultra-drive.jpg" alt="NAVEE XT5 Ultra">
           </a>
-          <div class="product-thumbs"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png" alt="NAVEE XT5 Ultra extra bild 2"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png" alt="NAVEE XT5 Ultra extra bild 3"></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE XT5 Ultra bild 2"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png" alt="NAVEE XT5 Ultra extra bild 2"></button><button type="button" data-open-product aria-label="Visa NAVEE XT5 Ultra bild 3"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png" alt="NAVEE XT5 Ultra extra bild 3"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>NAVEE</span><span>I LAGER</span></div>
             <h3>NAVEE XT5 Ultra</h3>
@@ -513,6 +631,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">16 990 kr</div>
             <p class="klarna">Ca 708 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-XT5-Ultra" data-product="navee-xt5-ultra">Köp nu</a>
@@ -521,7 +647,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-NT5-Ultra-X" data-product="navee-nt5-ultra-x" aria-label="Köp nu NAVEE NT5 Ultra X">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-NT5-Ultra-X" data-open-product aria-label="Visa bilder och information om NAVEE NT5 Ultra X">
             <span class="tag ">Nyhet</span>
             <img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png" alt="NAVEE NT5 Ultra X">
           </a>
@@ -534,6 +660,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">13 490 kr</div>
             <p class="klarna">Ca 563 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-NT5-Ultra-X" data-product="navee-nt5-ultra-x">Köp nu</a>
@@ -542,7 +676,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="NAVEE" data-status="pa-vag" data-gallery="[&quot;https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-XT5-Pro" data-product="navee-xt5-pro" aria-label="Förbeställ NAVEE XT5 Pro">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-XT5-Pro" data-open-product aria-label="Visa bilder och information om NAVEE XT5 Pro">
             <span class="tag ">På väg</span>
             <img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png" alt="NAVEE XT5 Pro">
           </a>
@@ -555,6 +689,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">11 990 kr</div>
             <p class="klarna">Ca 500 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">På väg till sortimentet</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-XT5-Pro" data-product="navee-xt5-pro">Förbeställ</a>
@@ -563,7 +705,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="NAVEE" data-status="pa-vag" data-gallery="[&quot;https://www.naveetech.com/wp-content/uploads/2026/03/NT5-max-12.31.1.png&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-NT5-Max" data-product="navee-nt5-max" aria-label="Förbeställ NAVEE NT5 Max">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-NT5-Max" data-open-product aria-label="Visa bilder och information om NAVEE NT5 Max">
             <span class="tag ">På väg</span>
             <img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2026/03/NT5-max-12.31.1.png" alt="NAVEE NT5 Max">
           </a>
@@ -576,6 +718,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">10 990 kr</div>
             <p class="klarna">Ca 458 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">På väg till sortimentet</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-NT5-Max" data-product="navee-nt5-max">Förbeställ</a>
@@ -584,11 +734,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/n65i-drive.jpg&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/07/N65i-500x500.png&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-N65i" data-product="navee-n65i" aria-label="Köp nu NAVEE N65i">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-N65i" data-open-product aria-label="Visa bilder och information om NAVEE N65i">
             <span class="tag ">Mellansegment</span>
             <img loading="lazy" src="/assets/products/navee/n65i-drive.jpg" alt="NAVEE N65i">
           </a>
-          <div class="product-thumbs"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/07/N65i-500x500.png" alt="NAVEE N65i extra bild 2"></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE N65i bild 2"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/07/N65i-500x500.png" alt="NAVEE N65i extra bild 2"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>NAVEE</span><span>I LAGER</span></div>
             <h3>NAVEE N65i</h3>
@@ -597,6 +747,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">8 499 kr</div>
             <p class="klarna">Ca 355 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-N65i" data-product="navee-n65i">Köp nu</a>
@@ -605,11 +763,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/v50i-pro-drive.jpg&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/07/4-V50i-Pro.png&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-V50i-Pro" data-product="navee-v50i-pro" aria-label="Köp nu NAVEE V50i Pro">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-V50i-Pro" data-open-product aria-label="Visa bilder och information om NAVEE V50i Pro">
             <span class="tag ">Pendling</span>
             <img loading="lazy" src="/assets/products/navee/v50i-pro-drive.jpg" alt="NAVEE V50i Pro">
           </a>
-          <div class="product-thumbs"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/07/4-V50i-Pro.png" alt="NAVEE V50i Pro extra bild 2"></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE V50i Pro bild 2"><img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/07/4-V50i-Pro.png" alt="NAVEE V50i Pro extra bild 2"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>NAVEE</span><span>I LAGER</span></div>
             <h3>NAVEE V50i Pro</h3>
@@ -618,6 +776,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">5 990 kr</div>
             <p class="klarna">Ca 250 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-V50i-Pro" data-product="navee-v50i-pro">Köp nu</a>
@@ -626,7 +792,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/g5-drive.jpg&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-G5" data-product="navee-g5" aria-label="Köp nu NAVEE G5">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-G5" data-open-product aria-label="Visa bilder och information om NAVEE G5">
             <span class="tag ">Vardag</span>
             <img loading="lazy" src="/assets/products/navee/g5-drive.jpg" alt="NAVEE G5">
           </a>
@@ -639,6 +805,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">5 490 kr</div>
             <p class="klarna">Ca 229 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-G5" data-product="navee-g5">Köp nu</a>
@@ -647,7 +821,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;https://www.naveetech.com/wp-content/uploads/2025/07/v25i-II-1-500x500.png&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-V25i-Pro-II" data-product="navee-v25i-pro-ii" aria-label="Köp nu NAVEE V25i Pro II">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-V25i-Pro-II" data-open-product aria-label="Visa bilder och information om NAVEE V25i Pro II">
             <span class="tag ">Insteg</span>
             <img loading="lazy" src="https://www.naveetech.com/wp-content/uploads/2025/07/v25i-II-1-500x500.png" alt="NAVEE V25i Pro II">
           </a>
@@ -660,6 +834,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">4 490 kr</div>
             <p class="klarna">Ca 188 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-V25i-Pro-II" data-product="navee-v25i-pro-ii">Köp nu</a>
@@ -668,7 +850,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/workshop/scooter-on-bench.jpg&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-K100-Max" data-product="navee-k100-max" aria-label="Köp nu NAVEE K100 Max">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-K100-Max" data-open-product aria-label="Visa bilder och information om NAVEE K100 Max">
             <span class="tag ">Insteg</span>
             <img loading="lazy" src="/assets/workshop/scooter-on-bench.jpg" alt="NAVEE K100 Max">
           </a>
@@ -681,6 +863,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">3 499 kr</div>
             <p class="klarna">Ca 146 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-K100-Max" data-product="navee-k100-max">Köp nu</a>
@@ -701,7 +891,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div class="grid three catalog-grid">
 
         <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Space_Lite_1.png?v=1773208465&amp;width=1024&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Space-Lite" data-product="teverun-space-lite" aria-label="Köp nu Teverun Space Lite">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Space-Lite" data-open-product aria-label="Visa bilder och information om Teverun Space Lite">
             <span class="tag ">Teverun</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Space_Lite_1.png?v=1773208465&amp;width=1024" alt="Teverun Space Lite">
           </a>
@@ -714,6 +904,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">12 990 kr</div>
             <p class="klarna">Ca 542 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=Teverun-Space-Lite" data-product="teverun-space-lite">Köp nu</a>
@@ -722,7 +920,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/02/Blade-Mini-Ultra-Yellow-1.png&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Blade-Mini-Ultra" data-product="teverun-blade-mini-ultra" aria-label="Köp nu Teverun Blade Mini Ultra">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Blade-Mini-Ultra" data-open-product aria-label="Visa bilder och information om Teverun Blade Mini Ultra">
             <span class="tag ">Blade</span>
             <img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/02/Blade-Mini-Ultra-Yellow-1.png" alt="Teverun Blade Mini Ultra">
           </a>
@@ -735,6 +933,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">17 990 kr</div>
             <p class="klarna">Ca 750 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=Teverun-Blade-Mini-Ultra" data-product="teverun-blade-mini-ultra">Köp nu</a>
@@ -743,7 +949,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/d105d84cfc45a3e1c40bed8ee5077350.png&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Blade-GT-II" data-product="teverun-blade-gt-ii" aria-label="Köp nu Teverun Blade GT II">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Blade-GT-II" data-open-product aria-label="Visa bilder och information om Teverun Blade GT II">
             <span class="tag ">Blade GT</span>
             <img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/d105d84cfc45a3e1c40bed8ee5077350.png" alt="Teverun Blade GT II">
           </a>
@@ -756,6 +962,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">24 990 kr</div>
             <p class="klarna">Ca 1 042 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=Teverun-Blade-GT-II" data-product="teverun-blade-gt-ii">Köp nu</a>
@@ -764,11 +978,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Fighter_mini_pro_08209532-0091-46c1-bc73-ec7a5507dd4f.png?v=1760331427&amp;width=2048&quot;,&quot;https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&amp;width=2048&quot;,&quot;https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&amp;width=2048&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Mini-Pro-eKFV" data-product="teverun-fighter-mini-pro-ekfv" aria-label="Köp nu Teverun Fighter Mini Pro eKFV">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Mini-Pro-eKFV" data-open-product aria-label="Visa bilder och information om Teverun Fighter Mini Pro eKFV">
             <span class="tag ">Fighter</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Fighter_mini_pro_08209532-0091-46c1-bc73-ec7a5507dd4f.png?v=1760331427&amp;width=2048" alt="Teverun Fighter Mini Pro eKFV">
           </a>
-          <div class="product-thumbs"><img loading="lazy" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&amp;width=2048" alt="Teverun Fighter Mini Pro eKFV extra bild 2"><img loading="lazy" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&amp;width=2048" alt="Teverun Fighter Mini Pro eKFV extra bild 3"></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Mini Pro eKFV bild 2"><img loading="lazy" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&amp;width=2048" alt="Teverun Fighter Mini Pro eKFV extra bild 2"></button><button type="button" data-open-product aria-label="Visa Teverun Fighter Mini Pro eKFV bild 3"><img loading="lazy" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&amp;width=2048" alt="Teverun Fighter Mini Pro eKFV extra bild 3"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>Teverun</span><span>I LAGER</span></div>
             <h3>Teverun Fighter Mini Pro eKFV</h3>
@@ -777,6 +991,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Regelstatus beror på exakt version och användning. Vi kontrollerar innan affär.</p>
             <div class="price">27 990 kr</div>
             <p class="klarna">Ca 1 167 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Mini-Pro-eKFV" data-product="teverun-fighter-mini-pro-ekfv">Köp nu</a>
@@ -785,11 +1007,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png&quot;,&quot;https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Eleven" data-product="teverun-fighter-eleven-plus" aria-label="Köp nu Teverun Fighter Eleven+">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Eleven" data-open-product aria-label="Visa bilder och information om Teverun Fighter Eleven+">
             <span class="tag ">I LAGER</span>
             <img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png" alt="Teverun Fighter Eleven+">
           </a>
-          <div class="product-thumbs"><img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg" alt="Teverun Fighter Eleven+ extra bild 2"></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Eleven+ bild 2"><img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg" alt="Teverun Fighter Eleven+ extra bild 2"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>Teverun</span><span>I LAGER</span></div>
             <h3>Teverun Fighter Eleven+</h3>
@@ -798,6 +1020,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">39 990 kr</div>
             <p class="klarna">Ca 1 667 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Finns hos leverantor, leverans 1-2 veckor</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Eleven" data-product="teverun-fighter-eleven-plus">Köp nu</a>
@@ -806,7 +1036,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/69f3d979970581fa511f0ed688750892.png&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Supreme-7260R" data-product="teverun-supreme-7260r" aria-label="Köp nu Teverun Supreme 7260R">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Supreme-7260R" data-open-product aria-label="Visa bilder och information om Teverun Supreme 7260R">
             <span class="tag ">Supreme</span>
             <img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/69f3d979970581fa511f0ed688750892.png" alt="Teverun Supreme 7260R">
           </a>
@@ -819,6 +1049,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">54 990 kr</div>
             <p class="klarna">Ca 2 292 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=Teverun-Supreme-7260R" data-product="teverun-supreme-7260r">Köp nu</a>
@@ -839,7 +1077,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div class="grid three catalog-grid">
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/S1_Max-1.jpg?v=1740030144&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-S1-Max" data-product="kukirin-s1-max" aria-label="Köp nu KuKirin S1 Max">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-S1-Max" data-open-product aria-label="Visa bilder och information om KuKirin S1 Max">
             <span class="tag orange">Insteg</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/S1_Max-1.jpg?v=1740030144" alt="KuKirin S1 Max">
           </a>
@@ -852,6 +1090,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">4 990 kr</div>
             <p class="klarna">Ca 208 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-S1-Max" data-product="kukirin-s1-max">Köp nu</a>
@@ -860,7 +1106,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2-1104.jpg?v=1741748721&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G2" data-product="kukirin-g2" aria-label="Köp nu KuKirin G2">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G2" data-open-product aria-label="Visa bilder och information om KuKirin G2">
             <span class="tag orange">Budget</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2-1104.jpg?v=1741748721" alt="KuKirin G2">
           </a>
@@ -873,6 +1119,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">7 990 kr</div>
             <p class="klarna">Ca 333 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-G2" data-product="kukirin-g2">Köp nu</a>
@@ -881,7 +1135,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/M4_Max-A1.jpg?v=1749530336&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-M4-Max" data-product="kukirin-m4-max" aria-label="Köp nu KuKirin M4 Max">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-M4-Max" data-open-product aria-label="Visa bilder och information om KuKirin M4 Max">
             <span class="tag orange">Varde</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/M4_Max-A1.jpg?v=1749530336" alt="KuKirin M4 Max">
           </a>
@@ -894,6 +1148,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">7 490 kr</div>
             <p class="klarna">Ca 313 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-M4-Max" data-product="kukirin-m4-max">Köp nu</a>
@@ -902,11 +1164,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G4-Special-Edition" data-product="kukirin-g4-special" aria-label="Köp nu KuKirin G4 Special Edition">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G4-Special-Edition" data-open-product aria-label="Visa bilder och information om KuKirin G4 Special Edition">
             <span class="tag orange">Special Edition</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272" alt="KuKirin G4 Special Edition">
           </a>
-          <div class="product-thumbs"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp" alt="KuKirin G4 Special Edition extra bild 2"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp" alt="KuKirin G4 Special Edition extra bild 3"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp" alt="KuKirin G4 Special Edition extra bild 4"></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 2"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp" alt="KuKirin G4 Special Edition extra bild 2"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 3"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp" alt="KuKirin G4 Special Edition extra bild 3"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 4"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp" alt="KuKirin G4 Special Edition extra bild 4"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>KuKirin</span><span>I LAGER</span></div>
             <h3>KuKirin G4 Special Edition</h3>
@@ -915,6 +1177,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">9 950 kr</div>
             <p class="klarna">Ca 415 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-G4-Special-Edition" data-product="kukirin-g4-special">Köp nu</a>
@@ -923,7 +1193,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/1_7da8cb39-a62d-45ec-ba6c-326fde3ce614.jpg?v=1718356445&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G3" data-product="kukirin-g3" aria-label="Köp nu KuKirin G3">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G3" data-open-product aria-label="Visa bilder och information om KuKirin G3">
             <span class="tag orange">Kraft</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/1_7da8cb39-a62d-45ec-ba6c-326fde3ce614.jpg?v=1718356445" alt="KuKirin G3">
           </a>
@@ -936,6 +1206,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">10 490 kr</div>
             <p class="klarna">Ca 438 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-G3" data-product="kukirin-g3">Köp nu</a>
@@ -944,7 +1222,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2_Max_29.jpg?v=1774526365&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G2-Max" data-product="kukirin-g2-max" aria-label="Köp nu KuKirin G2 Max">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G2-Max" data-open-product aria-label="Visa bilder och information om KuKirin G2 Max">
             <span class="tag orange">I lager</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2_Max_29.jpg?v=1774526365" alt="KuKirin G2 Max">
           </a>
@@ -957,6 +1235,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">10 990 kr</div>
             <p class="klarna">Ca 458 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-G2-Max" data-product="kukirin-g2-max">Köp nu</a>
@@ -965,7 +1251,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/KuKirin_G3_Pro_36.jpg?v=1774524745&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G3-Pro" data-product="kukirin-g3-pro" aria-label="Köp nu KuKirin G3 Pro">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G3-Pro" data-open-product aria-label="Visa bilder och information om KuKirin G3 Pro">
             <span class="tag orange">Pro</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/KuKirin_G3_Pro_36.jpg?v=1774524745" alt="KuKirin G3 Pro">
           </a>
@@ -978,6 +1264,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">18 990 kr</div>
             <p class="klarna">Ca 792 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-G3-Pro" data-product="kukirin-g3-pro">Köp nu</a>
@@ -986,7 +1280,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/74b96dbb2d19db9758ba306fc55ad040.jpg?v=1708069782&quot;]">
-          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G4-Max" data-product="kukirin-g4-max" aria-label="Köp nu KuKirin G4 Max">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G4-Max" data-open-product aria-label="Visa bilder och information om KuKirin G4 Max">
             <span class="tag orange">Max</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/74b96dbb2d19db9758ba306fc55ad040.jpg?v=1708069782" alt="KuKirin G4 Max">
           </a>
@@ -999,6 +1293,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">26 990 kr</div>
             <p class="klarna">Ca 1 125 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
+            <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-G4-Max" data-product="kukirin-g4-max">Köp nu</a>
@@ -1109,6 +1411,48 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           <div class="order-item"><div><strong>KuKirin G4 Max</strong><span>26 990 kr • I LAGER</span></div><a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-G4-Max" data-product="kukirin-g4-max">Köp nu</a></div>
         </div>
       </div>
+      <div class="catalog-product-modal" id="catalogProductModal" aria-hidden="true">
+        <div class="catalog-product-dialog" role="dialog" aria-modal="true" aria-labelledby="catalogModalTitle">
+          <div class="catalog-modal-head">
+            <div>
+              <h3 id="catalogModalTitle">Produktinformation</h3>
+              <p id="catalogModalPrice" style="color:#00C853;font-weight:900;margin:0"></p>
+            </div>
+            <button class="catalog-modal-close" type="button" aria-label="Stäng produktinformation">&times;</button>
+          </div>
+          <div class="catalog-modal-body">
+            <div>
+              <div class="catalog-modal-stage">
+                <button class="catalog-modal-nav catalog-modal-prev" type="button" aria-label="Föregående bild">&#8249;</button>
+                <img id="catalogModalImage" alt="">
+                <button class="catalog-modal-nav catalog-modal-next" type="button" aria-label="Nästa bild">&#8250;</button>
+              </div>
+              <div class="catalog-modal-thumbs" id="catalogModalThumbs"></div>
+            </div>
+            <div>
+              <p id="catalogModalSummary" style="color:#d7ddd9;line-height:1.6;margin:0 0 12px"></p>
+              <ul class="catalog-modal-list" id="catalogModalDetails"></ul>
+              <div class="payment-methods" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
+              <p style="color:#9aa59e;font-size:13px;line-height:1.55;margin-top:12px">Checkout visar Klarna, kort, Apple Pay, Google Pay och andra betalsätt när de är aktiverade och ordern kvalificerar.</p>
+              <div class="catalog-modal-actions">
+                <a class="buy" id="catalogModalBuy" href="/book-online">Köp nu</a>
+                <a class="ask" href="/book-online/">Fråga verkstaden</a>
+                <a class="ask" href="/regler-elscooter/">Läs regelguiden</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <script>
+      (()=>{const modal=document.getElementById('catalogProductModal');if(!modal)return;const title=document.getElementById('catalogModalTitle'),price=document.getElementById('catalogModalPrice'),image=document.getElementById('catalogModalImage'),summary=document.getElementById('catalogModalSummary'),details=document.getElementById('catalogModalDetails'),thumbs=document.getElementById('catalogModalThumbs'),buy=document.getElementById('catalogModalBuy');let gallery=[],galleryIndex=0;function render(){if(!gallery.length)return;image.src=gallery[galleryIndex];thumbs.innerHTML=gallery.map((src,index)=>`<button type="button" class="${index===galleryIndex?'is-active':''}" aria-label="Visa bild ${index+1}"><img src="${src}" alt=""></button>`).join('');thumbs.querySelectorAll('button').forEach((button,index)=>button.addEventListener('click',()=>{galleryIndex=index;render()}))}function info(card){const name=card.querySelector('h3')?.textContent.trim()||'Produkt';const priceText=card.querySelector('.price')?.textContent.trim()||'Kontakta oss';const spec=card.querySelector('.spec')?.textContent.trim()||'Specifikation saknas.';const copy=card.querySelector('.copy')?.textContent.trim()||'Kontakta verkstaden om du vill veta om modellen passar din körning och lokala regler.';const stock=card.querySelector('.stock-copy')?.textContent.trim()||card.querySelector('.product-meta span:last-child')?.textContent.trim()||'';const img=card.querySelector('.product-media img');const link=card.querySelector('.card-actions a[data-product], .card-actions a');let images=[];try{if(card.dataset.gallery)images=JSON.parse(card.dataset.gallery)}catch{}if(!images.length&&img?.src)images=[img.getAttribute('src')];return {name,priceText,spec,copy,stock,imgAlt:img?.alt||name,href:link?.href||'/book-online/',productId:link?.dataset.product||'',cta:link?.textContent.trim()||'Köp nu',images}}function open(card){const item=info(card);title.textContent=item.name;price.textContent=item.priceText;summary.textContent=item.copy;gallery=item.images;galleryIndex=0;image.alt=item.imgAlt;render();details.innerHTML=[`<li><strong>Specifikation</strong>${item.spec}</li>`,`<li><strong>Status / leverans</strong>${item.stock}</li>`,`<li><strong>Nästa steg</strong>Köp direkt i checkout eller skicka fråga om du vill kontrollera modell, regler, inbyte eller leverans först.</li>`].join('');buy.href=item.href;buy.textContent=item.cta;if(item.productId){buy.dataset.product=item.productId}else{delete buy.dataset.product}modal.classList.add('is-open');modal.setAttribute('aria-hidden','false');modal.querySelector('.catalog-modal-close').focus()}function close(){modal.classList.remove('is-open');modal.setAttribute('aria-hidden','true')}document.querySelectorAll('.product-card').forEach((card)=>{card.querySelectorAll('[data-open-product]').forEach((trigger)=>trigger.addEventListener('click',(event)=>{event.preventDefault();open(card)}));});modal.querySelector('.catalog-modal-close').addEventListener('click',close);modal.querySelector('.catalog-modal-prev').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex-1+gallery.length)%gallery.length;render()});modal.querySelector('.catalog-modal-next').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex+1)%gallery.length;render()});modal.addEventListener('click',(event)=>{if(event.target===modal)close()});document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&modal.classList.contains('is-open'))close()})})();
+      </script>
     </div>
   </section>
 
