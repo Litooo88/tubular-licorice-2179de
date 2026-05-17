@@ -1,0 +1,602 @@
+{
+  "updated": "2026-05-17",
+  "notes": [
+    "Two older NAVEE references are intentionally excluded from the sellable catalog.",
+    "Use status i-lager för products available from supplier with normal delivery, not necessarily physically in the workshop.",
+    "Do not label high-power models as road legal unless registration status is confirmed per model."
+  ],
+  "products": [
+    {
+      "id": "navee-ut5-ultra-x",
+      "brand": "NAVEE",
+      "name": "NAVEE UT5 Ultra X",
+      "priceSek": 23490,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Premium",
+      "spec": "2x1100W • 72V 15.6Ah • 1123 Wh",
+      "short": "NAVEE:s starkaste premiumval för kunden som vill ha komfort, kontroll och rejalt med kraft.",
+      "positioning": "Premium och lång räckvidd",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium",
+        "lång-rackvidd"
+      ],
+      "images": [
+        "https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png"
+      ]
+    },
+    {
+      "id": "navee-xt5-ultra",
+      "brand": "NAVEE",
+      "name": "NAVEE XT5 Ultra",
+      "priceSek": 16990,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "NAVEE rek.",
+      "spec": "2x500W • 46.8V 19.2Ah • 899 Wh • upp till 90 km",
+      "short": "Premiumvalet från NAVEE för kunden som vill ha komfort, räckvidd och modern känsla.",
+      "positioning": "Bekvam premiumvardag",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": true,
+      "use": [
+        "premium",
+        "pendling",
+        "komfort"
+      ],
+      "images": [
+        "/assets/products/navee/xt5-ultra-drive.jpg",
+        "https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png",
+        "https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png"
+      ]
+    },
+    {
+      "id": "navee-nt5-ultra-x",
+      "brand": "NAVEE",
+      "name": "NAVEE NT5 Ultra X",
+      "priceSek": 13490,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Nyhet",
+      "spec": "2x700W • premiumplattform",
+      "short": "Starkt NAVEE-alternativ för kunden som vill ha mer kraft men inte ga upp till storsta modellen.",
+      "positioning": "Starkt mellansteg",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium",
+        "pendling"
+      ],
+      "images": [
+        "https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png"
+      ]
+    },
+    {
+      "id": "navee-xt5-pro",
+      "brand": "NAVEE",
+      "name": "NAVEE XT5 Pro",
+      "priceSek": 11990,
+      "status": "pa-vag",
+      "delivery": "På väg till sortimentet",
+      "badge": "På väg",
+      "spec": "Premiumkomfort • XT5-plattform",
+      "short": "Kommande NAVEE-modell för kunden som vill ha XT5-känsla till lägre pris an Ultra.",
+      "positioning": "Kommande premiumvardag",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "pendling",
+        "komfort"
+      ],
+      "images": [
+        "https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png"
+      ]
+    },
+    {
+      "id": "navee-nt5-max",
+      "brand": "NAVEE",
+      "name": "NAVEE NT5 Max",
+      "priceSek": 10990,
+      "status": "pa-vag",
+      "delivery": "På väg till sortimentet",
+      "badge": "På väg",
+      "spec": "NT5-plattform • vardag och komfort",
+      "short": "Kommande NAVEE-modell för dig som vill ha ett tryggt mellansteg med modern känsla.",
+      "positioning": "Kommande mellanklass",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "pendling",
+        "komfort"
+      ],
+      "images": [
+        "https://www.naveetech.com/wp-content/uploads/2026/03/NT5-max-12.31.1.png"
+      ]
+    },
+    {
+      "id": "navee-n65i",
+      "brand": "NAVEE",
+      "name": "NAVEE N65i",
+      "priceSek": 8499,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Mellansegment",
+      "spec": "450W • upp till 65 km • stabil vardagsmodell",
+      "short": "Stadigare vardagsmodell för kunden som vill ha mer komfort utan att ga hela vägen upp i premium.",
+      "positioning": "Mellansegment",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": true,
+      "use": [
+        "pendling",
+        "vardag"
+      ],
+      "images": [
+        "/assets/products/navee/n65i-drive.jpg",
+        "https://www.naveetech.com/wp-content/uploads/2025/07/N65i-500x500.png"
+      ]
+    },
+    {
+      "id": "navee-v50i-pro",
+      "brand": "NAVEE",
+      "name": "NAVEE V50i Pro",
+      "priceSek": 5990,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Pendling",
+      "spec": "350W • upp till 50 km • smidig pendlare",
+      "short": "Smidig pendlare för vardagskunden som vill ha rätt pris, lag troskel och verkstadsstod.",
+      "positioning": "Pendling",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": true,
+      "use": [
+        "pendling",
+        "vardag"
+      ],
+      "images": [
+        "/assets/products/navee/v50i-pro-drive.jpg",
+        "https://www.naveetech.com/wp-content/uploads/2025/07/4-V50i-Pro.png"
+      ]
+    },
+    {
+      "id": "navee-g5",
+      "brand": "NAVEE",
+      "name": "NAVEE G5",
+      "priceSek": 5490,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Vardag",
+      "spec": "Vardagsmodell - verkstadsstöd efter köp",
+      "short": "Prisvärt NAVEE-val för enklare vardagskörning med lokal hjälp efter köpet.",
+      "positioning": "Prisvard vardag",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "vardag",
+        "budget"
+      ],
+      "images": [
+        "/assets/products/navee/g5-drive.jpg"
+      ]
+    },
+    {
+      "id": "navee-v25i-pro-ii",
+      "brand": "NAVEE",
+      "name": "NAVEE V25i Pro II",
+      "priceSek": 4490,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Insteg",
+      "spec": "Instegsmodell • NAVEE-känsla",
+      "short": "Ett enklare NAVEE-val för kortare vardagsresor och lägre inkopstrappa.",
+      "positioning": "Insteg",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "budget",
+        "vardag"
+      ],
+      "images": [
+        "https://www.naveetech.com/wp-content/uploads/2025/07/v25i-II-1-500x500.png"
+      ]
+    },
+    {
+      "id": "navee-k100-max",
+      "brand": "NAVEE",
+      "name": "NAVEE K100 Max",
+      "priceSek": 3499,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Insteg",
+      "spec": "Prisvart insteg • kortare vardag",
+      "short": "Lagsta NAVEE-prispunkten i sortimentet för enklare vardagsbehov.",
+      "positioning": "Budget",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "budget"
+      ],
+      "images": [
+        "/assets/workshop/scooter-on-bench.jpg"
+      ]
+    },
+    {
+      "id": "teverun-space-lite",
+      "brand": "Teverun",
+      "name": "Teverun Space Lite",
+      "priceSek": 12990,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Teverun",
+      "spec": "Kompakt Teverun • premiumkänsla",
+      "short": "Teverun-alternativet för kunden som vill in i premiumkänsla i ett smidigare format.",
+      "positioning": "Kompakt premium",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium",
+        "kompakt"
+      ],
+      "images": [
+        "https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Space_Lite_1.png?v=1773208465&width=1024"
+      ]
+    },
+    {
+      "id": "teverun-blade-mini-ultra",
+      "brand": "Teverun",
+      "name": "Teverun Blade Mini Ultra",
+      "priceSek": 17990,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Blade",
+      "spec": "Blade-serien • stark byggkänsla",
+      "short": "Starkt mellansteg för kunden som vill ha mer premiumkänsla och komponentniva.",
+      "positioning": "Premium mellanklass",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium"
+      ],
+      "images": [
+        "https://teverun-europe.com/wp-content/uploads/2026/02/Blade-Mini-Ultra-Yellow-1.png"
+      ]
+    },
+    {
+      "id": "teverun-blade-gt-ii",
+      "brand": "Teverun",
+      "name": "Teverun Blade GT II",
+      "priceSek": 24990,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Blade GT",
+      "spec": "Premiumplattform - höjdkänsla",
+      "short": "För kunden som vill ha mer Teverun-känsla, mer stabilitet och högre komponentniva.",
+      "positioning": "Premium",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium"
+      ],
+      "images": [
+        "https://teverun-europe.com/wp-content/uploads/2026/04/d105d84cfc45a3e1c40bed8ee5077350.png"
+      ]
+    },
+    {
+      "id": "teverun-fighter-mini-pro-ekfv",
+      "brand": "Teverun",
+      "name": "Teverun Fighter Mini Pro eKFV",
+      "priceSek": 27990,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Fighter",
+      "spec": "2x250W Bosch • 52V 30.8Ah Samsung • TFT",
+      "short": "Kompakt premium för kunden som vill ha seriös byggkvalitet och regelfokus där eKFV-status är relevant.",
+      "positioning": "Kompakt premium",
+      "legality": "confirmed-context-needed",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium",
+        "kompakt"
+      ],
+      "images": [
+        "https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Fighter_mini_pro_08209532-0091-46c1-bc73-ec7a5507dd4f.png?v=1760331427&width=2048",
+        "https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&width=2048",
+        "https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&width=2048"
+      ]
+    },
+    {
+      "id": "teverun-fighter-eleven-plus",
+      "brand": "Teverun",
+      "name": "Teverun Fighter Eleven+",
+      "priceSek": 39990,
+      "status": "i-lager",
+      "delivery": "Finns hos leverantor, leverans 1-2 veckor",
+      "badge": "I LAGER",
+      "spec": "2x1600W • 60V 35Ah LG • 2100 Wh",
+      "short": "Premium från Teverun för kunden som vill ha riktig kraft, stabilitet och en mer seriös scooter.",
+      "positioning": "Teverun premium",
+      "legality": "off-road-only",
+      "checkout": true,
+      "featured": true,
+      "use": [
+        "premium",
+        "prestanda"
+      ],
+      "images": [
+        "https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png",
+        "https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg"
+      ]
+    },
+    {
+      "id": "teverun-supreme-7260r",
+      "brand": "Teverun",
+      "name": "Teverun Supreme 7260R",
+      "priceSek": 54990,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Supreme",
+      "spec": "72V 60Ah • premiumprestanda",
+      "short": "Toppspår för privat mark, specialanvändning och kunden som uttryckligen vill ha storsta Teverun-klassen.",
+      "positioning": "Topprestanda",
+      "legality": "off-road-only",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium",
+        "prestanda"
+      ],
+      "images": [
+        "https://teverun-europe.com/wp-content/uploads/2026/04/69f3d979970581fa511f0ed688750892.png"
+      ]
+    },
+    {
+      "id": "kukirin-s1-max",
+      "brand": "KuKirin",
+      "name": "KuKirin S1 Max",
+      "priceSek": 4990,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Insteg",
+      "spec": "Kompakt instegsmodell",
+      "short": "Enklare KuKirin för kortare resor och lag inkopstrappa.",
+      "positioning": "Insteg",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "budget",
+        "kompakt"
+      ],
+      "images": [
+        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/S1_Max-1.jpg?v=1740030144"
+      ]
+    },
+    {
+      "id": "kukirin-g2",
+      "brand": "KuKirin",
+      "name": "KuKirin G2",
+      "priceSek": 7990,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Budget",
+      "spec": "800W • 48V 15Ah • 720 Wh",
+      "short": "Budgetvalet vi hellre visar tydligt än att blanda in för många svaga alternativ.",
+      "positioning": "Budget med kraft",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": true,
+      "use": [
+        "budget",
+        "vardag"
+      ],
+      "images": [
+        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2-1104.jpg?v=1741748721"
+      ]
+    },
+    {
+      "id": "kukirin-m4-max",
+      "brand": "KuKirin",
+      "name": "KuKirin M4 Max",
+      "priceSek": 7490,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Varde",
+      "spec": "Prisvard KuKirin • vardagskraft",
+      "short": "Prisvart alternativ för kunden som vill ha mer scooter för pengarna.",
+      "positioning": "Prisvard",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "budget",
+        "vardag"
+      ],
+      "images": [
+        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/M4_Max-A1.jpg?v=1749530336"
+      ]
+    },
+    {
+      "id": "kukirin-g4-special",
+      "brand": "KuKirin",
+      "name": "KuKirin G4 Special Edition",
+      "priceSek": 9950,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Special Edition",
+      "spec": "2000W • 60V 20Ah • 1200 Wh • upp till 75 km",
+      "short": "Kampanjmodellen med tydlig premiumkänsla. Svart crosshjälm ingår vid köp enligt nuvarande erbjudande.",
+      "positioning": "Kampanjmodell",
+      "legality": "off-road-only",
+      "checkout": true,
+      "featured": true,
+      "use": [
+        "premium",
+        "prestanda"
+      ],
+      "images": [
+        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272",
+        "https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp",
+        "https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp",
+        "https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp"
+      ]
+    },
+    {
+      "id": "kukirin-g3",
+      "brand": "KuKirin",
+      "name": "KuKirin G3",
+      "priceSek": 10490,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Kraft",
+      "spec": "1200W • 48V 18Ah • 864 Wh",
+      "short": "Starkt mellanval för kunden som vill upp från enklare modeller.",
+      "positioning": "Kraft och räckvidd",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium",
+        "prestanda"
+      ],
+      "images": [
+        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/1_7da8cb39-a62d-45ec-ba6c-326fde3ce614.jpg?v=1718356445"
+      ]
+    },
+    {
+      "id": "kukirin-g2-max",
+      "brand": "KuKirin",
+      "name": "KuKirin G2 Max",
+      "priceSek": 10990,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "I lager",
+      "spec": "1000W • 48V 20Ah • 960 Wh",
+      "short": "Mellanklass med mer räckvidd och komfort för kunden som vill ha mer an insteg.",
+      "positioning": "Mellanklass",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium",
+        "pendling"
+      ],
+      "images": [
+        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2_Max_29.jpg?v=1774526365"
+      ]
+    },
+    {
+      "id": "kukirin-g3-pro",
+      "brand": "KuKirin",
+      "name": "KuKirin G3 Pro",
+      "priceSek": 18990,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Pro",
+      "spec": "2x1200W • 52V 23Ah • 1196 Wh",
+      "short": "Starkare KuKirin för kunden som vill ha mer premium och mer kraft.",
+      "positioning": "Pro-prestanda",
+      "legality": "off-road-only",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium",
+        "prestanda"
+      ],
+      "images": [
+        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/KuKirin_G3_Pro_36.jpg?v=1774524745"
+      ]
+    },
+    {
+      "id": "kukirin-g4-max",
+      "brand": "KuKirin",
+      "name": "KuKirin G4 Max",
+      "priceSek": 26990,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Max",
+      "spec": "2x1600W • 60V 35Ah • 2100 Wh",
+      "short": "Stora KuKirin-valet för kunden som vill ha maximal prestanda och stor batteriplattform.",
+      "positioning": "Max-prestanda",
+      "legality": "off-road-only",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium",
+        "prestanda"
+      ],
+      "images": [
+        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/74b96dbb2d19db9758ba306fc55ad040.jpg?v=1708069782"
+      ]
+    }
+  ],
+  "accessories": [
+    {
+      "id": "monorim-nemob-special",
+      "brand": "Monorim",
+      "name": "Monorim/Nemob Special för Xiaomi",
+      "priceNote": "Offert efter modellkontroll",
+      "status": "forbestall",
+      "badge": "Uppgradering",
+      "spec": "Fjadring • hjulupphangning • custombygge",
+      "short": "För kunden som gillar sin Xiaomi men vill bygga om den med bättre komfort, mer stabilitet och tydligare premiumkänsla.",
+      "images": [
+        "/assets/showroom/showroom-custom-full.jpg",
+        "/assets/showroom/showroom-custom-cockpit.jpg",
+        "/assets/showroom/showroom-custom-rear-detail.jpg"
+      ]
+    },
+    {
+      "id": "monorim-steering-damper-kit",
+      "brand": "Monorim",
+      "name": "Steering damper premiumkit",
+      "priceSek": 1500,
+      "status": "forbestall",
+      "badge": "Premium",
+      "spec": "Steering damper • 3D-printat fäste • montering",
+      "short": "Stabilare styrkänsla på kompatibla modeller. Vi kontrollerar modell och passform innan montering.",
+      "images": [
+        "/assets/pricing/prislista-poster-a.png"
+      ]
+    },
+    {
+      "id": "kukirin-reservdelar",
+      "brand": "KuKirin",
+      "name": "KuKirin reservdelar",
+      "priceNote": "Pris efter modell och del",
+      "status": "forbestall",
+      "badge": "Reservdelar",
+      "spec": "Bromsar - däck - displays - controllers - slitagedelar",
+      "short": "Reservdelar och slitagedelar till KuKirin som tas fram efter exakt modell och felsymptom.",
+      "images": [
+        "/assets/workshop/tools-bench.jpg"
+      ]
+    },
+    {
+      "id": "premium-bultar-titan",
+      "brand": "Nemob",
+      "name": "Premiumbultar / titanbultar",
+      "priceSek": 495,
+      "status": "forbestall",
+      "badge": "Finish",
+      "spec": "Starkare, lattare och rostfriare premiumdetaljer",
+      "short": "För utvalda byggen där kvalitet, passform och finish spelar roll.",
+      "images": [
+        "/assets/pricing/prislista-poster-b.png"
+      ]
+    }
+  ]
+}

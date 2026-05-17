@@ -246,8 +246,12 @@ Lennart = workshop operator.
 
 - Product cards on the homepage must be clickable for information, not only order buttons.
 - Homepage `index.html` has a product detail modal that reads the clicked `.prod` card and shows image, specs, price/status, rule-guide link, call link, and order/question CTA.
+- Product data now lives in `data/products.json`. Update model price/status/images there first, then run `npm run generate:products`.
+- `scripts/generate-products.mjs` generates the homepage six-product grid, `/nya-elscootrar/` full static catalog, product gallery data, accessory cards, and the quick order list.
+- `netlify/functions/create-checkout.js` reads `data/products.json`; do not reintroduce a hardcoded product map in the function.
+- NAVEE ST3/ST3 Pro are intentionally excluded from the sellable catalog and checkout.
 - Homepage hero intentionally presents two immediate paths: `Verkstaden` and `Nya elscootrar`.
-- `/nya-elscootrar/` is the focused sales page for new scooters, trade-in, KuKirin G4 Special, NAVEE/Teverun partner picks, Monorim/Nemob Special upgrades, helmets, and accessories.
+- `/nya-elscootrar/` is the SEO-friendly catalog/sales page for the full NAVEE, Teverun and KuKirin range plus KuKirin/Monorim accessories and upgrades.
 - KuKirin G4 Special must not be described as dual motor. Current public copy uses 2000W, 60V 20Ah, 1200Wh, up to 75 km.
 - Product detail modals support image galleries/carousels. Add exported customer/project images as local assets or stable public URLs before wiring them into the gallery arrays; Google Photos album links are not directly usable by the static site.
 
