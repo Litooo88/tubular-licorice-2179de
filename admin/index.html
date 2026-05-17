@@ -798,7 +798,7 @@ function bookkeepingDraft(item,overrides={}){
   const completion=completionData(item,overrides);
   return `Betalning registrerad för ${item.customer&&item.customer.name||'kund'} (${completion.vehicleModel}). Belopp ${payment.amountLabel}. Status ${payment.statusLabel}. Betalsätt ${payment.methodLabel}. Referens ${payment.reference||'-'}. Betald ${payment.paidAtLabel}. Ärende ${shortId(item.id)}.`;
 }
-const mediaCategoryLabels={overview:'Översikt',before:'Före',after:'Efter',damage:'Skada',battery:'Batteri / el',parts:'Delar',delivery:'Upphämtning / leverans',workbench:'Verkstadsbord'};
+const mediaCategoryLabels={overview:'Översikt',before:'Före',after:'Efter',damage:'Skada',battery:'Batteri / el',parts:'Delar',delivery:'Hämtning / leverans',workbench:'Verkstadsbord'};
 function fortnoxDraft(item,overrides={}){
   const completion=completionData(item,overrides);
   const payment=paymentData(item,overrides);
@@ -1538,7 +1538,7 @@ function caseCard(item){
                 <option value="damage">Skada</option>
                 <option value="battery">Batteri / el</option>
                 <option value="parts">Delar</option>
-                <option value="delivery">Upphämtning / leverans</option>
+                <option value="delivery">Hämtning / leverans</option>
                 <option value="workbench">Verkstadsbord</option>
               </select>
             </div>
