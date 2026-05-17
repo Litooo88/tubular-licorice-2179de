@@ -1,4 +1,6 @@
 const Stripe = require("stripe");
+const fs = require("fs");
+const path = require("path");
 
 const env = (name) => {
   try {
@@ -14,34 +16,22 @@ const adminDebugAllowed = (event) => {
   return Boolean(expected && provided && expected === provided);
 };
 
-const PRODUCTS = {
-  // NAVEE
-  "navee-ut5-ultra-x": { name: "NAVEE UT5 Ultra X", price: 2349000 },
-  "navee-xt5-ultra": { name: "NAVEE XT5 Ultra", price: 1699000 },
-  "navee-nt5-ultra-x": { name: "NAVEE NT5 Ultra X", price: 1349000 },
-  "navee-st3-pro": { name: "NAVEE ST3 Pro SE", price: 1099000 },
-  "navee-st3": { name: "NAVEE ST3 SE", price: 899000 },
-  "navee-n65i": { name: "NAVEE N65i", price: 849900 },
-  "navee-v50i-pro": { name: "NAVEE V50i Pro", price: 599000 },
-  "navee-g5": { name: "NAVEE G5", price: 549000 },
-  "navee-v25i-pro-ii": { name: "NAVEE V25i Pro II", price: 449000 },
-  "navee-k100-max": { name: "NAVEE K100 Max", price: 349900 },
-  // TEVERUN
-  "teverun-space-lite": { name: "Teverun Space Lite", price: 1299000 },
-  "teverun-blade-mini-ultra": { name: "Teverun Blade Mini Ultra", price: 1799000 },
-  "teverun-blade-gt-ii": { name: "Teverun Blade GT II", price: 2499000 },
-  "teverun-fighter-mini-pro-ekfv": { name: "Teverun Fighter Mini Pro eKFV", price: 2799000 },
-  "teverun-fighter-eleven-plus": { name: "Teverun Fighter Eleven+", price: 3999000 },
-  "teverun-supreme-7260r": { name: "Teverun Supreme 7260R", price: 5499000 },
-  // KUKIRIN
-  "kukirin-s1-max": { name: "KuKirin S1 Max", price: 499000 },
-  "kukirin-g2": { name: "KuKirin G2", price: 799000 },
-  "kukirin-m4-max": { name: "KuKirin M4 Max", price: 749000 },
-  "kukirin-g4-special": { name: "KuKirin G4 Special Edition", price: 995000 },
-  "kukirin-g3": { name: "KuKirin G3", price: 1049000 },
-  "kukirin-g2-max": { name: "KuKirin G2 Max", price: 1099000 },
-  "kukirin-g3-pro": { name: "KuKirin G3 Pro", price: 1899000 },
-  "kukirin-g4-max": { name: "KuKirin G4 Max", price: 2699000 },
+const loadProducts = () => {
+  const catalogPath = path.resolve(__dirname, "../../data/products.json");
+  const catalog = JSON.parse(fs.readFileSync(catalogPath, "utf8"));
+  return Object.fromEntries(
+    catalog.products
+      .filter((product) => product.checkout && product.priceSek && !["slut", "upphord", "demo-bara"].includes(product.status))
+      .map((product) => [
+        product.id,
+        {
+          name: product.name,
+          price: product.priceSek * 100,
+          status: product.status,
+          delivery: product.delivery || "",
+        },
+      ])
+  );
 };
 
 exports.handler = async (event) => {
@@ -51,7 +41,7 @@ exports.handler = async (event) => {
 
   try {
     const { productId } = JSON.parse(event.body);
-    const product = PRODUCTS[productId];
+    const product = loadProducts()[productId];
     const stripeSecretKey = env("STRIPE_SECRET_KEY");
 
     if (!product) {
@@ -80,7 +70,7 @@ exports.handler = async (event) => {
             currency: "sek",
             product_data: {
               name: product.name,
-              description: "Elscooter - Nordic E-Mobility, Orebro",
+              description: "Elscooter - Nordic E-Mobility, Örebro",
             },
             unit_amount: product.price,
           },
@@ -100,11 +90,11 @@ exports.handler = async (event) => {
       custom_text: {
         terms_of_service_acceptance: {
           message:
-            "Jag godkanner Nordic E-Mobilitys villkor, returpolicy och garantipolicy: https://www.nordicemobility.se/villkor/",
+            "Jag godkänner Nordic E-Mobilitys villkor, returpolicy och garantipolicy: https://www.nordicemobility.se/villkor/",
         },
         submit: {
           message:
-            "Betala tryggt med kort, Klarna eller andra tillgangliga betalsatt. Villkor, returer och garanti finns pa https://www.nordicemobility.se/villkor/. Nordic E-Mobility kontaktar dig om leverans, showroom och efterservice.",
+            "Betala tryggt med kort, Klarna eller andra tillgängliga betalsätt. Villkor, returer och garanti finns på https://www.nordicemobility.se/villkor/. Nordic E-Mobility kontaktar dig om leverans, showroom och efterservice.",
         },
       },
     });
