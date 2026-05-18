@@ -160,6 +160,8 @@ Lennart = workshop operator.
 ### Payments and booking prices
 
 - Switched Stripe Checkout to dynamic/automatic payment methods.
+- Stripe product Checkout explicitly enables `automatic_payment_methods` and `allow_promotion_codes`; Klarna, Apple Pay, Google Pay, card wallets, and similar methods still depend on Stripe Dashboard/payment-method eligibility.
+- Product image/media clicks must open product info/gallery, not start Checkout. Only explicit product buy/order buttons should carry `data-product`.
 - Updated booking service cards and backend estimates:
   - Punktering/dack: from 349 kr
   - Service/genomgang: from 395 kr

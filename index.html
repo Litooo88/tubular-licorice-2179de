@@ -1124,11 +1124,29 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 <!-- PRODUKTER -->
 <section class="products" id="produkter">
 <div class="container">
+  <style>
+    .payment-methods{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px}
+    .payment-methods.compact{gap:5px;margin:8px 0 10px}
+    .pay-logo{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border-radius:5px;padding:4px 7px;background:#f4f6f5;color:#071008;font-size:11px;font-weight:950;line-height:1;letter-spacing:0}
+    .pay-logo.klarna{background:#ffb3c7;color:#111}
+    .pay-logo.apple{background:#fff;color:#000}
+    .pay-logo.gpay{background:#fff;color:#1f1f1f}
+    .pay-logo.card{background:#15251a;color:#dfffea;border:1px solid rgba(0,200,83,.24)}
+    .pay-logo.stripe{background:#635bff;color:#fff}
+  </style>
   <span class="section-label">Produkter</span>
   <h2 class="section-title">6 modeller vi vill lyfta just nu</h2>
   <p class="section-sub">Startsidan visar bara de tydligaste valen. Hela katalogen med NAVEE, Teverun, KuKirin, Monorim och reservdelar finns på utbudssidan.</p>
   <div class="legal-note">Produktinfo ska läsas tillsammans med användningsområde. Modeller med hög effekt eller hög hastighet kan vara avsedda för privat mark eller inhägnat område, inte vanlig trafik. <a href="/regler-elscooter/">Läs regelguiden innan köp</a>.</div>
-  <div class="legal-note" style="margin-bottom:10px;background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.22);color:#dce8df">Betala tryggt med <strong>kort, Klarna och andra tillgängliga betalsätt</strong>. Stripe visar de alternativ som är aktiverade och kvalificerade för ordern. Vi hjälper dig med leverans, rådgivning och service efter köpet.</div>
+  <div class="legal-note" style="margin-bottom:10px;background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.22);color:#dce8df">Betala tryggt med <strong>Klarna, Apple Pay, Google Pay, kort och andra tillgängliga betalsätt</strong>. Stripe visar de alternativ som är aktiverade och kvalificerade för ordern. Vi hjälper dig med leverans, rådgivning och service efter köpet.</div>
+  <div class="payment-methods" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
   <div class="products-grid" style="grid-template-columns:repeat(3,1fr)">
     <div class="prod" data-gallery="[&quot;/assets/products/navee/xt5-ultra-drive.jpg&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png&quot;]" style="border-color:rgba(0,200,83,.3)">
       <div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">
@@ -1141,6 +1159,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div style="font-size:11px;color:#888;margin:4px 0">2x500W • 46.8V 19.2Ah • 899 Wh • upp till 90 km</div>
         <div style="font-size:11px;color:#b0b0b0;line-height:1.5;margin-bottom:10px">Premiumvalet från NAVEE för kunden som vill ha komfort, räckvidd och modern känsla.</div>
         <div class="prod-price">16 990 kr</div>
+        <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
         <a href="/book-online?service=bestallning&amp;modell=NAVEE-XT5-Ultra" class="prod-btn" data-product="navee-xt5-ultra" data-price="16990">Köp nu</a>
       </div>
     </div>
@@ -1155,6 +1181,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div style="font-size:11px;color:#888;margin:4px 0">450W • upp till 65 km • stabil vardagsmodell</div>
         <div style="font-size:11px;color:#b0b0b0;line-height:1.5;margin-bottom:10px">Stadigare vardagsmodell för kunden som vill ha mer komfort utan att ga hela vägen upp i premium.</div>
         <div class="prod-price">8 499 kr</div>
+        <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
         <a href="/book-online?service=bestallning&amp;modell=NAVEE-N65i" class="prod-btn" data-product="navee-n65i" data-price="8499">Köp nu</a>
       </div>
     </div>
@@ -1169,6 +1203,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div style="font-size:11px;color:#888;margin:4px 0">350W • upp till 50 km • smidig pendlare</div>
         <div style="font-size:11px;color:#b0b0b0;line-height:1.5;margin-bottom:10px">Smidig pendlare för vardagskunden som vill ha rätt pris, lag troskel och verkstadsstod.</div>
         <div class="prod-price">5 990 kr</div>
+        <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
         <a href="/book-online?service=bestallning&amp;modell=NAVEE-V50i-Pro" class="prod-btn" data-product="navee-v50i-pro" data-price="5990">Köp nu</a>
       </div>
     </div>
@@ -1183,6 +1225,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div style="font-size:11px;color:#888;margin:4px 0">2000W • 60V 20Ah • 1200 Wh • upp till 75 km</div>
         <div style="font-size:11px;color:#b0b0b0;line-height:1.5;margin-bottom:10px">Kampanjmodellen med tydlig premiumkänsla. Svart crosshjälm ingår vid köp enligt nuvarande erbjudande.</div>
         <div class="prod-price">9 950 kr</div>
+        <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
         <a href="/book-online?service=bestallning&amp;modell=KuKirin-G4-Special-Edition" class="prod-btn" data-product="kukirin-g4-special" data-price="9950" style="background:rgba(255,109,0,.15);border-color:rgba(255,109,0,.4);color:#ff6d00">Köp nu</a>
       </div>
     </div>
@@ -1197,6 +1247,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div style="font-size:11px;color:#888;margin:4px 0">800W • 48V 15Ah • 720 Wh</div>
         <div style="font-size:11px;color:#b0b0b0;line-height:1.5;margin-bottom:10px">Budgetvalet vi hellre visar tydligt än att blanda in för många svaga alternativ.</div>
         <div class="prod-price">7 990 kr</div>
+        <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
         <a href="/book-online?service=bestallning&amp;modell=KuKirin-G2" class="prod-btn" data-product="kukirin-g2" data-price="7990" style="background:rgba(255,109,0,.15);border-color:rgba(255,109,0,.4);color:#ff6d00">Köp nu</a>
       </div>
     </div>
@@ -1211,6 +1269,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div style="font-size:11px;color:#888;margin:4px 0">2x1600W • 60V 35Ah LG • 2100 Wh</div>
         <div style="font-size:11px;color:#b0b0b0;line-height:1.5;margin-bottom:10px">Premium från Teverun för kunden som vill ha riktig kraft, stabilitet och en mer seriös scooter.</div>
         <div class="prod-price">39 990 kr</div>
+        <div class="payment-methods compact" aria-label="Tillgängliga betalsätt i checkout">
+              <span class="pay-logo klarna">Klarna</span>
+              <span class="pay-logo apple">Apple Pay</span>
+              <span class="pay-logo gpay">Google Pay</span>
+              <span class="pay-logo card">VISA</span>
+              <span class="pay-logo card">MC</span>
+              <span class="pay-logo stripe">Stripe</span>
+            </div>
         <a href="/book-online?service=bestallning&amp;modell=Teverun-Fighter-Eleven" class="prod-btn" data-product="teverun-fighter-eleven-plus" data-price="39990">Köp nu</a>
       </div>
     </div>
