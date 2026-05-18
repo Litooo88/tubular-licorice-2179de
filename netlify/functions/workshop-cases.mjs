@@ -100,6 +100,8 @@ const STAFF = {
 
 const PAYMENT_STATUSES = new Set(["unpaid", "invoice_ready", "invoiced", "paid"]);
 const PAYMENT_METHODS = new Set(["swish", "card", "cash", "invoice", "bank", "other"]);
+const PAYMENT_SWISH_NUMBER = "123 240 6775";
+const PAYMENT_BANKGIRO = "5290-5494";
 const CONTENT_STATUSES = new Set(["draft", "review", "ready", "published"]);
 const JOB_TYPES = new Set(["puncture", "tire", "brake", "throttle", "electrical", "battery", "service"]);
 const SERVICE_ACTIONS = new Set([
@@ -127,7 +129,7 @@ const footerHtml = () => `
     <strong style="color:#111">Nordic E-Mobility</strong><br>
     Pistolv&auml;gen 6, 702 21 &Ouml;rebro<br>
     <a href="mailto:info@nordicemobility.se" style="color:#067a35">info@nordicemobility.se</a> &middot;
-    <a href="tel:+46700243319" style="color:#067a35">070-024 33 19</a>
+    <a href="tel:+46101385498" style="color:#067a35">010-138 54 98</a>
   </div>
 `;
 
@@ -172,8 +174,18 @@ const sendThankYou = async (caseItem) => {
   return { email, coupon: { code, percent: 10, validUntil, used: false, caseId: caseItem.id }, sentAt: new Date().toISOString() };
 };
 
-const paymentSmsText = ({ caseItem, amount }) =>
-  `Hej ${firstName(caseItem.customer?.name)}! Swisha ${Math.round(Number(amount || 0))} kr till 070-024 33 19. Meddelande: ${shortCaseId(caseItem.id)}. Tack! / Nordic E-Mobility`;
+const paymentSmsText = ({ caseItem, amount }) => {
+  const rounded = Math.round(Number(amount || 0));
+  const reference = shortCaseId(caseItem.id);
+  return [
+    `Hej ${firstName(caseItem.customer?.name)}!`,
+    `Att betala: ${rounded} kr.`,
+    `Swish f\u00f6retag: ${PAYMENT_SWISH_NUMBER} (mottagare: Nordic E-Mobility).`,
+    `Bankgiro: ${PAYMENT_BANKGIRO}.`,
+    `Meddelande/OCR: ${reference}.`,
+    `Tack! / Nordic E-Mobility`,
+  ].join("\n");
+};
 
 const workshopReviewSmsText = (caseItem) => {
   const workshop = caseItem.workshop || {};
