@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "generate:products": "node scripts/generate-products.mjs",
+    "verify:checkout-products": "node scripts/verify-checkout-products.mjs",
     "build": "npm run generate:products && echo Static site ready"
   },
   "dependencies": {
