@@ -1,6 +1,4 @@
-const Stripe = require("stripe");
-const fs = require("fs");
-const path = require("path");
+const catalog = require("../../data/products.json");
 
 const env = (name) => {
   try {
@@ -17,8 +15,6 @@ const adminDebugAllowed = (event) => {
 };
 
 const loadProducts = () => {
-  const catalogPath = path.resolve(__dirname, "../../data/products.json");
-  const catalog = JSON.parse(fs.readFileSync(catalogPath, "utf8"));
   return Object.fromEntries(
     catalog.products
       .filter((product) => product.checkout && product.priceSek && !["slut", "upphord", "demo-bara"].includes(product.status))
@@ -60,6 +56,7 @@ exports.handler = async (event) => {
     }
 
     const origin = event.headers.origin || "https://www.nordicemobility.se";
+    const Stripe = require("stripe");
     const stripe = Stripe(stripeSecretKey);
 
     const session = await stripe.checkout.sessions.create({
@@ -127,3 +124,5 @@ exports.handler = async (event) => {
     };
   }
 };
+
+exports._internals = { loadProducts };

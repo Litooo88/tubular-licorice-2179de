@@ -1495,7 +1495,7 @@ const productGalleries={
   "navee v50i pro": ["/assets/products/navee/v50i-pro-drive.jpg","https://www.naveetech.com/wp-content/uploads/2025/07/4-V50i-Pro.png"],
   "navee g5": ["/assets/products/navee/g5-drive.jpg"],
   "navee v25i pro ii": ["https://www.naveetech.com/wp-content/uploads/2025/07/v25i-II-1-500x500.png"],
-  "navee k100 max": ["/assets/workshop/scooter-on-bench.jpg"],
+  "navee k100 max": ["https://www.naveetech.com/wp-content/uploads/2025/09/k100-com1.png"],
   "teverun space lite": ["https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Space_Lite_1.png?v=1773208465&width=1024"],
   "teverun blade mini ultra": ["https://teverun-europe.com/wp-content/uploads/2026/02/Blade-Mini-Ultra-Yellow-1.png"],
   "teverun blade gt ii": ["https://teverun-europe.com/wp-content/uploads/2026/04/d105d84cfc45a3e1c40bed8ee5077350.png"],
@@ -1548,11 +1548,12 @@ function openProductModal(card){
   productModalDetails.innerHTML=[
     `<li><strong>Specifikation</strong>${info.spec}</li>`,
     `<li><strong>Pris / status</strong>${info.price}</li>`,
-    `<li><strong>N&auml;sta steg</strong>Klicka p&aring; best&auml;ll/fr&aring;ga s&aring; skapas en order- eller r&aring;dgivningsf&ouml;rfr&aring;gan till verkstaden.</li>`
+    `<li><strong>N&auml;sta steg</strong>Klicka p&aring; K&ouml;p nu f&ouml;r trygg checkout, eller fr&aring;ga verkstaden om du vill dubbelkolla modell, regler eller leverans f&ouml;rst.</li>`
   ].join('');
   productModalBuy.href=info.href;
   if(info.productId){productModalBuy.dataset.product=info.productId}else{delete productModalBuy.dataset.product}
-  productModalBuy.textContent=/bevaka|fråga/i.test(card.querySelector('.prod-btn')?.textContent||'')?'Fråga / bevaka':'Beställ / fråga';
+  const ctaText=card.querySelector('.prod-btn')?.textContent||'';
+  productModalBuy.textContent=/bevaka|fråga/i.test(ctaText)?'Fråga / bevaka':'Köp nu';
   productModal.classList.add('is-open');
   productModal.setAttribute('aria-hidden','false');
   productModal.querySelector('.product-close').focus();

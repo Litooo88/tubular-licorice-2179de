@@ -1,16 +1,7 @@
 (function () {
-  const fallbackPaymentLinks = {
-    "teverun-fighter-eleven-plus": "https://buy.stripe.com/5kQ28takseIPeMwaRva7C00"
-  };
-
   async function startCheckout(link) {
     const productId = link.dataset.product;
     if (!productId) return false;
-
-    if (fallbackPaymentLinks[productId]) {
-      window.location.href = fallbackPaymentLinks[productId];
-      return true;
-    }
 
     const originalText = link.textContent;
     let redirecting = false;

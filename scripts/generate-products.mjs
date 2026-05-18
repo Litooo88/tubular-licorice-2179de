@@ -422,6 +422,19 @@ if (
       "const gallery=productGalleries[galleryKey(name)]||[baseImage].filter(Boolean);",
       "let gallery=productGalleries[galleryKey(name)]||[];\n  try{if(card.dataset.gallery)gallery=JSON.parse(card.dataset.gallery)}catch{}\n  if(!gallery.length)gallery=[baseImage].filter(Boolean);"
     );
+    next = next
+      .replace(
+        "`<li><strong>N&auml;sta steg</strong>Klicka p&aring; best&auml;ll/fr&aring;ga s&aring; skapas en order- eller r&aring;dgivningsf&ouml;rfr&aring;gan till verkstaden.</li>`",
+        "`<li><strong>N&auml;sta steg</strong>Klicka p&aring; K&ouml;p nu f&ouml;r trygg checkout, eller fr&aring;ga verkstaden om du vill dubbelkolla modell, regler eller leverans f&ouml;rst.</li>`"
+      )
+      .replace(
+        "productModalBuy.textContent=/bevaka|frÃ¥ga/i.test(card.querySelector('.prod-btn')?.textContent||'')?'FrÃ¥ga / bevaka':'BestÃ¤ll / frÃ¥ga';",
+        "const ctaText=card.querySelector('.prod-btn')?.textContent||'';\n  productModalBuy.textContent=/bevaka|frÃ¥ga/i.test(ctaText)?'FrÃ¥ga / bevaka':'KÃ¶p nu';"
+      )
+      .replace(
+        "productModalBuy.textContent=/bevaka|fråga/i.test(card.querySelector('.prod-btn')?.textContent||'')?'Fråga / bevaka':'Beställ / fråga';",
+        "const ctaText=card.querySelector('.prod-btn')?.textContent||'';\n  productModalBuy.textContent=/bevaka|fråga/i.test(ctaText)?'Fråga / bevaka':'Köp nu';"
+      );
     return next;
   })
 ) {
