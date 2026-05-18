@@ -160,6 +160,8 @@ Lennart = workshop operator.
 ### Payments and booking prices
 
 - Switched Stripe Checkout to dynamic/automatic payment methods.
+- Business payment details for workshop/customer-card checkout are Swish foretag `123 240 6775` (recipient shown as `Nordic E-Mobility`) and bankgiro `5290-5494`.
+- `/checkout/` has a `Skicka betal-SMS` action. It sends amount, Swish foretag, bankgiro, and case reference through `/api/cases` action `send_payment_instruction`.
 - Stripe product Checkout explicitly enables `automatic_payment_methods` and `allow_promotion_codes`; Klarna, Apple Pay, Google Pay, card wallets, and similar methods still depend on Stripe Dashboard/payment-method eligibility.
 - Product image/media clicks must open product info/gallery, not start Checkout. Only explicit product buy/order buttons should carry `data-product`.
 - Checkout regression guard: run `npm run verify:checkout-products` before shipping product/payment changes. It verifies every rendered `data-product` exists in the Netlify checkout loader, every checkout product renders on the site, no image/media starts checkout, and no one-off Stripe fallback link bypasses the shared checkout flow.
