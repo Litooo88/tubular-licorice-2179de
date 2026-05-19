@@ -14,8 +14,8 @@ const adminDebugAllowed = (event) => {
   return Boolean(expected && provided && expected === provided);
 };
 
-const loadProducts = () => {
-  return Object.fromEntries(
+const loadProducts = () =>
+  Object.fromEntries(
     catalog.products
       .filter((product) => product.checkout && product.priceSek && !["slut", "upphord", "demo-bara"].includes(product.status))
       .map((product) => [
@@ -28,6 +28,71 @@ const loadProducts = () => {
         },
       ])
   );
+
+const createCheckoutSession = async ({ stripe, product, origin }) => {
+  const stableSession = {
+    locale: "sv",
+    line_items: [
+      {
+        price_data: {
+          currency: "sek",
+          product_data: {
+            name: product.name,
+            description: "Elscooter - Nordic E-Mobility, Orebro",
+          },
+          unit_amount: product.price,
+        },
+        quantity: 1,
+      },
+    ],
+    mode: "payment",
+    success_url: `${origin}/?purchase=success`,
+    cancel_url: `${origin}/#produkter`,
+    shipping_address_collection: {
+      allowed_countries: ["SE"],
+    },
+    phone_number_collection: { enabled: true },
+  };
+
+  const policyFields = {
+    consent_collection: {
+      terms_of_service: "required",
+    },
+    custom_text: {
+      terms_of_service_acceptance: {
+        message:
+          "Jag godkanner Nordic E-Mobilitys villkor, returpolicy och garantipolicy: https://www.nordicemobility.se/villkor/",
+      },
+      submit: {
+        message:
+          "Betala tryggt med kort, Klarna eller andra tillgangliga betalsatt. Villkor, returer och garanti finns pa https://www.nordicemobility.se/villkor/. Nordic E-Mobility kontaktar dig om leverans, showroom och efterservice.",
+      },
+    },
+  };
+
+  const richSession = { ...stableSession, ...policyFields };
+  const attempts = [
+    { ...richSession, payment_method_types: ["card", "klarna"], allow_promotion_codes: true },
+    { ...richSession, payment_method_types: ["card", "klarna"] },
+    { ...richSession, payment_method_types: ["card"], allow_promotion_codes: true },
+    { ...richSession, payment_method_types: ["card"] },
+    { ...stableSession, payment_method_types: ["card", "klarna"], allow_promotion_codes: true },
+    { ...stableSession, payment_method_types: ["card", "klarna"] },
+    { ...stableSession, payment_method_types: ["card"], allow_promotion_codes: true },
+    { ...stableSession, payment_method_types: ["card"] },
+  ];
+
+  let lastError;
+  for (const params of attempts) {
+    try {
+      return await stripe.checkout.sessions.create(params);
+    } catch (error) {
+      lastError = error;
+      const retryable = error?.code === "parameter_unknown" || error?.type === "invalid_request_error";
+      if (!retryable) throw error;
+    }
+  }
+  throw lastError || new Error("Stripe Checkout kunde inte startas.");
 };
 
 exports.handler = async (event) => {
@@ -36,13 +101,14 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { productId } = JSON.parse(event.body);
+    const { productId } = JSON.parse(event.body || "{}");
     const product = loadProducts()[productId];
     const stripeSecretKey = env("STRIPE_SECRET_KEY");
 
     if (!product) {
       return {
         statusCode: 400,
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ error: "Ogiltig produkt" }),
       };
     }
@@ -51,52 +117,14 @@ exports.handler = async (event) => {
       return {
         statusCode: 503,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ error: "Stripe är inte konfigurerat i Netlify. Saknar STRIPE_SECRET_KEY." }),
+        body: JSON.stringify({ error: "Stripe ar inte konfigurerat i Netlify. Saknar STRIPE_SECRET_KEY." }),
       };
     }
 
     const origin = event.headers.origin || "https://www.nordicemobility.se";
     const Stripe = require("stripe");
     const stripe = Stripe(stripeSecretKey);
-
-    const session = await stripe.checkout.sessions.create({
-      locale: "sv",
-      automatic_payment_methods: { enabled: true },
-      allow_promotion_codes: true,
-      line_items: [
-        {
-          price_data: {
-            currency: "sek",
-            product_data: {
-              name: product.name,
-              description: "Elscooter - Nordic E-Mobility, Örebro",
-            },
-            unit_amount: product.price,
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${origin}/?purchase=success`,
-      cancel_url: `${origin}/#produkter`,
-      shipping_address_collection: {
-        allowed_countries: ["SE"],
-      },
-      phone_number_collection: { enabled: true },
-      consent_collection: {
-        terms_of_service: "required",
-      },
-      custom_text: {
-        terms_of_service_acceptance: {
-          message:
-            "Jag godkänner Nordic E-Mobilitys villkor, returpolicy och garantipolicy: https://www.nordicemobility.se/villkor/",
-        },
-        submit: {
-          message:
-            "Betala tryggt med kort, Klarna eller andra tillgängliga betalsätt. Villkor, returer och garanti finns på https://www.nordicemobility.se/villkor/. Nordic E-Mobility kontaktar dig om leverans, showroom och efterservice.",
-        },
-      },
-    });
+    const session = await createCheckoutSession({ stripe, product, origin });
 
     return {
       statusCode: 200,
@@ -125,4 +153,4 @@ exports.handler = async (event) => {
   }
 };
 
-exports._internals = { loadProducts };
+exports._internals = { loadProducts, createCheckoutSession };

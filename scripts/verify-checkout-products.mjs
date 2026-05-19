@@ -66,6 +66,50 @@ for (const id of checkoutProducts) {
 }
 if (previousStripeKey) process.env.STRIPE_SECRET_KEY = previousStripeKey;
 
+let stripeCalls = 0;
+let firstStripeAttempt;
+let secondStripeAttempt;
+const fakeStripe = {
+  checkout: {
+    sessions: {
+      create: async (params) => {
+        stripeCalls += 1;
+        if (stripeCalls === 1) {
+          firstStripeAttempt = params;
+          const error = new Error("Unknown parameter");
+          error.code = "parameter_unknown";
+          error.type = "invalid_request_error";
+          throw error;
+        }
+        secondStripeAttempt = params;
+        return { url: "https://checkout.stripe.test/session" };
+      },
+    },
+  },
+};
+
+const fallbackSession = await _internals.createCheckoutSession({
+  stripe: fakeStripe,
+  product: { name: "Checkout test", price: 995000 },
+  origin: "https://www.nordicemobility.se",
+});
+
+if (stripeCalls !== 2 || fallbackSession.url !== "https://checkout.stripe.test/session") {
+  failures.push("Stripe checkout did not retry after a parameter_unknown response.");
+}
+
+if (firstStripeAttempt && "automatic_payment_methods" in firstStripeAttempt) {
+  failures.push("Stripe checkout still sends automatic_payment_methods, which failed live with parameter_unknown.");
+}
+
+if (!Array.isArray(firstStripeAttempt?.payment_method_types) || !firstStripeAttempt.payment_method_types.includes("card")) {
+  failures.push("Stripe checkout first attempt must explicitly include card as a payment method.");
+}
+
+if (!Array.isArray(secondStripeAttempt?.payment_method_types) || !secondStripeAttempt.payment_method_types.includes("card")) {
+  failures.push("Stripe checkout retry must explicitly include card as a payment method.");
+}
+
 if (failures.length) {
   console.error(failures.join("\n"));
   process.exit(1);
