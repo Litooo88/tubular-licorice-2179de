@@ -23,6 +23,8 @@ const loadProducts = () =>
         {
           name: product.name,
           price: product.priceSek * 100,
+          brand: product.brand,
+          id: product.id,
           status: product.status,
           delivery: product.delivery || "",
         },
@@ -30,7 +32,35 @@ const loadProducts = () =>
   );
 
 const createCheckoutSession = async ({ stripe, product, origin }) => {
-  const stableSession = {
+  const shippingOptions =
+    product.brand === "KuKirin"
+      ? [
+          {
+            shipping_rate_data: {
+              type: "fixed_amount",
+              fixed_amount: { amount: 0, currency: "sek" },
+              display_name: "Gratis hemleverans från KuKirin",
+              delivery_estimate: {
+                minimum: { unit: "business_day", value: 5 },
+                maximum: { unit: "business_day", value: 10 },
+              },
+            },
+          },
+          {
+            shipping_rate_data: {
+              type: "fixed_amount",
+              fixed_amount: { amount: 0, currency: "sek" },
+              display_name: "Gratis leverans till Nordic E-Mobilitys verkstad",
+              delivery_estimate: {
+                minimum: { unit: "business_day", value: 5 },
+                maximum: { unit: "business_day", value: 10 },
+              },
+            },
+          },
+        ]
+      : undefined;
+
+  const baseStableSession = {
     locale: "sv",
     line_items: [
       {
@@ -38,7 +68,7 @@ const createCheckoutSession = async ({ stripe, product, origin }) => {
           currency: "sek",
           product_data: {
             name: product.name,
-            description: "Elscooter - Nordic E-Mobility, Orebro",
+            description: `Elscooter - Nordic E-Mobility, Orebro. ${product.delivery || ""}`.trim(),
           },
           unit_amount: product.price,
         },
@@ -53,6 +83,8 @@ const createCheckoutSession = async ({ stripe, product, origin }) => {
     },
     phone_number_collection: { enabled: true },
   };
+  const stableSession = { ...baseStableSession };
+  if (shippingOptions) stableSession.shipping_options = shippingOptions;
 
   const policyFields = {
     consent_collection: {
@@ -71,6 +103,7 @@ const createCheckoutSession = async ({ stripe, product, origin }) => {
   };
 
   const richSession = { ...stableSession, ...policyFields };
+  const richNoShippingSession = { ...baseStableSession, ...policyFields };
   const attempts = [
     { ...richSession, payment_method_types: ["card", "klarna"], allow_promotion_codes: true },
     { ...richSession, payment_method_types: ["card", "klarna"] },
@@ -80,6 +113,10 @@ const createCheckoutSession = async ({ stripe, product, origin }) => {
     { ...stableSession, payment_method_types: ["card", "klarna"] },
     { ...stableSession, payment_method_types: ["card"], allow_promotion_codes: true },
     { ...stableSession, payment_method_types: ["card"] },
+    { ...richNoShippingSession, payment_method_types: ["card", "klarna"], allow_promotion_codes: true },
+    { ...richNoShippingSession, payment_method_types: ["card", "klarna"] },
+    { ...baseStableSession, payment_method_types: ["card"], allow_promotion_codes: true },
+    { ...baseStableSession, payment_method_types: ["card"] },
   ];
 
   let lastError;

@@ -82,6 +82,10 @@ function productCard(item, options = {}) {
   const price = formatPrice(item.priceSek) || escapeHtml(item.priceNote || "Pris efter modell");
   const monthly = item.priceSek ? Math.ceil(item.priceSek / 24) : null;
   const legal = item.legality ? `<p class="product-legal">${escapeHtml(legalityText[item.legality] || item.legality)}</p>` : "";
+  const campaignNote =
+    item.id === "kukirin-g4-special"
+      ? `<p class="campaign-note"><strong>Kampanj:</strong> svart crosshjälm ingår för de 5 första G4 Special Edition-ordrarna.</p>`
+      : "";
   const thumbs = images
     .slice(1, 4)
     .map((src, index) => `<button type="button" data-open-product aria-label="Visa ${escapeAttr(item.name)} bild ${index + 2}"><img loading="lazy" src="${escapeAttr(src)}" alt="${escapeAttr(item.name)} extra bild ${index + 2}"></button>`)
@@ -98,6 +102,7 @@ function productCard(item, options = {}) {
             <h3>${escapeHtml(item.name)}</h3>
             <p class="spec">${escapeHtml(item.spec)}</p>
             <p class="copy">${escapeHtml(item.short)}</p>
+            ${campaignNote}
             ${legal}
             <div class="price">${price}</div>
             ${monthly ? `<p class="klarna">Ca ${formatPrice(monthly)}/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>` : ""}
@@ -170,6 +175,7 @@ function nyaElscootrarSection() {
         .product-thumbs-empty{display:block;color:#8d9a91;font-size:12px;min-height:42px}
         .product-meta{display:flex;justify-content:space-between;gap:8px;color:#90a097;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
         .product-legal{margin-top:10px;color:#ffd9b3;font-size:12px;line-height:1.45}
+        .campaign-note{margin:10px 0 8px;border:1px solid rgba(255,109,0,.42);background:rgba(255,109,0,.13);color:#ffd0a6;border-radius:8px;padding:9px 10px;font-size:12px;line-height:1.45;font-weight:800}
         .klarna,.stock-copy{font-size:12px;color:#9eaaa2;margin-top:-6px;margin-bottom:10px}
         .payment-methods{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px}
         .payment-methods.compact{gap:5px;margin:8px 0 10px}
@@ -230,7 +236,7 @@ function nyaElscootrarSection() {
         </div>
         <div class="catalog-note">
           <h3>Köp med verkstadsstöd</h3>
-          <p>Betala tryggt via checkout. Vi kontaktar kunden om leverans, montering, hjälm, inbyte och efterservice. Prestandamodeller markeras försiktigt så de inte säljs som vanliga trafikfordon utan kontroll.</p>
+          <p>Betala tryggt via checkout. KuKirin har gratis hemleverans eller gratis leverans till vår verkstad. Teverun har fraktavgift 60 EUR. Vi kontaktar kunden om leverans, montering, hjälm, inbyte och efterservice.</p>
           ${paymentStrip()}
         </div>
       </div>
@@ -320,6 +326,10 @@ function homeProductCard(item) {
   const gallery = galleryAttr(item);
   const border = item.brand === "KuKirin" ? "#ff6d00" : item.brand === "Teverun" ? "rgba(0,200,83,.35)" : "rgba(0,200,83,.3)";
   const buttonStyle = item.brand === "KuKirin" ? ' style="background:rgba(255,109,0,.15);border-color:rgba(255,109,0,.4);color:#ff6d00"' : "";
+  const campaignNote =
+    item.id === "kukirin-g4-special"
+      ? `<div style="border:1px solid rgba(255,109,0,.42);background:rgba(255,109,0,.13);color:#ffd0a6;border-radius:8px;padding:8px 9px;font-size:11px;line-height:1.45;font-weight:800;margin:8px 0">Kampanj: svart crosshjälm ingår för de 5 första ordrarna.</div>`
+      : "";
   return `    <div class="prod" data-gallery="${gallery}" style="border-color:${border}">
       <div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">
         <div style="position:absolute;top:8px;left:8px;background:${item.brand === "KuKirin" ? "#ff6d00" : "#00C853"};color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">${escapeHtml(item.badge || statusLabel[item.status])}</div>
@@ -330,6 +340,7 @@ function homeProductCard(item) {
         <div class="prod-name">${escapeHtml(item.name.replace(/^NAVEE |^KuKirin |^Teverun /, ""))}</div>
         <div style="font-size:11px;color:#888;margin:4px 0">${escapeHtml(item.spec)}</div>
         <div style="font-size:11px;color:#b0b0b0;line-height:1.5;margin-bottom:10px">${escapeHtml(item.short)}</div>
+        ${campaignNote}
         <div class="prod-price">${price}</div>
         ${paymentStrip(true)}
         <a href="${escapeAttr(bookingHref(item))}" class="prod-btn" data-product="${escapeAttr(item.id)}" data-price="${item.priceSek}"${buttonStyle}>${escapeHtml(ctaText(item))}</a>
@@ -364,7 +375,7 @@ function homeProductsSection() {
   <h2 class="section-title">6 modeller vi vill lyfta just nu</h2>
   <p class="section-sub">Startsidan visar bara de tydligaste valen. Hela katalogen med NAVEE, Teverun, KuKirin, Monorim och reservdelar finns på utbudssidan.</p>
   <div class="legal-note">Produktinfo ska läsas tillsammans med användningsområde. Modeller med hög effekt eller hög hastighet kan vara avsedda för privat mark eller inhägnat område, inte vanlig trafik. <a href="/regler-elscooter/">Läs regelguiden innan köp</a>.</div>
-  <div class="legal-note" style="margin-bottom:10px;background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.22);color:#dce8df">Betala tryggt med <strong>Klarna, Apple Pay, Google Pay, kort och andra tillgängliga betalsätt</strong>. Stripe visar de alternativ som är aktiverade och kvalificerade för ordern. Vi hjälper dig med leverans, rådgivning och service efter köpet.</div>
+  <div class="legal-note" style="margin-bottom:10px;background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.22);color:#dce8df">Betala tryggt med <strong>Klarna, Apple Pay, Google Pay, kort och andra tillgängliga betalsätt</strong>. KuKirin har gratis leveransval. Teverun har fraktavgift 60 EUR. Vi hjälper dig med leverans, rådgivning och service efter köpet.</div>
   ${paymentStrip()}
   <div class="products-grid" style="grid-template-columns:repeat(3,1fr)">
 ${featured.map((item) => homeProductCard(item)).join("\n")}
