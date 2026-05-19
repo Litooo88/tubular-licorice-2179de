@@ -31,34 +31,55 @@ const loadProducts = () =>
       ])
   );
 
+const TEVERUN_SHIPPING_SEK = 69900;
+
 const createCheckoutSession = async ({ stripe, product, origin }) => {
-  const shippingOptions =
-    product.brand === "KuKirin"
-      ? [
-          {
-            shipping_rate_data: {
-              type: "fixed_amount",
-              fixed_amount: { amount: 0, currency: "sek" },
-              display_name: "Gratis hemleverans från KuKirin",
-              delivery_estimate: {
-                minimum: { unit: "business_day", value: 5 },
-                maximum: { unit: "business_day", value: 10 },
-              },
+  const shippingOptions = (() => {
+    if (product.brand === "KuKirin") {
+      return [
+        {
+          shipping_rate_data: {
+            type: "fixed_amount",
+            fixed_amount: { amount: 0, currency: "sek" },
+            display_name: "Gratis hemleverans fr\u00e5n KuKirin",
+            delivery_estimate: {
+              minimum: { unit: "business_day", value: 5 },
+              maximum: { unit: "business_day", value: 5 },
             },
           },
-          {
-            shipping_rate_data: {
-              type: "fixed_amount",
-              fixed_amount: { amount: 0, currency: "sek" },
-              display_name: "Gratis leverans till Nordic E-Mobilitys verkstad",
-              delivery_estimate: {
-                minimum: { unit: "business_day", value: 5 },
-                maximum: { unit: "business_day", value: 10 },
-              },
+        },
+        {
+          shipping_rate_data: {
+            type: "fixed_amount",
+            fixed_amount: { amount: 0, currency: "sek" },
+            display_name: "Gratis leverans till Nordic E-Mobilitys verkstad",
+            delivery_estimate: {
+              minimum: { unit: "business_day", value: 5 },
+              maximum: { unit: "business_day", value: 5 },
             },
           },
-        ]
-      : undefined;
+        },
+      ];
+    }
+
+    if (product.brand === "Teverun") {
+      return [
+        {
+          shipping_rate_data: {
+            type: "fixed_amount",
+            fixed_amount: { amount: TEVERUN_SHIPPING_SEK, currency: "sek" },
+            display_name: "Teverun-frakt 60 EUR",
+            delivery_estimate: {
+              minimum: { unit: "business_day", value: 5 },
+              maximum: { unit: "business_day", value: 7 },
+            },
+          },
+        },
+      ];
+    }
+
+    return undefined;
+  })();
 
   const baseStableSession = {
     locale: "sv",
@@ -190,4 +211,4 @@ exports.handler = async (event) => {
   }
 };
 
-exports._internals = { loadProducts, createCheckoutSession };
+exports._internals = { loadProducts, createCheckoutSession, TEVERUN_SHIPPING_SEK };

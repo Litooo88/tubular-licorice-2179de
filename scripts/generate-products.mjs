@@ -236,7 +236,7 @@ function nyaElscootrarSection() {
         </div>
         <div class="catalog-note">
           <h3>Köp med verkstadsstöd</h3>
-          <p>Betala tryggt via checkout. KuKirin har gratis hemleverans eller gratis leverans till vår verkstad. Teverun har fraktavgift 60 EUR. Vi kontaktar kunden om leverans, montering, hjälm, inbyte och efterservice.</p>
+          <p>Betala tryggt via checkout. KuKirin har gratis hemleverans eller gratis leverans till vår verkstad med leverans 5 arbetsdagar efter mottagen betalning. Teverun har fraktavgift 60 EUR och leverans 5-7 arbetsdagar. Vi kontaktar kunden om leverans, montering, hjälm, inbyte och efterservice.</p>
           ${paymentStrip()}
         </div>
       </div>
@@ -375,7 +375,7 @@ function homeProductsSection() {
   <h2 class="section-title">6 modeller vi vill lyfta just nu</h2>
   <p class="section-sub">Startsidan visar bara de tydligaste valen. Hela katalogen med NAVEE, Teverun, KuKirin, Monorim och reservdelar finns på utbudssidan.</p>
   <div class="legal-note">Produktinfo ska läsas tillsammans med användningsområde. Modeller med hög effekt eller hög hastighet kan vara avsedda för privat mark eller inhägnat område, inte vanlig trafik. <a href="/regler-elscooter/">Läs regelguiden innan köp</a>.</div>
-  <div class="legal-note" style="margin-bottom:10px;background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.22);color:#dce8df">Betala tryggt med <strong>Klarna, Apple Pay, Google Pay, kort och andra tillgängliga betalsätt</strong>. KuKirin har gratis leveransval. Teverun har fraktavgift 60 EUR. Vi hjälper dig med leverans, rådgivning och service efter köpet.</div>
+  <div class="legal-note" style="margin-bottom:10px;background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.22);color:#dce8df">Betala tryggt med <strong>Klarna, Apple Pay, Google Pay, kort och andra tillgängliga betalsätt</strong>. KuKirin har gratis leveransval och 5 arbetsdagars leverans efter mottagen betalning. Teverun har fraktavgift 60 EUR och leverans 5-7 arbetsdagar. Vi hjälper dig med leverans, rådgivning och service efter köpet.</div>
   ${paymentStrip()}
   <div class="products-grid" style="grid-template-columns:repeat(3,1fr)">
 ${featured.map((item) => homeProductCard(item)).join("\n")}
