@@ -20,7 +20,7 @@ Keep it current. When a larger feature, rescue operation, deploy-sensitive fix, 
 - Booking confirmation now has structured send status for SMS/email/workshop alert and confirmation flags.
 - Admin route collision was fixed by disabling the rescued duplicate `cases.mjs` route; live admin cases API is `netlify/functions/workshop-cases.mjs` at `/api/cases`.
 - Public customer scooter/showroom image section was removed from the public website. Customer images/content support must stay internal to admin.
-- Stripe Checkout uses `automatic_payment_methods: { enabled: true }`; Klarna and other methods are controlled in the Stripe Dashboard.
+- Stripe product Checkout does not use `automatic_payment_methods`; live Stripe returned `parameter_unknown`. The function uses explicit `payment_method_types` attempts and falls back from Klarna/card/rabattkod/policy text to lean card-only params if Stripe rejects optional fields.
 - The public price list and booking service prices were aligned with Sebastian's provided workshop pricing.
 - Admin has a first version of a price database and touch-friendly POS/pricing workflow.
 - Admin can be installed as a browser app on the workshop Windows touch computer through `/admin/`.
@@ -162,7 +162,8 @@ Lennart = workshop operator.
 - Switched Stripe Checkout to dynamic/automatic payment methods.
 - Business payment details for workshop/customer-card checkout are Swish foretag `123 240 6775` (recipient shown as `Nordic E-Mobility`) and bankgiro `5290-5494`.
 - `/checkout/` has a `Skicka betal-SMS` action. It sends amount, Swish foretag, bankgiro, and case reference through `/api/cases` action `send_payment_instruction`.
-- Stripe product Checkout explicitly enables `automatic_payment_methods` and `allow_promotion_codes`; Klarna, Apple Pay, Google Pay, card wallets, and similar methods still depend on Stripe Dashboard/payment-method eligibility.
+- Stripe product Checkout explicitly tries `card` + `klarna` first and `card` as fallback. Apple Pay, Google Pay, card wallets, Klarna, and similar methods still depend on Stripe Dashboard/payment-method eligibility, domain verification, device/browser support, and order eligibility.
+- Do not reintroduce `automatic_payment_methods` in `netlify/functions/create-checkout.js`; it caused live `parameter_unknown` errors and customer-facing fallback alerts.
 - Product image/media clicks must open product info/gallery, not start Checkout. Only explicit product buy/order buttons should carry `data-product`.
 - Checkout regression guard: run `npm run verify:checkout-products` before shipping product/payment changes. It verifies every rendered `data-product` exists in the Netlify checkout loader, every checkout product renders on the site, no image/media starts checkout, and no one-off Stripe fallback link bypasses the shared checkout flow.
 - `netlify/functions/create-checkout.js` must import `../../data/products.json` with `require(...)`; do not read it via runtime filesystem paths, because Netlify bundling can otherwise deploy the function without the JSON file and cause ENOENT for all products.
