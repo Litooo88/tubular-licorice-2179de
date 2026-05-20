@@ -2,7 +2,8 @@ import { validateRequest } from "./auth";
 import { dial, holdThenDial, introIvr, outsideHoursVoicemail, recordVoicemail, voicemailPrompt, callId, caller, ivrChoice } from "./flow";
 import { logCall, purgeOldLogs } from "./log";
 import { notifyCaller, notifySebastian } from "./notify";
-import { isOfficeHours, stockholmTime } from "./officeHours";
+import { isOfficeHours, stockholmTime, stockholmParts } from "./officeHours";
+import { sendDailyReport } from "./report";
 import type { ElksPayload, Env, Operator } from "./types";
 
 function json(data: unknown, status = 200): Response {
@@ -118,7 +119,7 @@ async function handleHangup(req: Request, env: Env, ctx: ExecutionContext, url: 
     });
 
     // Notifiera Sebastian vid varje besvarat samtal (oavsett vem som svarade).
-    // Voicemail-fallet hanteras separat i handleVoicemailSaved → ingen risk for dubblett.
+    // Voicemail hanteras separat i handleVoicemailSaved - ingen risk for dubblett.
     if (answered) {
       const who = answeredBy === "lennart" ? "Lennart" : "Du";
       const durationFmt = formatDuration(duration);
@@ -174,7 +175,20 @@ export default {
     if (url.pathname === "/stats") return handleStats(req, env, url);
     return new Response("Not Found", { status: 404 });
   },
-  async scheduled(_event: ScheduledEvent, env: Env): Promise<void> {
-    await purgeOldLogs(env);
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    // Nattlig purge av gamla loggar (03:00 UTC).
+    if (event.cron === "0 3 * * *") {
+      await purgeOldLogs(env);
+      return;
+    }
+    // Dagsrapport-cron firar vid bade sommar- och vinter-UTC (11/12 och 16/17).
+    // Vi kontrollerar faktisk Stockholm-timme sa exakt EN rapport skickas per
+    // tidpunkt oavsett sommar-/vintertid (DST-saker).
+    const { hour } = stockholmParts(new Date());
+    if (hour === 13) {
+      await sendDailyReport(env, "middagsrapport", ctx);
+    } else if (hour === 18) {
+      await sendDailyReport(env, "kvallsrapport", ctx);
+    }
   }
 };

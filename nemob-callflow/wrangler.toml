@@ -12,4 +12,8 @@ binding = "CALLFLOW_KV"
 id = "7816083f46ed486e86c9c48d57b87a2d"
 
 [triggers]
-crons = ["0 3 * * *"]
+# 03:00 UTC = nattlig purge av gamla call_log-rader.
+# 11/12 UTC = 13:00 Stockholm (sommar/vinter) -> middagsrapport.
+# 16/17 UTC = 18:00 Stockholm (sommar/vinter) -> kvallsrapport.
+# Handlern kontrollerar faktisk Stockholm-timme sa bara ratt rapport skickas.
+crons = ["0 3 * * *", "0 11 * * *", "0 12 * * *", "0 16 * * *", "0 17 * * *"]
