@@ -8,52 +8,46 @@ if (!apiKey) {
   process.exit(1);
 }
 
-const voiceId = process.env.ELEVENLABS_VOICE_ID || "pNInz6obpgDQGcFmaJgB";
+// Default: Olivia (svensktalande, ung kvinnlig röst från ElevenLabs Voice Library).
+// Override via ELEVENLABS_VOICE_ID env var om du vill testa annan röst.
+const voiceId = process.env.ELEVENLABS_VOICE_ID || "cLAH1kXlkAivJHxCW601";
 const modelId = process.env.ELEVENLABS_MODEL_ID || "eleven_multilingual_v2";
 const outputDir = fileURLToPath(new URL("../../audio/", import.meta.url));
 await mkdir(outputDir, { recursive: true });
 
+// OBS: hold-music.mp3 genereras INTE här. Den är en Pixabay royalty-fri loop.
 const prompts = [
   {
     file: "welcome.mp3",
     text: [
-      "Du hör en automatisk röst från Nordic E-Mobility.",
+      "Hej, du har kommit till Nordic E-Mobility i Örebro.",
       "",
-      "Välkommen.",
+      "För att hjälpa dig snabbare — tryck ett för verkstad och service.",
+      "Tryck två om du vill köpa ny elscooter eller har frågor om försäljning.",
       "",
-      "Tryck 1 för verkstad, service och bokning.",
-      "Tryck 2 för ny elscooter, försäljning eller inbyte.",
-      "",
-      "Vi kopplar dig direkt."
+      "Vill du höra alternativen igen, tryck noll.",
+      "Annars kopplas du automatiskt till verkstaden."
     ].join("\n")
   },
   {
     file: "voicemail-prompt.mp3",
     text: [
-      "Du hör en automatisk röst från Nordic E-Mobility.",
+      "Hej, just nu kan vi inte svara.",
       "",
-      "Du har kommit till vår röstbrevlåda.",
-      "Lämna ditt namn, telefonnummer och vad det gäller efter pipet.",
+      "Lämna ditt namn, ditt telefonnummer, och vad det gäller efter pipet — så hör vi av oss så snart vi kan.",
       "",
-      "Genom att lämna ett meddelande godkänner du att samtalet spelas in och lagras i 90 dagar för att vi ska kunna återkomma.",
-      "",
-      "Tryck fyrkant när du är klar."
+      "Genom att lämna ett meddelande godkänner du att samtalet spelas in och raderas efter 90 dagar."
     ].join("\n")
   },
   {
     file: "outside-hours-prompt.mp3",
     text: [
-      "Du hör en automatisk röst från Nordic E-Mobility.",
+      "Hej, du har kommit till Nordic E-Mobility utanför våra öppettider, vardagar nio till sex.",
       "",
-      "Du har ringt n\u00e4r vi inte kan svara direkt.",
-      "L\u00e4mna ditt namn, telefonnummer och vad det g\u00e4ller efter pipet, s\u00e5 h\u00f6r vi av oss s\u00e5 snart vi kan.",
+      "Lämna ett meddelande efter pipet så ringer vi upp dig första bästa tillfälle.",
       "",
-      "Genom att lämna ett meddelande godkänner du att samtalet spelas in och lagras i 90 dagar för att vi ska kunna återkomma."
+      "Vi spelar in meddelandet och raderar det efter 90 dagar."
     ].join("\n")
-  },
-  {
-    file: "hold-music.mp3",
-    text: "Ett ögonblick, vi kopplar dig vidare."
   }
 ];
 
@@ -72,9 +66,11 @@ for (const prompt of prompts) {
       text: prompt.text,
       model_id: modelId,
       voice_settings: {
-        stability: 0.6,
+        // Sänkt stability (0.45) + höjt style (0.30) = mer mänsklig/uttrycksfull röst.
+        // Default (0.6/0.15) lät för robotaktig enligt Boss.
+        stability: 0.45,
         similarity_boost: 0.75,
-        style: 0.15,
+        style: 0.30,
         use_speaker_boost: true
       }
     })

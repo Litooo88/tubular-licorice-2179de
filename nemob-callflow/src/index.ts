@@ -93,6 +93,13 @@ async function handleVoicemailSaved(req: Request, env: Env, ctx: ExecutionContex
   });
 }
 
+function formatDuration(seconds: number): string {
+  if (seconds < 60) return `${seconds}s`;
+  const mins = Math.floor(seconds / 60);
+  const secs = seconds % 60;
+  return secs === 0 ? `${mins}m` : `${mins}m${secs}s`;
+}
+
 async function handleHangup(req: Request, env: Env, ctx: ExecutionContext, url: URL): Promise<Response> {
   return guarded(req, env, url, async (payload) => {
     const attempt = url.searchParams.get("attempt");
@@ -109,6 +116,19 @@ async function handleHangup(req: Request, env: Env, ctx: ExecutionContext, url: 
       status: answered ? "answered" : "missed",
       ivr_choice: ivrChoice(payload, url)
     });
+
+    // Notifiera Sebastian vid varje besvarat samtal (oavsett vem som svarade).
+    // Voicemail-fallet hanteras separat i handleVoicemailSaved → ingen risk for dubblett.
+    if (answered) {
+      const who = answeredBy === "lennart" ? "Lennart" : "Du";
+      const durationFmt = formatDuration(duration);
+      notifySebastian(
+        env,
+        `${who} tog samtal fran ${from} kl ${stockholmTime()}, varaktighet ${durationFmt}.`,
+        ctx
+      );
+    }
+
     return json({ ok: true });
   });
 }
