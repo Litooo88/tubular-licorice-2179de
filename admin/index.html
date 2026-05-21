@@ -37,6 +37,10 @@ button:disabled{opacity:.6;cursor:wait}
 .sms-status{display:none;margin-top:10px;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.45}
 .sms-status.ok{display:block;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#e6ffef}
 .sms-status.bad{display:block;background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}
+.admin-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.admin-tabs button{background:#101410;color:#fff;border:1px solid #2b362e}
+.admin-tabs button.is-active{background:#00c853;color:#031006}
+.admin-view[hidden]{display:none}
 .quote-box{border:1px solid rgba(0,200,83,.28);background:rgba(0,200,83,.06);border-radius:8px;padding:12px;margin-top:12px}
 .quote-box h4{margin:0 0 6px;font-size:15px}
 .quote-box p{margin:0 0 10px;color:#b9c3bb;font-size:13px;line-height:1.45}
@@ -94,6 +98,19 @@ button:disabled{opacity:.6;cursor:wait}
 .active-table .priority-urgent{color:#ffc247;font-weight:900}
 .active-table .priority-stale{color:#ff9ba0;font-weight:900}
 .active-table button{padding:8px 10px;font-size:12px}
+.call-dashboard{overflow:auto}
+.call-dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:12px 0}
+.call-table{width:100%;border-collapse:collapse;min-width:1020px}
+.call-table th,.call-table td{border-bottom:1px solid #263029;padding:9px 8px;text-align:left;vertical-align:top;font-size:13px}
+.call-table th{color:#a8b2aa;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.call-row-missing{background:rgba(255,194,71,.08)}
+.call-row-lost{background:rgba(255,90,95,.1)}
+.call-case{display:block;color:#e8fff0}
+.call-actions{display:flex;gap:8px;flex-wrap:wrap}
+.call-actions button{padding:8px 10px;font-size:12px}
+.call-status{display:none;margin-top:8px;border-radius:8px;padding:10px;font-size:13px}
+.call-status.ok{display:block;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#e6ffef}
+.call-status.bad{display:block;background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}
 .column{padding:12px;min-height:220px}
 .column h2{font-size:14px;margin:0 0 10px;display:flex;align-items:center;justify-content:space-between}
 .count{background:#202820;border:1px solid #344038;border-radius:999px;padding:2px 8px;color:#b8c2ba}
@@ -245,6 +262,23 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   <div class="calendar-result" id="calendarResult"></div>
   <section class="panel notice"><strong>Automatiskt fl&ouml;de:</strong> Nya bokningar sparas h&auml;r, kunden ska f&aring; SMS och e-post direkt, och verkstaden f&aring;r avisering. Om ett kort markeras med r&ouml;d kundbekr&auml;ftelse beh&ouml;ver kunden f&ouml;ljas upp manuellt direkt.</section>
 
+  <nav class="admin-tabs" aria-label="Adminvyer">
+    <button type="button" class="is-active" data-admin-tab="overview">Översikt & samtal</button>
+    <button type="button" data-admin-tab="cards">Kundkort</button>
+  </nav>
+
+  <div class="admin-view" id="overviewView">
+  <section class="panel call-dashboard">
+    <h2>Live samtalsdashboard</h2>
+    <p>Dagens inkommande samtal matchas mot kundregistret. Missade samtal och Lennart-samtal utan kundkort kan följas upp direkt med SMS.</p>
+    <div class="call-dashboard-grid" id="callDashboardStats"></div>
+    <div class="call-actions">
+      <button type="button" class="secondary" id="refreshCalls">Uppdatera samtal</button>
+    </div>
+    <div class="call-status" id="callDashboardStatus"></div>
+    <div id="callDashboardTable">Laddar samtal...</div>
+  </section>
+
   <section class="panel sms-panel">
     <h2>SMS till kund</h2>
     <p>V&auml;lj ett aktivt &auml;rende, skriv eller bygg en mall och skicka SMS direkt fr&aring;n admin. Utskicket sparas i kundens timeline.</p>
@@ -287,6 +321,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div class="panel stat"><span>Tyngre jobb</span><b id="heavyTotal">0</b></div>
   </section>
 
+  <section class="panel active-overview">
+    <h2>Aktiv &auml;rendelista</h2>
+    <p>Prioriterad lista &ouml;ver aktiva kundkort. Anv&auml;nd den h&auml;r f&ouml;r morgonm&ouml;te, uppf&ouml;ljning och f&ouml;r att se vilka kort som saknar tydlig modell eller har st&aring;tt stilla.</p>
+    <div id="activeOverview">Laddar aktiva &auml;renden...</div>
+  </section>
+  </div>
+
+  <div class="admin-view" id="cardsView" hidden>
   <div class="toolbar">
     <div class="muted" id="lastUpdated">Inte laddad &auml;nnu. Auto-refresh &auml;r avst&auml;ngd medan du jobbar.</div>
     <div class="filters">
@@ -295,14 +337,8 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <div><label for="statusFilter">Status</label><select id="statusFilter"><option value="">Alla</option><option value="new">Ny</option><option value="contacted">Kontaktad</option><option value="waiting_customer">V&auml;ntar kund</option><option value="checked_in">Inl&auml;mnad</option><option value="diagnosing">Diagnos</option><option value="repairing">Reparerar</option><option value="waiting_parts">V&auml;ntar delar</option><option value="ready">Klar</option><option value="done">Avslutad</option></select></div>
     </div>
   </div>
-
-  <section class="panel active-overview">
-    <h2>Aktiv &auml;rendelista</h2>
-    <p>Prioriterad lista &ouml;ver aktiva kundkort. Anv&auml;nd den h&auml;r f&ouml;r morgonm&ouml;te, uppf&ouml;ljning och f&ouml;r att se vilka kort som saknar tydlig modell eller har st&aring;tt stilla.</p>
-    <div id="activeOverview">Laddar aktiva &auml;renden...</div>
-  </section>
-
   <section class="board" id="board"></section>
+  </div>
 </main>
 
 <script>
@@ -374,6 +410,12 @@ const smsMessageText=document.getElementById('smsMessageText');
 const smsDeskStatus=document.getElementById('smsDeskStatus');
 const operatorInput=document.getElementById('operatorName');
 const activeOverviewEl=document.getElementById('activeOverview');
+const overviewView=document.getElementById('overviewView');
+const cardsView=document.getElementById('cardsView');
+const callStatsEl=document.getElementById('callDashboardStats');
+const callTableEl=document.getElementById('callDashboardTable');
+const callStatusEl=document.getElementById('callDashboardStatus');
+let callDashboardRows=[];
 let cases=[];
 let isLoadingCases=false;
 let lastUserActivityAt=Date.now();
@@ -387,8 +429,10 @@ let initialCaseFocused=false;
 tokenInput.value=localStorage.getItem('nordicAdminToken')||'';
 operatorInput.value=localStorage.getItem('nordicAdminOperator')||'Sebastian';
 operatorInput.addEventListener('change',()=>localStorage.setItem('nordicAdminOperator',operatorInput.value));
+document.querySelectorAll('[data-admin-tab]').forEach((button)=>button.addEventListener('click',()=>setAdminView(button.dataset.adminTab)));
 document.getElementById('saveToken').addEventListener('click',()=>{localStorage.setItem('nordicAdminToken',tokenInput.value.trim());loadCases();});
 document.getElementById('refresh').addEventListener('click',loadCases);
+document.getElementById('refreshCalls').addEventListener('click',loadCallDashboard);
 document.getElementById('calendarTest').addEventListener('click',testCalendar);
 ownerFilter.addEventListener('change',render);
 statusFilter.addEventListener('change',render);
@@ -405,10 +449,20 @@ activeOverviewEl.addEventListener('click',(event)=>{
   const id=button.dataset.caseId;
   const card=boardEl.querySelector(`[data-case-id="${CSS.escape(id)}"]`);
   if(card){
+    setAdminView('cards');
     cardTabState[id]='overview';
     card.scrollIntoView({behavior:'smooth',block:'start'});
     card.classList.add('focus-flash');
     setTimeout(()=>card.classList.remove('focus-flash'),1200);
+  }
+});
+callTableEl.addEventListener('click',async(event)=>{
+  const button=event.target&&event.target.closest&&event.target.closest('[data-call-action]');
+  if(!button)return;
+  const row=callDashboardRows.find((item)=>item.id===button.dataset.callId);
+  if(!row)return;
+  if(button.dataset.callAction==='discount'){
+    await sendLostLeadDiscount(row,button);
   }
 });
 function money(value){return new Intl.NumberFormat('sv-SE',{style:'currency',currency:'SEK',maximumFractionDigits:0}).format(Number(value||0));}
@@ -427,6 +481,17 @@ function html(value){return String(value||'').replace(/[&<>"']/g,(char)=>({'&':'
 function showError(message){errorEl.textContent=message;errorEl.style.display=message?'block':'none';}
 function showCalendarResult(result,bad=false){calendarResultEl.classList.toggle('bad',bad);calendarResultEl.innerHTML=result;calendarResultEl.style.display=result?'block':'none';}
 function showSmsDeskStatus(message,bad=false){smsDeskStatus.className=`sms-status ${message?(bad?'bad':'ok'):''}`;smsDeskStatus.textContent=message;smsDeskStatus.style.display=message?'block':'none';}
+function showCallStatus(message,bad=false){
+  callStatusEl.className=`call-status ${message?(bad?'bad':'ok'):''}`;
+  callStatusEl.textContent=message;
+  callStatusEl.style.display=message?'block':'none';
+}
+function setAdminView(view='overview'){
+  const isCards=view==='cards';
+  overviewView.hidden=isCards;
+  cardsView.hidden=!isCards;
+  document.querySelectorAll('[data-admin-tab]').forEach((button)=>button.classList.toggle('is-active',button.dataset.adminTab===view));
+}
 function selectedSmsCase(){return cases.find((item)=>item.id===smsCaseSelect.value)||null;}
 function smsCustomerLabel(item){
   const name=item.customer&&item.customer.name||'Okänd kund';
@@ -1223,6 +1288,78 @@ function renderActiveOverview(active){
         </tr>`;
       }).join('')}</tbody>
     </table>`;
+}
+
+async function loadCallDashboard(){
+  try{
+    showCallStatus('Laddar samtalsdata...');
+    const data=await api('/api/call-dashboard');
+    callDashboardRows=data.todayRows||[];
+    renderCallDashboard(data);
+    showCallStatus(`Samtal uppdaterade ${new Date().toLocaleTimeString('sv-SE')}.`);
+  }catch(error){
+    showCallStatus(error.message,true);
+  }
+}
+function renderCallDashboard(data){
+  const totals=data.totals||{};
+  const statItems=[
+    ['Samtal idag',totals.callsToday||0],
+    ['Hanterade',totals.handledToday||0],
+    ['Lennart',totals.lennartToday||0],
+    ['Sebastian',totals.sebastianToday||0],
+    ['Röstbrevlåda',totals.voicemailToday||0],
+    ['Missade',totals.missedToday||0],
+    ['Kundkort',totals.registeredToday||0],
+    ['Tapp-risk',totals.lostLeadToday||0],
+  ];
+  callStatsEl.innerHTML=statItems.map(([label,value])=>`<div class="panel stat"><span>${html(label)}</span><b>${html(value)}</b></div>`).join('');
+  const rows=data.todayRows||[];
+  if(!rows.length){
+    callTableEl.innerHTML='<div class="muted">Inga inkommande samtal idag.</div>';
+    return;
+  }
+  callTableEl.innerHTML=`
+    <table class="call-table">
+      <thead><tr><th>Tid</th><th>Nummer</th><th>L&auml;ngd</th><th>Hanterad av</th><th>Val</th><th>Kundkort</th><th>&Aring;tg&auml;rd</th></tr></thead>
+      <tbody>${rows.map((row)=>{
+        const rowClass=row.eligibleLostLead?'call-row-lost':(!row.hasCase?'call-row-missing':'');
+        const caseHtml=row.hasCase
+          ? row.cases.map((item)=>`<span class="call-case"><strong>${html(item.customerName||item.shortId)}</strong>${html(item.status)} &middot; ${html(item.service||'')} &middot; ${html(item.model||'modell saknas')}</span>`).join('')
+          : '<strong>SAKNAS kundkort</strong>';
+        const actionHtml=row.eligibleLostLead
+          ? `<button type="button" class="secondary" data-call-action="discount" data-call-id="${html(row.id)}" ${row.followup?'disabled':''}>${row.followup?'SMS skickat':'Skicka RING10'}</button>`
+          : row.hasCase ? '<span class="muted-small">Registrerad kund</span>' : '<span class="muted-small">Ej SMS-lämplig</span>';
+        return `<tr class="${rowClass}">
+          <td>${html(row.time)}</td>
+          <td>${html(row.phone)}</td>
+          <td>${html(row.duration?`${row.duration}s`:'-')}</td>
+          <td>${html(row.answeredByLabel)}</td>
+          <td>${html(row.ivrChoice)}</td>
+          <td>${caseHtml}</td>
+          <td><div class="call-actions">${actionHtml}</div></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+async function sendLostLeadDiscount(row,button){
+  if(!confirm(`Skicka 10% rabatt-SMS till ${row.phone}?`))return;
+  const original=button.textContent;
+  button.disabled=true;
+  button.textContent='Skickar...';
+  try{
+    const result=await api('/api/call-dashboard',{
+      method:'POST',
+      body:JSON.stringify({callId:row.id,phone:row.phone,code:'RING10'})
+    });
+    if(!result.ok) throw new Error(result.followup&&result.followup.result&&result.followup.result.error||'SMS kunde inte skickas.');
+    showCallStatus(`Rabatt-SMS skickat till ${row.phone}.`);
+    await loadCallDashboard();
+  }catch(error){
+    showCallStatus(error.message,true);
+    button.disabled=false;
+    button.textContent=original;
+  }
 }
 
 function focusInitialCase(){
@@ -2349,7 +2486,7 @@ function readyMailTemplate(item,overrides={}){
   return `${greeting}\n\nDin ${data.vehicleModel} \u00e4r nu klar f\u00f6r upph\u00e4mtning hos Nordic E-Mobility.\n\nUtf\u00f6rda \u00e5tg\u00e4rder\n${data.workSummary||'Se underlag i \u00e4rendet.'}\n\nTotalt belopp inkl. moms\n${data.totalLabel}\n${readyPaymentLine(item,overrides)}\n\nBoka upph\u00e4mtning\n${data.bookingUrl}\n\n${data.pickupSummary}\n\nAdress\nPistolv\u00e4gen 6, \u00d6rebro\n\nOm du vill att vi reserverar en tid \u00e5t dig g\u00e5r det bra att svara direkt p\u00e5 detta mail eller SMS.\n\n\u00c4rende\n${shortId(item.id)}\n\nV\u00e4nliga h\u00e4lsningar,\nNordic E-Mobility`;
 }
 
-loadPublicConfig().finally(loadCases);
+loadPublicConfig().finally(()=>{loadCases();loadCallDashboard();});
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('/admin/service-worker.js').catch(()=>{});
 }

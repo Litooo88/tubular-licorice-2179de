@@ -24,6 +24,7 @@ Keep it current. When a larger feature, rescue operation, deploy-sensitive fix, 
 - The public price list and booking service prices were aligned with Sebastian's provided workshop pricing.
 - Admin has a first version of a price database and touch-friendly POS/pricing workflow.
 - Admin can be installed as a browser app on the workshop Windows touch computer through `/admin/`.
+- Admin has an overview tab with an active case list, operator tracking for future edits, and a protected live call dashboard backed by `/api/call-dashboard`.
 
 ## Important files
 
@@ -34,6 +35,7 @@ Keep it current. When a larger feature, rescue operation, deploy-sensitive fix, 
 - `index.html` - public homepage and public price list.
 - `netlify/functions/booking.mjs` - booking creation, notifications, calendar handling, case creation.
 - `netlify/functions/workshop-cases.mjs` - live `/api/cases` admin endpoint.
+- `netlify/functions/call-dashboard.mjs` - protected `/api/call-dashboard` endpoint; reads 46elks calls, matches cases, and can send lost-lead discount SMS.
 - `netlify/functions/price-catalog.mjs` - live `/api/price-catalog` endpoint backed by Netlify Blobs.
 - `netlify/functions/create-checkout.js` - Stripe Checkout for scooter purchases.
 - `netlify.toml` and `_redirects` - Netlify routing/config.
