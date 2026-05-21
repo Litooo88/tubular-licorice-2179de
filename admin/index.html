@@ -106,6 +106,9 @@ button:disabled{opacity:.6;cursor:wait}
 .call-row-missing{background:rgba(255,194,71,.08)}
 .call-row-lost{background:rgba(255,90,95,.1)}
 .call-case{display:block;color:#e8fff0}
+.call-leads{margin-top:16px}
+.call-lead-actions{display:flex;gap:8px;flex-wrap:wrap}
+.call-lead-pill{display:inline-flex;align-items:center;border:1px solid #34503b;border-radius:999px;padding:3px 8px;font-size:11px;color:#b9d7c0;background:#0f1f13}
 .call-actions{display:flex;gap:8px;flex-wrap:wrap}
 .call-actions button{padding:8px 10px;font-size:12px}
 .call-status{display:none;margin-top:8px;border-radius:8px;padding:10px;font-size:13px}
@@ -276,6 +279,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <button type="button" class="secondary" id="refreshCalls">Uppdatera samtal</button>
     </div>
     <div class="call-status" id="callDashboardStatus"></div>
+    <div class="call-leads" id="callLeadsTable"></div>
     <div id="callDashboardTable">Laddar samtal...</div>
   </section>
 
@@ -414,6 +418,7 @@ const overviewView=document.getElementById('overviewView');
 const cardsView=document.getElementById('cardsView');
 const callStatsEl=document.getElementById('callDashboardStats');
 const callTableEl=document.getElementById('callDashboardTable');
+const callLeadsEl=document.getElementById('callLeadsTable');
 const callStatusEl=document.getElementById('callDashboardStatus');
 let callDashboardRows=[];
 let cases=[];
@@ -463,6 +468,23 @@ callTableEl.addEventListener('click',async(event)=>{
   if(!row)return;
   if(button.dataset.callAction==='discount'){
     await sendLostLeadDiscount(row,button);
+  }else if(button.dataset.callAction==='create-case'){
+    await createCaseFromCallLead(row,button);
+  }else if(button.dataset.callAction==='ignore'){
+    await ignoreCallLead(row,button);
+  }
+});
+callLeadsEl.addEventListener('click',async(event)=>{
+  const button=event.target&&event.target.closest&&event.target.closest('[data-call-action]');
+  if(!button)return;
+  const row=callDashboardRows.find((item)=>item.id===button.dataset.callId);
+  if(!row)return;
+  if(button.dataset.callAction==='discount'){
+    await sendLostLeadDiscount(row,button);
+  }else if(button.dataset.callAction==='create-case'){
+    await createCaseFromCallLead(row,button);
+  }else if(button.dataset.callAction==='ignore'){
+    await ignoreCallLead(row,button);
   }
 });
 function money(value){return new Intl.NumberFormat('sv-SE',{style:'currency',currency:'SEK',maximumFractionDigits:0}).format(Number(value||0));}
@@ -1294,7 +1316,7 @@ async function loadCallDashboard(){
   try{
     showCallStatus('Laddar samtalsdata...');
     const data=await api('/api/call-dashboard');
-    callDashboardRows=data.todayRows||[];
+    callDashboardRows=data.rows||data.todayRows||[];
     renderCallDashboard(data);
     showCallStatus(`Samtal uppdaterade ${new Date().toLocaleTimeString('sv-SE')}.`);
   }catch(error){
@@ -1312,8 +1334,10 @@ function renderCallDashboard(data){
     ['Missade',totals.missedToday||0],
     ['Kundkort',totals.registeredToday||0],
     ['Tapp-risk',totals.lostLeadToday||0],
+    ['Leads att göra',totals.activeLeads||0],
   ];
   callStatsEl.innerHTML=statItems.map(([label,value])=>`<div class="panel stat"><span>${html(label)}</span><b>${html(value)}</b></div>`).join('');
+  renderCallLeads(data.activeLeadRows||[]);
   const rows=data.todayRows||[];
   if(!rows.length){
     callTableEl.innerHTML='<div class="muted">Inga inkommande samtal idag.</div>';
@@ -1328,7 +1352,7 @@ function renderCallDashboard(data){
           ? row.cases.map((item)=>`<span class="call-case"><strong>${html(item.customerName||item.shortId)}</strong>${html(item.status)} &middot; ${html(item.service||'')} &middot; ${html(item.model||'modell saknas')}</span>`).join('')
           : '<strong>SAKNAS kundkort</strong>';
         const actionHtml=row.eligibleLostLead
-          ? `<button type="button" class="secondary" data-call-action="discount" data-call-id="${html(row.id)}" ${row.followup?'disabled':''}>${row.followup?'SMS skickat':'Skicka RING10'}</button>`
+          ? `<button type="button" data-call-action="create-case" data-call-id="${html(row.id)}">Skapa kundkort</button><button type="button" class="secondary" data-call-action="discount" data-call-id="${html(row.id)}" ${row.followup?'disabled':''}>${row.followup?'SMS skickat':'Skicka RING10'}</button><button type="button" class="secondary" data-call-action="ignore" data-call-id="${html(row.id)}">Ignorera</button>`
           : row.hasCase ? '<span class="muted-small">Registrerad kund</span>' : '<span class="muted-small">Ej SMS-lämplig</span>';
         return `<tr class="${rowClass}">
           <td>${html(row.time)}</td>
@@ -1338,6 +1362,34 @@ function renderCallDashboard(data){
           <td>${html(row.ivrChoice)}</td>
           <td>${caseHtml}</td>
           <td><div class="call-actions">${actionHtml}</div></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+function renderCallLeads(rows){
+  const active=(rows||[]).filter((row)=>row.lead&&!['ignored','converted'].includes(row.lead.status));
+  if(!active.length){
+    callLeadsEl.innerHTML='<div class="muted">Inga aktiva samtalsleads just nu.</div>';
+    return;
+  }
+  callLeadsEl.innerHTML=`
+    <h3>Samtalsleads att f&ouml;lja upp</h3>
+    <table class="call-table">
+      <thead><tr><th>Datum</th><th>Nummer</th><th>Varf&ouml;r</th><th>Samtal</th><th>Status</th><th>&Aring;tg&auml;rd</th></tr></thead>
+      <tbody>${active.map((row)=>{
+        const lead=row.lead||{};
+        const status=lead.status==='followed_up'?'SMS skickat':'Ny';
+        return `<tr class="call-row-lost">
+          <td>${html(row.date)} ${html(row.time)}</td>
+          <td><strong>${html(row.phone)}</strong></td>
+          <td>${html(lead.reason||row.leadReason||'Samtal utan kundkort')}</td>
+          <td>${html(row.answeredByLabel)} &middot; ${html(row.duration?`${row.duration}s`:'-')} &middot; ${html(row.ivrChoice)}</td>
+          <td><span class="call-lead-pill">${html(status)}</span></td>
+          <td><div class="call-lead-actions">
+            <button type="button" data-call-action="create-case" data-call-id="${html(row.id)}">Skapa kundkort</button>
+            <button type="button" class="secondary" data-call-action="discount" data-call-id="${html(row.id)}" ${row.followup?'disabled':''}>${row.followup?'SMS skickat':'Skicka RING10'}</button>
+            <button type="button" class="secondary" data-call-action="ignore" data-call-id="${html(row.id)}">Ignorera</button>
+          </div></td>
         </tr>`;
       }).join('')}</tbody>
     </table>`;
@@ -1354,6 +1406,42 @@ async function sendLostLeadDiscount(row,button){
     });
     if(!result.ok) throw new Error(result.followup&&result.followup.result&&result.followup.result.error||'SMS kunde inte skickas.');
     showCallStatus(`Rabatt-SMS skickat till ${row.phone}.`);
+    await loadCallDashboard();
+  }catch(error){
+    showCallStatus(error.message,true);
+    button.disabled=false;
+    button.textContent=original;
+  }
+}
+async function createCaseFromCallLead(row,button){
+  if(!confirm(`Skapa kundkort fÃ¶r ${row.phone}?`))return;
+  const original=button.textContent;
+  button.disabled=true;
+  button.textContent='Skapar...';
+  try{
+    const result=await api('/api/call-dashboard',{
+      method:'POST',
+      body:JSON.stringify({action:'create_case',callId:row.id,phone:row.phone,note:'Skapat frÃ¥n samtalsdashboard.'})
+    });
+    showCallStatus(`Kundkort skapat: ${result.case&&result.case.id?shortId(result.case.id):row.phone}.`);
+    await Promise.all([loadCallDashboard(),loadCases({background:true})]);
+  }catch(error){
+    showCallStatus(error.message,true);
+    button.disabled=false;
+    button.textContent=original;
+  }
+}
+async function ignoreCallLead(row,button){
+  if(!confirm(`Ignorera samtalslead fÃ¶r ${row.phone}?`))return;
+  const original=button.textContent;
+  button.disabled=true;
+  button.textContent='Sparar...';
+  try{
+    await api('/api/call-dashboard',{
+      method:'POST',
+      body:JSON.stringify({action:'ignore',callId:row.id,phone:row.phone,note:'Ignorerad i samtalsdashboard.'})
+    });
+    showCallStatus(`Samtalslead ignorerat fÃ¶r ${row.phone}.`);
     await loadCallDashboard();
   }catch(error){
     showCallStatus(error.message,true);

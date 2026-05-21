@@ -49,6 +49,10 @@ const stockholmTime = (date) =>
   }).format(date);
 
 const shortCaseId = (id) => clean(id, 120).replace(/^case_/, "").slice(0, 18).toUpperCase();
+const STAFF = {
+  lennart: { key: "lennart", name: "Lennart", role: "Golv, mottagning och snabba jobb", phone: "010-138 54 98" },
+  sebastian: { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "010-138 54 98" },
+};
 
 const postSms = async ({ to, message }) => {
   const normalizedTo = normalizePhone(to);
@@ -95,6 +99,17 @@ const loadCases = async () => {
   return cases;
 };
 
+const loadBlobMap = async (storeName) => {
+  const store = getStore({ name: storeName, consistency: "strong" });
+  const { blobs } = await store.list().catch(() => ({ blobs: [] }));
+  const items = new Map();
+  for (const blob of blobs || []) {
+    const item = await store.get(blob.key, { type: "json" }).catch(() => null);
+    if (item) items.set(blob.key, item);
+  }
+  return { store, items };
+};
+
 const answeredBy = (call) => {
   const success = (Array.isArray(call.legs) ? call.legs : []).find((leg) => leg.state === "success");
   if (!success) {
@@ -115,6 +130,140 @@ const ivrChoice = (call) => {
   return "-";
 };
 
+const shouldCreateLead = (row) =>
+  Boolean(row.phone && String(row.phone).startsWith("+") && !row.hasCase) &&
+  (["missed", "voicemail", "lennart"].includes(row.answeredBy) || Number(row.duration || 0) >= 60);
+
+const leadReason = (row) => {
+  if (row.answeredBy === "missed") return "Missat samtal utan kundkort";
+  if (row.answeredBy === "voicemail") return "Rostmeddelande utan kundkort";
+  if (row.answeredBy === "lennart") return "Lennart tog samtal utan kundkort";
+  if (Number(row.duration || 0) >= 60) return "Langt samtal utan kundkort";
+  return "Samtal utan kundkort";
+};
+
+const syncCallLeads = async (rows, existingLeads) => {
+  const store = getStore({ name: "call-leads", consistency: "strong" });
+  const now = new Date().toISOString();
+  const leads = new Map(existingLeads);
+  const writes = [];
+  for (const row of rows) {
+    const current = leads.get(row.id);
+    if (current?.status === "converted" || current?.status === "ignored") continue;
+    if (row.hasCase && current) {
+      const next = {
+        ...current,
+        status: "converted",
+        caseId: row.cases?.[0]?.id || current.caseId || "",
+        convertedAt: current.convertedAt || now,
+        updatedAt: now,
+      };
+      leads.set(row.id, next);
+      writes.push(store.setJSON(row.id, next));
+      continue;
+    }
+    if (!shouldCreateLead(row)) continue;
+    const next = {
+      ...(current || {}),
+      id: row.id,
+      callId: row.id,
+      phone: row.phone,
+      timestamp: row.timestamp,
+      date: row.date,
+      time: row.time,
+      duration: row.duration,
+      answeredBy: row.answeredBy,
+      answeredByLabel: row.answeredByLabel,
+      ivrChoice: row.ivrChoice,
+      reason: current?.reason || leadReason(row),
+      status: current?.status || "new",
+      createdAt: current?.createdAt || now,
+      updatedAt: current ? now : current?.updatedAt || now,
+      notes: Array.isArray(current?.notes) ? current.notes : [],
+    };
+    leads.set(row.id, next);
+    if (!current) writes.push(store.setJSON(row.id, next));
+  }
+  await Promise.all(writes);
+  return leads;
+};
+
+const createCaseFromLead = async ({ lead, operatorName, note }) => {
+  const now = new Date().toISOString();
+  const caseId = `case_${now.replace(/[:.]/g, "-")}_${Math.random().toString(36).slice(2, 8)}`;
+  const assignedTo = lead.answeredBy === "sebastian" ? STAFF.sebastian : STAFF.lennart;
+  const next = {
+    id: caseId,
+    createdAt: now,
+    updatedAt: now,
+    createdBy: { name: operatorName, source: "call-dashboard" },
+    updatedBy: { name: operatorName, source: "call-dashboard", at: now },
+    status: "contacted",
+    source: "call-lead",
+    channel: "phone",
+    priority: "normal",
+    preferredContactTime: null,
+    preferredDate: null,
+    discountCode: null,
+    contactMethod: "phone",
+    logistics: "dropoff",
+    assignedTo,
+    customer: {
+      name: "Telefonlead",
+      phone: lead.phone,
+      email: "",
+    },
+    vehicle: {
+      model: "",
+    },
+    service: "Telefonlead / uppfoljning",
+    addons: [],
+    estimatedValue: 0,
+    message: [
+      `Skapat fran samtalslead ${lead.callId}.`,
+      `Tid: ${lead.date} ${lead.time}.`,
+      `Hanterad av: ${lead.answeredByLabel || lead.answeredBy}.`,
+      lead.duration ? `Langd: ${lead.duration}s.` : "",
+      lead.ivrChoice ? `IVR: ${lead.ivrChoice}.` : "",
+      lead.reason ? `Orsak: ${lead.reason}.` : "",
+      note ? `Notering: ${clean(note, 500)}.` : "",
+    ].filter(Boolean).join("\n"),
+    intakeAt: null,
+    promisedAt: null,
+    notes: note ? [{ at: now, text: clean(note, 1200) }] : [],
+    notifications: {},
+    confirmation_sent: false,
+    confirmation_missing: false,
+    completion: {
+      totalCost: 0,
+      workSummary: "",
+      invoiceText: "",
+      priceRows: [],
+      readyForFortnox: false,
+      updatedAt: now,
+    },
+    payment: {
+      status: "unpaid",
+      amount: 0,
+      method: "",
+      reference: "",
+      updatedAt: now,
+    },
+    callLead: {
+      callId: lead.callId,
+      phone: lead.phone,
+      timestamp: lead.timestamp,
+      answeredBy: lead.answeredBy,
+      duration: lead.duration,
+    },
+    timeline: [
+      { at: now, event: `Kundkort skapat fran samtalslead av ${operatorName}.` },
+    ],
+  };
+  await getStore({ name: "workshop-cases", consistency: "strong" }).setJSON(caseId, next);
+  return next;
+};
+
 const buildCallRows = async () => {
   const [calls, cases] = await Promise.all([fetchCalls(), loadCases()]);
   const caseByPhone = new Map();
@@ -125,13 +274,10 @@ const buildCallRows = async () => {
     caseByPhone.get(phone).push(item);
   }
   const today = stockholmDateKey(new Date());
-  const followupStore = getStore({ name: "call-followups", consistency: "strong" });
-  const { blobs: followupBlobs } = await followupStore.list().catch(() => ({ blobs: [] }));
-  const followups = new Map();
-  for (const blob of followupBlobs || []) {
-    const item = await followupStore.get(blob.key, { type: "json" }).catch(() => null);
-    if (item?.callId) followups.set(item.callId, item);
-  }
+  const [{ items: followups }, { items: leadMap }] = await Promise.all([
+    loadBlobMap("call-followups"),
+    loadBlobMap("call-leads"),
+  ]);
 
   const rows = calls
     .filter((call) => call.direction === "incoming" && call.to === "+46101385498")
@@ -171,7 +317,17 @@ const buildCallRows = async () => {
     })
     .sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)));
 
+  const syncedLeads = await syncCallLeads(rows, leadMap);
+  rows.forEach((row) => {
+    const lead = syncedLeads.get(row.id) || null;
+    row.lead = lead;
+    row.leadStatus = lead?.status || "";
+    row.leadReason = lead?.reason || "";
+    row.eligibleLostLead = shouldCreateLead(row) && !["ignored", "converted"].includes(row.leadStatus);
+  });
+
   const todayRows = rows.filter((row) => row.date === today);
+  const activeLeadRows = rows.filter((row) => row.lead && !["ignored", "converted"].includes(row.lead.status));
   const totals = {
     date: today,
     callsToday: todayRows.length,
@@ -182,9 +338,11 @@ const buildCallRows = async () => {
     missedToday: todayRows.filter((row) => row.answeredBy === "missed").length,
     registeredToday: todayRows.filter((row) => row.hasCase).length,
     lostLeadToday: todayRows.filter((row) => row.eligibleLostLead).length,
+    activeLeads: activeLeadRows.length,
+    newLeadsToday: todayRows.filter((row) => row.lead?.status === "new").length,
   };
 
-  return { rows, todayRows, totals };
+  return { rows, todayRows, activeLeadRows, totals };
 };
 
 export default async (request) => {
@@ -202,8 +360,48 @@ export default async (request) => {
 
   if (request.method === "POST") {
     const body = await request.json().catch(() => ({}));
+    const action = clean(body.action, 40) || "send_discount";
     const phone = normalizePhone(body.phone);
     const callId = clean(body.callId, 160);
+    const operatorName = clean(body.operatorName, 80) || "admin";
+    const leadStore = getStore({ name: "call-leads", consistency: "strong" });
+    const currentLead = callId ? await leadStore.get(callId, { type: "json" }).catch(() => null) : null;
+
+    if (action === "ignore") {
+      if (!callId) return json({ error: "Call ID saknas." }, 400);
+      const now = new Date().toISOString();
+      const lead = {
+        ...(currentLead || { id: callId, callId, phone }),
+        status: "ignored",
+        ignoredAt: now,
+        updatedAt: now,
+        ignoredBy: operatorName,
+        notes: [
+          ...(Array.isArray(currentLead?.notes) ? currentLead.notes : []),
+          ...(body.note ? [{ at: now, text: clean(body.note, 500), by: operatorName }] : []),
+        ],
+      };
+      await leadStore.setJSON(callId, lead);
+      return json({ ok: true, lead });
+    }
+
+    if (action === "create_case") {
+      if (!currentLead) return json({ error: "Samtalslead saknas. Uppdatera samtal och prova igen." }, 404);
+      if (currentLead.status === "converted" && currentLead.caseId) return json({ ok: true, lead: currentLead, caseId: currentLead.caseId });
+      const caseItem = await createCaseFromLead({ lead: currentLead, operatorName, note: body.note });
+      const now = new Date().toISOString();
+      const lead = {
+        ...currentLead,
+        status: "converted",
+        caseId: caseItem.id,
+        convertedAt: now,
+        convertedBy: operatorName,
+        updatedAt: now,
+      };
+      await leadStore.setJSON(callId, lead);
+      return json({ ok: true, lead, case: caseItem });
+    }
+
     const code = clean(body.code, 30) || "RING10";
     if (!phone || phone === "+46") return json({ error: "Telefonnummer saknas." }, 400);
     if (!callId) return json({ error: "Call ID saknas." }, 400);
@@ -218,9 +416,17 @@ export default async (request) => {
       message,
       result,
       sentAt: result.sentAt || new Date().toISOString(),
-      operatorName: clean(body.operatorName, 80) || "admin",
+      operatorName,
     };
     await getStore({ name: "call-followups", consistency: "strong" }).setJSON(callId, entry);
+    if (currentLead) {
+      await leadStore.setJSON(callId, {
+        ...currentLead,
+        status: currentLead.status === "new" ? "followed_up" : currentLead.status,
+        followup: entry,
+        updatedAt: entry.sentAt,
+      });
+    }
     return json({ ok: result.status === "sent", followup: entry });
   }
 

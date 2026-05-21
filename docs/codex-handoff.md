@@ -25,6 +25,7 @@ Keep it current. When a larger feature, rescue operation, deploy-sensitive fix, 
 - Admin has a first version of a price database and touch-friendly POS/pricing workflow.
 - Admin can be installed as a browser app on the workshop Windows touch computer through `/admin/`.
 - Admin has an overview tab with an active case list, operator tracking for future edits, and a protected live call dashboard backed by `/api/call-dashboard`.
+- Call dashboard now creates persistent `call-leads` for missed calls, voicemail calls, Lennart calls without a customer card, and long calls without a customer card. Admin can create a customer card from a lead, ignore it, or send the `RING10` follow-up SMS.
 
 ## Important files
 
@@ -35,7 +36,7 @@ Keep it current. When a larger feature, rescue operation, deploy-sensitive fix, 
 - `index.html` - public homepage and public price list.
 - `netlify/functions/booking.mjs` - booking creation, notifications, calendar handling, case creation.
 - `netlify/functions/workshop-cases.mjs` - live `/api/cases` admin endpoint.
-- `netlify/functions/call-dashboard.mjs` - protected `/api/call-dashboard` endpoint; reads 46elks calls, matches cases, and can send lost-lead discount SMS.
+- `netlify/functions/call-dashboard.mjs` - protected `/api/call-dashboard` endpoint; reads 46elks calls, matches cases, creates call leads, can create customer cards from call leads, ignore leads, and send lost-lead discount SMS.
 - `netlify/functions/price-catalog.mjs` - live `/api/price-catalog` endpoint backed by Netlify Blobs.
 - `netlify/functions/create-checkout.js` - Stripe Checkout for scooter purchases.
 - `netlify.toml` and `_redirects` - Netlify routing/config.
@@ -44,6 +45,7 @@ Keep it current. When a larger feature, rescue operation, deploy-sensitive fix, 
 
 - Admin auth uses `ADMIN_TOKEN` sent as `x-admin-token`.
 - Workshop cases are stored in Netlify Blobs store `workshop-cases`.
+- Call leads are stored in Netlify Blobs store `call-leads`; discount follow-ups are stored in `call-followups`.
 - Price catalog is stored in Netlify Blobs store `price-catalog`.
 - `/api/cases` supports listing, patching, deleting cases, and stores completion/payment/content fields.
 - `/api/price-catalog` supports GET and PUT/POST of price rows.
