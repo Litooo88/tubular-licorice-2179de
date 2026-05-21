@@ -16,7 +16,7 @@ a{color:#00c853}
 h1{font-size:34px;margin:0 0 8px;letter-spacing:0}
 .muted{color:#9ea79f}
 .panel,.case,.login,.column{background:#101410;border:1px solid #28322a;border-radius:8px}
-.login{display:grid;grid-template-columns:1fr auto auto auto;gap:12px;align-items:end;padding:18px;margin-bottom:14px}
+.login{display:grid;grid-template-columns:1fr 180px auto auto auto;gap:12px;align-items:end;padding:18px;margin-bottom:14px}
 label{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#a8b2aa;font-weight:900;margin-bottom:6px}
 input,select,textarea{width:100%;background:#060806;border:1px solid #303a32;border-radius:8px;color:#fff;padding:10px 11px;font:inherit}
 button{border:0;border-radius:8px;background:#00c853;color:#031006;font-weight:900;padding:11px 14px;cursor:pointer}
@@ -85,10 +85,20 @@ button:disabled{opacity:.6;cursor:wait}
 .pos-status.ok{display:block;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#e6ffef}
 .pos-status.bad{display:block;background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}
 .board{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:14px;align-items:start}
+.active-overview{overflow:auto}
+.active-table{width:100%;border-collapse:collapse;min-width:980px}
+.active-table th,.active-table td{border-bottom:1px solid #263029;padding:9px 8px;text-align:left;vertical-align:top;font-size:13px}
+.active-table th{color:#a8b2aa;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.active-table td strong{display:block;color:#fff}
+.active-table .muted-small{display:block;color:#89948c;font-size:12px;margin-top:2px}
+.active-table .priority-urgent{color:#ffc247;font-weight:900}
+.active-table .priority-stale{color:#ff9ba0;font-weight:900}
+.active-table button{padding:8px 10px;font-size:12px}
 .column{padding:12px;min-height:220px}
 .column h2{font-size:14px;margin:0 0 10px;display:flex;align-items:center;justify-content:space-between}
 .count{background:#202820;border:1px solid #344038;border-radius:999px;padding:2px 8px;color:#b8c2ba}
 .case{padding:16px;margin-bottom:12px}
+.case.focus-flash{outline:3px solid rgba(0,200,83,.65);box-shadow:0 0 0 6px rgba(0,200,83,.12)}
 .case-head{display:flex;justify-content:space-between;gap:10px;margin-bottom:8px}
 .case h3{font-size:20px;margin:0}
 .customer-line{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}
@@ -225,6 +235,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 
   <section class="login">
     <div><label for="token">Admin-token</label><input id="token" type="password" autocomplete="current-password" placeholder="ADMIN_TOKEN fr&aring;n Netlify"></div>
+    <div><label for="operatorName">Jag &auml;r</label><select id="operatorName"><option value="Sebastian">Sebastian</option><option value="Lennart">Lennart</option></select></div>
     <button id="saveToken">Spara token</button>
     <button class="secondary" id="refresh">Uppdatera</button>
     <button class="secondary" id="calendarTest">Testa kalender</button>
@@ -284,6 +295,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <div><label for="statusFilter">Status</label><select id="statusFilter"><option value="">Alla</option><option value="new">Ny</option><option value="contacted">Kontaktad</option><option value="waiting_customer">V&auml;ntar kund</option><option value="checked_in">Inl&auml;mnad</option><option value="diagnosing">Diagnos</option><option value="repairing">Reparerar</option><option value="waiting_parts">V&auml;ntar delar</option><option value="ready">Klar</option><option value="done">Avslutad</option></select></div>
     </div>
   </div>
+
+  <section class="panel active-overview">
+    <h2>Aktiv &auml;rendelista</h2>
+    <p>Prioriterad lista &ouml;ver aktiva kundkort. Anv&auml;nd den h&auml;r f&ouml;r morgonm&ouml;te, uppf&ouml;ljning och f&ouml;r att se vilka kort som saknar tydlig modell eller har st&aring;tt stilla.</p>
+    <div id="activeOverview">Laddar aktiva &auml;renden...</div>
+  </section>
 
   <section class="board" id="board"></section>
 </main>
@@ -355,6 +372,8 @@ const smsCaseSelect=document.getElementById('smsCaseSelect');
 const smsTemplateSelect=document.getElementById('smsTemplateSelect');
 const smsMessageText=document.getElementById('smsMessageText');
 const smsDeskStatus=document.getElementById('smsDeskStatus');
+const operatorInput=document.getElementById('operatorName');
+const activeOverviewEl=document.getElementById('activeOverview');
 let cases=[];
 let isLoadingCases=false;
 let lastUserActivityAt=Date.now();
@@ -366,6 +385,8 @@ const initialCaseTab=initialParams.get('tab')||'contact';
 let initialCaseFocused=false;
 
 tokenInput.value=localStorage.getItem('nordicAdminToken')||'';
+operatorInput.value=localStorage.getItem('nordicAdminOperator')||'Sebastian';
+operatorInput.addEventListener('change',()=>localStorage.setItem('nordicAdminOperator',operatorInput.value));
 document.getElementById('saveToken').addEventListener('click',()=>{localStorage.setItem('nordicAdminToken',tokenInput.value.trim());loadCases();});
 document.getElementById('refresh').addEventListener('click',loadCases);
 document.getElementById('calendarTest').addEventListener('click',testCalendar);
@@ -378,6 +399,18 @@ searchFilter.addEventListener('input',render);
 document.getElementById('smsApplyTemplate').addEventListener('click',()=>{smsMessageText.value=smsTemplateFor(selectedSmsCase(),smsTemplateSelect.value);showSmsDeskStatus('',false);});
 document.getElementById('smsCopyDraft').addEventListener('click',async()=>{try{await copyText(smsMessageText.value);showSmsDeskStatus('SMS-utkast kopierat.',false)}catch(error){showSmsDeskStatus(error.message,true)}});
 document.getElementById('smsSendButton').addEventListener('click',sendDeskSms);
+activeOverviewEl.addEventListener('click',(event)=>{
+  const button=event.target&&event.target.closest&&event.target.closest('.open-case');
+  if(!button)return;
+  const id=button.dataset.caseId;
+  const card=boardEl.querySelector(`[data-case-id="${CSS.escape(id)}"]`);
+  if(card){
+    cardTabState[id]='overview';
+    card.scrollIntoView({behavior:'smooth',block:'start'});
+    card.classList.add('focus-flash');
+    setTimeout(()=>card.classList.remove('focus-flash'),1200);
+  }
+});
 function money(value){return new Intl.NumberFormat('sv-SE',{style:'currency',currency:'SEK',maximumFractionDigits:0}).format(Number(value||0));}
 function reviewUrl(){return String(adminPublicConfig.reviewUrl||'').trim();}
 async function loadPublicConfig(){
@@ -983,8 +1016,23 @@ function calendarHref(item){
   return `data:text/calendar;charset=utf-8,${encodeURIComponent(ics)}`;
 }
 
+function currentOperatorName(){
+  return String(operatorInput&&operatorInput.value||'Sebastian').trim()||'Sebastian';
+}
+function optionsWithOperator(options={}){
+  const method=String(options.method||'GET').toUpperCase();
+  if(!['POST','PATCH'].includes(method)||typeof options.body!=='string') return options;
+  try{
+    const body=JSON.parse(options.body);
+    if(!body.operatorName) body.operatorName=currentOperatorName();
+    return {...options,body:JSON.stringify(body)};
+  }catch(_error){
+    return options;
+  }
+}
 async function api(path,options={}){
-  const response=await fetch(path,{...options,headers:{'Content-Type':'application/json','x-admin-token':tokenInput.value.trim(),...(options.headers||{})}});
+  const requestOptions=optionsWithOperator(options);
+  const response=await fetch(path,{...requestOptions,headers:{'Content-Type':'application/json','x-admin-token':tokenInput.value.trim(),...(requestOptions.headers||{})}});
   const data=await response.json().catch(()=>({}));
   if(!response.ok) throw new Error(data.error||'Kunde inte l&auml;sa data.');
   return data;
@@ -1090,6 +1138,7 @@ async function testCalendar(){
 function render(){
   updateSmsCaseOptions();
   const active=cases.filter(item=>!['done','archived'].includes(item.status));
+  renderActiveOverview(active);
   document.getElementById('activeTotal').textContent=active.length;
   document.getElementById('valueTotal').textContent=money(active.reduce((sum,item)=>sum+Number(item.estimatedValue||0),0));
   document.getElementById('newTotal').textContent=cases.filter(item=>item.status==='new').length;
@@ -1134,6 +1183,48 @@ function render(){
   });
 }
 
+function activePriorityScore(item){
+  const statusOrder={ready:0,urgent:1,waiting_customer:2,new:3,contacted:4,checked_in:5,diagnosing:6,repairing:7,waiting_parts:8};
+  const base=item.priority==='urgent'?0:(statusOrder[item.status]??9);
+  const model=item.vehicle&&String(item.vehicle.model||'').trim();
+  const missingModel=!model||/^okänd|^okand|^test$/i.test(model);
+  const updated=item.updatedAt||item.createdAt;
+  const stale=updated?Date.now()-new Date(updated).getTime()>48*60*60*1000:false;
+  return base*10+(missingModel?1:0)+(stale?2:0);
+}
+function renderActiveOverview(active){
+  const sorted=[...active].sort((a,b)=>activePriorityScore(a)-activePriorityScore(b)||String(a.preferredDate||'').localeCompare(String(b.preferredDate||'')));
+  if(!sorted.length){
+    activeOverviewEl.innerHTML='<div class="muted">Inga aktiva &auml;renden just nu.</div>';
+    return;
+  }
+  activeOverviewEl.innerHTML=`
+    <table class="active-table">
+      <thead><tr><th>Prio</th><th>Kund</th><th>Fordon</th><th>Status</th><th>N&auml;sta steg</th><th>Ansvar</th><th>Skapad / &auml;ndrad</th><th></th></tr></thead>
+      <tbody>${sorted.map((item)=>{
+        const model=item.vehicle&&String(item.vehicle.model||'').trim();
+        const missingModel=!model||/^okänd|^okand|^test$/i.test(model);
+        const updated=item.updatedAt||item.createdAt;
+        const stale=updated?Date.now()-new Date(updated).getTime()>48*60*60*1000:false;
+        const lastTimeline=(Array.isArray(item.timeline)&&item.timeline.length?item.timeline[item.timeline.length-1].event:'Ingen h&auml;ndelse loggad');
+        const createdBy=item.createdBy&&item.createdBy.name?item.createdBy.name:(item.source||item.channel||'ok&auml;nt');
+        const updatedBy=item.updatedBy&&item.updatedBy.name?item.updatedBy.name:'saknas';
+        const priorityText=item.priority==='urgent'?'Akut':stale?'St&aring;tt stilla':missingModel?'Saknar modell':'Normal';
+        const priorityClass=item.priority==='urgent'?'priority-urgent':stale||missingModel?'priority-stale':'';
+        return `<tr>
+          <td class="${priorityClass}">${html(priorityText)}</td>
+          <td><strong>${html(item.customer&&item.customer.name||'Ok&auml;nd kund')}</strong><span class="muted-small">${html(item.customer&&item.customer.phone||'Telefon saknas')}</span></td>
+          <td><strong>${html(model||'MODELL SAKNAS')}</strong><span class="muted-small">${html(item.service||'Tj&auml;nst saknas')}</span></td>
+          <td>${html(statusLabels[item.status]||item.status)}<span class="muted-small">${html(displayDate(item.preferredDate))}</span></td>
+          <td>${html(lastTimeline)}<span class="muted-small">${html(item.message||'Ingen felbeskrivning')}</span></td>
+          <td>${html(item.assignedTo&&item.assignedTo.name||'Lennart')}</td>
+          <td>Skapad: ${html(createdBy)}<span class="muted-small">Senast: ${html(updatedBy)} ${html(dateShort(updated))}</span></td>
+          <td><button type="button" class="secondary open-case" data-case-id="${html(item.id)}">&Ouml;ppna</button></td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>`;
+}
+
 function focusInitialCase(){
   if(initialCaseFocused||!initialCaseId)return;
   const target=cases.find((item)=>item.id===initialCaseId);
@@ -1170,6 +1261,7 @@ function caseCard(item){
   const activeTab=cardTabState[item.id]||(item.status==='ready'?'ready':'overview');
   const card=document.createElement('article');
   card.className='case';
+  card.dataset.caseId=item.id;
   const notes=(item.notes||[]).slice(-2).map(note=>`<div>${dateShort(note.at)}: ${html(note.text)}</div>`).join('');
   const notifications=item.notifications||{};
   const sms=notifications.sms;

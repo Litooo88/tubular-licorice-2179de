@@ -314,6 +314,7 @@ export default async (request, context) => {
     const customerName = clean(body.customerName || body.name, 140) || "Drop-in kund";
     const customerPhone = clean(body.customerPhone || body.phone, 80);
     const vehicleModel = clean(body.vehicleModel || body.vehicle || body.scooter, 180);
+    const operatorName = clean(body.operatorName, 80) || "admin";
     const workSummary = clean(body.workSummary, 3000) || priceRows.map((row) => `${row.qty} x ${row.name}`).join(", ");
     const invoiceText = clean(body.invoiceText, 5000) || priceRows.map((row) => `${row.fortnoxArticleNumber ? `${row.fortnoxArticleNumber} ` : ""}${row.qty} x ${row.name}`).join("\n");
 
@@ -321,6 +322,8 @@ export default async (request, context) => {
       id: caseId,
       createdAt: now,
       updatedAt: now,
+      createdBy: { name: operatorName, source: "admin" },
+      updatedBy: { name: operatorName, source: "admin", at: now },
       status: "contacted",
       source: clean(body.source, 80) || "admin",
       channel: "internal",
@@ -365,7 +368,7 @@ export default async (request, context) => {
         updatedAt: now,
       },
       timeline: [
-        { at: now, event: `Internt ärende skapat från ${clean(body.source, 80) || "admin"}.` },
+        { at: now, event: `Internt ärende skapat av ${operatorName} från ${clean(body.source, 80) || "admin"}.` },
         ...(priceRows.length ? [{ at: now, event: `Prisförslag: ${totalCost} kr inkl. moms (${priceRows.length} rader).` }] : []),
       ],
     };
@@ -382,6 +385,7 @@ export default async (request, context) => {
 
     const body = await request.json();
     const now = new Date().toISOString();
+    const operatorName = clean(body.operatorName, 80);
     const currentPayment = current.payment || {};
     const currentContent = current.content || {};
 
@@ -401,6 +405,7 @@ export default async (request, context) => {
       const next = {
         ...current,
         updatedAt: now,
+        updatedBy: operatorName ? { name: operatorName, source: "admin", at: now } : current.updatedBy,
         status: ["new", "contacted"].includes(current.status) ? "waiting_customer" : current.status,
         outboundMessages: [...(Array.isArray(current.outboundMessages) ? current.outboundMessages : []), entry],
         notifications: {
@@ -454,6 +459,7 @@ export default async (request, context) => {
       const next = {
         ...current,
         updatedAt: now,
+        updatedBy: operatorName ? { name: operatorName, source: "admin", at: now } : current.updatedBy,
         status: current.status === "new" ? "waiting_customer" : current.status,
         quote,
         outboundMessages: [...(Array.isArray(current.outboundMessages) ? current.outboundMessages : []), entry],
@@ -502,6 +508,7 @@ export default async (request, context) => {
       const next = {
         ...current,
         updatedAt: now,
+        updatedBy: operatorName ? { name: operatorName, source: "admin", at: now } : current.updatedBy,
         status: current.status === "done" ? current.status : "ready",
         completion: nextCompletion,
         payment: nextPayment,
@@ -659,6 +666,7 @@ export default async (request, context) => {
     const next = {
       ...current,
       updatedAt: now,
+      updatedBy: operatorName ? { name: operatorName, source: "admin", at: now } : current.updatedBy,
       status: clean(body.status, 40) || current.status,
       preferredDate: body.preferredDate === undefined ? current.preferredDate : clean(body.preferredDate, 120) || null,
       discountCode: body.discountCode === undefined ? current.discountCode : clean(body.discountCode, 40) || null,
@@ -703,9 +711,9 @@ export default async (request, context) => {
 
     const timeline = [...(current.timeline || [])];
     if (body.note) {
-      timeline.push({ at: now, event: `Uppdaterad: ${clean(body.note, 160)}` });
+      timeline.push({ at: now, event: `Uppdaterad${operatorName ? ` av ${operatorName}` : ""}: ${clean(body.note, 160)}` });
     } else if (body.status !== undefined) {
-      timeline.push({ at: now, event: `Status andrad till ${next.status}` });
+      timeline.push({ at: now, event: `Status andrad till ${next.status}${operatorName ? ` av ${operatorName}` : ""}` });
     }
 
     const paymentTouched =
