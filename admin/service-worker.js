@@ -1,4 +1,4 @@
-const CACHE_NAME = "nordic-admin-shell-v1";
+const CACHE_NAME = "nordic-admin-shell-v2";
 const SHELL_FILES = ["/admin/", "/admin/index.html", "/logo.png", "/nordic_logo_transparent.png"];
 
 self.addEventListener("install", (event) => {
@@ -18,6 +18,20 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (url.pathname.startsWith("/api/")) return;
+  if (url.pathname === "/admin/" || url.pathname === "/admin/index.html") {
+    event.respondWith(
+      fetch(event.request)
+        .then((response) => {
+          if (event.request.method === "GET" && response.ok) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => caches.match(event.request)),
+    );
+    return;
+  }
 
   event.respondWith(
     caches.match(event.request).then((cached) =>

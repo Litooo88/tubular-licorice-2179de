@@ -277,7 +277,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   </section>
 
   <div class="toolbar">
-    <div class="muted" id="lastUpdated">Inte laddad &auml;nnu</div>
+    <div class="muted" id="lastUpdated">Inte laddad &auml;nnu. Auto-refresh &auml;r avst&auml;ngd medan du jobbar.</div>
     <div class="filters">
       <div class="search-filter"><label for="searchFilter">S&ouml;k kund</label><input id="searchFilter" type="search" placeholder="Namn, telefon, modell eller e-post"></div>
       <div><label for="ownerFilter">Ansvarig</label><select id="ownerFilter"><option value="">Alla</option><option value="lennart">Lennart</option><option value="sebastian">Sebastian</option></select></div>
@@ -2258,7 +2258,6 @@ function readyMailTemplate(item,overrides={}){
 }
 
 loadPublicConfig().finally(loadCases);
-setInterval(()=>{if(!shouldPauseRefresh())loadCases({background:true});},30000);
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('/admin/service-worker.js').catch(()=>{});
 }
