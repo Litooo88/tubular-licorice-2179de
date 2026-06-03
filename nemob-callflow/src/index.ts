@@ -134,6 +134,19 @@ async function handleHangup(req: Request, env: Env, ctx: ExecutionContext, url: 
   });
 }
 
+async function handleCalls(req: Request, env: Env, url: URL): Promise<Response> {
+  const key = url.searchParams.get("key") || req.headers.get("x-admin-key");
+  if (!env.ADMIN_KEY || key !== env.ADMIN_KEY) return new Response("Forbidden", { status: 403 });
+  const days = Math.min(Math.max(Number(url.searchParams.get("days") || "7"), 1), 90);
+  const rows = await env.DB.prepare(`
+    SELECT timestamp, callid, caller_e164, duration_s, answered_by, status, ivr_choice, recording_url
+    FROM call_log
+    WHERE datetime(timestamp) >= datetime('now', ?)
+    ORDER BY timestamp DESC
+  `).bind(`-${days} days`).all();
+  return json(rows.results || []);
+}
+
 async function handleStats(req: Request, env: Env, url: URL): Promise<Response> {
   const key = url.searchParams.get("key") || req.headers.get("x-admin-key");
   if (!env.ADMIN_KEY || key !== env.ADMIN_KEY) return new Response("Forbidden", { status: 403 });
@@ -172,6 +185,7 @@ export default {
     if (url.pathname === "/record") return handleRecord(req, env, url);
     if (url.pathname === "/event/voicemail-saved") return handleVoicemailSaved(req, env, ctx, url);
     if (url.pathname === "/event/hangup") return handleHangup(req, env, ctx, url);
+    if (url.pathname === "/calls") return handleCalls(req, env, url);
     if (url.pathname === "/stats") return handleStats(req, env, url);
     return new Response("Not Found", { status: 404 });
   },

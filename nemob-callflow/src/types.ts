@@ -4,6 +4,7 @@ export interface Env {
   ELKS_USERNAME: string;
   ELKS_PASSWORD: string;
   ELKS_FROM_NUMBER: string;
+  SMS_SENDER?: string;
   ELKS_WEBHOOK_SECRET?: string;
   ELKS_ALLOWED_IPS?: string;
   REQUIRE_ELKS_SIGNATURE?: string;
