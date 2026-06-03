@@ -60,9 +60,45 @@ force = true
   to = "/book-online/"
   status = 301
 
+# Wix-arvda paths som inte finns pa .se-sajten.
+# Innan dessa: wildcard-redirect fran .com gjorde att gamla .com-URLer
+# landade pa motsvarande .se-path som 404:ade -> SEO-laeckage (300+ exp/manad).
+[[redirects]]
+  from = "/elscooter-service-orebro"
+  to = "/elscooter-reparation-orebro/"
+  status = 301
+
+[[redirects]]
+  from = "/boka-service"
+  to = "/book-online/"
+  status = 301
+
+[[redirects]]
+  from = "/pricing-plans/list"
+  to = "/priser/"
+  status = 301
+
+[[redirects]]
+  from = "/pricing-plans/*"
+  to = "/priser/"
+  status = 301
+
+[[redirects]]
+  from = "/category/nya-elscootrar"
+  to = "/nya-elscootrar/"
+  status = 301
+
+[[redirects]]
+  from = "/category/*"
+  to = "/nya-elscootrar/"
+  status = 301
+
+# Produktsidor pa gamla Wix: fanns enskilda /product-page/<slug>-routes.
+# Vi har ingen 1:1 mappning - skicka till nya-elscootrar/ (riktigt produkt-katalog)
+# istallet for tidigare hash-anchor /#produkter (laddade hem + scroll, ingen SEO-vinning).
 [[redirects]]
   from = "/product-page/*"
-  to = "/#produkter"
+  to = "/nya-elscootrar/"
   status = 301
 
 [[redirects]]
