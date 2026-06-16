@@ -2,6 +2,11 @@ const { json, parseBody, requireAdmin, env } = require("./_shared/http");
 const { list, put } = require("./_shared/storage");
 const { assessRisk } = require("./_shared/operator");
 
+const isDryRunRequest = (event, body) =>
+  body.dryRun === true ||
+  body.previewOnly === true ||
+  event.queryStringParameters?.dryRun === "1";
+
 const isActive = (item) => !["done", "archived", "closed"].includes(item.status);
 const valueFor = (item) => Number(item.completion?.totalCost || item.total_cost || item.quote?.amount || item.estimatedValue || 0);
 const customerName = (item) => item.customer?.name || "Okand kund";
@@ -19,6 +24,7 @@ exports.handler = async (event) => {
   if (!["GET", "POST"].includes(event.httpMethod)) return json(405, { error: "Method not allowed" });
 
   const body = parseBody(event);
+  const writeDryRun = isDryRunRequest(event, body);
   const [cases, calls, drafts, parts] = await Promise.all([
     list("service_cases"),
     list("call_logs"),
@@ -79,7 +85,7 @@ exports.handler = async (event) => {
     riskCases: riskRows.slice(0, 10).map(({ item, risk }) => ({ ...caseSummary(item), risk })),
     suggestedSocialPost: socialPost,
   };
-  if (event.httpMethod === "POST") {
+  if (event.httpMethod === "POST" && !writeDryRun) {
     const recommendation = await put("ai_recommendations", {
       kind: "daily_brief",
       status: "proposed",
@@ -103,7 +109,8 @@ exports.handler = async (event) => {
     readyForPayment: brief.readyInvoice,
     salesOpportunities,
     socialMediaSuggestion: socialPost,
-    dryRun: !env("OPENAI_API_KEY"),
+    dryRun: writeDryRun || !env("OPENAI_API_KEY"),
+    writesSkipped: writeDryRun && event.httpMethod === "POST" ? ["ai_recommendations"] : [],
     brief,
   });
 };

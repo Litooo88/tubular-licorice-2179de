@@ -197,3 +197,32 @@ data under `.local/nordic-storage/`, which is gitignored.
 PR #32 is locally verified with explicit storage fallback. Because no Netlify
 preview/status is available, merge is recommended only if this local Netlify
 verification is manually accepted as satisfying the PR merge condition.
+
+## Production dry-run smoke test support
+
+* Date/time: 2026-06-16 15:09:10 +02:00
+
+Authenticated production smoke tests need to verify AI functions without
+creating persistent Netlify Blobs data. `ai-quote` and POST `ai-daily-brief`
+normally create `ai_recommendations`, so explicit dry-run support is required
+for safe production verification.
+
+Dry-run still requires `x-admin-token` and `ADMIN_TOKEN`. It is enabled only
+when one of these flags is sent:
+
+* request body `dryRun: true`
+* request body `previewOnly: true`
+* query string `dryRun=1`
+
+When dry-run is active:
+
+* `ai-quote` runs deterministic price logic and skips `ai_recommendations` and
+  `case_events` writes.
+* `ai-daily-brief` returns the normal brief response and skips
+  `ai_recommendations` writes for POST smoke tests.
+* Responses include `dryRun: true` and `writesSkipped` when writes were
+  intentionally bypassed.
+* No SMS send path is used.
+
+This mode is intended only for production smoke testing and does not change the
+default behavior when dry-run flags are absent.
