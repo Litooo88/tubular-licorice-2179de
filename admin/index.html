@@ -47,6 +47,28 @@ button:disabled{opacity:.6;cursor:wait}
 .quote-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .quote-grid .full{grid-column:1 / -1}
 .quote-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.ai-control-tower{padding:16px;margin:0 0 14px}
+.ai-control-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.ai-control-head h2{margin:0 0 6px;font-size:22px}
+.ai-control-head p{margin:0;color:#aab5ac;font-size:13px;line-height:1.45}
+.ai-control-status{color:#8ff5ae;font-size:12px;margin:8px 0 0}
+.ai-control-status.bad{color:#ffb1b5}
+.ai-control-status.warn{color:#ffe0a3}
+.ai-control-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.ai-control-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px;margin:14px 0}
+.ai-control-grid .stat{background:#080d09;border:1px solid #29362d}
+.ai-control-detail{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.ai-control-box{border:1px solid #29362d;border-radius:8px;background:#080d09;padding:12px;min-width:0}
+.ai-control-box.wide{grid-column:1 / -1}
+.ai-control-box h3{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:#a8b2aa;margin:0 0 8px}
+.ai-control-list{display:grid;gap:6px}
+.ai-control-item{border-left:3px solid #00c853;background:#0f1610;padding:8px 9px;font-size:12px;line-height:1.45}
+.ai-control-item.risk{border-left-color:#ff5a5f}
+.ai-social-post{white-space:pre-wrap;color:#e8fff0;font-size:13px;line-height:1.5}
+.ai-test-results{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.ai-test-result{display:none;border:1px solid #29362d;border-radius:8px;background:#080d09;padding:12px;font-size:13px;line-height:1.5;white-space:pre-wrap}
+.ai-test-result.show{display:block}
+.ai-test-result.bad{border-color:rgba(255,90,95,.45);color:#ffe1e3}
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
 .stat{padding:16px}
 .stat span{display:block;color:#99a39b;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
@@ -132,7 +154,7 @@ button:disabled{opacity:.6;cursor:wait}
 .key-date b{display:block;font-size:20px;line-height:1.25}
 .key-date.missing{background:rgba(255,194,71,.12);border-color:rgba(255,194,71,.45);color:#fff2cf}
 .key-date.missing span{color:#ffe0a3}
-.card-tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin:12px 0 10px}
+.card-tabs{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin:12px 0 10px}
 .card-tab{background:#0a0f0a;color:#d6ded8;border:1px solid #28322a;padding:10px 12px;font-size:12px;font-weight:900}
 .card-tab.is-active{background:rgba(0,200,83,.14);border-color:rgba(0,200,83,.45);color:#baffcf}
 .card-panel{display:none}
@@ -210,6 +232,20 @@ button:disabled{opacity:.6;cursor:wait}
   .quick-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:10px 0}
 .quick-actions button{padding:9px 10px;font-size:12px}
 .quick-actions button.secondary.active{background:rgba(0,200,83,.14);border-color:rgba(0,200,83,.45);color:#baffcf}
+.timeline-panel{border:1px solid #263029;border-radius:8px;background:#090d09;padding:12px;margin:10px 0}
+.timeline-panel h4{margin:0 0 8px;font-size:15px}
+.timeline-toolbar,.draft-actions{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}
+.timeline-toolbar button,.draft-actions button{padding:8px 10px;font-size:12px}
+.timeline-status{border:1px dashed #313b33;border-radius:8px;padding:10px;color:#aab2ac;font-size:12px;margin-bottom:10px}
+.timeline-status.bad{border-color:rgba(255,90,95,.4);color:#ffe1e3;background:rgba(255,90,95,.08)}
+.timeline-event,.sms-draft-card{border-left:3px solid #00c853;background:#061008;padding:10px 12px;margin:8px 0;border-radius:0 8px 8px 0}
+.timeline-event-head,.sms-draft-head{display:flex;justify-content:space-between;gap:8px;align-items:flex-start;margin-bottom:5px;font-size:12px}
+.timeline-event-head strong,.sms-draft-head strong{color:#baffcf}
+.timeline-event p,.sms-draft-card p{margin:0;color:#edf3ee;line-height:1.5;white-space:pre-wrap}
+.timeline-event small,.sms-draft-card small{display:block;color:#9ea79f;margin-top:6px;line-height:1.4;word-break:break-word}
+.sms-draft-card.approval{border-left-color:#ffc247}
+.sms-draft-card.rejected{border-left-color:#ff5a5f}
+.timeline-note textarea{min-height:90px}
 .edit{display:grid;gap:8px;margin-top:10px}
 .edit-wrap{border-top:1px solid #263029;margin-top:12px;padding-top:10px}
 .edit-wrap summary{cursor:pointer;font-weight:900;color:#9fffc1;margin-bottom:10px}
@@ -229,8 +265,8 @@ textarea{min-height:66px;resize:vertical}
 .contact-state.waiting{color:#cce2ff}
 .contact-state.waiting::before{background:#4ba3ff;box-shadow:0 0 0 3px rgba(75,163,255,.18)}
   @media(max-width:1200px){.board,.workshop-tools{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:980px){.workshop-tools{grid-template-columns:1fr}}
-  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions,.media-grid,.content-actions,.tick-grid,.price-toolbar,.pos-grid,.pos-buttons,.sms-grid,.quote-grid{grid-template-columns:1fr}.top{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}.pos-line{grid-template-columns:1fr 72px}.pos-line .pos-remove,.sms-grid .full,.quote-grid .full{grid-column:1 / -1}}
+  @media(max-width:980px){.workshop-tools,.ai-control-detail,.ai-test-results{grid-template-columns:1fr}}
+  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions,.media-grid,.content-actions,.tick-grid,.price-toolbar,.pos-grid,.pos-buttons,.sms-grid,.quote-grid{grid-template-columns:1fr}.top,.ai-control-head{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}.pos-line{grid-template-columns:1fr 72px}.pos-line .pos-remove,.sms-grid .full,.quote-grid .full{grid-column:1 / -1}}
 </style>
 <script>
 window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debugMode:new URLSearchParams(window.location.search).has("ga_debug")};
@@ -271,6 +307,43 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   </nav>
 
   <div class="admin-view" id="overviewView">
+  <section class="panel ai-control-tower">
+    <div class="ai-control-head">
+      <div>
+        <h2>AI Kontrolltorn</h2>
+        <p>Regelstyrd dagsbrief fr&aring;n skyddade Netlify Functions. F&ouml;rslag granskas alltid innan h&ouml;grisk&aring;tg&auml;rder.</p>
+        <div class="ai-control-status" id="aiControlStatus">Klicka p&aring; Uppdatera AI-brief f&ouml;r att h&auml;mta data.</div>
+      </div>
+      <div class="ai-control-actions">
+        <button type="button" class="secondary" id="refreshAiControl">Uppdatera AI-brief</button>
+        <button type="button" class="secondary" id="testAiQuote">Testa E-Wheels E16 prisf&ouml;rslag</button>
+        <button type="button" class="secondary" id="testAiSmsDraft">Skapa missat samtal-SMS</button>
+      </div>
+    </div>
+    <div class="ai-control-grid">
+      <div class="panel stat"><span>Dagens prioritet</span><b id="aiPriorityToday">0</b></div>
+      <div class="panel stat"><span>Missade samtal</span><b id="aiMissedCalls">0</b></div>
+      <div class="panel stat"><span>V&auml;ntar kund</span><b id="aiWaitingCustomer">0</b></div>
+      <div class="panel stat"><span>V&auml;ntar reservdel</span><b id="aiWaitingParts">0</b></div>
+      <div class="panel stat"><span>Klara att fakturera</span><b id="aiReadyInvoice">0</b></div>
+      <div class="panel stat"><span>Risk&auml;renden</span><b id="aiRiskCases">0</b></div>
+      <div class="panel stat"><span>M&ouml;jlig int&auml;kt idag</span><b id="aiRevenueToday">0 kr</b></div>
+    </div>
+    <div class="ai-control-detail">
+      <div class="ai-control-box wide"><h3>Sammanfattning</h3><div class="ai-social-post" id="aiSummary">Ingen brief h&auml;mtad.</div></div>
+      <div class="ai-control-box"><h3>Dagens prioritet</h3><div class="ai-control-list" id="aiPriorityList"></div></div>
+      <div class="ai-control-box"><h3>Risk&auml;renden</h3><div class="ai-control-list" id="aiRiskList"></div></div>
+      <div class="ai-control-box"><h3>Missade samtal att f&ouml;lja upp</h3><div class="ai-control-list" id="aiMissedCallsList"></div></div>
+      <div class="ai-control-box"><h3>Reservdelar att best&auml;lla</h3><div class="ai-control-list" id="aiPartsList"></div></div>
+      <div class="ai-control-box"><h3>Klara f&ouml;r betalning</h3><div class="ai-control-list" id="aiReadyPaymentList"></div></div>
+      <div class="ai-control-box"><h3>S&auml;ljm&ouml;jligheter</h3><div class="ai-control-list" id="aiSalesList"></div></div>
+      <div class="ai-control-box"><h3>F&ouml;reslagen social post</h3><div class="ai-social-post" id="aiSocialPost"></div></div>
+    </div>
+    <div class="ai-test-results">
+      <div class="ai-test-result" id="aiQuoteTestResult"></div>
+      <div class="ai-test-result" id="aiSmsTestResult"></div>
+    </div>
+  </section>
   <section class="panel call-dashboard">
     <h2>Live samtalsdashboard</h2>
     <p>Dagens inkommande samtal matchas mot kundregistret. Missade samtal och Lennart-samtal utan kundkort kan följas upp direkt med SMS.</p>
@@ -420,6 +493,17 @@ const callStatsEl=document.getElementById('callDashboardStats');
 const callTableEl=document.getElementById('callDashboardTable');
 const callLeadsEl=document.getElementById('callLeadsTable');
 const callStatusEl=document.getElementById('callDashboardStatus');
+const aiControlStatusEl=document.getElementById('aiControlStatus');
+const aiSummaryEl=document.getElementById('aiSummary');
+const aiPriorityListEl=document.getElementById('aiPriorityList');
+const aiRiskListEl=document.getElementById('aiRiskList');
+const aiMissedCallsListEl=document.getElementById('aiMissedCallsList');
+const aiPartsListEl=document.getElementById('aiPartsList');
+const aiReadyPaymentListEl=document.getElementById('aiReadyPaymentList');
+const aiSalesListEl=document.getElementById('aiSalesList');
+const aiSocialPostEl=document.getElementById('aiSocialPost');
+const aiQuoteTestResultEl=document.getElementById('aiQuoteTestResult');
+const aiSmsTestResultEl=document.getElementById('aiSmsTestResult');
 let callDashboardRows=[];
 let cases=[];
 let isLoadingCases=false;
@@ -435,9 +519,12 @@ tokenInput.value=localStorage.getItem('nordicAdminToken')||'';
 operatorInput.value=localStorage.getItem('nordicAdminOperator')||'Sebastian';
 operatorInput.addEventListener('change',()=>localStorage.setItem('nordicAdminOperator',operatorInput.value));
 document.querySelectorAll('[data-admin-tab]').forEach((button)=>button.addEventListener('click',()=>setAdminView(button.dataset.adminTab)));
-document.getElementById('saveToken').addEventListener('click',()=>{localStorage.setItem('nordicAdminToken',tokenInput.value.trim());loadCases();});
+document.getElementById('saveToken').addEventListener('click',()=>{localStorage.setItem('nordicAdminToken',tokenInput.value.trim());showAiStatus(tokenInput.value.trim()?'Admin-token sparad. Klicka på Uppdatera AI-brief.':'Admin-token saknas',tokenInput.value.trim()?'':'warn');loadCases();});
 document.getElementById('refresh').addEventListener('click',loadCases);
 document.getElementById('refreshCalls').addEventListener('click',loadCallDashboard);
+document.getElementById('refreshAiControl').addEventListener('click',loadAiControlTower);
+document.getElementById('testAiQuote').addEventListener('click',testAiQuote);
+document.getElementById('testAiSmsDraft').addEventListener('click',testAiSmsDraft);
 document.getElementById('calendarTest').addEventListener('click',testCalendar);
 ownerFilter.addEventListener('change',render);
 statusFilter.addEventListener('change',render);
@@ -448,6 +535,7 @@ searchFilter.addEventListener('input',render);
 document.getElementById('smsApplyTemplate').addEventListener('click',()=>{smsMessageText.value=smsTemplateFor(selectedSmsCase(),smsTemplateSelect.value);showSmsDeskStatus('',false);});
 document.getElementById('smsCopyDraft').addEventListener('click',async()=>{try{await copyText(smsMessageText.value);showSmsDeskStatus('SMS-utkast kopierat.',false)}catch(error){showSmsDeskStatus(error.message,true)}});
 document.getElementById('smsSendButton').addEventListener('click',sendDeskSms);
+if(!tokenInput.value.trim())showAiStatus('Admin-token saknas','warn');
 activeOverviewEl.addEventListener('click',(event)=>{
   const button=event.target&&event.target.closest&&event.target.closest('.open-case');
   if(!button)return;
@@ -1270,6 +1358,199 @@ function render(){
   });
 }
 
+function aiListHtml(rows=[],risk=false){
+  if(!rows.length)return '<div class="muted">Inget att visa.</div>';
+  return rows.map((item)=>{
+    const title=item.customer&&typeof item.customer==='object'?item.customer.name:item.customer;
+    return `<div class="ai-control-item ${risk?'risk':''}"><strong>${html(title||item.partName||item.name||item.phone||item.id||'Post')}</strong><br>${html(item.model||item.status||item.reason||item.note||item.partNumber||'')}${item.value?` &middot; ${html(money(item.value))}`:''}${item.risk&&item.risk.reasons&&item.risk.reasons.length?`<br>${html(item.risk.reasons.join(', '))}`:''}</div>`;
+  }).join('');
+}
+function showAiStatus(message,state=''){
+  aiControlStatusEl.className=`ai-control-status ${state}`;
+  aiControlStatusEl.textContent=message;
+}
+function aiAdminToken(){
+  return String(localStorage.getItem('nordicAdminToken')||'').trim();
+}
+async function aiFunctionFetch(path,{method='GET',body}={}){
+  const token=aiAdminToken();
+  if(!token)throw new Error('Admin-token saknas');
+  const options={method,headers:{'x-admin-token':token}};
+  if(body!==undefined){
+    options.headers['Content-Type']='application/json';
+    options.body=JSON.stringify(body);
+  }
+  const response=await fetch(path,options);
+  const data=await response.json().catch(()=>({}));
+  if(response.status===401)throw new Error('Ej behörig');
+  if(!response.ok)throw new Error(data.error||'AI-funktionen kunde inte h&auml;mta data.');
+  return data;
+}
+const CASE_EVENT_LABELS={
+  sms:'SMS',
+  call:'Samtal',
+  status_change:'Status\u00e4ndring',
+  quote:'Prisf\u00f6rslag',
+  payment:'Betalning',
+  part:'Reservdel',
+  note:'Intern notering',
+  ai_suggestion:'AI-f\u00f6rslag',
+  booking:'Bokning'
+};
+function caseOperatorName(){
+  return String(operatorInput.value||localStorage.getItem('nordicAdminOperator')||'admin').trim()||'admin';
+}
+function compactMetadata(metadata){
+  if(!metadata||typeof metadata!=='object')return'';
+  return Object.entries(metadata)
+    .filter(([,value])=>value!==undefined&&value!==null&&value!=='')
+    .slice(0,6)
+    .map(([key,value])=>`${key}: ${typeof value==='object'?JSON.stringify(value):value}`)
+    .join(' - ');
+}
+function timelineEventsHtml(events=[]){
+  if(!events.length)return '<div class="empty">Inga timeline-events finns f\u00f6r \u00e4rendet.</div>';
+  return events.map((entry)=>`
+    <article class="timeline-event">
+      <div class="timeline-event-head"><strong>${html(CASE_EVENT_LABELS[entry.type]||entry.type||'H\u00e4ndelse')}</strong><span>${html(dateShort(entry.createdAt))}</span></div>
+      <p>${html(entry.content||'H\u00e4ndelse registrerad.')}</p>
+      <small>${html(entry.createdBy||'system')}${compactMetadata(entry.metadata)?`<br>${html(compactMetadata(entry.metadata))}`:''}</small>
+    </article>`).join('');
+}
+function smsDraftsHtml(drafts=[]){
+  if(!drafts.length)return '<div class="empty">Inga SMS-utkast \u00e4r kopplade till \u00e4rendet.</div>';
+  return drafts.map((draft)=>`
+    <article class="sms-draft-card ${draft.requiresApproval?'approval':''} ${draft.status==='rejected'?'rejected':''}">
+      <div class="sms-draft-head"><strong>${html(draft.status||'draft')}</strong><span>${html(dateShort(draft.createdAt))}</span></div>
+      <p>${html(draft.message||'Tomt SMS-utkast')}</p>
+      <small>Risk: ${html(draft.riskLevel||draft.risk&&draft.risk.level||'ok\u00e4nd')} - Kr\u00e4ver godk\u00e4nnande: ${draft.requiresApproval||draft.risk&&draft.risk.approvalRequired?'Ja':'Nej'}</small>
+      <div class="draft-actions">
+        <button type="button" class="secondary draft-status" data-draft-id="${html(draft.id)}" data-status="approved">Godk\u00e4nn</button>
+        <button type="button" class="secondary draft-status" data-draft-id="${html(draft.id)}" data-status="rejected">Avvisa</button>
+        <button type="button" class="secondary draft-status" data-draft-id="${html(draft.id)}" data-status="dry_run">Markera dry-run</button>
+        <button type="button" class="secondary draft-status" data-draft-id="${html(draft.id)}" data-status="sent" ${(draft.requiresApproval||draft.risk&&draft.risk.approvalRequired)&&draft.status!=='approved'?'disabled title="Godkann utkastet forst"':''}>Markera skickad</button>
+      </div>
+    </article>`).join('');
+}
+async function loadCaseTimeline(item,card){
+  const status=card.querySelector('.timeline-status');
+  const eventsEl=card.querySelector('.timeline-events');
+  const draftsEl=card.querySelector('.case-sms-drafts');
+  status.className='timeline-status';
+  status.textContent='Laddar timeline och SMS-utkast...';
+  try{
+    const query=`?caseId=${encodeURIComponent(item.id)}`;
+    const [eventData,draftData]=await Promise.all([
+      aiFunctionFetch('/.netlify/functions/case-events'+query),
+      aiFunctionFetch('/.netlify/functions/sms-drafts'+query)
+    ]);
+    eventsEl.innerHTML=timelineEventsHtml(eventData.events||[]);
+    draftsEl.innerHTML=smsDraftsHtml(draftData.drafts||[]);
+    status.textContent=`Senast uppdaterad ${new Date().toLocaleTimeString('sv-SE')} - senaste event visas f\u00f6rst`;
+    card.dataset.timelineLoaded='true';
+  }catch(error){
+    status.className='timeline-status bad';
+    status.textContent=error.message==='Ej beh\u00f6rig'?'Ej beh\u00f6rig':`Fel: ${error.message}`;
+  }
+}
+async function logStatusChangeEvent(item,nextStatus,note=''){
+  if(!item.id||!nextStatus||nextStatus===item.status)return;
+  await aiFunctionFetch('/.netlify/functions/case-events',{
+    method:'POST',
+    body:{
+      caseId:item.id,
+      customerId:item.customer&&item.customer.id||'',
+      type:'status_change',
+      direction:'internal',
+      content:note||`Status \u00e4ndrad fr\u00e5n ${statusLabels[item.status]||item.status} till ${statusLabels[nextStatus]||nextStatus}.`,
+      metadata:{fromStatus:item.status,toStatus:nextStatus},
+      createdBy:caseOperatorName()
+    }
+  });
+}
+function showAiTestResult(element,title,rows,bad=false){
+  element.className=`ai-test-result show ${bad?'bad':''}`;
+  element.innerHTML=`<strong>${html(title)}</strong><br>${rows.map(([label,value])=>`${html(label)}: ${html(value===null||value===undefined?'-':value)}`).join('<br>')}`;
+}
+async function loadAiControlTower(){
+  const button=document.getElementById('refreshAiControl');
+  try{
+    if(!aiAdminToken()){showAiStatus('Admin-token saknas','warn');return;}
+    button.disabled=true;
+    showAiStatus('Laddar AI-brief...');
+    const data=await aiFunctionFetch('/.netlify/functions/ai-daily-brief');
+    const brief=data.brief||{};
+    const metrics=brief.metrics||{};
+    const priorities=data.topPriorities||brief.priority||[];
+    const missedCalls=data.missedCallsToFollowUp||brief.missedCalls||[];
+    const riskCases=data.riskCases||brief.riskCases||[];
+    const partsToOrder=data.partsToOrder||brief.openPartNeeds||[];
+    const readyForPayment=data.readyForPayment||brief.readyInvoice||[];
+    const salesOpportunities=data.salesOpportunities||[];
+    aiSummaryEl.textContent=data.summary||'Ingen sammanfattning tillgänglig.';
+    document.getElementById('aiPriorityToday').textContent=priorities.length;
+    document.getElementById('aiMissedCalls').textContent=missedCalls.length;
+    document.getElementById('aiWaitingCustomer').textContent=metrics.waitingCustomer||0;
+    document.getElementById('aiWaitingParts').textContent=metrics.waitingParts||0;
+    document.getElementById('aiReadyInvoice').textContent=readyForPayment.length;
+    document.getElementById('aiRiskCases').textContent=riskCases.length;
+    document.getElementById('aiRevenueToday').textContent=money(metrics.possibleRevenueToday??data.cashToday??0);
+    aiPriorityListEl.innerHTML=aiListHtml(priorities);
+    aiRiskListEl.innerHTML=aiListHtml(riskCases,true);
+    aiMissedCallsListEl.innerHTML=aiListHtml(missedCalls);
+    aiPartsListEl.innerHTML=aiListHtml(partsToOrder);
+    aiReadyPaymentListEl.innerHTML=aiListHtml(readyForPayment);
+    aiSalesListEl.innerHTML=aiListHtml(salesOpportunities);
+    aiSocialPostEl.textContent=data.socialMediaSuggestion||brief.suggestedSocialPost||'Inget förslag tillgängligt.';
+    showAiStatus(`Senast uppdaterad ${new Date().toLocaleTimeString('sv-SE')} - ${data.dryRun?'mock/dry-run-läge':brief.aiMode||'AI-läge'}`,data.dryRun?'warn':'');
+  }catch(error){
+    const message=String(error.message||'Okänt fel');
+    showAiStatus(message==='Ej behörig'?'Ej behörig':`Fel: ${message}`,'bad');
+  }finally{
+    button.disabled=false;
+  }
+}
+async function testAiQuote(){
+  const button=document.getElementById('testAiQuote');
+  try{
+    if(!aiAdminToken()){showAiStatus('Admin-token saknas','warn');return;}
+    button.disabled=true;
+    showAiTestResult(aiQuoteTestResultEl,'E-Wheels E16 prisförslag',[['Status','Laddar...']]);
+    const data=await aiFunctionFetch('/.netlify/functions/ai-quote',{method:'POST',body:{brand:'E-Wheels',model:'E2S V2 Pro LR',issueDescription:'Felkod E16'}});
+    showAiTestResult(aiQuoteTestResultEl,'E-Wheels E16 prisförslag',[
+      ['Startpris',money(data.startPrice)],
+      ['Troligt minimum',money(data.likelyMin)],
+      ['Troligt maximum',money(data.likelyMax)],
+      ['Kräver diagnos',data.requiresDiagnosis?'Ja':'Nej'],
+      ['Kräver godkännande',data.requiresApproval?'Ja':'Nej'],
+      ['Kundmeddelande',data.customerMessage],
+      ['Intern notering',data.internalNotes],
+    ]);
+  }catch(error){
+    if(error.message==='Ej behörig')showAiStatus('Ej behörig','bad');
+    showAiTestResult(aiQuoteTestResultEl,'E-Wheels E16 prisförslag',[['Fel',error.message]],true);
+  }finally{button.disabled=false}
+}
+async function testAiSmsDraft(){
+  const button=document.getElementById('testAiSmsDraft');
+  try{
+    if(!aiAdminToken()){showAiStatus('Admin-token saknas','warn');return;}
+    button.disabled=true;
+    showAiTestResult(aiSmsTestResultEl,'Missat samtal-SMS',[['Status','Laddar...']]);
+    const data=await aiFunctionFetch('/.netlify/functions/ai-sms-draft',{method:'POST',body:{eventType:'missed_call_followup',customer:{name:'Testkund'},case:{}}});
+    showAiTestResult(aiSmsTestResultEl,'Missat samtal-SMS',[
+      ['SMS-utkast',data.smsDraft],
+      ['Risknivå',data.riskLevel],
+      ['Kräver godkännande',data.requiresApproval?'Ja':'Nej'],
+      ['Föreslagen nästa status',data.suggestedNextStatus],
+      ['Intern sammanfattning',data.internalSummary],
+    ]);
+  }catch(error){
+    if(error.message==='Ej behörig')showAiStatus('Ej behörig','bad');
+    showAiTestResult(aiSmsTestResultEl,'Missat samtal-SMS',[['Fel',error.message]],true);
+  }finally{button.disabled=false}
+}
+
 function activePriorityScore(item){
   const statusOrder={ready:0,urgent:1,waiting_customer:2,new:3,contacted:4,checked_in:5,diagnosing:6,repairing:7,waiting_parts:8};
   const base=item.priority==='urgent'?0:(statusOrder[item.status]??9);
@@ -1531,6 +1812,7 @@ function caseCard(item){
       <button type="button" class="secondary card-tab ${activeTab==='ready'?'is-active':''}" data-tab="ready">Klar / h&auml;mtning</button>
       <button type="button" class="secondary card-tab ${activeTab==='payment'?'is-active':''}" data-tab="payment">Betalning</button>
       <button type="button" class="secondary card-tab ${activeTab==='media'?'is-active':''}" data-tab="media">Bilder / content</button>
+      <button type="button" class="secondary card-tab ${activeTab==='timeline'?'is-active':''}" data-tab="timeline">Timeline</button>
     </div>
     <div class="card-panel ${activeTab==='overview'?'is-active':''}" data-panel="overview">
       <div class="key-date ${missingPreferred?'missing':''}"><span>${isPickupReady?'Planerad upph&auml;mtning':'Planerad inl&auml;mning'}</span><b>${missingPreferred?'Beh&ouml;ver bokas in':html(displayDate(item.preferredDate))}</b></div>
@@ -1931,13 +2213,32 @@ function caseCard(item){
         ${mediaHtml}
       </div>
     </div>
+    <div class="card-panel ${activeTab==='timeline'?'is-active':''}" data-panel="timeline">
+      <div class="timeline-panel">
+        <h4>Timeline</h4>
+        <div class="timeline-status">&Ouml;ppna fliken eller klicka p&aring; uppdatera f&ouml;r att h&auml;mta timeline.</div>
+        <div class="timeline-toolbar"><button type="button" class="secondary refresh-timeline">Uppdatera timeline</button></div>
+        <div class="timeline-events"></div>
+      </div>
+      <div class="timeline-panel timeline-note">
+        <h4>Intern notering</h4>
+        <textarea class="internal-note-text" placeholder="Skriv en intern notering f&ouml;r &auml;rendet..."></textarea>
+        <div class="timeline-toolbar"><button type="button" class="add-internal-note">L&auml;gg intern notering</button></div>
+      </div>
+      <div class="timeline-panel">
+        <h4>SMS-utkast</h4>
+        <p class="muted">Utkasten kan godk&auml;nnas eller markeras. Inga SMS skickas fr&aring;n denna vy.</p>
+        <div class="case-sms-drafts"></div>
+      </div>
+    </div>
     ${notes?`<div class="notes"><strong>Senaste noteringar</strong>${notes}</div>`:''}`;
   card.querySelectorAll('.card-tab').forEach((button)=>{
-    button.addEventListener('click',()=>{
+    button.addEventListener('click',async()=>{
       const nextTab=button.dataset.tab||'overview';
       cardTabState[item.id]=nextTab;
       card.querySelectorAll('.card-tab').forEach((tab)=>tab.classList.toggle('is-active',tab===button));
       card.querySelectorAll('.card-panel').forEach((panel)=>panel.classList.toggle('is-active',panel.dataset.panel===nextTab));
+      if(nextTab==='timeline'&&card.dataset.timelineLoaded!=='true')await loadCaseTimeline(item,card);
     });
   });
   const form=card.querySelector('.edit-wrap form');
@@ -1950,6 +2251,37 @@ function caseCard(item){
   if(duplicateAnalysisStates.length>1){
     duplicateAnalysisStates[0].remove();
   }
+  if(activeTab==='timeline')loadCaseTimeline(item,card);
+  card.querySelector('.refresh-timeline').addEventListener('click',()=>loadCaseTimeline(item,card));
+  card.querySelector('.add-internal-note').addEventListener('click',async()=>{
+    const textarea=card.querySelector('.internal-note-text');
+    const content=String(textarea.value||'').trim();
+    if(!item.id){showError('Inget \u00e4rende \u00e4r valt.');return;}
+    if(!content){showError('Skriv en intern notering f\u00f6rst.');return;}
+    try{
+      await aiFunctionFetch('/.netlify/functions/case-events',{
+        method:'POST',
+        body:{caseId:item.id,customerId:item.customer&&item.customer.id||'',type:'note',direction:'internal',content,createdBy:caseOperatorName()}
+      });
+      textarea.value='';
+      await loadCaseTimeline(item,card);
+    }catch(error){showError(error.message)}
+  });
+  card.querySelector('.case-sms-drafts').addEventListener('click',async(event)=>{
+    const button=event.target&&event.target.closest&&event.target.closest('.draft-status');
+    if(!button)return;
+    const original=button.textContent;
+    button.disabled=true;
+    button.textContent='Sparar...';
+    try{
+      await aiFunctionFetch('/.netlify/functions/sms-drafts',{
+        method:'PATCH',
+        body:{id:button.dataset.draftId,status:button.dataset.status,createdBy:caseOperatorName()}
+      });
+      await loadCaseTimeline(item,card);
+    }catch(error){showError(error.message)}
+    finally{button.disabled=false;button.textContent=original}
+  });
   card.querySelectorAll('.quick-status').forEach((button)=>{
     button.addEventListener('click',async()=>{
       const original=button.textContent;
@@ -1960,6 +2292,8 @@ function caseCard(item){
           method:'PATCH',
           body:JSON.stringify({status:button.dataset.status,note:button.dataset.note})
         });
+        try{await logStatusChangeEvent(item,button.dataset.status,button.dataset.note)}
+        catch(timelineError){showError(`Status sparad, men timeline kunde inte uppdateras: ${timelineError.message}`)}
         await loadCases();
       }catch(error){showError(error.message)}
       finally{
@@ -1974,7 +2308,10 @@ function caseCard(item){
     button.disabled=true;
     button.textContent='Sparar...';
     try{
-      await api('/api/cases/'+encodeURIComponent(form.dataset.id),{method:'PATCH',body:JSON.stringify(Object.fromEntries(new FormData(form).entries()))});
+      const formData=Object.fromEntries(new FormData(form).entries());
+      await api('/api/cases/'+encodeURIComponent(form.dataset.id),{method:'PATCH',body:JSON.stringify(formData)});
+      try{await logStatusChangeEvent(item,formData.status)}
+      catch(timelineError){showError(`Arendet sparades, men timeline kunde inte uppdateras: ${timelineError.message}`)}
       await loadCases();
     }catch(error){showError(error.message)}
     finally{button.disabled=false;button.textContent='Spara \u00e4ndringar'}
