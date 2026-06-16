@@ -392,12 +392,19 @@ function galleryObject() {
   return `const productGalleries={\n${entries.join(",\n")}\n};`;
 }
 
+const detectEol = (value) => (value.includes("\r\n") ? "\r\n" : "\n");
+const toLf = (value) => value.replace(/\r\n/g, "\n");
+const trimTrailingSpaces = (value) => value.replace(/[ \t]+$/gm, "");
+const generatedBlock = (value) => toLf(value).replace(/^\n/, "").trimEnd();
+
 function updateFile(filePath, updater) {
   const fullPath = path.join(root, filePath);
   const before = fs.readFileSync(fullPath, "utf8");
-  const after = updater(before).replace(/[ \t]+$/gm, "");
-  if (after === before) return false;
-  fs.writeFileSync(fullPath, after, "utf8");
+  const eol = detectEol(before);
+  const beforeLf = toLf(before);
+  const afterLf = trimTrailingSpaces(toLf(updater(beforeLf)));
+  if (afterLf === trimTrailingSpaces(beforeLf)) return false;
+  fs.writeFileSync(fullPath, afterLf.replace(/\n/g, eol), "utf8");
   return true;
 }
 
@@ -417,7 +424,7 @@ if (
       );
     next = next.replace(
       /  <section class="section" id="nya-elscootrar">[\s\S]*?\n  <section class="section alt" id="dack-punktering">/,
-      `${nyaElscootrarSection()}\n\n  <section class="section alt" id="dack-punktering">`
+      `${generatedBlock(nyaElscootrarSection())}\n\n  <section class="section alt" id="dack-punktering">`
     );
     return next;
   })
@@ -427,7 +434,7 @@ if (
 
 if (
   updateFile("index.html", (html) => {
-    let next = html.replace(/<!-- PRODUKTER -->[\s\S]*?\n<!-- BLOGG -->/, `${homeProductsSection()}\n\n<!-- BLOGG -->`);
+    let next = html.replace(/<!-- PRODUKTER -->[\s\S]*?\n<!-- BLOGG -->/, `${generatedBlock(homeProductsSection())}\n\n<!-- BLOGG -->`);
     next = next.replace(/const productGalleries=\{[\s\S]*?\n\};/, galleryObject());
     next = next.replace(
       "const gallery=productGalleries[galleryKey(name)]||[baseImage].filter(Boolean);",
