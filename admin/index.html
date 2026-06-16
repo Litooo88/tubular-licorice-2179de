@@ -1516,7 +1516,7 @@ async function testAiQuote(){
     if(!aiAdminToken()){showAiStatus('Admin-token saknas','warn');return;}
     button.disabled=true;
     showAiTestResult(aiQuoteTestResultEl,'E-Wheels E16 prisförslag',[['Status','Laddar...']]);
-    const data=await aiFunctionFetch('/.netlify/functions/ai-quote',{method:'POST',body:{brand:'E-Wheels',model:'E2S V2 Pro LR',issueDescription:'Felkod E16'}});
+    const data=await aiFunctionFetch('/.netlify/functions/ai-quote',{method:'POST',body:{brand:'E-Wheels',model:'E2S V2 Pro LR',issueDescription:'Felkod E16',dryRun:true}});
     showAiTestResult(aiQuoteTestResultEl,'E-Wheels E16 prisförslag',[
       ['Startpris',money(data.startPrice)],
       ['Troligt minimum',money(data.likelyMin)],

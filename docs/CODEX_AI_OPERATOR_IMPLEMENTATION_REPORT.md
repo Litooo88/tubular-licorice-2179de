@@ -377,3 +377,28 @@ Det finns daremot tva praktiska deploy-risker att hantera innan produktion:
   ignoreras fore deploy.
 
 Ingen commit eller push har gjorts.
+
+## Production dry-run smoke test support
+
+Date/time: 2026-06-16 15:09:10 +02:00
+
+### Syfte
+
+Production smoke-test behovde kunna verifiera authade AI-functions utan att
+skapa persistent testdata i Netlify Blobs. `ai-quote` skapade tidigare alltid
+en `ai_recommendations`-post efter godkand auth.
+
+### Andring
+
+- `ai-quote` stodjer nu explicit dry-run via `dryRun: true`,
+  `previewOnly: true` eller query `dryRun=1`.
+- `ai-daily-brief` stodjer samma dry-run-flaggor och skippar recommendation-
+  write for POST nar flaggan ar aktiv.
+- Admins E-Wheels E16-testknapp skickar `dryRun: true`.
+
+### Sakerhet
+
+- `x-admin-token` kravs fortfarande innan dry-run-svar returneras.
+- Defaultbeteendet ar oforandrat nar dry-run-flaggor saknas.
+- Dry-run skippar Blob-writes och returnerar `writesSkipped`.
+- Ingen SMS-sandning anvands i smoke-testflodet.
