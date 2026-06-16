@@ -2,6 +2,7 @@ node_modules/
 .wrangler/
 private-reports/
 .netlify/
+.local/
 tmp-*
 *.tmp
 .DS_Store

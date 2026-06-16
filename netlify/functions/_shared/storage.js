@@ -1,4 +1,6 @@
 const { getStore } = require("@netlify/blobs");
+const fs = require("node:fs/promises");
+const path = require("node:path");
 const { clean } = require("./http");
 
 const ENTITIES = Object.freeze({
@@ -19,7 +21,52 @@ const idFor = (prefix = "item") =>
 const storeFor = (entity) => {
   const config = ENTITIES[entity];
   if (!config) throw new Error(`Okand storage-entitet: ${entity}`);
+  if (process.env.NORDIC_LOCAL_STORAGE_FALLBACK === "1") return localStore(config.store);
   return getStore({ name: config.store, consistency: "strong" });
+};
+
+const localRoot = () => path.join(process.cwd(), ".local", "nordic-storage");
+
+const encodeKey = (key) => encodeURIComponent(String(key));
+const decodeKey = (key) => decodeURIComponent(String(key).replace(/\.json$/, ""));
+
+const localStore = (storeName) => {
+  const dir = path.join(localRoot(), clean(storeName, 64));
+  const fileFor = (key) => path.join(dir, `${encodeKey(key)}.json`);
+  const ensureDir = async () => {
+    await fs.mkdir(dir, { recursive: true });
+  };
+  return {
+    async list() {
+      await ensureDir();
+      const entries = await fs.readdir(dir, { withFileTypes: true }).catch(() => []);
+      return {
+        blobs: entries
+          .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
+          .map((entry) => ({ key: decodeKey(entry.name) })),
+      };
+    },
+    async get(key, options = {}) {
+      await ensureDir();
+      const raw = await fs.readFile(fileFor(key), "utf8").catch(() => null);
+      if (raw === null) return null;
+      return options.type === "json" ? JSON.parse(raw) : raw;
+    },
+    async getJSON(key) {
+      return this.get(key, { type: "json" });
+    },
+    async setJSON(key, value) {
+      await ensureDir();
+      await fs.writeFile(fileFor(key), JSON.stringify(value, null, 2), "utf8");
+    },
+    async set(key, value) {
+      await ensureDir();
+      await fs.writeFile(fileFor(key), typeof value === "string" ? value : JSON.stringify(value), "utf8");
+    },
+    async delete(key) {
+      await fs.rm(fileFor(key), { force: true });
+    },
+  };
 };
 
 const allKeys = async (store) => {
