@@ -1,7 +1,15 @@
-const { getStore } = require("@netlify/blobs");
 const fs = require("node:fs/promises");
 const path = require("node:path");
 const { clean } = require("./http");
+
+let getStore;
+
+const getNetlifyStore = () => {
+  if (!getStore) {
+    ({ getStore } = require("@netlify/blobs"));
+  }
+  return getStore;
+};
 
 const ENTITIES = Object.freeze({
   customers: { store: "customers" },
@@ -22,7 +30,7 @@ const storeFor = (entity) => {
   const config = ENTITIES[entity];
   if (!config) throw new Error(`Okand storage-entitet: ${entity}`);
   if (process.env.NORDIC_LOCAL_STORAGE_FALLBACK === "1") return localStore(config.store);
-  return getStore({ name: config.store, consistency: "strong" });
+  return getNetlifyStore()({ name: config.store, consistency: "strong" });
 };
 
 const localRoot = () => path.join(process.cwd(), ".local", "nordic-storage");
