@@ -7,6 +7,48 @@ const isDryRunRequest = (event, body) =>
   body.previewOnly === true ||
   event.queryStringParameters?.dryRun === "1";
 
+const emptyDryRunBrief = (body = {}, method = "GET") => {
+  const today = new Date().toISOString().slice(0, 10);
+  const brief = {
+    date: body.date || today,
+    generatedAt: new Date().toISOString(),
+    aiMode: "deterministic_write_dry_run",
+    metrics: {
+      active: 0,
+      missedCalls: 0,
+      unansweredSms: 0,
+      waitingCustomer: 0,
+      waitingParts: 0,
+      readyInvoice: 0,
+      riskCases: 0,
+      possibleRevenueToday: 0,
+    },
+    priority: [],
+    missedCalls: [],
+    unansweredSms: [],
+    waitingParts: [],
+    openPartNeeds: [],
+    readyInvoice: [],
+    riskCases: [],
+    suggestedSocialPost: "Hall din elscooter redo for vardagen. Nordic E-Mobility i Orebro hjalper dig med service, bromsar och felsokning.",
+  };
+  return {
+    summary: "0 aktiva arenden, 0 riskarenden och 0 klara for betalning.",
+    topPriorities: [],
+    cashToday: 0,
+    riskCases: [],
+    missedCallsToFollowUp: [],
+    partsToOrder: [],
+    readyForPayment: [],
+    salesOpportunities: [],
+    socialMediaSuggestion: brief.suggestedSocialPost,
+    dryRun: true,
+    writesSkipped: method === "POST" ? ["ai_recommendations"] : [],
+    readsSkipped: ["service_cases", "call_logs", "sms_drafts", "part_needs", "ai_recommendations"],
+    brief,
+  };
+};
+
 const functionError = (error, dryRun) => {
   const code = clean(error?.code || error?.name || "AI_DAILY_BRIEF_ERROR", 80) || "AI_DAILY_BRIEF_ERROR";
   console.error("ai-daily-brief failed", {
@@ -36,6 +78,7 @@ exports.handler = async (event) => {
     const auth = requireAdmin(event);
     if (!auth.ok) return auth.response;
     if (!["GET", "POST"].includes(event.httpMethod)) return json(405, { error: "Method not allowed" });
+    if (writeDryRun) return json(200, emptyDryRunBrief(body, event.httpMethod));
 
     const [cases, calls, drafts, parts] = writeDryRun
       ? [[], [], [], []]
