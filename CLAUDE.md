@@ -6,10 +6,14 @@ Detta är permanent projektminne och arbetsinstruktion för Claude Code.
 
 Använd dokumenten under `docs/` som projektminne. Börja med:
 
-1. `docs/NORDIC_PROJECT_CONTEXT.md`
-2. `docs/CODEBASE_RECOVERY_SUMMARY.md`
-3. `docs/SAFETY_AND_APPROVAL_RULES.md`
-4. relevant API-, databas- eller workflow-dokument
+1. `docs/AGENT_SYNC_LOG.md` — delad realtidslogg mellan agenter (Codex och
+   Claude Code jobbar ofta parallellt i samma mapp). Läs senaste posterna först
+   och logga in vad du gör enligt protokollet där: post `PÅGÅR` när du börjar,
+   `KLAR` när du lämnar över. Committa loggändringen i en egen liten commit.
+2. `docs/NORDIC_PROJECT_CONTEXT.md`
+3. `docs/CODEBASE_RECOVERY_SUMMARY.md`
+4. `docs/SAFETY_AND_APPROVAL_RULES.md`
+5. relevant API-, databas- eller workflow-dokument
 
 Verifiera alltid dokumentation mot aktuell kod. Äldre handoff-dokument kan
 beskriva historiska eller delvis genomförda lösningar.

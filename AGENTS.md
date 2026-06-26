@@ -7,10 +7,14 @@ E-Mobility-repot.
 
 Läs följande innan kodändringar:
 
-1. `docs/NORDIC_PROJECT_CONTEXT.md`
-2. `docs/CODEBASE_RECOVERY_SUMMARY.md`
-3. `docs/SAFETY_AND_APPROVAL_RULES.md`
-4. Relevant domändokument, särskilt `docs/API_CONTRACTS.md`,
+1. `docs/AGENT_SYNC_LOG.md` — **delad realtidslogg mellan agenter.** Flera
+   agenter (Codex, Claude Code) jobbar ofta parallellt i samma mapp. Läs de
+   senaste posterna först, och **logga in vad du gör** enligt protokollet där
+   (post `PÅGÅR` när du börjar, `KLAR` när du lämnar över).
+2. `docs/NORDIC_PROJECT_CONTEXT.md`
+3. `docs/CODEBASE_RECOVERY_SUMMARY.md`
+4. `docs/SAFETY_AND_APPROVAL_RULES.md`
+5. Relevant domändokument, särskilt `docs/API_CONTRACTS.md`,
    `docs/DATABASE_SCHEMA.md` och `docs/ADMIN_WORKFLOW.md`
 
 Äldre dokument under `docs/` innehåller viktig historik, men kan vara delvis
