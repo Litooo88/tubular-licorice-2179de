@@ -97,6 +97,7 @@ button:disabled{opacity:.6;cursor:wait}
 .customer-export-status.bad{color:#ffb1b5}
 .customer-export-status.warn{color:#ffe0a3}
 .customer-export-output{display:none;margin-top:10px}
+.customer-export-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .customer-export-output textarea{min-height:130px;font-family:Consolas,monospace;font-size:13px}
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
 .stat{padding:16px}
@@ -295,7 +296,7 @@ textarea{min-height:66px;resize:vertical}
 .contact-state.waiting::before{background:#4ba3ff;box-shadow:0 0 0 3px rgba(75,163,255,.18)}
   @media(max-width:1200px){.board,.workshop-tools{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:980px){.workshop-tools,.ai-control-detail,.ai-test-results,.communication-radar-grid{grid-template-columns:1fr}}
-  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions,.media-grid,.content-actions,.tick-grid,.price-toolbar,.pos-grid,.pos-buttons,.sms-grid,.quote-grid{grid-template-columns:1fr}.top,.ai-control-head,.customer-export-head{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}.pos-line{grid-template-columns:1fr 72px}.pos-line .pos-remove,.sms-grid .full,.quote-grid .full{grid-column:1 / -1}}
+  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions,.media-grid,.content-actions,.tick-grid,.price-toolbar,.pos-grid,.pos-buttons,.sms-grid,.quote-grid,.customer-export-grid{grid-template-columns:1fr}.top,.ai-control-head,.customer-export-head{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}.pos-line{grid-template-columns:1fr 72px}.pos-line .pos-remove,.sms-grid .full,.quote-grid .full{grid-column:1 / -1}}
 </style>
 <script>
 window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debugMode:new URLSearchParams(window.location.search).has("ga_debug")};
@@ -339,11 +340,20 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <div class="customer-export-actions">
         <button type="button" class="secondary" id="exportCustomers">Exportera kundlista</button>
         <button type="button" class="secondary" id="copyCustomerEmails">Kopiera e-postlista</button>
+        <button type="button" class="secondary" id="copyCustomerPhones">Kopiera telefonlista</button>
       </div>
     </div>
     <div class="customer-export-output" id="customerExportOutput">
-      <label for="customerExportEmails">E-postadresser</label>
-      <textarea id="customerExportEmails" readonly placeholder="Inga adresser h&auml;mtade."></textarea>
+      <div class="customer-export-grid">
+        <div>
+          <label for="customerExportEmails">E-postadresser</label>
+          <textarea id="customerExportEmails" readonly placeholder="Inga adresser h&auml;mtade."></textarea>
+        </div>
+        <div>
+          <label for="customerExportPhones">Telefonnummer</label>
+          <textarea id="customerExportPhones" readonly placeholder="Inga telefonnummer h&auml;mtade."></textarea>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -583,9 +593,11 @@ const communicationDraftPreviewEl=document.getElementById('communicationDraftPre
 const customerExportStatusEl=document.getElementById('customerExportStatus');
 const customerExportOutputEl=document.getElementById('customerExportOutput');
 const customerExportEmailsEl=document.getElementById('customerExportEmails');
+const customerExportPhonesEl=document.getElementById('customerExportPhones');
 let callDashboardRows=[];
 let communicationRadarEvents=[];
 let latestCustomerEmails=[];
+let latestCustomerPhones=[];
 let cases=[];
 let isLoadingCases=false;
 let lastUserActivityAt=Date.now();
@@ -610,6 +622,7 @@ document.getElementById('refreshCommunicationRadar').addEventListener('click',lo
 document.getElementById('testCommunicationDraft').addEventListener('click',testCommunicationDraft);
 document.getElementById('exportCustomers').addEventListener('click',exportCustomerList);
 document.getElementById('copyCustomerEmails').addEventListener('click',copyCustomerEmailList);
+document.getElementById('copyCustomerPhones').addEventListener('click',copyCustomerPhoneList);
 document.getElementById('calendarTest').addEventListener('click',testCalendar);
 ownerFilter.addEventListener('change',render);
 statusFilter.addEventListener('change',render);
@@ -1573,14 +1586,25 @@ async function exportCustomerList(){
     showCustomerExportStatus('Hamtar kundlista read-only...');
     const data=await aiFunctionFetch('/.netlify/functions/customer-export');
     latestCustomerEmails=Array.isArray(data.emails)?data.emails:[];
+    latestCustomerPhones=Array.isArray(data.phones)?data.phones:[];
     customerExportEmailsEl.value=latestCustomerEmails.join('\n');
+    customerExportPhonesEl.value=latestCustomerPhones.join('\n');
     customerExportOutputEl.style.display='block';
     const warnings=Array.isArray(data.warnings)&&data.warnings.length?` Varningar: ${data.warnings.join(' | ')}`:'';
-    showCustomerExportStatus(`Hittade ${data.count||latestCustomerEmails.length} e-postadresser. Inget mail skickades.${warnings}`,latestCustomerEmails.length?'':'warn');
+    const emailCount=Number(data.emailCount||data.count||latestCustomerEmails.length||0);
+    const phoneCount=Number(data.phoneCount||latestCustomerPhones.length||0);
+    const message=emailCount
+      ? `Hittade ${emailCount} e-postadresser och ${phoneCount} telefonnummer. Inget mail skickades.${warnings}`
+      : phoneCount
+        ? `Inga e-postadresser hittades, men ${phoneCount} telefonnummer finns. Inget mail skickades.${warnings}`
+        : `Inga e-postadresser eller telefonnummer hittades. Inget mail skickades.${warnings}`;
+    showCustomerExportStatus(message,emailCount?'':'warn');
   }catch(error){
     latestCustomerEmails=[];
+    latestCustomerPhones=[];
     customerExportOutputEl.style.display='block';
     customerExportEmailsEl.value='';
+    customerExportPhonesEl.value='';
     showCustomerExportStatus(`Fel: ${error.message}`,'bad');
   }finally{
     button.disabled=false;
@@ -1592,6 +1616,16 @@ async function copyCustomerEmailList(){
     if(!text.trim()){showCustomerExportStatus('Ingen e-postlista att kopiera. Exportera kundlista forst.','warn');return;}
     await copyText(text);
     showCustomerExportStatus(`Kopierade ${text.split(/\n+/).filter(Boolean).length} e-postadresser. Inget mail skickades.`);
+  }catch(error){
+    showCustomerExportStatus(`Kunde inte kopiera: ${error.message}`,'bad');
+  }
+}
+async function copyCustomerPhoneList(){
+  try{
+    const text=customerExportPhonesEl.value||latestCustomerPhones.join('\n');
+    if(!text.trim()){showCustomerExportStatus('Ingen telefonlista att kopiera. Exportera kundlista forst.','warn');return;}
+    await copyText(text);
+    showCustomerExportStatus(`Kopierade ${text.split(/\n+/).filter(Boolean).length} telefonnummer. Inget SMS skickades.`);
   }catch(error){
     showCustomerExportStatus(`Kunde inte kopiera: ${error.message}`,'bad');
   }
@@ -1819,9 +1853,21 @@ async function loadCallDashboard(){
     const data=await api('/api/call-dashboard');
     callDashboardRows=data.rows||data.todayRows||[];
     renderCallDashboard(data);
+    const callLogStatus=await checkCallLogsSource();
+    if(callLogStatus&&callLogStatus.sourceUnavailable){
+      showCallStatus('Call logs källa saknas / ej konfigurerad',true);
+      return;
+    }
     showCallStatus(`Samtal uppdaterade ${new Date().toLocaleTimeString('sv-SE')}.`);
   }catch(error){
     showCallStatus(error.message,true);
+  }
+}
+async function checkCallLogsSource(){
+  try{
+    return await aiFunctionFetch('/.netlify/functions/call-logs?readOnly=1');
+  }catch(error){
+    return {sourceUnavailable:true,warnings:[error.message]};
   }
 }
 function renderCallDashboard(data){
