@@ -1,0 +1,87 @@
+# Agent Sync Log — Nordic E-Mobility
+
+Delad realtidslogg mellan AI-agenter som jobbar i detta repo (Claude Code,
+Codex, m.fl.). Syftet: vi jobbar ofta **parallellt i samma mapp** och får inte
+skriva över varandras arbete eller dubblera ändringar. Den här filen är vår
+löpande "konversation".
+
+> Detta är operativ koordinering. Den varaktiga arkitektur-/handoff-bilden bor
+> fortfarande i [`AGENTS.md`](../AGENTS.md), [`CLAUDE.md`](../CLAUDE.md) och
+> [`docs/codex-handoff.md`](codex-handoff.md). Den här filen ersätter dem inte.
+
+## Protokoll (läs och följ)
+
+1. **Vid start av ett pass:** `git fetch origin`, stå på `main`,
+   `git pull --ff-only`, läs de senaste posterna nedan.
+2. **När du börjar en uppgift:** lägg en NY post högst upp i `## Logg` med
+   status `PÅGÅR` — säg vilken branch och vilka filer/områden du tar.
+3. **När du är klar / lämnar över:** uppdatera posten till `KLAR` (eller lägg en
+   ny) med resultat, testkörningar och ev. risker.
+4. **Commit-disciplin:** committa loggändringen i en **egen liten commit**.
+   `git pull --ff-only` innan du pushar. Lämna inte ändringar ocommittade länge
+   — ocommittat arbete kan gå förlorat om den andra agenten byter branch i den
+   delade mappen.
+5. **Vid konflikt i denna fil:** behåll BÅDA posterna (det är en logg, inget ska
+   skrivas över). Lös konflikten genom att lägga båda i kronologisk ordning.
+6. **Rör aldrig** den andra agentens ocommittade arbete, branch eller
+   git-worktree. Byt inte branch i en mapp där den andra kan jobba utan att först
+   logga det här och säkra (committa) eget arbete.
+7. **Format på en post:** se mallen längst ned.
+
+## Logg
+
+<!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
+
+### 2026-06-26 ~12:40Z — Claude Code — KLAR
+
+- **Branch:** `seo/sitemap-favicon` → mergad till `main` via
+  [PR #37](https://github.com/Litooo88/tubular-licorice-2179de/pull/37)
+  (merge-commit `ccdf9ad`, mergad av Sebastian).
+- **Gjorde:** SEO-fix. Skapade `favicon.svg` (varumärkesgrön `#00C853`) och la
+  `<link rel="icon">` på alla 19 publika sidor (efter `<meta charset>`). La till
+  saknade sidor i `sitemap.xml`: `/nya-elscootrar/`, `/foretag/`, `/garanti/`.
+  Commit `9fdfbd6`, 21 filer.
+- **Tester:** `npm run build` ✅, `npm run verify:checkout-products` ✅.
+- **Rör INTE:** ingen kod i AI Operator/MVP4, inga functions, ingen storage.
+- **Notis:** Codex MVP4-commit `e716afc` (Communication radar demo) ligger också
+  på `main`. Inga konflikter — SEO och MVP4 samexisterar.
+- **Production:** PR mergad → Netlify deployar från `main`.
+
+### 2026-06-26 (tidigare denna session) — Claude Code — KLAR
+
+- **Gjorde:** Genomgång av hela sajten på begäran (read-only).
+  - Hälsokoll: `npm run build` ✅, `npm run verify:checkout-products` ✅,
+    `nemob-callflow` `tsc --noEmit` ✅.
+  - Live-koll: startsida + `/book-online/` laddar korrekt.
+  - Säkerhetsgranskning (ej åtgärdad) — viktigaste fynd att ta tag i:
+    - **Kritiskt:** `netlify/functions/case-media.mjs` GET serverar kundbilder
+      utan auth (före `requireAdmin`) och struntar i `publicOk` (IDOR-läcka).
+    - **Högt:** inga signaturkontroller på 46elks voice-callbacks
+      (`voice-notify.mjs`, `voice-start.mjs`); ingen Stripe-webhook som bekräftar
+      betalning; `booking.mjs` saknar rate limiting/honeypot.
+    - **Medel:** `booking-env-status.mjs` publik config-disclosure; admin-token i
+      `localStorage`; icke-konstanttidsjämförelse i `requireAdmin`;
+      `create-checkout.js` litar på `Origin`-header; `cases.mjs` är död
+      duplicerad write-path på disabled route.
+  - SEO-granskning — fynd kvar utöver det åtgärdade ovan:
+    - Logotypen är 1,8 MB och laddas på varje sida (`logo.png` =
+      `nordic_logo_transparent.png`, byte-identiska) — optimera.
+    - ~7 MB oanvända PNG:er i repo-roten (`blade-gt2-promo.png`,
+      `facebook-content-1/2.png`).
+    - `/priser/` saknar JSON-LD; motsägelse i `_redirects` för `/product-page/*`.
+- **Inga kodändringar** i detta steg (bara granskning).
+
+---
+
+## Postmall (kopiera)
+
+```
+### ÅÅÅÅ-MM-DD ~HH:MMZ — <Agent> — <PÅGÅR|KLAR>
+
+- **Branch:** <branch / PR>
+- **Gjorde:** <kort vad>
+- **Filer/områden:** <vilka filer eller routes>
+- **Tester:** <kommandon + resultat>
+- **Nästa / överlämning:** <vad som är kvar>
+- **Varning:** <vad den andra agenten bör undvika att röra just nu>
+```
