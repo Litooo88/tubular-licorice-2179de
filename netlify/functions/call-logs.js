@@ -25,12 +25,20 @@ exports.handler = async (event) => {
     if (event.httpMethod === "GET") {
       try {
         const calls = await list("call_logs", { caseId: params.caseId, status: params.status, limit: params.limit });
-        return json(200, { ok: true, calls, warnings: [] });
+        return json(200, {
+          ok: true,
+          calls,
+          storageAvailable: true,
+          sourceUnavailable: false,
+          warnings: [],
+        });
       } catch (error) {
         console.error("call-logs read failed", storageWarning(error));
         return json(200, {
           ok: true,
           calls: [],
+          storageAvailable: false,
+          sourceUnavailable: true,
           warnings: [storageWarning(error)],
         });
       }

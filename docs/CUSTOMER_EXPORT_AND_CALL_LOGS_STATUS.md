@@ -2,30 +2,27 @@
 
 Senast uppdaterad: 2026-06-26
 
-## Syfte
+## Faktisk admin-kundkälla
 
-Detta dokument beskriver den säkra, read-only kundexporten och hardening av
-`/.netlify/functions/call-logs`.
+`/admin/` bygger kundkorten från `GET /api/cases`.
 
-## Call logs
+Den routen hanteras av `netlify/functions/workshop-cases.mjs` och läser
+Netlify Blob-storen `workshop-cases`.
 
-`call-logs` är adminskyddad med `x-admin-token` / `ADMIN_TOKEN`.
+Kodspårning:
 
-Förändring:
+- `admin/index.html` anropar `api('/api/cases')` i `loadCases()`.
+- `netlify/functions/workshop-cases.mjs` exponerar `/api/cases`.
+- `workshop-cases.mjs` läser `getStore({ name: "workshop-cases" })`.
+- Namn som syntes i production-admin hittades inte i repot, vilket betyder att
+  de inte är hårdkodade i HTML/JS eller statisk JSON.
 
-- `GET` returnerar alltid kontrollerad JSON.
-- Om Netlify Blobs saknar runtime-konfiguration eller är tom returneras `200`
-  med `calls: []` och `warnings`, inte 502.
-- `POST` har `dryRun`, `readOnly` och `previewOnly` som inte skriver till Blobs.
-- Oväntade fel returnerar JSON med `error: "Function error"`.
+Admin-token sparas fortfarande i browserns `localStorage` som befintlig MVP-auth,
+men kundkorten lagras inte auktoritativt i `localStorage`.
 
-Rotorsak till production-felet var att endpointen anropade Blob-storage direkt
-utan try/catch. När Netlify Blobs runtime saknade rätt konfiguration bubblade
-`MissingBlobsEnvironmentError` upp som 502.
+## Kundexport
 
-## Customer export
-
-Ny endpoint:
+Endpoint:
 
 `/.netlify/functions/customer-export`
 
@@ -36,50 +33,110 @@ Egenskaper:
 - Skickar inga mail.
 - Skickar inga SMS.
 - Gör inga production-writes.
-- Returnerar JSON med `customers`, `emails`, `count`, `sources` och `warnings`.
+- Filtrerar bort `email@example.com`, `test@example.com`, tomma värden och
+  ogiltiga e-postformat.
 
-## Källor
+Primär källa är nu samma som admin använder:
 
-Endpointen försöker läsa:
+- `admin_cases_api` -> `GET /api/cases` -> `workshop-cases`
+
+Som kompletterande källor försöker endpointen läsa:
 
 - `service_cases` / Netlify Blob `workshop-cases`
 - `customers` / Netlify Blob `customers`
 - `communication_events` / Netlify Blob `communication-events`
 
-Om en källa är tom eller saknas läggs det i `warnings` och exporten fortsätter.
-
-## Filtrering
-
-Exporten deduplicerar e-postadresser och filtrerar bort:
-
-- tomma värden
-- ogiltiga e-postformat
-- `email@example.com`
-- `test@example.com`
-
-Om inga riktiga e-postadresser hittas returneras:
+Response inkluderar både e-post och telefonnummer:
 
 ```json
 {
   "customers": [],
   "emails": [],
-  "count": 0
+  "phones": [],
+  "emailCount": 0,
+  "phoneCount": 0,
+  "sources": [],
+  "warnings": []
 }
 ```
 
-med warnings som beskriver vilka källor som var tomma eller saknade.
+Om inga riktiga e-postadresser finns men telefonnummer finns ska admin visa:
 
-## Admin UI
+`Inga e-postadresser hittades, men X telefonnummer finns.`
 
-`/admin/` har en liten panel:
+Det här är viktigt eftersom många production-kundkort saknar e-post men har
+telefonnummer.
 
-- `Exportera kundlista`
-- antal hittade e-postadresser
-- read-only textarea med kopierbar lista
+## Call logs
 
-Det finns ingen massutskicksfunktion i admin.
+Endpoint:
 
-## Framtida massutskick
+`/.netlify/functions/call-logs`
+
+Egenskaper:
+
+- Kräver `x-admin-token`.
+- `GET` är read-only.
+- `POST` har `dryRun`, `readOnly` och `previewOnly` som inte skriver till Blobs.
+- Skickar inga SMS.
+- Oväntade fel returnerar kontrollerad JSON.
+
+När storage saknas returnerar endpointen nu tydlig källstatus:
+
+```json
+{
+  "ok": true,
+  "calls": [],
+  "storageAvailable": false,
+  "sourceUnavailable": true,
+  "warnings": []
+}
+```
+
+Admin ska visa `Call logs källa saknas / ej konfigurerad` så att saknad källa
+inte misstolkas som noll missade samtal.
+
+## Storage health
+
+Endpoint:
+
+`/.netlify/functions/storage-health`
+
+Den kräver `x-admin-token` och returnerar endast booleans/felkoder, aldrig
+secret-värden:
+
+```json
+{
+  "ok": true,
+  "blobsAvailable": false,
+  "hasSiteId": false,
+  "hasToken": false,
+  "storesChecked": [],
+  "warnings": []
+}
+```
+
+Syftet är att se om Netlify Blobs är åtkomligt för de skyddade legacy
+functions som använder shared storage-helpern. Production-observationen med
+`MissingBlobsEnvironmentError` betyder att den aktuella function-runtimen saknar
+den Blob-kontext eller de manuella properties (`siteID`, `token`) som
+`@netlify/blobs` kräver när den inte kan auto-konfigureras.
+
+Det påverkar framför allt de nya legacy/CJS-functions som använder shared
+storage-helpern. Den befintliga admin-källan `/api/cases` går via
+`workshop-cases.mjs` och är fortfarande den auktoritativa production-källan för
+kundkort.
+
+## Vad som saknas
+
+- En riktig, enhetlig kunddatamodell med migrationsplan.
+- En production-konfigurerad storage-helper som fungerar lika i alla functions.
+- Riktig call-log-ingest från 46elks/Cloudflare Worker in i samma datakälla.
+- E-postsamtycke, avregistrering och mottagargranskning innan utskick.
+
+## Massutskick
+
+Massutskick är inte aktiverat.
 
 Innan kundutskick aktiveras behövs:
 
@@ -89,4 +146,4 @@ Innan kundutskick aktiveras behövs:
 - loggning av utskick
 - policy för vilka kundtyper som får kontaktas
 
-Massutskick är inte aktiverat i denna ändring.
+Den här ändringen skickar inga mail och inga SMS.

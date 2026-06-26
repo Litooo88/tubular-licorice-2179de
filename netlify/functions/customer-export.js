@@ -3,36 +3,60 @@ const { list } = require("./_shared/storage");
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const PLACEHOLDERS = new Set(["email@example.com", "test@example.com"]);
+const PHONE_PLACEHOLDERS = new Set(["saknas", "telefon saknas", "unknown", "okand", "okänd", "test"]);
 
 const normalizeEmail = (value) => clean(value, 240).toLowerCase();
+const normalizePhone = (value) => {
+  const raw = clean(value, 80);
+  if (!raw || PHONE_PLACEHOLDERS.has(raw.toLowerCase())) return "";
+  const compact = raw.replace(/[^\d+]/g, "");
+  if (!compact || compact.replace(/\D/g, "").length < 6) return "";
+  return raw;
+};
 
 const isValidCustomerEmail = (value) => {
   const email = normalizeEmail(value);
   return Boolean(email) && EMAIL_RE.test(email) && !PLACEHOLDERS.has(email);
 };
 
-const addEmailCandidate = (map, { email, name, phone, caseId, customerId, source }) => {
+const addEmailCandidate = (emailMap, phoneMap, { email, name, phone, caseId, customerId, source }) => {
   const normalized = normalizeEmail(email);
-  if (!isValidCustomerEmail(normalized)) return;
-  const existing = map.get(normalized) || {
-    email: normalized,
-    name: "",
-    phone: "",
-    customerId: "",
+  const normalizedPhone = normalizePhone(phone);
+  const base = {
+    name: clean(name, 160),
+    phone: normalizedPhone,
+    customerId: clean(customerId, 180),
     caseIds: [],
     sources: [],
   };
-  existing.name = existing.name || clean(name, 160);
-  existing.phone = existing.phone || clean(phone, 80);
-  existing.customerId = existing.customerId || clean(customerId, 180);
-  if (caseId && !existing.caseIds.includes(caseId)) existing.caseIds.push(clean(caseId, 180));
-  if (source && !existing.sources.includes(source)) existing.sources.push(source);
-  map.set(normalized, existing);
+  if (caseId) base.caseIds.push(clean(caseId, 180));
+  if (source) base.sources.push(source);
+
+  if (isValidCustomerEmail(normalized)) {
+    const existing = emailMap.get(normalized) || { email: normalized, ...base };
+    existing.name = existing.name || base.name;
+    existing.phone = existing.phone || base.phone;
+    existing.customerId = existing.customerId || base.customerId;
+    for (const id of base.caseIds) if (id && !existing.caseIds.includes(id)) existing.caseIds.push(id);
+    for (const sourceName of base.sources) if (sourceName && !existing.sources.includes(sourceName)) existing.sources.push(sourceName);
+    emailMap.set(normalized, existing);
+  }
+
+  if (normalizedPhone) {
+    const phoneKey = normalizedPhone.replace(/[^\d+]/g, "");
+    const existing = phoneMap.get(phoneKey) || { phone: normalizedPhone, email: isValidCustomerEmail(normalized) ? normalized : "", ...base };
+    existing.name = existing.name || base.name;
+    existing.email = existing.email || (isValidCustomerEmail(normalized) ? normalized : "");
+    existing.customerId = existing.customerId || base.customerId;
+    for (const id of base.caseIds) if (id && !existing.caseIds.includes(id)) existing.caseIds.push(id);
+    for (const sourceName of base.sources) if (sourceName && !existing.sources.includes(sourceName)) existing.sources.push(sourceName);
+    phoneMap.set(phoneKey, existing);
+  }
 };
 
-const collectFromCase = (map, item, source) => {
+const collectFromCase = (emailMap, phoneMap, item, source) => {
   const customer = item?.customer || {};
-  addEmailCandidate(map, {
+  addEmailCandidate(emailMap, phoneMap, {
     email: customer.email || item.email || item.customerEmail,
     name: customer.name || item.customerName,
     phone: customer.phone || item.customerPhone,
@@ -42,8 +66,8 @@ const collectFromCase = (map, item, source) => {
   });
 };
 
-const collectFromCustomer = (map, item, source) => {
-  addEmailCandidate(map, {
+const collectFromCustomer = (emailMap, phoneMap, item, source) => {
+  addEmailCandidate(emailMap, phoneMap, {
     email: item?.email || item?.customerEmail,
     name: item?.name || item?.customerName,
     phone: item?.phone || item?.customerPhone,
@@ -52,14 +76,14 @@ const collectFromCustomer = (map, item, source) => {
   });
 };
 
-const readSource = async (entity, collector, map, warnings) => {
+const readSource = async (entity, collector, emailMap, phoneMap, warnings) => {
   try {
     const rows = await list(entity);
     if (!rows.length) {
       warnings.push(`${entity}: tom eller saknar poster.`);
       return { source: entity, count: 0 };
     }
-    rows.forEach((row) => collector(map, row, entity));
+    rows.forEach((row) => collector(emailMap, phoneMap, row, entity));
     return { source: entity, count: rows.length };
   } catch (error) {
     const code = clean(error?.code || error?.name || "STORAGE_UNAVAILABLE", 80);
@@ -67,6 +91,54 @@ const readSource = async (entity, collector, map, warnings) => {
     console.error("customer-export source failed", { source: entity, code, message });
     warnings.push(`${entity}: kunde inte lasas (${code}).`);
     return { source: entity, count: 0, error: code };
+  }
+};
+
+const header = (event, name) => {
+  const headers = event?.headers || {};
+  const target = String(name).toLowerCase();
+  const key = Object.keys(headers).find((item) => item.toLowerCase() === target);
+  return key ? String(headers[key] || "") : "";
+};
+
+const originFor = (event) => {
+  const host = header(event, "host");
+  if (!host) return "";
+  const forwardedProto = header(event, "x-forwarded-proto");
+  const protocol = forwardedProto || (host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https");
+  return `${protocol}://${host}`;
+};
+
+const readAdminCasesSource = async (event, emailMap, phoneMap, warnings) => {
+  const origin = originFor(event);
+  if (!origin) {
+    warnings.push("admin_cases_api: kunde inte bygga intern URL.");
+    return { source: "admin_cases_api", count: 0, error: "MISSING_ORIGIN" };
+  }
+  try {
+    const response = await fetch(`${origin}/api/cases`, {
+      headers: { "x-admin-token": header(event, "x-admin-token") },
+      signal: AbortSignal.timeout(10000),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      const code = clean(data?.error || response.statusText || `HTTP_${response.status}`, 120);
+      warnings.push(`admin_cases_api: kunde inte lasas (${code}).`);
+      return { source: "admin_cases_api", count: 0, error: code };
+    }
+    const rows = Array.isArray(data.cases) ? data.cases : [];
+    if (!rows.length) {
+      warnings.push("admin_cases_api: tom eller saknar poster.");
+      return { source: "admin_cases_api", count: 0 };
+    }
+    rows.forEach((row) => collectFromCase(emailMap, phoneMap, row, "admin_cases_api"));
+    return { source: "admin_cases_api", count: rows.length };
+  } catch (error) {
+    const code = clean(error?.code || error?.name || "ADMIN_CASES_API_UNAVAILABLE", 80);
+    const message = clean(error?.message || "Admin cases API kunde inte lasas.", 240);
+    console.error("customer-export admin cases source failed", { code, message });
+    warnings.push(`admin_cases_api: kunde inte lasas (${code}).`);
+    return { source: "admin_cases_api", count: 0, error: code };
   }
 };
 
@@ -78,28 +150,38 @@ exports.handler = async (event) => {
 
     const warnings = [];
     const customersByEmail = new Map();
+    const customersByPhone = new Map();
     const sources = [];
 
-    sources.push(await readSource("service_cases", collectFromCase, customersByEmail, warnings));
-    sources.push(await readSource("customers", collectFromCustomer, customersByEmail, warnings));
-    sources.push(await readSource("communication_events", (map, item, source) => {
-      addEmailCandidate(map, {
+    sources.push(await readAdminCasesSource(event, customersByEmail, customersByPhone, warnings));
+    sources.push(await readSource("service_cases", collectFromCase, customersByEmail, customersByPhone, warnings));
+    sources.push(await readSource("customers", collectFromCustomer, customersByEmail, customersByPhone, warnings));
+    sources.push(await readSource("communication_events", (emailMap, phoneMap, item, source) => {
+      addEmailCandidate(emailMap, phoneMap, {
         email: item?.from,
         name: item?.from,
+        phone: item?.phone || item?.fromPhone,
         caseId: item?.caseId,
         customerId: item?.customerId,
         source,
       });
-    }, customersByEmail, warnings));
+    }, customersByEmail, customersByPhone, warnings));
 
     const customers = [...customersByEmail.values()].sort((a, b) => a.email.localeCompare(b.email));
     const emails = customers.map((customer) => customer.email);
-    if (!emails.length) warnings.push("Inga riktiga kund-e-postadresser hittades. Placeholder/testadresser filtrerades bort.");
+    const phoneCustomers = [...customersByPhone.values()].sort((a, b) => a.phone.localeCompare(b.phone));
+    const phones = phoneCustomers.map((customer) => customer.phone);
+    if (!emails.length && phones.length) warnings.push(`Inga e-postadresser hittades, men ${phones.length} telefonnummer finns.`);
+    if (!emails.length && !phones.length) warnings.push("Inga riktiga kund-e-postadresser eller telefonnummer hittades. Placeholder/testadresser filtrerades bort.");
 
     return json(200, {
       customers,
       emails,
+      phones,
+      emailCount: emails.length,
+      phoneCount: phones.length,
       count: emails.length,
+      phoneCustomers,
       sources,
       warnings,
       readOnly: true,
@@ -116,6 +198,9 @@ exports.handler = async (event) => {
       code: clean(error?.code || error?.name || "CUSTOMER_EXPORT_ERROR", 80),
       customers: [],
       emails: [],
+      phones: [],
+      emailCount: 0,
+      phoneCount: 0,
       count: 0,
       sources: [],
       warnings: ["customer-export: ovantat fel, ingen export skapad."],
