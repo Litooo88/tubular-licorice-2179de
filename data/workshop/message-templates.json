@@ -1,0 +1,42 @@
+{
+  "version": "0.1",
+  "updatedAt": "2026-06-26",
+  "bookingUrl": "https://www.nordicemobility.se/book-online/",
+  "templates": [
+    {
+      "id": "missed_call_identified",
+      "channel": "sms",
+      "riskLevel": "low",
+      "requiresApproval": false,
+      "body": "Hej! Jag ber om ursäkt att jag missat ditt samtal och att återkopplingen dragit ut på tiden. Vi har haft ovanligt hög belastning i verkstaden och tillfälliga bemanningsproblem. Jag går nu igenom alla pågående ärenden i turordning. Skriv gärna kort vad det gäller och om fordonet redan står hos oss, så återkommer jag så snabbt jag kan. För ny inlämning bokas tid här: https://www.nordicemobility.se/book-online/ Mvh Sebastian, Nordic E-Mobility"
+    },
+    {
+      "id": "missed_call_unknown",
+      "channel": "sms",
+      "riskLevel": "low",
+      "requiresApproval": false,
+      "body": "Hej! Jag har missat ditt samtal till Nordic E-Mobility. Ber om ursäkt för sen återkoppling, vi har haft väldigt hög belastning i verkstaden. Skriv gärna namn, modell på fordonet och vad ärendet gäller, så återkommer jag i turordning. För ny inlämning bokas tid här: https://www.nordicemobility.se/book-online/ Mvh Sebastian, Nordic E-Mobility"
+    },
+    {
+      "id": "book_diagnostics",
+      "channel": "sms",
+      "riskLevel": "low",
+      "requiresApproval": false,
+      "body": "Hej! För att kunna bedöma felet behöver vi boka felsökning. Boka tid här: https://www.nordicemobility.se/book-online/ Skriv gärna modell, felbeskrivning och eventuell felkod."
+    },
+    {
+      "id": "quote_interval",
+      "channel": "sms",
+      "riskLevel": "medium",
+      "requiresApproval": true,
+      "body": "Hej! Utifrån nuvarande felsökning bedömer vi att arbetet ligger i intervallet __ kr till __ kr. Slutpris bekräftas innan arbete utförs."
+    },
+    {
+      "id": "battery_risk",
+      "channel": "sms",
+      "riskLevel": "high",
+      "requiresApproval": true,
+      "body": "Hej! Eftersom ärendet gäller batteri/laddning behöver vi hantera det extra försiktigt. Vi kan inte ge slutlig bedömning eller fast pris innan säker kontroll är gjord."
+    }
+  ]
+}
