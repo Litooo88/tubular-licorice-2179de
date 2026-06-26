@@ -195,8 +195,8 @@ const applyPatch = (caseItem, body) => {
   if (body.vehicleModel) caseItem.vehicle = { ...(caseItem.vehicle || {}), model: clean(body.vehicleModel, 160) };
   if (body.assignedTo) {
     const sebastian = { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "010-138 54 98" };
-    const lennart = { key: "lennart", name: "Lennart", role: "Golv, mottagning och snabba jobb", phone: "010-138 54 98" };
-    caseItem.assignedTo = body.assignedTo === "sebastian" ? sebastian : lennart;
+    const workshop = { key: "workshop", name: "Verkstaden", role: "Golv, mottagning och snabba jobb", phone: "010-138 54 98" };
+    caseItem.assignedTo = body.assignedTo === "sebastian" ? sebastian : workshop;
   }
   if (body.note) {
     caseItem.notes = Array.isArray(caseItem.notes) ? caseItem.notes : [];

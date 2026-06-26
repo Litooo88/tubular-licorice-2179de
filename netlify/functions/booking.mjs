@@ -70,9 +70,9 @@ const LOGO_URL = env("SITE_URL") ? `${env("SITE_URL").replace(/\/$/, "")}/nordic
 const RETRY_DELAY_MS = 30000;
 
 const STAFF = {
-  lennart: {
-    key: "lennart",
-    name: "Lennart",
+  workshop: {
+    key: "workshop",
+    name: "Verkstaden",
     role: "Golv, mottagning och snabba jobb",
     phone: "010-138 54 98",
   },
@@ -204,7 +204,7 @@ const assignOwner = (service, message = "") => {
 
   const heavyWords = ["batteri", "bms", "controller", "elsystem", "avancerad", "ladd", "display", "felkod"];
   if (heavyWords.some((word) => text.includes(word))) return STAFF.sebastian;
-  return STAFF.lennart;
+  return STAFF.workshop;
 };
 
 const normalizePhone = (phone) => {
@@ -531,7 +531,7 @@ const sendWorkshopSmsNotification = async (caseItem) => {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
-  const recipients = uniquePhones([STAFF.sebastian.phone, STAFF.lennart.phone, ...configured]);
+  const recipients = uniquePhones([STAFF.sebastian.phone, STAFF.workshop.phone, ...configured]);
   const results = await Promise.all(recipients.map((recipient) => postSms({ to: recipient, message: workshopSmsMessage(caseItem) })));
   const sentCount = results.filter((result) => result.status === "sent").length;
   const failedCount = results.length - sentCount;

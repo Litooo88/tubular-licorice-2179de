@@ -1,6 +1,6 @@
 # Verkstadsworkflow i admin
 
-Det har dokumentet ar till for Sebastian, Lennart och ovriga som jobbar i verkstaden. Malet ar att varje arende ska hanteras pa samma satt varje gang, sa att kundkontakt, betalning och content inte blir personberoende.
+Det har dokumentet ar till for Sebastian, Verkstaden och ovriga som jobbar i verkstaden. Malet ar att varje arende ska hanteras pa samma satt varje gang, sa att kundkontakt, betalning och content inte blir personberoende.
 
 ## 1. Oppna admin
 
@@ -217,7 +217,7 @@ Varje dag borja sa har:
 5. Nar ett jobb ar klart: fyll i slutkostnad och skicka klarmeddelande
 6. Om jobbet ar bra for marknadsforing: ladda upp bilder samma dag
 
-## 9. Enkla regler for Lennart
+## 9. Enkla regler for Verkstaden
 
 For att undvika misstag:
 

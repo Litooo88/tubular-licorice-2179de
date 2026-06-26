@@ -26,7 +26,7 @@ const normalizePhone = (value) => {
 
 const voiceConfig = () => ({
   sebastian: normalizePhone(env("VOICE_SEBASTIAN_PHONE")),
-  lennart: normalizePhone(env("VOICE_LENNART_PHONE")),
+  workshop: normalizePhone(env("VOICE_WORKSHOP_PHONE")),
   workshopNumber: normalizePhone(env("VOICE_CALLER_ID")) || "+46101385498",
   timeout: Math.max(8, Math.min(30, Number(env("VOICE_TIMEOUT_SECONDS") || 18))),
 });
@@ -138,26 +138,26 @@ export default async (request) => {
     const result = clean(body.result || body.state, 40);
     console.log("voice_step_sebastian", { callid: body.callid || body.id, from: body.from, result, why: body.why });
     if (result === "success") return json(hangupAction());
-    if (!callConfig.lennart) {
+    if (!callConfig.workshop) {
       const sms = await sendMissedCallSms({
         customerNumber: normalizePhone(body.from),
-        result: result || "lennart_not_configured",
+        result: result || "workshop_not_configured",
         callid: clean(body.callid || body.id, 120),
       });
-      console.log("voice_missing_lennart_sms", sms);
+      console.log("voice_missing_workshop_sms", sms);
       return json(hangupAction());
     }
     return json(connectAction({
-      to: callConfig.lennart,
+      to: callConfig.workshop,
       callerid: callConfig.workshopNumber,
       timeout: callConfig.timeout,
-      nextUrl: `${baseUrl}?stage=lennart`,
+      nextUrl: `${baseUrl}?stage=workshop`,
     }));
   }
 
-  if (stage === "lennart") {
+  if (stage === "workshop") {
     const result = clean(body.result || body.state, 40);
-    console.log("voice_step_lennart", { callid: body.callid || body.id, from: body.from, result, why: body.why });
+    console.log("voice_step_workshop", { callid: body.callid || body.id, from: body.from, result, why: body.why });
     if (result !== "success") {
       const sms = await sendMissedCallSms({
         customerNumber: normalizePhone(body.from),

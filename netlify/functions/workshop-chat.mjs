@@ -27,7 +27,7 @@ const normalizePhone = (phone) => {
 };
 
 const STAFF = {
-  lennart: { key: "lennart", name: "Lennart", role: "Golv, mottagning och snabba jobb", phone: "010-138 54 98" },
+  workshop: { key: "workshop", name: "Verkstaden", role: "Golv, mottagning och snabba jobb", phone: "010-138 54 98" },
   sebastian: { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "010-138 54 98" },
 };
 
@@ -52,7 +52,7 @@ const topicService = {
 const assigneeFor = (topic, message) => {
   const text = `${topic} ${message}`.toLowerCase();
   if (/battery|batteri|ladd|bms|controller|display|felkod|error|elsystem/.test(text)) return STAFF.sebastian;
-  return STAFF.lennart;
+  return STAFF.workshop;
 };
 
 const uniquePhones = (phones) => {
@@ -116,7 +116,7 @@ const sendWorkshopAlert = async (caseItem) => {
   const configured = clean(env("WORKSHOP_CHAT_SMS_TO") || env("WORKSHOP_SMS_TO"), 500)
     .split(/[,\s;]+/)
     .filter(Boolean);
-  const recipients = uniquePhones([STAFF.lennart.phone, STAFF.sebastian.phone, ...configured]);
+  const recipients = uniquePhones([STAFF.workshop.phone, STAFF.sebastian.phone, ...configured]);
   const message = notificationMessage({
     caseId: caseItem.id,
     topicLabel: caseItem.chat?.topicLabel,

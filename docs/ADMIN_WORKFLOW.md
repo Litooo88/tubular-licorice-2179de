@@ -61,7 +61,7 @@ bakåtkompatibel mappning.
 
 ## Roller och godkännande
 
-- Lennart får uppdatera verkstadsstatus, logg, bilder och reservdelsbehov.
+- Verkstaden får uppdatera verkstadsstatus, logg, bilder och reservdelsbehov.
 - Sebastian godkänner slutpris, batteriärenden, reklamation, rabatt, garanti,
   betalning och högriskkommunikation.
 - AI får rekommendera nästa status men inte själv flytta ärenden genom

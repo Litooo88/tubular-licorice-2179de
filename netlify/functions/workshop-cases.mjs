@@ -94,7 +94,7 @@ const numberOrNull = (value) => {
 };
 
 const STAFF = {
-  lennart: { key: "lennart", name: "Lennart", role: "Golv, mottagning och snabba jobb", phone: "010-138 54 98" },
+  workshop: { key: "workshop", name: "Verkstaden", role: "Golv, mottagning och snabba jobb", phone: "010-138 54 98" },
   sebastian: { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "010-138 54 98" },
 };
 
@@ -216,7 +216,24 @@ const requireAdmin = (request) => {
   return { ok: true };
 };
 
-const loadCase = async (store, id) => store.get(id, { type: "json" });
+const normalizeOwner = (value) => value?.key === "sebastian" ? STAFF.sebastian : STAFF.workshop;
+
+const normalizeStoredCase = (item) => {
+  if (!item) return null;
+  const next = {
+    ...item,
+    assignedTo: normalizeOwner(item.assignedTo),
+  };
+  if (next.quote) {
+    next.quote = {
+      ...next.quote,
+      contactOwner: next.quote.contactOwner === "sebastian" ? "sebastian" : "workshop",
+    };
+  }
+  return next;
+};
+
+const loadCase = async (store, id) => normalizeStoredCase(await store.get(id, { type: "json" }));
 
 const normalizePriceRows = (rows = []) =>
   Array.isArray(rows)
@@ -235,7 +252,7 @@ const priceRowsTotal = (rows = []) =>
   rows.reduce((sum, row) => sum + Number(row.price || 0) * Number(row.qty || 1), 0);
 
 const quoteSmsText = ({ caseItem, amount, summary, contactOwner }) => {
-  const owner = contactOwner === "sebastian" ? STAFF.sebastian : STAFF.lennart;
+  const owner = contactOwner === "sebastian" ? STAFF.sebastian : STAFF.workshop;
   const model = clean(caseItem.vehicle?.model, 160) || "scooter";
   const rounded = Math.round(Number(amount || 0));
   return [
@@ -333,7 +350,7 @@ export default async (request, context) => {
       discountCode: null,
       contactMethod: customerPhone ? "sms" : "phone",
       logistics: "dropoff",
-      assignedTo: STAFF.lennart,
+      assignedTo: STAFF.workshop,
       customer: {
         name: customerName,
         phone: customerPhone,
@@ -431,7 +448,7 @@ export default async (request, context) => {
     if (body.action === "send_quote_sms") {
       const amount = numberOrNull(body.amount);
       const summary = clean(body.summary, 500);
-      const contactOwner = clean(body.contactOwner, 40) === "sebastian" ? "sebastian" : "lennart";
+      const contactOwner = clean(body.contactOwner, 40) === "sebastian" ? "sebastian" : "workshop";
       if (!amount || amount <= 0) return json({ error: "Prisf\u00f6rslag m\u00e5ste ha belopp." }, 400);
       if (!summary) return json({ error: "\u00c5tg\u00e4rd/sammanfattning saknas." }, 400);
       const message = quoteSmsText({ caseItem: current, amount, summary, contactOwner });
@@ -698,7 +715,7 @@ export default async (request, context) => {
 
     if (body.assignedTo) {
       const assignee = clean(body.assignedTo, 40);
-      next.assignedTo = assignee === "sebastian" ? STAFF.sebastian : STAFF.lennart;
+      next.assignedTo = assignee === "sebastian" ? STAFF.sebastian : STAFF.workshop;
     }
 
     if (body.status === "ready" && !next.completion.readyAt) {

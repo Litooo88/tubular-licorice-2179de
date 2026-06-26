@@ -26,13 +26,13 @@ assert_contains() {
   echo "PASS: $label"
 }
 
-echo "Scenario 1: office-hours IVR option 1 -> Lennart workshop"
+echo "Scenario 1: office-hours IVR option 1 -> Verkstaden workshop"
 resp=$(post_form "/route/from-ivr" "callid=test-1&from=$CALLER&to=$TO&result=1")
-assert_contains "$resp" '"/dial/lennart' "routes option 1 to Lennart dial"
+assert_contains "$resp" '"/dial/workshop' "routes option 1 to Verkstaden dial"
 
-echo "Scenario 2: Lennart misses -> Sebastian fallback"
-resp=$(post_form "/dial/lennart?callid=test-2&from=$CALLER&ivr_choice=1" "callid=test-2&from=$CALLER&to=$TO")
-assert_contains "$resp" '"/dial/sebastian-fallback' "Lennart dial has Sebastian fallback"
+echo "Scenario 2: Verkstaden misses -> Sebastian fallback"
+resp=$(post_form "/dial/workshop?callid=test-2&from=$CALLER&ivr_choice=1" "callid=test-2&from=$CALLER&to=$TO")
+assert_contains "$resp" '"/dial/sebastian-fallback' "Verkstaden dial has Sebastian fallback"
 
 echo "Scenario 3: both miss -> voicemail"
 resp=$(post_form "/dial/sebastian-fallback?callid=test-3&from=$CALLER&ivr_choice=1" "callid=test-3&from=$CALLER&to=$TO")

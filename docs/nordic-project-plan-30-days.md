@@ -77,7 +77,7 @@ Om 30 dagar ska vi ha ett system dar:
 | Bild/content builder | Pa gang | 1 jobb -> flera contentbitar | Codex |
 | Premium retail/showroom | Pa gang | Starkare forsaljning av premiumfordon med test- och trygghetskansla | Sebastian + Codex |
 | Analytics och SEO | Pa gang | Mata trafik, sokord, konvertering och lokalt genomslag | Codex |
-| Google Business och social cadence | Ej startat i systemform | Kontinuerliga poster, bilder, recensioner och lokala signaler | Sebastian + Lennart + Codex |
+| Google Business och social cadence | Ej startat i systemform | Kontinuerliga poster, bilder, recensioner och lokala signaler | Sebastian + Verkstaden + Codex |
 
 ---
 
@@ -147,7 +147,7 @@ Minska tiden som idag laggs pa manuell kundkontakt om pris, status och hamtning.
 
 - mindre manuellt SMS-arbete
 - mindre risk att kunder missas
-- tydligare drift for Sebastian och Lennart
+- tydligare drift for Sebastian och Verkstaden
 
 ### Status
 
@@ -276,7 +276,7 @@ For att bli storst och bast i Mellansverige maste vi nu vinna pa:
 - prioriterar verksamhetslogik
 - ager relation till varumarken och premiumsortiment
 
-### Lennart
+### Verkstaden
 
 - mottagning och vardagsflode pa golvet
 - ska kunna anvanda admin enkelt

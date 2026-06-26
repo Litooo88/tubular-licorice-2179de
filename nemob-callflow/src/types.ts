@@ -9,7 +9,7 @@ export interface Env {
   ELKS_ALLOWED_IPS?: string;
   REQUIRE_ELKS_SIGNATURE?: string;
   SEBASTIAN_NUMBER: string;
-  LENNART_NUMBER: string;
+  WORKSHOP_NUMBER: string;
   ADMIN_KEY?: string;
   APPS_SCRIPT_WEBHOOK_URL?: string;
   INTRO_MP3_URL: string;
@@ -38,10 +38,10 @@ export interface CallLogRow {
   callid: string;
   caller_e164: string;
   duration_s?: number | null;
-  answered_by?: "sebastian" | "lennart" | "voicemail" | "missed" | null;
+  answered_by?: "sebastian" | "workshop" | "voicemail" | "missed" | null;
   status: "started" | "answered" | "missed" | "voicemail" | "rejected" | "route";
   ivr_choice?: "1" | "2" | "default" | "outside_hours" | null;
   recording_url?: string | null;
 }
 
-export type Operator = "sebastian" | "sebastian-fallback" | "lennart";
+export type Operator = "sebastian" | "sebastian-fallback" | "workshop";

@@ -169,7 +169,7 @@ wrangler secret put ELKS_ALLOWED_IPS
 wrangler secret put SEBASTIAN_NUMBER
 # Klistra in: +46101385498 (eller ditt aktuella mobilnummer)
 
-wrangler secret put LENNART_NUMBER
+wrangler secret put WORKSHOP_NUMBER
 # Klistra in: +46101385498
 
 wrangler secret put ADMIN_KEY
@@ -272,8 +272,8 @@ ELLER acceptera att smoke-test inte funkar och hoppa till Steg 9.
 ### Test 1 — Office hours, option 1
 1. Ring 010-138 54 98 från din egen mobil
 2. Hör välkomstprompten
-3. Tryck **1** → Hold music spelar → Lennarts mobil ringer
-4. Lennart svarar → samtalet kopplas
+3. Tryck **1** → Hold music spelar → Verkstadens mobil ringer
+4. Verkstaden svarar → samtalet kopplas
 
 **Verifiera i D1:**
 ```bash
@@ -282,8 +282,8 @@ wrangler d1 execute nemob-callflow --remote --command "SELECT * FROM call_log OR
 
 Du ska se rader för "started", "route", "answered" med korrekta värden.
 
-### Test 2 — Option 1, Lennart svarar inte
-1. Lennart sätter mobil i flygplansläge
+### Test 2 — Option 1, Verkstaden svarar inte
+1. Verkstaden sätter mobil i flygplansläge
 2. Ring 010-138 54 98 → tryck 1
 3. Vänta 25s → automatiskt fallback till Sebastian
 4. Sebastian svarar
