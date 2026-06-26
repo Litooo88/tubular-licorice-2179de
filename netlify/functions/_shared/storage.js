@@ -20,6 +20,8 @@ const ENTITIES = Object.freeze({
   part_needs: { store: "part-needs" },
   price_rules: { store: "price-catalog", collectionKey: "items" },
   ai_recommendations: { store: "ai-recommendations" },
+  communication_events: { store: "communication-events" },
+  ai_response_drafts: { store: "ai-response-drafts" },
   payments: { store: "payments" },
 });
 

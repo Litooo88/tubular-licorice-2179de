@@ -69,6 +69,25 @@ button:disabled{opacity:.6;cursor:wait}
 .ai-test-result{display:none;border:1px solid #29362d;border-radius:8px;background:#080d09;padding:12px;font-size:13px;line-height:1.5;white-space:pre-wrap}
 .ai-test-result.show{display:block}
 .ai-test-result.bad{border-color:rgba(255,90,95,.45);color:#ffe1e3}
+.communication-radar{padding:16px;margin:0 0 14px}
+.communication-radar h2{margin:0 0 6px;font-size:22px}
+.communication-radar p{margin:0;color:#aab5ac;font-size:13px;line-height:1.45}
+.communication-radar-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.communication-radar-actions{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.communication-radar-status{color:#8ff5ae;font-size:12px;margin-top:8px}
+.communication-radar-status.bad{color:#ffb1b5}
+.communication-radar-status.warn{color:#ffe0a3}
+.communication-radar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.communication-radar-card{border:1px solid #29362d;border-radius:8px;background:#080d09;padding:12px;min-width:0}
+.communication-radar-card h3{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:#a8b2aa;margin:0 0 8px}
+.communication-radar-list{display:grid;gap:8px}
+.communication-event{border-left:3px solid #00c853;background:#0f1610;border-radius:0 8px 8px 0;padding:9px 10px;font-size:12px;line-height:1.45}
+.communication-event.risk{border-left-color:#ff5a5f}
+.communication-event.supplier{border-left-color:#ffc247}
+.communication-event strong{display:block;color:#fff;margin-bottom:3px}
+.communication-event small{display:block;color:#9ea79f;margin-top:5px;word-break:break-word}
+.communication-draft-preview{display:none;border:1px solid #29362d;border-radius:8px;background:#061008;padding:12px;margin-top:10px;font-size:13px;line-height:1.5;white-space:pre-wrap}
+.communication-draft-preview.show{display:block}
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
 .stat{padding:16px}
 .stat span{display:block;color:#99a39b;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
@@ -265,7 +284,7 @@ textarea{min-height:66px;resize:vertical}
 .contact-state.waiting{color:#cce2ff}
 .contact-state.waiting::before{background:#4ba3ff;box-shadow:0 0 0 3px rgba(75,163,255,.18)}
   @media(max-width:1200px){.board,.workshop-tools{grid-template-columns:repeat(2,1fr)}}
-  @media(max-width:980px){.workshop-tools,.ai-control-detail,.ai-test-results{grid-template-columns:1fr}}
+  @media(max-width:980px){.workshop-tools,.ai-control-detail,.ai-test-results,.communication-radar-grid{grid-template-columns:1fr}}
   @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions,.media-grid,.content-actions,.tick-grid,.price-toolbar,.pos-grid,.pos-buttons,.sms-grid,.quote-grid{grid-template-columns:1fr}.top,.ai-control-head{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}.pos-line{grid-template-columns:1fr 72px}.pos-line .pos-remove,.sms-grid .full,.quote-grid .full{grid-column:1 / -1}}
 </style>
 <script>
@@ -343,6 +362,28 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <div class="ai-test-result" id="aiQuoteTestResult"></div>
       <div class="ai-test-result" id="aiSmsTestResult"></div>
     </div>
+  </section>
+  <section class="panel communication-radar">
+    <div class="communication-radar-head">
+      <div>
+        <h2>Kommunikationsradar</h2>
+        <p>Demo-s&auml;ker vy f&ouml;r mockade Gmail/SMS/samtal. Inga svar skickas och inga live-integrationer kopplas.</p>
+        <div class="communication-radar-status warn" id="communicationRadarStatus">Klicka p&aring; H&auml;mta demo-data f&ouml;r att ladda Kommunikationsradar.</div>
+      </div>
+      <div class="communication-radar-actions">
+        <button type="button" class="secondary" id="refreshCommunicationRadar">H&auml;mta demo-data</button>
+        <button type="button" class="secondary" id="testCommunicationDraft">Skapa svarsf&ouml;rslag dry-run</button>
+      </div>
+    </div>
+    <div class="communication-radar-grid">
+      <div class="communication-radar-card"><h3>Nya inkommande</h3><div class="communication-radar-list" id="communicationNewList"></div></div>
+      <div class="communication-radar-card"><h3>Kr&auml;ver svar</h3><div class="communication-radar-list" id="communicationReplyList"></div></div>
+      <div class="communication-radar-card"><h3>Risk&auml;renden</h3><div class="communication-radar-list" id="communicationRiskList"></div></div>
+      <div class="communication-radar-card"><h3>Leverant&ouml;rer</h3><div class="communication-radar-list" id="communicationSupplierList"></div></div>
+      <div class="communication-radar-card"><h3>Utkast</h3><div class="communication-radar-list" id="communicationDraftList"></div></div>
+      <div class="communication-radar-card"><h3>Koppla till &auml;rende</h3><div class="communication-radar-list" id="communicationLinkedList"></div></div>
+    </div>
+    <div class="communication-draft-preview" id="communicationDraftPreview"></div>
   </section>
   <section class="panel call-dashboard">
     <h2>Live samtalsdashboard</h2>
@@ -504,7 +545,16 @@ const aiSalesListEl=document.getElementById('aiSalesList');
 const aiSocialPostEl=document.getElementById('aiSocialPost');
 const aiQuoteTestResultEl=document.getElementById('aiQuoteTestResult');
 const aiSmsTestResultEl=document.getElementById('aiSmsTestResult');
+const communicationRadarStatusEl=document.getElementById('communicationRadarStatus');
+const communicationNewListEl=document.getElementById('communicationNewList');
+const communicationReplyListEl=document.getElementById('communicationReplyList');
+const communicationRiskListEl=document.getElementById('communicationRiskList');
+const communicationSupplierListEl=document.getElementById('communicationSupplierList');
+const communicationDraftListEl=document.getElementById('communicationDraftList');
+const communicationLinkedListEl=document.getElementById('communicationLinkedList');
+const communicationDraftPreviewEl=document.getElementById('communicationDraftPreview');
 let callDashboardRows=[];
+let communicationRadarEvents=[];
 let cases=[];
 let isLoadingCases=false;
 let lastUserActivityAt=Date.now();
@@ -525,6 +575,8 @@ document.getElementById('refreshCalls').addEventListener('click',loadCallDashboa
 document.getElementById('refreshAiControl').addEventListener('click',loadAiControlTower);
 document.getElementById('testAiQuote').addEventListener('click',testAiQuote);
 document.getElementById('testAiSmsDraft').addEventListener('click',testAiSmsDraft);
+document.getElementById('refreshCommunicationRadar').addEventListener('click',loadCommunicationRadar);
+document.getElementById('testCommunicationDraft').addEventListener('click',testCommunicationDraft);
 document.getElementById('calendarTest').addEventListener('click',testCalendar);
 ownerFilter.addEventListener('change',render);
 statusFilter.addEventListener('change',render);
@@ -1471,6 +1523,106 @@ async function logStatusChangeEvent(item,nextStatus,note=''){
 function showAiTestResult(element,title,rows,bad=false){
   element.className=`ai-test-result show ${bad?'bad':''}`;
   element.innerHTML=`<strong>${html(title)}</strong><br>${rows.map(([label,value])=>`${html(label)}: ${html(value===null||value===undefined?'-':value)}`).join('<br>')}`;
+}
+function showCommunicationStatus(message,state=''){
+  communicationRadarStatusEl.className=`communication-radar-status ${state}`;
+  communicationRadarStatusEl.textContent=message;
+}
+function communicationStatusLabel(item){
+  if(item.displayStatus)return item.displayStatus;
+  if(item.caseId)return'linked_to_case';
+  if(item.risk&&item.risk.level==='high')return'needs_approval';
+  if(item.draftId)return'draft';
+  return'read_only';
+}
+function communicationEventHtml(rows=[]){
+  if(!rows.length)return'<div class="muted">Inget att visa.</div>';
+  return rows.map((item)=>{
+    const risk=item.risk||{};
+    const className=`communication-event ${risk.level==='high'?'risk':''} ${item.classification==='supplier'?'supplier':''}`;
+    const status=communicationStatusLabel(item);
+    const timeline=item.caseId?`<br>Timeline/case: ${html(item.caseId)}`:'';
+    const reasons=Array.isArray(risk.reasons)&&risk.reasons.length?`<br>Riskorsak: ${html(risk.reasons.join(', '))}`:'';
+    return `<article class="${className}">
+      <strong>${html(item.subject||item.classification||'Kommunikation')}</strong>
+      ${html(item.source||'manual')} - ${html(item.classification||'other')} - ${html(status)}
+      <small>${html(item.bodySummary||'Saknar sammanfattning')}<br>Risk: ${html(risk.level||'low')}${reasons}${timeline}<br>${html(dateShort(item.receivedAt))}</small>
+    </article>`;
+  }).join('');
+}
+function communicationDraftHtml(drafts=[]){
+  if(!drafts.length)return'<div class="muted">Inga utkast.</div>';
+  return drafts.slice(0,6).map((draft)=>`
+    <article class="communication-event ${draft.requiresApproval?'risk':''}">
+      <strong>${html(draft.status||'draft')} - ${html(draft.channel||draft.source||'kanal')}</strong>
+      ${html(draft.message||'Tomt utkast')}
+      <small>Risk: ${html(draft.riskLevel||draft.risk&&draft.risk.level||'low')} - Kr&auml;ver godk&auml;nnande: ${draft.requiresApproval?'Ja':'Nej'}<br>Skickas: ${draft.sendsMessage?'Ja':'Nej'}</small>
+    </article>`).join('');
+}
+function renderCommunicationRadar(data){
+  const events=Array.isArray(data.events)?data.events:[];
+  const drafts=Array.isArray(data.drafts)?data.drafts:[];
+  communicationRadarEvents=events;
+  communicationNewListEl.innerHTML=communicationEventHtml(events.filter((item)=>item.status==='new').slice(0,6));
+  communicationReplyListEl.innerHTML=communicationEventHtml(events.filter((item)=>['new','reviewed'].includes(item.status)).slice(0,6));
+  communicationRiskListEl.innerHTML=communicationEventHtml(events.filter((item)=>item.risk&&item.risk.level==='high').slice(0,6));
+  communicationSupplierListEl.innerHTML=communicationEventHtml(events.filter((item)=>item.classification==='supplier').slice(0,6));
+  communicationDraftListEl.innerHTML=communicationDraftHtml(drafts);
+  communicationLinkedListEl.innerHTML=communicationEventHtml(events.filter((item)=>item.caseId).slice(0,6));
+}
+async function loadCommunicationRadar(){
+  const button=document.getElementById('refreshCommunicationRadar');
+  try{
+    if(!aiAdminToken()){showCommunicationStatus('Admin-token saknas','warn');return;}
+    button.disabled=true;
+    showCommunicationStatus('Laddar Kommunikationsradar demo-data...');
+    const data=await aiFunctionFetch('/.netlify/functions/communication-radar-demo');
+    renderCommunicationRadar(data);
+    const summary=data.summary||{};
+    showCommunicationStatus(`Senast uppdaterad ${new Date().toLocaleTimeString('sv-SE')} - mock/dry-run - ${summary.total||0} handelser, ${summary.riskCases||0} risk`,data.dryRun?'warn':'');
+  }catch(error){
+    showCommunicationStatus(`Fel: ${error.message}`,'bad');
+  }finally{
+    button.disabled=false;
+  }
+}
+async function testCommunicationDraft(){
+  const button=document.getElementById('testCommunicationDraft');
+  try{
+    if(!aiAdminToken()){showCommunicationStatus('Admin-token saknas','warn');return;}
+    button.disabled=true;
+    const event=communicationRadarEvents.find((item)=>item.risk&&item.risk.level==='high')||communicationRadarEvents[0]||{
+      source:'gmail',
+      direction:'inbound',
+      from:'demo@example.test',
+      subject:'Demo arende',
+      bodySummary:'Kund vill boka service.',
+      dryRun:true
+    };
+    communicationDraftPreviewEl.className='communication-draft-preview show';
+    communicationDraftPreviewEl.textContent='Skapar svarsforslag i dry-run...';
+    const data=await aiFunctionFetch('/.netlify/functions/ai-communication-draft',{method:'POST',body:{event,dryRun:true,previewOnly:true}});
+    const draft=data.draft||{};
+    const preview=data.timelinePreview;
+    communicationDraftPreviewEl.innerHTML=[
+      '<strong>Svarsf&ouml;rslag dry-run</strong>',
+      `Status: ${html(draft.status||'-')}`,
+      `Risk: ${html(draft.riskLevel||draft.risk&&draft.risk.level||'-')}`,
+      `Kr&auml;ver godk&auml;nnande: ${draft.requiresApproval?'Ja':'Nej'}`,
+      `Skickas: ${data.sendsMessage||draft.sendsMessage?'Ja':'Nej'}`,
+      `Writes skipped: ${html((data.writesSkipped||[]).join(', ')||'-')}`,
+      '',
+      html(draft.message||'Inget utkast.'),
+      preview?`<br><strong>Timeline-preview</strong><br>${html(preview.type||'ai_suggestion')} - ${html(preview.content||'')}`:''
+    ].join('<br>');
+    showCommunicationStatus('Svarsforslag skapat i dry-run. Inget skickades och inga writes gjordes.','warn');
+  }catch(error){
+    communicationDraftPreviewEl.className='communication-draft-preview show';
+    communicationDraftPreviewEl.textContent=`Fel: ${error.message}`;
+    showCommunicationStatus(`Fel: ${error.message}`,'bad');
+  }finally{
+    button.disabled=false;
+  }
 }
 async function loadAiControlTower(){
   const button=document.getElementById('refreshAiControl');
