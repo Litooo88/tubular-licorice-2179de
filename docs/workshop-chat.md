@@ -8,8 +8,8 @@ Public workshop chat is installed through `/assets/workshop-chat.js`.
 - Collects topic, message, name, phone, and vehicle/model.
 - Sends the message to `POST /api/workshop-chat`.
 - Creates a `website_chat` case in the existing Netlify Blobs `workshop-cases` store.
-- Sends an internal SMS alert to Lennart and Sebastian through 46elks.
-- Assigns battery/electrical/error-code topics to Sebastian and simpler workshop topics to Lennart.
+- Sends an internal SMS alert to Verkstaden and Sebastian through 46elks.
+- Assigns battery/electrical/error-code topics to Sebastian and simpler workshop topics to Verkstaden.
 - The SMS alert links directly to `/admin/?case=<case-id>&tab=contact`.
 - Admin contact cards include a `Svara på chatt / SMS` box that sends a 46elks SMS reply to the customer.
 
@@ -38,11 +38,11 @@ Optional chat-specific override:
 
 ## Current limitation
 
-This version is a high-converting chat intake and SMS reply flow. Lennart answers by opening the case link from the SMS alert, using the `Svara på chatt / SMS` box in `/admin/`, calling the customer, or using the existing admin SMS tools.
+This version is a high-converting chat intake and SMS reply flow. Verkstaden answers by opening the case link from the SMS alert, using the `Svara på chatt / SMS` box in `/admin/`, calling the customer, or using the existing admin SMS tools.
 
 True two-way live messaging inside the widget needs a second step:
 
 - add operator reply UI in admin/workshop
 - store chat replies on `case.chat.messages`
 - let the widget poll a public thread token for replies
-- optionally add browser push notifications for Lennart
+- optionally add browser push notifications for Verkstaden

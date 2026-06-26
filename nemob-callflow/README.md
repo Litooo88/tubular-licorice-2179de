@@ -2,9 +2,9 @@
 
 Cloudflare Workers webhook for Nordic E-Mobility's 46elks workshop number.
 
-The current routing is Lennart-first for workshop calls:
+The current routing is Verkstaden-first for workshop calls:
 
-- Option 1 or no input: Lennart -> Sebastian fallback -> voicemail.
+- Option 1 or no input: Verkstaden -> Sebastian fallback -> voicemail.
 - Option 2: Sebastian/sales -> voicemail.
 - Outside office hours: outside-hours prompt -> voicemail.
 
@@ -17,7 +17,7 @@ flowchart TD
   C -- "No" --> V["Outside-hours prompt"]
   V --> R["Voicemail recording"]
   C -- "Yes" --> I["IVR welcome: 1 workshop/service, 2 sales/new scooter"]
-  I -- "1 or no input" --> L["Hold audio, then Lennart"]
+  I -- "1 or no input" --> L["Hold audio, then Verkstaden"]
   I -- "2" --> S["Hold audio, then Sebastian"]
   L -- "No answer" --> SF["Sebastian fallback"]
   S -- "No answer" --> R
@@ -73,7 +73,7 @@ npx wrangler secret put ELKS_FROM_NUMBER
 npx wrangler secret put ELKS_ALLOWED_IPS
 npx wrangler secret put REQUIRE_ELKS_SIGNATURE
 npx wrangler secret put SEBASTIAN_NUMBER
-npx wrangler secret put LENNART_NUMBER
+npx wrangler secret put WORKSHOP_NUMBER
 npx wrangler secret put ADMIN_KEY
 npx wrangler secret put INTRO_MP3_URL
 npx wrangler secret put HOLD_MUSIC_MP3_URL
@@ -144,11 +144,11 @@ Hold:
 
 ## Operator Instructions
 
-Lennart is called first for option 1 and default/no-input calls. Sebastian is called for option 2 sales/new-scooter calls and as fallback when Lennart misses option 1.
+Verkstaden is called first for option 1 and default/no-input calls. Sebastian is called for option 2 sales/new-scooter calls and as fallback when Verkstaden misses option 1.
 
-Do not use mid-call DTMF transfer. If Lennart gets a technical question he cannot answer, he should use the phone's native carrier transfer/conference feature to bring Sebastian into the call.
+Do not use mid-call DTMF transfer. If Verkstaden gets a technical question he cannot answer, he should use the phone's native carrier transfer/conference feature to bring Sebastian into the call.
 
-Both Sebastian and Lennart should save `010-138 54 98` as `NEMOB Verkstad` so routed work calls are obvious.
+Both Sebastian and Verkstaden should save `010-138 54 98` as `NEMOB Verkstad` so routed work calls are obvious.
 
 ## Office Hours
 

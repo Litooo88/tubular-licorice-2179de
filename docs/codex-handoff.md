@@ -25,7 +25,7 @@ Keep it current. When a larger feature, rescue operation, deploy-sensitive fix, 
 - Admin has a first version of a price database and touch-friendly POS/pricing workflow.
 - Admin can be installed as a browser app on the workshop Windows touch computer through `/admin/`.
 - Admin has an overview tab with an active case list, operator tracking for future edits, and a protected live call dashboard backed by `/api/call-dashboard`.
-- Call dashboard now creates persistent `call-leads` for missed calls, voicemail calls, Lennart calls without a customer card, and long calls without a customer card. Admin can create a customer card from a lead, ignore it, or send the `RING10` follow-up SMS.
+- Call dashboard now creates persistent `call-leads` for missed calls, voicemail calls, Verkstaden calls without a customer card, and long calls without a customer card. Admin can create a customer card from a lead, ignore it, or send the `RING10` follow-up SMS.
 
 ## Important files
 
@@ -80,7 +80,7 @@ Sebastian = admin/owner.
 - Can change final prices.
 - Can manage Fortnox/export/payment preparation.
 
-Lennart = workshop operator.
+Verkstaden = workshop operator.
 - Should primarily use /workshop.
 - Should see only what is needed to perform work.
 - Should not edit the price database.
@@ -94,7 +94,7 @@ Lennart = workshop operator.
 - Full case overview and admin control.
 
 /workshop
-- Simplified touch-friendly workshop mode for Lennart.
+- Simplified touch-friendly workshop mode for Verkstaden.
 - Shows active/inlämnade jobs.
 - Focus: what to do, photos, short notes, next status.
 
@@ -132,10 +132,10 @@ Lennart = workshop operator.
 
 ### Workshop mode - Task 3
 
-- `/workshop/` is Lennart's simplified daily work mode.
+- `/workshop/` is Verkstaden's simplified daily work mode.
 - It shows active/inlamnade cases only and excludes price database, final checkout controls, and customer message buttons.
 - Each collapsed job card shows customer contact info first and a clear `Starta` button.
-- Opening a job pauses auto-refresh so Lennart is not bounced back to the top while typing or scrolling.
+- Opening a job pauses auto-refresh so Verkstaden is not bounced back to the top while typing or scrolling.
 - Expanded jobs use a step-by-step workflow: start work, check approved boundaries, quick documentation buttons, photos, and final status actions.
 - Each job shows customer, model, problem, approved work, "do not do without approval", and next action.
 - Photo workflow uses existing `/api/cases/:id/media` with internal categories `before`, `during`, and `after`.
@@ -223,16 +223,16 @@ Lennart = workshop operator.
 
 - Added `/api/voice-start` in `netlify/functions/voice-start.mjs` for incoming 46elks calls.
 - Current public 46elks fixed voice number is `+46101385498`.
-- Flow is Sebastian first, then Lennart fallback, then optional missed-call SMS if both miss the call.
-- Sebastian/Lennart routing numbers must be configured through Netlify env vars; private mobile fallbacks are not stored in the repo. Default timeout is 18 seconds per person.
-- Override with Netlify env vars `VOICE_CALLER_ID`, `VOICE_SEBASTIAN_PHONE`, `VOICE_LENNART_PHONE`, `VOICE_TIMEOUT_SECONDS`, and `VOICE_MISSED_SMS_TO`.
+- Flow is Sebastian first, then Verkstaden fallback, then optional missed-call SMS if both miss the call.
+- Sebastian/Verkstaden routing numbers must be configured through Netlify env vars; private mobile fallbacks are not stored in the repo. Default timeout is 18 seconds per person.
+- Override with Netlify env vars `VOICE_CALLER_ID`, `VOICE_SEBASTIAN_PHONE`, `VOICE_WORKSHOP_PHONE`, `VOICE_TIMEOUT_SECONDS`, and `VOICE_MISSED_SMS_TO`.
 - Setup/test notes live in `docs/46elks-voice-fallback.md`.
 
 ### Cloudflare 46elks callflow worker
 
 - `nemob-callflow/` contains a standalone Cloudflare Workers TypeScript implementation for the richer 46elks IVR flow.
 - It uses D1 for `call_log`, KV binding for future transient state, 46elks SMS notifications, office-hours routing, voicemail recording callbacks, `/stats`, and a daily cron purge for call logs older than 90 days.
-- Current route intent: option 1/default = Lennart/workshop first, then Sebastian fallback, then voicemail. Option 2 = Sebastian/sales, then voicemail.
+- Current route intent: option 1/default = Verkstaden/workshop first, then Sebastian fallback, then voicemail. Option 2 = Sebastian/sales, then voicemail.
 - AI voice prompt generation helper lives in `nemob-callflow/scripts/generate-voice-prompts.mjs` and uses OpenAI TTS when `OPENAI_API_KEY` is available.
 - The implementation follows current 46elks docs for IVR/record action syntax and documents that 46elks officially recommends IP firewalling for callback-origin verification. The optional HMAC check is custom and off by default via `REQUIRE_ELKS_SIGNATURE=false`.
 - Deploy steps, required `wrangler secret put` commands, MP3 prompt text, and test scenarios live in `nemob-callflow/README.md`.
@@ -240,7 +240,7 @@ Lennart = workshop operator.
 ### Public workshop phone number
 
 - Public website contact CTAs now present one workshop number: `010-138 54 98` (`+46101385498`).
-- Public Sebastian/Lennart direct phone CTAs were removed from customer-facing pages.
+- Public Sebastian/Verkstaden direct phone CTAs were removed from customer-facing pages.
 - Booking customer confirmations and public email footer point to the workshop number.
 - Internal booking/workshop SMS routing still uses staff mobiles where needed; do not replace those with the public number unless the notification flow is changed.
 
@@ -248,8 +248,8 @@ Lennart = workshop operator.
 
 - Public pages load `/assets/workshop-chat.js`, which adds the `Chatta med verkstaden` widget.
 - The widget posts to `/api/workshop-chat` in `netlify/functions/workshop-chat.mjs`.
-- Chat submissions create `website_chat` cases in the existing `workshop-cases` store and send 46elks SMS alerts to Lennart + Sebastian.
-- Battery/electrical/error-code chats are assigned to Sebastian; simpler workshop chats default to Lennart.
+- Chat submissions create `website_chat` cases in the existing `workshop-cases` store and send 46elks SMS alerts to Verkstaden + Sebastian.
+- Battery/electrical/error-code chats are assigned to Sebastian; simpler workshop chats default to Verkstaden.
 - Chat SMS alerts should link to `/admin/?case=<case-id>&tab=contact`, where the card opens with a `Svara på chatt / SMS` reply box.
 - Operational notes and next-step livechat limitations live in `docs/workshop-chat.md`.
 

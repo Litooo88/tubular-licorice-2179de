@@ -63,7 +63,7 @@
   root.innerHTML = [
     '<button class="nem-chat-launch" type="button" aria-controls="nem-chat-panel" aria-expanded="false"><span class="nem-chat-launch-dot" aria-hidden="true"></span><span>Chatta med verkstaden</span></button>',
     '<section class="nem-chat-panel" id="nem-chat-panel" aria-label="Chatta med Nordic E-Mobility" data-open="false">',
-    '<div class="nem-chat-head"><div><strong>Fråga verkstaden</strong><span>Lennart svarar när han är ledig. Annars återkommer vi via SMS.</span></div><button class="nem-chat-close" type="button" aria-label="Stäng chatten">&times;</button></div>',
+    '<div class="nem-chat-head"><div><strong>Fråga verkstaden</strong><span>Vi svarar när vi har möjlighet. Annars återkommer vi via SMS.</span></div><button class="nem-chat-close" type="button" aria-label="Stäng chatten">&times;</button></div>',
     '<div class="nem-chat-body">',
     '<div class="nem-chat-msg"><b>Hej!</b>Skriv vad som hänt med din scooter eller elcykel. Lägg gärna till modell och bildinfo. Vid akuta ärenden: ring 010-138 54 98.</div>',
     '<div class="nem-chat-topics" role="listbox" aria-label="Valj problemtyp"></div>',
@@ -168,7 +168,7 @@
           item.dataset.active = item.dataset.key === "other" ? "true" : "false";
         });
         status.dataset.error = "false";
-        status.innerHTML = "Klart. Verkstaden har fått din fråga. Om Lennart inte svarar direkt återkommer vi via SMS eller telefon.";
+        status.innerHTML = "Klart. Verkstaden har fått din fråga. Om vi inte svarar direkt återkommer vi via SMS eller telefon.";
       })
       .catch(function (error) {
         status.dataset.error = "true";

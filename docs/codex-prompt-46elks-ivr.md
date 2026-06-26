@@ -78,7 +78,7 @@ ELKS_FROM_NUMBER          # Verkstadsnummer in E.164 (the public number)
 ELKS_WEBHOOK_SECRET       # Shared secret for HMAC validation of incoming
 ELKS_ALLOWED_IPS          # Comma-sep 46elks IP ranges (verify current list at 46elks docs)
 SEBASTIAN_NUMBER          # E.164, e.g. +46101385498
-LENNART_NUMBER            # E.164, e.g. +46101385498
+WORKSHOP_NUMBER            # E.164, e.g. +46101385498
 APPS_SCRIPT_WEBHOOK_URL   # Backup logging endpoint (optional)
 INTRO_MP3_URL             # Public URL to welcome.mp3
 HOLD_MUSIC_MP3_URL        # Public URL to hold-music.mp3 (5-second loop max)
@@ -119,7 +119,7 @@ Return 46elks JSON response:
   "play": "{{INTRO_MP3_URL}}",
   "ivr": {
     "1": "https://yourworker.com/route/sebastian",
-    "2": "https://yourworker.com/route/lennart",
+    "2": "https://yourworker.com/route/workshop",
     "timeout": 8,
     "default": "https://yourworker.com/route/sebastian"
   }
@@ -131,7 +131,7 @@ Return 46elks JSON response:
 
 #### Step 4 — Hold music + dial
 
-When `/route/sebastian` or `/route/lennart` is hit:
+When `/route/sebastian` or `/route/workshop` is hit:
 
 ```json
 {
@@ -147,23 +147,23 @@ Then `/dial/sebastian` returns:
   "connect": "{{SEBASTIAN_NUMBER}}",
   "callerid": "{{ELKS_FROM_NUMBER}}",
   "timeout": 25,
-  "next": "https://yourworker.com/dial/lennart-fallback?callid={callid}",
+  "next": "https://yourworker.com/dial/workshop-fallback?callid={callid}",
   "whenhangup": "https://yourworker.com/event/hangup?callid={callid}"
 }
 ```
 
-**Important:** Do NOT attempt to implement mid-call DTMF transfer ("press # to send to Lennart"). 46elks doesn't reliably support this without a SIP bridge layer. Instead:
+**Important:** Do NOT attempt to implement mid-call DTMF transfer ("press # to send to Verkstaden"). 46elks doesn't reliably support this without a SIP bridge layer. Instead:
 
 - If Sebastian wants to forward the call mid-conversation, he uses **his mobile's native call-transfer feature** (most modern Android/iOS phones support this on the carrier level).
-- Document this in README under "Operator instructions for Sebastian/Lennart".
+- Document this in README under "Operator instructions for Sebastian/Verkstaden".
 
-#### Step 5 — Lennart fallback
+#### Step 5 — Verkstaden fallback
 
-`/dial/lennart-fallback` returns:
+`/dial/workshop-fallback` returns:
 
 ```json
 {
-  "connect": "{{LENNART_NUMBER}}",
+  "connect": "{{WORKSHOP_NUMBER}}",
   "callerid": "{{ELKS_FROM_NUMBER}}",
   "timeout": 25,
   "next": "https://yourworker.com/voicemail?callid={callid}",
@@ -214,11 +214,11 @@ Akut ärende? Skriv hit på SMS. /Nordic E-Mobility
 - Do NOT include "tryck för rabatt" or any sales language
 - This is a transactional service confirmation — that's the only legal framing
 
-When Lennart picks up after Sebastian misses (`/event/hangup` with `answered_by=lennart` and `state=success`):
+When Verkstaden picks up after Sebastian misses (`/event/hangup` with `answered_by=workshop` and `state=success`):
 
 **SMS to Sebastian:**
 ```
-Lennart tog samtal från {caller_e164} kl {HH:MM}, varaktighet {duration}s.
+Verkstaden tog samtal från {caller_e164} kl {HH:MM}, varaktighet {duration}s.
 ```
 
 #### Step 8 — Logging
@@ -232,7 +232,7 @@ CREATE TABLE call_log (
   callid TEXT NOT NULL,
   caller_e164 TEXT NOT NULL,
   duration_s INTEGER,
-  answered_by TEXT,         -- 'sebastian' | 'lennart' | 'voicemail' | 'missed'
+  answered_by TEXT,         -- 'sebastian' | 'workshop' | 'voicemail' | 'missed'
   status TEXT,              -- 'answered' | 'missed' | 'voicemail' | 'rejected'
   ivr_choice TEXT,          -- '1' | '2' | 'default' | 'outside_hours'
   recording_url TEXT,
@@ -294,9 +294,9 @@ Auth this endpoint with a query param `?key={ADMIN_KEY}` or basic auth.
 `test/scenarios.sh` simulates 5 cases via curl against the deployed worker (or local dev server with `wrangler dev`):
 
 1. **Office hours, IVR option 1, Sebastian answers** — expect Sebastian's leg to connect
-2. **Office hours, IVR option 1, Sebastian misses, Lennart answers** — expect 25s timeout then Lennart connects
+2. **Office hours, IVR option 1, Sebastian misses, Verkstaden answers** — expect 25s timeout then Verkstaden connects
 3. **Office hours, IVR option 1, both miss** — expect voicemail prompt + SMS notifications
-4. **Office hours, IVR option 2** — expect Lennart route directly
+4. **Office hours, IVR option 2** — expect Verkstaden route directly
 5. **Outside office hours** — expect outside-hours prompt + voicemail (no IVR)
 
 Each scenario should assert:
@@ -310,9 +310,9 @@ Mandatory sections in `README.md`:
 
 1. **Architecture diagram** (ASCII or Mermaid) of call flow
 2. **Setup steps** (honest — list every `wrangler secret put` command)
-3. **How to swap Sebastian/Lennart numbers** (just `wrangler secret put SEBASTIAN_NUMBER`)
+3. **How to swap Sebastian/Verkstaden numbers** (just `wrangler secret put SEBASTIAN_NUMBER`)
 4. **How to update prompt MP3s** (where to host, expected format: MP3 mono 8kHz 64kbps for telephony)
-5. **Operator instructions for Sebastian/Lennart** — including how to do native call-transfer on Android/iOS
+5. **Operator instructions for Sebastian/Verkstaden** — including how to do native call-transfer on Android/iOS
 6. **Office hours configuration** (where to edit the hours, how to add holidays)
 7. **GDPR compliance notes** — what data we collect, retention periods, data subject access procedure
 8. **Cost estimate** (Cloudflare Workers free tier handles ~100k calls/mo, 46elks SMS ~0.30 SEK each)
@@ -335,7 +335,7 @@ These must exist before deploy:
 - `voicemail-prompt.mp3` (with mandatory GDPR consent line — script in Step 6)
 - `outside-hours-prompt.mp3` (script: "Hej! Du har ringt utanför våra öppettider mån-fre 9-18. Lämna ett meddelande efter pipet så hör vi av oss på morgonen.")
 - `hold-music.mp3` (royalty-free, 5-15 second loop)
-- E.164 numbers for Sebastian and Lennart
+- E.164 numbers for Sebastian and Verkstaden
 - 46elks API credentials (username, password)
 - Verkstadsnummer (the public-facing 46elks number)
 - Apps Script webhook URL (or skip if D1-only logging is acceptable initially)

@@ -50,7 +50,7 @@ const stockholmTime = (date) =>
 
 const shortCaseId = (id) => clean(id, 120).replace(/^case_/, "").slice(0, 18).toUpperCase();
 const STAFF = {
-  lennart: { key: "lennart", name: "Lennart", role: "Golv, mottagning och snabba jobb", phone: "010-138 54 98" },
+  workshop: { key: "workshop", name: "Verkstaden", role: "Golv, mottagning och snabba jobb", phone: "010-138 54 98" },
   sebastian: { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "010-138 54 98" },
 };
 
@@ -116,7 +116,7 @@ const answeredBy = (call) => {
     if (Array.isArray(call.recordings) && call.recordings.length) return { key: "voicemail", label: "Röstmeddelande" };
     return { key: "missed", label: "Missad/ej svar" };
   }
-  if (success.to === "+46722607753") return { key: "lennart", label: "Lennart" };
+  if (success.to === "+46722607753") return { key: "workshop", label: "Verkstaden" };
   if (success.to === "+46700243319") return { key: "sebastian", label: "Sebastian" };
   return { key: "other", label: success.to || "Annan" };
 };
@@ -132,12 +132,12 @@ const ivrChoice = (call) => {
 
 const shouldCreateLead = (row) =>
   Boolean(row.phone && String(row.phone).startsWith("+") && !row.hasCase) &&
-  (["missed", "voicemail", "lennart"].includes(row.answeredBy) || Number(row.duration || 0) >= 60);
+  (["missed", "voicemail", "workshop"].includes(row.answeredBy) || Number(row.duration || 0) >= 60);
 
 const leadReason = (row) => {
   if (row.answeredBy === "missed") return "Missat samtal utan kundkort";
   if (row.answeredBy === "voicemail") return "Rostmeddelande utan kundkort";
-  if (row.answeredBy === "lennart") return "Lennart tog samtal utan kundkort";
+  if (row.answeredBy === "workshop") return "Verkstaden tog samtal utan kundkort";
   if (Number(row.duration || 0) >= 60) return "Langt samtal utan kundkort";
   return "Samtal utan kundkort";
 };
@@ -191,7 +191,7 @@ const syncCallLeads = async (rows, existingLeads) => {
 const createCaseFromLead = async ({ lead, operatorName, note }) => {
   const now = new Date().toISOString();
   const caseId = `case_${now.replace(/[:.]/g, "-")}_${Math.random().toString(36).slice(2, 8)}`;
-  const assignedTo = lead.answeredBy === "sebastian" ? STAFF.sebastian : STAFF.lennart;
+  const assignedTo = lead.answeredBy === "sebastian" ? STAFF.sebastian : STAFF.workshop;
   const next = {
     id: caseId,
     createdAt: now,
@@ -288,7 +288,7 @@ const buildCallRows = async () => {
       const matchedCases = phone ? caseByPhone.get(phone) || [] : [];
       const answer = answeredBy(call);
       const hasCase = matchedCases.length > 0;
-      const eligibleLostLead = Boolean(phone) && !hasCase && (answer.key === "missed" || answer.key === "lennart");
+      const eligibleLostLead = Boolean(phone) && !hasCase && (answer.key === "missed" || answer.key === "workshop");
       const followup = followups.get(call.id) || null;
       return {
         id: clean(call.id, 140),
@@ -309,7 +309,7 @@ const buildCallRows = async () => {
           customerName: clean(item.customer?.name, 160),
           service: clean(item.service, 180),
           model: clean(item.vehicle?.model, 180),
-          assignedTo: clean(item.assignedTo?.name, 80),
+          assignedTo: item.assignedTo?.key === "sebastian" ? STAFF.sebastian.name : STAFF.workshop.name,
         })),
         eligibleLostLead,
         followup,
@@ -331,9 +331,9 @@ const buildCallRows = async () => {
   const totals = {
     date: today,
     callsToday: todayRows.length,
-    handledToday: todayRows.filter((row) => row.hasCase || ["lennart", "sebastian", "voicemail"].includes(row.answeredBy)).length,
+    handledToday: todayRows.filter((row) => row.hasCase || ["workshop", "sebastian", "voicemail"].includes(row.answeredBy)).length,
     sebastianToday: todayRows.filter((row) => row.answeredBy === "sebastian").length,
-    lennartToday: todayRows.filter((row) => row.answeredBy === "lennart").length,
+    workshopToday: todayRows.filter((row) => row.answeredBy === "workshop").length,
     voicemailToday: todayRows.filter((row) => row.answeredBy === "voicemail").length,
     missedToday: todayRows.filter((row) => row.answeredBy === "missed").length,
     registeredToday: todayRows.filter((row) => row.hasCase).length,

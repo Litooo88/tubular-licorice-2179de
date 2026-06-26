@@ -16,7 +16,7 @@
 - ✅ Apps Script som backup, fire-and-forget (blockerar inte huvudflödet)
 - ✅ Scheduled handler för 90-dagars purge
 - ✅ GDPR-text i voicemail-prompten ÄR exakt korrekt
-- ✅ Smart routing-inversion (option 1 → Lennart först, option 2 → Sebastian) — matchar verksamheten bättre
+- ✅ Smart routing-inversion (option 1 → Verkstaden först, option 2 → Sebastian) — matchar verksamheten bättre
 - ✅ README är ärligt om vad som avviker från specen
 - ✅ Operator-instruktioner förklarar native call-transfer korrekt
 
@@ -126,7 +126,7 @@ export function outsideHoursVoicemail(env: Env, reqUrl: URL, payload: ElksPayloa
 
 ```
 SEBASTIAN_NUMBER=+46101385498
-LENNART_NUMBER=+46101385498
+WORKSHOP_NUMBER=+46101385498
 ```
 
 **Problem:** `.env.example` är en mall som ska committas till git. Personliga mobilnummer ska INTE ligga där.
@@ -134,7 +134,7 @@ LENNART_NUMBER=+46101385498
 **Fix:** Ändra till tomma värden:
 ```
 SEBASTIAN_NUMBER=
-LENNART_NUMBER=
+WORKSHOP_NUMBER=
 ```
 
 ### P1-2 — `REQUIRE_ELKS_SIGNATURE=false` är default
@@ -193,14 +193,14 @@ Och uppdatera alla `logCall(env, ...)`-anrop i `index.ts` att skicka `ctx` när 
 
 **Fil:** `test/scenarios.sh`
 
-**Problem:** Testerna verifierar att routes returneras korrekt, men inte att hangup-eventet med `state=success` och `attempt=lennart` faktiskt loggas som "answered" med `answered_by=lennart` i D1.
+**Problem:** Testerna verifierar att routes returneras korrekt, men inte att hangup-eventet med `state=success` och `attempt=workshop` faktiskt loggas som "answered" med `answered_by=workshop` i D1.
 
 **Fix:** Lägg till scenario 6 i scenarios.sh:
 
 ```bash
-echo "Scenario 6: hangup event - Lennart answered"
-post_form "/event/hangup?callid=test-6&from=$CALLER&ivr_choice=1&attempt=lennart" "callid=test-6&state=success&duration=42"
-# (kontrollera D1 att rad har answered_by='lennart', status='answered', duration_s=42)
+echo "Scenario 6: hangup event - Verkstaden answered"
+post_form "/event/hangup?callid=test-6&from=$CALLER&ivr_choice=1&attempt=workshop" "callid=test-6&state=success&duration=42"
+# (kontrollera D1 att rad har answered_by='workshop', status='answered', duration_s=42)
 ```
 
 ### P1-6 — Inget rate-limiting på `/voice`-endpoint
@@ -235,8 +235,8 @@ Codex har **inverterat** option 1 vs 2 jämfört med min spec:
 
 | Option | Min spec | Codex implementation | Vilken är rätt? |
 |---|---|---|---|
-| 1 | → Sebastian (verkstad) | → Lennart (verkstad) | **Codex är rätt** — Lennart är intake/floor |
-| 2 | → Lennart (sales) | → Sebastian (sales) | **Codex är rätt** — Sebastian gör tunga konsultationer |
+| 1 | → Sebastian (verkstad) | → Verkstaden (verkstad) | **Codex är rätt** — Verkstaden är intake/floor |
+| 2 | → Verkstaden (sales) | → Sebastian (sales) | **Codex är rätt** — Sebastian gör tunga konsultationer |
 
 → **Boss bekräftar: är detta rätt routing?** (jag tror ja)
 
@@ -252,7 +252,7 @@ Codex har **inverterat** option 1 vs 2 jämfört med min spec:
 | P1-7 | Justera `compatibility_date` | Cowork kan skriva diff | 1 min |
 | P1-4 | Lägg till 2027 helgdagar | Cowork kan skriva diff | 5 min |
 | GDPR-1 | Verifiera 46elks retention-setting i dashboard | Boss måste göra | 5 min |
-| Routing | Bekräfta att option 1 = Lennart är rätt | Boss bekräftar | 10 sek |
+| Routing | Bekräfta att option 1 = Verkstaden är rätt | Boss bekräftar | 10 sek |
 
 **Total tid:** ~15 min för Cowork + 10 min för Boss = klart att deploya.
 
@@ -260,6 +260,6 @@ Codex har **inverterat** option 1 vs 2 jämfört med min spec:
 
 ## Vad jag rekommenderar nu
 
-1. **Bekräfta routing** (option 1 = Lennart, option 2 = Sebastian) — JA eller NEJ?
+1. **Bekräfta routing** (option 1 = Verkstaden, option 2 = Sebastian) — JA eller NEJ?
 2. Säg "kör fixarna" så skriver jag de fyra Cowork-fixarna direkt i koden
 3. Sen kör vi deployment-runbooken

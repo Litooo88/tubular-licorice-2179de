@@ -321,7 +321,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 
   <section class="login">
     <div><label for="token">Admin-token</label><input id="token" type="password" autocomplete="current-password" placeholder="ADMIN_TOKEN fr&aring;n Netlify"></div>
-    <div><label for="operatorName">Jag &auml;r</label><select id="operatorName"><option value="Sebastian">Sebastian</option><option value="Lennart">Lennart</option></select></div>
+    <div><label for="operatorName">Jag &auml;r</label><select id="operatorName"><option value="Sebastian">Sebastian</option><option value="Verkstaden">Verkstaden</option></select></div>
     <button id="saveToken">Spara token</button>
     <button class="secondary" id="refresh">Uppdatera</button>
     <button class="secondary" id="calendarTest">Testa kalender</button>
@@ -424,7 +424,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   </section>
   <section class="panel call-dashboard">
     <h2>Live samtalsdashboard</h2>
-    <p>Dagens inkommande samtal matchas mot kundregistret. Missade samtal och Lennart-samtal utan kundkort kan följas upp direkt med SMS.</p>
+    <p>Dagens inkommande samtal matchas mot kundregistret. Missade samtal och Verkstaden-samtal utan kundkort kan följas upp direkt med SMS.</p>
     <div class="call-dashboard-grid" id="callDashboardStats"></div>
     <div class="call-actions">
       <button type="button" class="secondary" id="refreshCalls">Uppdatera samtal</button>
@@ -488,7 +488,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div class="muted" id="lastUpdated">Inte laddad &auml;nnu. Auto-refresh &auml;r avst&auml;ngd medan du jobbar.</div>
     <div class="filters">
       <div class="search-filter"><label for="searchFilter">S&ouml;k kund</label><input id="searchFilter" type="search" placeholder="Namn, telefon, modell eller e-post"></div>
-      <div><label for="ownerFilter">Ansvarig</label><select id="ownerFilter"><option value="">Alla</option><option value="lennart">Lennart</option><option value="sebastian">Sebastian</option></select></div>
+      <div><label for="ownerFilter">Ansvarig</label><select id="ownerFilter"><option value="">Alla</option><option value="workshop">Verkstaden</option><option value="sebastian">Sebastian</option></select></div>
       <div><label for="statusFilter">Status</label><select id="statusFilter"><option value="">Alla</option><option value="new">Ny</option><option value="contacted">Kontaktad</option><option value="waiting_customer">V&auml;ntar kund</option><option value="checked_in">Inl&auml;mnad</option><option value="diagnosing">Diagnos</option><option value="repairing">Reparerar</option><option value="waiting_parts">V&auml;ntar delar</option><option value="ready">Klar</option><option value="done">Avslutad</option></select></div>
     </div>
   </div>
@@ -609,7 +609,8 @@ const initialCaseTab=initialParams.get('tab')||'contact';
 let initialCaseFocused=false;
 
 tokenInput.value=localStorage.getItem('nordicAdminToken')||'';
-operatorInput.value=localStorage.getItem('nordicAdminOperator')||'Sebastian';
+const savedOperatorName=localStorage.getItem('nordicAdminOperator')||'Sebastian';
+operatorInput.value=['Sebastian','Verkstaden'].includes(savedOperatorName)?savedOperatorName:'Sebastian';
 operatorInput.addEventListener('change',()=>localStorage.setItem('nordicAdminOperator',operatorInput.value));
 document.querySelectorAll('[data-admin-tab]').forEach((button)=>button.addEventListener('click',()=>setAdminView(button.dataset.adminTab)));
 document.getElementById('saveToken').addEventListener('click',()=>{localStorage.setItem('nordicAdminToken',tokenInput.value.trim());showAiStatus(tokenInput.value.trim()?'Admin-token sparad. Klicka på Uppdatera AI-brief.':'Admin-token saknas',tokenInput.value.trim()?'':'warn');loadCases();});
@@ -707,6 +708,12 @@ function smsCustomerLabel(item){
   const model=item.vehicle&&item.vehicle.model||'okänd modell';
   return `${name} - ${model} - ${phone} - ${shortId(item.id)}`;
 }
+function caseOwner(itemOrOwner){
+  const assigned=itemOrOwner&&itemOrOwner.assignedTo?itemOrOwner.assignedTo:itemOrOwner;
+  return assigned&&assigned.key==='sebastian'
+    ? {key:'sebastian',name:'Sebastian',phone:'010-138 54 98'}
+    : {key:'workshop',name:'Verkstaden',phone:'010-138 54 98'};
+}
 function updateSmsCaseOptions(){
   const previous=smsCaseSelect.value;
   const active=cases.filter((item)=>!['done','archived'].includes(item.status));
@@ -719,9 +726,7 @@ function smsTemplateFor(item,type='custom'){
   if(!item)return'';
   const name=(item.customer&&item.customer.name||'').split(/\s+/).filter(Boolean)[0]||'där';
   const model=item.vehicle&&item.vehicle.model||'scooter';
-  const owner=(item.assignedTo&&item.assignedTo.key)==='sebastian'
-    ? {name:'Sebastian',phone:'010-138 54 98'}
-    : {name:'Lennart',phone:'010-138 54 98'};
+  const owner=caseOwner(item);
   const amount=item.quote&&item.quote.amount?`${Math.round(Number(item.quote.amount))} kr`:'[pris] kr';
   if(type==='quote')return `Hej ${name}! Vi har felsökt din ${model}.\nPrisförslag: ${amount} inkl. moms.\nÅtgärd: [kort åtgärd].\nSvara JA om du godkänner, eller ring ${owner.name} på ${owner.phone}.\n/ Nordic E-Mobility`;
   if(type==='need_info')return `Hej ${name}! Vi behöver lite mer information om din ${model} innan vi går vidare. Svara gärna här eller ring ${owner.name} på ${owner.phone}.\n/ Nordic E-Mobility`;
@@ -913,7 +918,7 @@ function smsPhone(value){
 function customerTemplate(item){
   const name=item.customer&&item.customer.name?item.customer.name:'';
   const greeting=name?`Hej ${name}!`:'Hej!';
-  return `${greeting}\n\nVi har tagit emot din serviceförfrågan hos Nordic E-Mobility. Ärende: ${shortId(item.id)}.\n\nDetta är inte en bekräftad verkstadstid förrän vi har återkommit med tid, pris och nästa steg.\n\nSnabb kontakt: Sebastian 010-138 54 98 eller Lennart 010-138 54 98.\n\n/Nordic E-Mobility`;
+  return `${greeting}\n\nVi har tagit emot din serviceförfrågan hos Nordic E-Mobility. Ärende: ${shortId(item.id)}.\n\nDetta är inte en bekräftad verkstadstid förrän vi har återkommit med tid, pris och nästa steg.\n\nSnabb kontakt: Sebastian 010-138 54 98 eller Verkstaden 010-138 54 98.\n\n/Nordic E-Mobility`;
 }
 function smsHref(item){
   const phone=smsPhone(item.customer&&item.customer.phone);
@@ -930,7 +935,7 @@ function customerTemplate(item){
   const greeting=name?`Hej ${name}!`:'Hej!';
   const timeLabel=item.logistics==='pickup-ready'?'Upph\u00e4mtning':'\u00d6nskad inl\u00e4mning';
   const addons=addonText(item);
-  return `${greeting}\n\nVi har tagit emot din bokning hos Nordic E-Mobility. \u00c4rende: ${shortId(item.id)}.\n\n${timeLabel}: ${displayDate(item.preferredDate)}\nTj\u00e4nst: ${item.service||'Servicef\u00f6rfr\u00e5gan'}${item.discountCode?`\nRabattkod: ${item.discountCode}`:''}${addons?`\nTillval: ${addons}`:''}\n\nVi g\u00e5r nu igenom underlaget och \u00e5terkommer med bekr\u00e4ftad tid, pris och n\u00e4sta steg innan arbete p\u00e5b\u00f6rjas.\n\nDirektkontakt: Sebastian 010-138 54 98 eller Lennart 010-138 54 98.\n\nNordic E-Mobility`;
+  return `${greeting}\n\nVi har tagit emot din bokning hos Nordic E-Mobility. \u00c4rende: ${shortId(item.id)}.\n\n${timeLabel}: ${displayDate(item.preferredDate)}\nTj\u00e4nst: ${item.service||'Servicef\u00f6rfr\u00e5gan'}${item.discountCode?`\nRabattkod: ${item.discountCode}`:''}${addons?`\nTillval: ${addons}`:''}\n\nVi g\u00e5r nu igenom underlaget och \u00e5terkommer med bekr\u00e4ftad tid, pris och n\u00e4sta steg innan arbete p\u00e5b\u00f6rjas.\n\nDirektkontakt: Sebastian 010-138 54 98 eller Verkstaden 010-138 54 98.\n\nNordic E-Mobility`;
 }
 function mailHref(item){
   const email=String(item.customer&&item.customer.email||'').trim();
@@ -1094,7 +1099,7 @@ function fortnoxDraft(item,overrides={}){
     `${completion.workSummary||item.message||'Verkstadsarbete enligt ärende'}`,
     '',
     'INTERNT',
-    `Ansvarig: ${item.assignedTo&&item.assignedTo.name||'Lennart'}`,
+    `Ansvarig: ${caseOwner(item).name}`,
     `Skapad: ${dateShort(item.createdAt)}`,
     `Klar: ${completion.readyAt?dateShort(completion.readyAt):'Inte markerad klar'}`,
   ].join('\n');
@@ -1138,7 +1143,7 @@ function fortnoxDraft(item,overrides={}){
     `${completion.invoiceText||'Verkstadsarbete enligt arende'}`,
     '',
     'INTERNT',
-    `Ansvarig: ${item.assignedTo&&item.assignedTo.name||'Lennart'}`,
+    `Ansvarig: ${caseOwner(item).name}`,
     `Skapad: ${dateShort(item.createdAt)}`,
     `Klar: ${completion.readyAt?dateShort(completion.readyAt):'Inte markerad klar'}`,
   ].join('\n');
@@ -1208,9 +1213,9 @@ function readyMailTemplate(item,overrides={}){
 function quoteSmsTemplate(item,overrides={}){
   const first=(item.customer&&item.customer.name||'').split(/\s+/).filter(Boolean)[0]||'där';
   const model=item.vehicle&&item.vehicle.model||'scooter';
-  const owner=String(overrides.quoteOwner||item.quote&&item.quote.contactOwner||item.assignedTo&&item.assignedTo.key||'lennart')==='sebastian'
+  const owner=String(overrides.quoteOwner||item.quote&&item.quote.contactOwner||item.assignedTo&&item.assignedTo.key||'workshop')==='sebastian'
     ? {name:'Sebastian',phone:'010-138 54 98'}
-    : {name:'Lennart',phone:'010-138 54 98'};
+    : {name:'Verkstaden',phone:'010-138 54 98'};
   const amount=overrides.quoteAmount||item.quote&&item.quote.amount||'[pris]';
   const summary=String(overrides.quoteSummary||item.quote&&item.quote.summary||'[kort åtgärd]').trim();
   return `Hej ${first}! Vi har felsökt din ${model}.\nPrisförslag: ${amount} kr inkl. moms.\nÅtgärd: ${summary}.\nSvara JA om du godkänner, eller ring ${owner.name} på ${owner.phone}.\n/ Nordic E-Mobility`;
@@ -1290,7 +1295,8 @@ function calendarHref(item){
 }
 
 function currentOperatorName(){
-  return String(operatorInput&&operatorInput.value||'Sebastian').trim()||'Sebastian';
+  const value=String(operatorInput&&operatorInput.value||'Sebastian').trim();
+  return ['Sebastian','Verkstaden'].includes(value)?value:'admin';
 }
 function optionsWithOperator(options={}){
   const method=String(options.method||'GET').toUpperCase();
@@ -1425,7 +1431,7 @@ function render(){
   const status=statusFilter.value;
   const search=String(searchFilter.value||'').trim().toLowerCase();
   let visible=cases
-    .filter(item=>!owner || (item.assignedTo&&item.assignedTo.key)===owner)
+    .filter(item=>!owner || caseOwner(item).key===owner)
     .filter(item=>!status || item.status===status)
     .filter(item=>{
       if(!search)return true;
@@ -1839,7 +1845,7 @@ function renderActiveOverview(active){
           <td><strong>${html(model||'MODELL SAKNAS')}</strong><span class="muted-small">${html(item.service||'Tj&auml;nst saknas')}</span></td>
           <td>${html(statusLabels[item.status]||item.status)}<span class="muted-small">${html(displayDate(item.preferredDate))}</span></td>
           <td>${html(lastTimeline)}<span class="muted-small">${html(item.message||'Ingen felbeskrivning')}</span></td>
-          <td>${html(item.assignedTo&&item.assignedTo.name||'Lennart')}</td>
+          <td>${html(caseOwner(item).name)}</td>
           <td>Skapad: ${html(createdBy)}<span class="muted-small">Senast: ${html(updatedBy)} ${html(dateShort(updated))}</span></td>
           <td><button type="button" class="secondary open-case" data-case-id="${html(item.id)}">&Ouml;ppna</button></td>
         </tr>`;
@@ -1875,7 +1881,7 @@ function renderCallDashboard(data){
   const statItems=[
     ['Samtal idag',totals.callsToday||0],
     ['Hanterade',totals.handledToday||0],
-    ['Lennart',totals.lennartToday||0],
+    ['Verkstaden',totals.workshopToday||0],
     ['Sebastian',totals.sebastianToday||0],
     ['Röstbrevlåda',totals.voicemailToday||0],
     ['Missade',totals.missedToday||0],
@@ -2017,7 +2023,7 @@ function focusInitialCase(){
 }
 
 function caseCard(item){
-  const owner=item.assignedTo||{key:'lennart',name:'Lennart',phone:'010-138 54 98'};
+  const owner=caseOwner(item);
   const contactState=contactStateMeta(item);
   const delivery=customerDeliveryMeta(item);
   const customerPhone=item.customer&&item.customer.phone||'Saknas';
@@ -2129,7 +2135,7 @@ function caseCard(item){
           </div>
           <div class="row">
             <div><label>Status</label><select name="status">${Object.entries(statusLabels).map(([value,label])=>`<option value="${value}" ${item.status===value?'selected':''}>${label}</option>`).join('')}</select></div>
-            <div><label>Ansvarig</label><select name="assignedTo"><option value="lennart" ${owner.key!=='sebastian'?'selected':''}>Lennart</option><option value="sebastian" ${owner.key==='sebastian'?'selected':''}>Sebastian</option></select></div>
+            <div><label>Ansvarig</label><select name="assignedTo"><option value="workshop" ${owner.key!=='sebastian'?'selected':''}>Verkstaden</option><option value="sebastian" ${owner.key==='sebastian'?'selected':''}>Sebastian</option></select></div>
           </div>
           <div class="row">
             <div><label>Service / tj&auml;nst</label><input name="service" value="${html(item.service||'')}"></div>
@@ -2191,11 +2197,11 @@ function caseCard(item){
         </form>
         <div class="quote-box">
           <h4>Prisf&ouml;rslag via SMS</h4>
-          <p>F&ouml;r fels&ouml;kta fordon d&auml;r kunden ska godk&auml;nna pris innan &aring;tg&auml;rd. SMS:et ber kunden svara JA eller ringa Sebastian/Lennart.</p>
+          <p>F&ouml;r fels&ouml;kta fordon d&auml;r kunden ska godk&auml;nna pris innan &aring;tg&auml;rd. SMS:et ber kunden svara JA eller ringa Sebastian/Verkstaden.</p>
           <form class="quote-form" data-id="${html(item.id)}">
             <div class="quote-grid">
               <div><label>Pris inkl. moms</label><input name="quoteAmount" type="number" min="0" step="1" value="${item.quote&&item.quote.amount?Number(item.quote.amount):''}" placeholder="T.ex. 1295"></div>
-              <div><label>Svar till</label><select name="quoteOwner"><option value="lennart" ${(item.quote&&item.quote.contactOwner)==='sebastian'?'':'selected'}>Lennart</option><option value="sebastian" ${(item.quote&&item.quote.contactOwner)==='sebastian'?'selected':''}>Sebastian</option></select></div>
+              <div><label>Svar till</label><select name="quoteOwner"><option value="workshop" ${(item.quote&&item.quote.contactOwner)==='sebastian'?'':'selected'}>Verkstaden</option><option value="sebastian" ${(item.quote&&item.quote.contactOwner)==='sebastian'?'selected':''}>Sebastian</option></select></div>
               <div class="full"><label>&Aring;tg&auml;rd / prisf&ouml;rslag</label><textarea name="quoteSummary" placeholder="T.ex. byte av slang bak + bromsjustering.">${html(item.quote&&item.quote.summary||'')}</textarea></div>
               <div class="full"><label>SMS-preview</label><textarea class="quote-preview" readonly>${html(quoteSmsTemplate(item))}</textarea></div>
             </div>

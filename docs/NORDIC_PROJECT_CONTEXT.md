@@ -20,7 +20,7 @@ Systemets mål är att samla hela kundresan:
 
 - **Sebastian**: ägare/admin, tekniskt ansvarig, batteri/elsystem, slutpris,
   betalning och högriskbeslut.
-- **Lennart**: verkstadsgolv, mottagning, snabba jobb, dokumentation och
+- **Verkstaden**: verkstadsgolv, mottagning, snabba jobb, dokumentation och
   statusuppdatering. Ska eskalera slutpris och tekniska risker.
 - **AI servicekoordinator**: analyserar, prioriterar och skapar utkast. AI
   verkställer inte högriskbeslut.

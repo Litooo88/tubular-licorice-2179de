@@ -95,7 +95,7 @@ Efter den automatiska bekraftelsen kommer den manuella delen:
 - ansvarar for tyngre felsokning, batteri och elsystem
 - har sista ordet vid bedomningar och upplagg
 
-### Lennart
+### Verkstaden
 
 - mottagning dagtid
 - golv, inlamningar, utlämningar och snabba jobb
@@ -117,7 +117,7 @@ Darfor ska varje automatisk kundbekraftelse innehalla:
 - vald tjanst
 - preliminar tid
 - tydligt att tiden blir slutligt bekräftad av verkstaden
-- direktnummer till Sebastian och Lennart
+- direktnummer till Sebastian och Verkstaden
 
 ## Daglig rutin i admin
 

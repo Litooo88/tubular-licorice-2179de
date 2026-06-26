@@ -50,7 +50,7 @@ async function handleVoice(req: Request, env: Env, url: URL): Promise<Response> 
 
 async function handleRoute(req: Request, env: Env, url: URL, route: string): Promise<Response> {
   return guarded(req, env, url, async (payload) => {
-    let operator: Operator = route === "sebastian" ? "sebastian" : "lennart";
+    let operator: Operator = route === "sebastian" ? "sebastian" : "workshop";
     const choice = ivrChoice(payload, url);
     if (route === "from-ivr" && choice === "2") operator = "sebastian";
     await logCall(env, {
@@ -107,7 +107,7 @@ async function handleHangup(req: Request, env: Env, ctx: ExecutionContext, url: 
     const state = payload.state || "failed";
     const duration = payload.duration ? Number(payload.duration) : 0;
     const answered = state === "success" && duration > 0;
-    const answeredBy = answered ? (attempt === "lennart" ? "lennart" : "sebastian") : "missed";
+    const answeredBy = answered ? (attempt === "workshop" ? "workshop" : "sebastian") : "missed";
     const from = caller(payload, url);
     await logCall(env, {
       callid: callId(payload, url),
@@ -121,7 +121,7 @@ async function handleHangup(req: Request, env: Env, ctx: ExecutionContext, url: 
     // Notifiera Sebastian vid varje besvarat samtal (oavsett vem som svarade).
     // Voicemail hanteras separat i handleVoicemailSaved - ingen risk for dubblett.
     if (answered) {
-      const who = answeredBy === "lennart" ? "Lennart" : "Du";
+      const who = answeredBy === "workshop" ? "Verkstaden" : "Du";
       const durationFmt = formatDuration(duration);
       notifySebastian(
         env,
@@ -177,10 +177,10 @@ export default {
     if (url.pathname === "/voice") return handleVoice(req, env, url);
     if (url.pathname === "/route/from-ivr") return handleRoute(req, env, url, "from-ivr");
     if (url.pathname === "/route/sebastian") return handleRoute(req, env, url, "sebastian");
-    if (url.pathname === "/route/lennart") return handleRoute(req, env, url, "lennart");
+    if (url.pathname === "/route/workshop") return handleRoute(req, env, url, "workshop");
     if (url.pathname === "/dial/sebastian") return handleDial(req, env, url, "sebastian");
     if (url.pathname === "/dial/sebastian-fallback") return handleDial(req, env, url, "sebastian-fallback");
-    if (url.pathname === "/dial/lennart") return handleDial(req, env, url, "lennart");
+    if (url.pathname === "/dial/workshop") return handleDial(req, env, url, "workshop");
     if (url.pathname === "/voicemail") return handleVoicemail(req, env, url);
     if (url.pathname === "/record") return handleRecord(req, env, url);
     if (url.pathname === "/event/voicemail-saved") return handleVoicemailSaved(req, env, ctx, url);
