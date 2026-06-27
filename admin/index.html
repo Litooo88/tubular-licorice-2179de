@@ -2447,13 +2447,14 @@ async function testAiSmsDraft(){
     if(!aiAdminToken()){showAiStatus('Admin-token saknas','warn');return;}
     button.disabled=true;
     showAiTestResult(aiSmsTestResultEl,'Missat samtal-SMS',[['Status','Laddar...']]);
-    const data=await aiFunctionFetch('/.netlify/functions/ai-sms-draft',{method:'POST',body:{eventType:'missed_call_followup',customer:{name:'Testkund'},case:{}}});
+    const data=await aiFunctionFetch('/.netlify/functions/ai-sms-draft',{method:'POST',body:{eventType:'missed_call_followup',customer:{name:'Testkund'},case:{},dryRun:true,previewOnly:true}});
     showAiTestResult(aiSmsTestResultEl,'Missat samtal-SMS',[
       ['SMS-utkast',data.smsDraft],
       ['Risknivå',data.riskLevel],
       ['Kräver godkännande',data.requiresApproval?'Ja':'Nej'],
       ['Föreslagen nästa status',data.suggestedNextStatus],
       ['Intern sammanfattning',data.internalSummary],
+      ['Writes skippade',(data.writesSkipped||[]).join(', ')||'Inga'],
     ]);
   }catch(error){
     if(error.message==='Ej behörig')showAiStatus('Ej behörig','bad');

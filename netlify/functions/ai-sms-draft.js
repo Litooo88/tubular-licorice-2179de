@@ -2,15 +2,31 @@ const { json, parseBody, requireAdmin, clean } = require("./_shared/http");
 const { appendCaseEvent, get, put } = require("./_shared/storage");
 const { assessRisk, deterministicSmsDraft, intentFromInput, tryOpenAiJson, withSmsSignature } = require("./_shared/operator");
 
-exports.handler = async (event) => {
-  const auth = requireAdmin(event);
-  if (!auth.ok) return auth.response;
-  if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed" });
+const isDryRunRequest = (event, body) => {
+  const query = event?.queryStringParameters || {};
+  return body.dryRun === true
+    || body.previewOnly === true
+    || query.dryRun === "1"
+    || query.previewOnly === "1";
+};
 
-  const body = parseBody(event);
-  const intent = intentFromInput(body);
-  const caseItem = body.caseId ? await get("service_cases", body.caseId) : null;
-  if (body.caseId && !caseItem) return json(404, { error: "Arendet hittades inte." });
+exports.handler = async (event) => {
+  let dryRun = false;
+  try {
+    const auth = requireAdmin(event);
+    if (!auth.ok) return auth.response;
+    if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed" });
+
+    const body = parseBody(event);
+    dryRun = isDryRunRequest(event, body);
+    const intent = intentFromInput(body);
+    const providedCaseItem = body.case || body.caseItem || null;
+    const caseItem = dryRun
+      ? providedCaseItem
+      : body.caseId
+        ? await get("service_cases", body.caseId)
+        : null;
+    if (!dryRun && body.caseId && !caseItem) return json(404, { error: "Arendet hittades inte." });
 
   const fallbackMessage = deterministicSmsDraft({ ...body, intent, caseItem });
   const aiCaseContext = caseItem
@@ -21,11 +37,13 @@ exports.handler = async (event) => {
         status: caseItem.status || "",
       }
     : null;
-  const generated = await tryOpenAiJson({
-    system: "Svara endast med JSON: {\"message\":\"...\"}. Skriv ett kort svenskt SMS-utkast for Nordic E-Mobility. Lova inget och fatta inga beslut.",
-    input: { intent, eventType: body.eventType, context: body.context, caseContext: aiCaseContext },
-    fallback: { message: fallbackMessage },
-  });
+  const generated = dryRun
+    ? { value: { message: fallbackMessage }, mode: "deterministic_dry_run" }
+    : await tryOpenAiJson({
+        system: "Svara endast med JSON: {\"message\":\"...\"}. Skriv ett kort svenskt SMS-utkast for Nordic E-Mobility. Lova inget och fatta inga beslut.",
+        input: { intent, eventType: body.eventType, context: body.context, caseContext: aiCaseContext },
+        fallback: { message: fallbackMessage },
+      });
   const message = withSmsSignature(generated.value?.message || fallbackMessage);
   const risk = assessRisk({
     ...body,
@@ -34,33 +52,40 @@ exports.handler = async (event) => {
     caseItem,
     price: body.suggestedPriceRange?.max ?? body.price ?? caseItem?.quote?.amount,
   });
-  const customerId = clean(body.customerId || body.customer?.id || caseItem?.customerId || caseItem?.customer?.id, 180);
-  const draft = await put("sms_drafts", {
-    caseId: body.caseId || "",
-    customerId,
-    eventType: clean(body.eventType || intent, 80),
-    intent,
-    to: clean(body.to || caseItem?.customer?.phone, 80),
-    message,
-    status: "draft",
-    riskLevel: risk.level,
-    requiresApproval: risk.approvalRequired,
-    risk,
-    aiMode: generated.mode,
-    providerError: generated.providerError || "",
-    createdBy: clean(body.operatorName || "AI operator", 120),
-  });
-  const recommendation = await put("ai_recommendations", {
-    caseId: body.caseId || "",
-    kind: "sms_draft",
-    status: "proposed",
-    risk,
-    payload: { draftId: draft.id, message, intent },
-    aiMode: generated.mode,
-  });
-  if (body.caseId) {
-    await appendCaseEvent({
-      caseId: body.caseId,
+    const customerId = clean(body.customerId || body.customer?.id || caseItem?.customerId || caseItem?.customer?.id, 180);
+    let draft = null;
+    let recommendation = null;
+    const writesSkipped = dryRun
+      ? ["sms_drafts", "ai_recommendations", ...(body.caseId ? ["case_events"] : [])]
+      : [];
+    if (!dryRun) {
+      draft = await put("sms_drafts", {
+        caseId: body.caseId || "",
+        customerId,
+        eventType: clean(body.eventType || intent, 80),
+        intent,
+        to: clean(body.to || caseItem?.customer?.phone, 80),
+        message,
+        status: "draft",
+        riskLevel: risk.level,
+        requiresApproval: risk.approvalRequired,
+        risk,
+        aiMode: generated.mode,
+        providerError: generated.providerError || "",
+        createdBy: clean(body.operatorName || "AI operator", 120),
+      });
+      recommendation = await put("ai_recommendations", {
+        caseId: body.caseId || "",
+        kind: "sms_draft",
+        status: "proposed",
+        risk,
+        payload: { draftId: draft.id, message, intent },
+        aiMode: generated.mode,
+      });
+    }
+    if (!dryRun && body.caseId) {
+      await appendCaseEvent({
+        caseId: body.caseId,
       customerId,
       type: "ai_suggestion",
       direction: "internal",
@@ -101,14 +126,30 @@ exports.handler = async (event) => {
     `SMS-utkast skapat för ${caseItem?.service || intent || "ärendet"}. Risk: ${risk.level}. ${risk.reasons.length ? `Godkännande krävs: ${risk.reasons.join(", ")}.` : "Lågriskutkast."}`,
     800
   );
-  return json(201, {
+  return json(dryRun ? 200 : 201, {
     smsDraft: message,
     riskLevel: risk.level,
     requiresApproval: risk.approvalRequired,
     suggestedNextStatus,
     suggestedPriceRange,
     internalSummary,
-    dryRun: generated.mode !== "openai",
-    references: { draftId: draft.id, recommendationId: recommendation.id },
+    dryRun: dryRun || generated.mode !== "openai",
+    writesSkipped,
+    references: {
+      draftId: draft?.id || null,
+      recommendationId: recommendation?.id || null,
+    },
   });
+  } catch (error) {
+    console.error("ai-sms-draft failed", {
+      name: error?.name,
+      message: error?.message,
+      dryRun,
+    });
+    return json(500, {
+      error: "Function error",
+      code: error?.name || "AI_SMS_DRAFT_ERROR",
+      dryRun,
+    });
+  }
 };
