@@ -49,6 +49,11 @@ const loadProducts = () =>
 const TEVERUN_SHIPPING_SEK = 69900;
 
 const createCheckoutSession = async ({ stripe, product, origin }) => {
+  const metadata = {
+    product_id: product.id || "",
+    product_name: product.name || "",
+    brand: product.brand || "",
+  };
   const shippingOptions = (() => {
     if (product.brand === "KuKirin") {
       return [
@@ -112,6 +117,8 @@ const createCheckoutSession = async ({ stripe, product, origin }) => {
       },
     ],
     mode: "payment",
+    metadata,
+    payment_intent_data: { metadata },
     success_url: `${origin}/?purchase=success`,
     cancel_url: `${origin}/#produkter`,
     shipping_address_collection: {
