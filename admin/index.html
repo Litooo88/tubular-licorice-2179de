@@ -1887,6 +1887,20 @@ function timelineEventsHtml(events=[]){
       <small>${html(entry.createdBy||'system')}${compactMetadata(entry.metadata)?`<br>${html(compactMetadata(entry.metadata))}`:''}</small>
     </article>`).join('');
 }
+function caseTimelineFallbackEvents(item){
+  const entries=Array.isArray(item&&item.timeline)?item.timeline:[];
+  return entries.map((entry,index)=>({
+    id:`case-timeline-${index}`,
+    caseId:item.id,
+    customerId:item.customer&&item.customer.id||'',
+    type:'note',
+    direction:'internal',
+    content:entry.event||entry.content||'H\u00e4ndelse registrerad.',
+    createdBy:entry.createdBy||entry.actor||'/api/cases',
+    createdAt:entry.at||entry.createdAt||entry.updatedAt||item.updatedAt||item.createdAt,
+    metadata:{source:'/api/cases timeline'}
+  })).sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')));
+}
 function smsDraftsHtml(drafts=[]){
   if(!drafts.length)return '<div class="empty">Inga SMS-utkast \u00e4r kopplade till \u00e4rendet.</div>';
   return drafts.map((draft)=>`
@@ -1908,20 +1922,44 @@ async function loadCaseTimeline(item,card){
   const draftsEl=card.querySelector('.case-sms-drafts');
   status.className='timeline-status';
   status.textContent='Laddar timeline och SMS-utkast...';
-  try{
-    const query=`?caseId=${encodeURIComponent(item.id)}`;
-    const [eventData,draftData]=await Promise.all([
-      aiFunctionFetch('/.netlify/functions/case-events'+query),
-      aiFunctionFetch('/.netlify/functions/sms-drafts'+query)
-    ]);
-    eventsEl.innerHTML=timelineEventsHtml(eventData.events||[]);
-    draftsEl.innerHTML=smsDraftsHtml(draftData.drafts||[]);
-    status.textContent=`Senast uppdaterad ${new Date().toLocaleTimeString('sv-SE')} - senaste event visas f\u00f6rst`;
-    card.dataset.timelineLoaded='true';
-  }catch(error){
+  if(!item.id){
     status.className='timeline-status bad';
-    status.textContent=error.message==='Ej beh\u00f6rig'?'Ej beh\u00f6rig':`Fel: ${error.message}`;
+    status.textContent='Inget \u00e4rende \u00e4r valt.';
+    return;
   }
+  const query=`?caseId=${encodeURIComponent(item.id)}`;
+  const [eventResult,draftResult]=await Promise.allSettled([
+    aiFunctionFetch('/.netlify/functions/case-events'+query),
+    aiFunctionFetch('/.netlify/functions/sms-drafts'+query)
+  ]);
+  const fallbackEvents=caseTimelineFallbackEvents(item);
+  const warnings=[];
+  let events=[];
+  let drafts=[];
+  if(eventResult.status==='fulfilled'){
+    const eventData=eventResult.value||{};
+    events=Array.isArray(eventData.events)?eventData.events:[];
+    if(eventData.sourceUnavailable)warnings.push('case-events k\u00e4lla saknas');
+  }else{
+    warnings.push(`case-events: ${eventResult.reason&&eventResult.reason.message||'kunde inte h\u00e4mtas'}`);
+  }
+  if(!events.length&&fallbackEvents.length){
+    events=fallbackEvents;
+    warnings.push('visar fallback fr\u00e5n /api/cases timeline');
+  }
+  if(draftResult.status==='fulfilled'){
+    const draftData=draftResult.value||{};
+    drafts=Array.isArray(draftData.drafts)?draftData.drafts:[];
+    if(draftData.sourceUnavailable)warnings.push('sms-drafts k\u00e4lla saknas');
+  }else{
+    warnings.push(`sms-drafts: ${draftResult.reason&&draftResult.reason.message||'kunde inte h\u00e4mtas'}`);
+  }
+  eventsEl.innerHTML=timelineEventsHtml(events);
+  draftsEl.innerHTML=smsDraftsHtml(drafts);
+  const sourceText=warnings.length?` - ${warnings.join(' | ')}`:' - senaste event visas f\u00f6rst';
+  status.className=`timeline-status ${events.length||!warnings.length?'':'bad'}`;
+  status.textContent=`Senast uppdaterad ${new Date().toLocaleTimeString('sv-SE')}${sourceText}`;
+  card.dataset.timelineLoaded='true';
 }
 async function logStatusChangeEvent(item,nextStatus,note=''){
   if(!item.id||!nextStatus||nextStatus===item.status)return;
