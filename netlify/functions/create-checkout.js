@@ -8,6 +8,21 @@ const env = (name) => {
   }
 };
 
+const DEFAULT_SITE_ORIGIN = "https://www.nordicemobility.se";
+
+const normalizeOrigin = (value) => {
+  try {
+    const url = new URL(value || DEFAULT_SITE_ORIGIN);
+    if (!["https:", "http:"].includes(url.protocol)) return DEFAULT_SITE_ORIGIN;
+    return url.origin;
+  } catch {
+    return DEFAULT_SITE_ORIGIN;
+  }
+};
+
+const checkoutOrigin = () =>
+  normalizeOrigin(env("SITE_URL") || env("URL") || env("DEPLOY_PRIME_URL") || DEFAULT_SITE_ORIGIN);
+
 const adminDebugAllowed = (event) => {
   const expected = env("ADMIN_TOKEN");
   const provided = event.headers["x-admin-token"] || event.headers["X-Admin-Token"] || "";
@@ -179,7 +194,7 @@ exports.handler = async (event) => {
       };
     }
 
-    const origin = event.headers.origin || "https://www.nordicemobility.se";
+    const origin = checkoutOrigin();
     const Stripe = require("stripe");
     const stripe = Stripe(stripeSecretKey);
     const session = await createCheckoutSession({ stripe, product, origin });
@@ -211,4 +226,4 @@ exports.handler = async (event) => {
   }
 };
 
-exports._internals = { loadProducts, createCheckoutSession, TEVERUN_SHIPPING_SEK };
+exports._internals = { loadProducts, createCheckoutSession, TEVERUN_SHIPPING_SEK, checkoutOrigin, normalizeOrigin };
