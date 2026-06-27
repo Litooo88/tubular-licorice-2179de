@@ -32,6 +32,15 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-27 ~18:55Z — Codex — PÅGÅR
+
+- **Branch:** `fix/timing-safe-admin-auth`
+- **Gör:** Hårdar admin-auth i kvarvarande MJS-functions så `x-admin-token`
+  jämförs timing-safe där endpoints redan kräver admin-token.
+- **Filer/områden:** `netlify/functions/*.mjs` med lokal admin-auth samt
+  relevanta verifieringar.
+- **Säkerhet:** Inga SMS/mail, inga production-writes, stashen poppas inte.
+
 ### 2026-06-27 ~18:10Z — Codex — KLAR
 
 - **Branch:** flera fokuserade branches, mergeade via PR #52-#61 till `main`.
