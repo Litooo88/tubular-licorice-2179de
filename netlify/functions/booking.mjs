@@ -935,6 +935,34 @@ const createCalendarEvent = async (caseItem) => {
   }
 };
 
+const bookingRateState = globalThis.__nordicBookingRateState || new Map();
+globalThis.__nordicBookingRateState = bookingRateState;
+
+const requestIp = (request) =>
+  clean(
+    request.headers.get("x-nf-client-connection-ip") ||
+      request.headers.get("client-ip") ||
+      request.headers.get("x-forwarded-for")?.split(",")[0] ||
+      "unknown",
+    120,
+  );
+
+const rateLimitKey = (request, body = {}) => [
+  requestIp(request),
+  normalizePhone(body.phone) || "no-phone",
+].join("|");
+
+const isRateLimited = (key, { limit = 4, windowMs = 10 * 60 * 1000 } = {}) => {
+  const now = Date.now();
+  const bucket = (bookingRateState.get(key) || []).filter((timestamp) => now - timestamp < windowMs);
+  bucket.push(now);
+  bookingRateState.set(key, bucket);
+  return bucket.length > limit;
+};
+
+const hasHoneypotValue = (body = {}) =>
+  Boolean(clean(body["bot-field"] || body.botField || body.website || body.company, 240));
+
 export default async (request, context) => {
   if (request.method !== "POST") {
     return json({ error: "Method not allowed" }, 405);
@@ -942,6 +970,14 @@ export default async (request, context) => {
 
   try {
     const body = await request.json();
+    if (hasHoneypotValue(body)) {
+      console.warn("booking_honeypot_blocked", { ip: requestIp(request) });
+      return json({ error: "Kunde inte skapa verkstadsarende." }, 400);
+    }
+    if (isRateLimited(rateLimitKey(request, body))) {
+      console.warn("booking_rate_limited", { ip: requestIp(request) });
+      return json({ error: "For manga bokningsforsok just nu. Ring verkstaden pa 010-138 54 98 om det ar akut." }, 429);
+    }
     const now = new Date().toISOString();
     const id = `case_${now.replace(/[:.]/g, "-")}_${Math.random().toString(36).slice(2, 8)}`;
     const service = clean(body.service) || "Annat";

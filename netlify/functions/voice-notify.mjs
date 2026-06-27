@@ -1,50 +1,98 @@
-// eLks whenhangup callback — skickar SMS-notis till Sebastian
-// Triggas när ett inkommande samtal är slut (besvarat eller missat)
+// 46elks whenhangup callback - sends an internal missed/answered call SMS when configured.
+
+const env = (name) => {
+  try {
+    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
+  } catch {
+    return process.env[name] || "";
+  }
+};
+
+const clean = (value, max = 1000) => String(value || "").trim().slice(0, max);
+
+const authorizeVoiceWebhook = (request) => {
+  const secret = clean(env("VOICE_WEBHOOK_SECRET"), 240);
+  if (!secret) return { ok: true, configured: false };
+  const url = new URL(request.url);
+  const provided = clean(
+    request.headers.get("x-nordic-webhook-secret") ||
+      url.searchParams.get("secret") ||
+      url.searchParams.get("token"),
+    240,
+  );
+  return { ok: provided === secret, configured: true };
+};
+
+const parsePayload = async (request) => {
+  try {
+    const contentType = request.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) return request.json().catch(() => ({}));
+    if (contentType.includes("application/x-www-form-urlencoded") || contentType.includes("multipart/form-data")) {
+      const form = await request.formData();
+      return Object.fromEntries([...form.entries()].map(([key, value]) => [key, clean(value, 2000)]));
+    }
+    const text = await request.text();
+    return Object.fromEntries(new URLSearchParams(text));
+  } catch (error) {
+    console.error("voice-notify parse error", { message: clean(error.message, 240) });
+    return {};
+  }
+};
+
+const smsConfig = () => ({
+  username: env("ELKS_USERNAME") || env("SMS_API_USERNAME"),
+  password: env("ELKS_PASSWORD") || env("SMS_API_PASSWORD"),
+  from: clean(env("SMS_FROM") || "NordicEM", 11),
+  to: clean(env("VOICE_NOTIFY_TO") || "+46700243319", 40),
+});
+
+const sendInternalSms = async (message) => {
+  const { username, password, from, to } = smsConfig();
+  if (!username || !password || !to) return { status: "not_configured" };
+  try {
+    const response = await fetch("https://api.46elks.com/a1/sms", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ from, to, message, dontlog: "message" }),
+      signal: AbortSignal.timeout(7000),
+    });
+    return { status: response.ok ? "sent" : "failed", httpStatus: response.status };
+  } catch (error) {
+    console.error("voice-notify SMS error", { message: clean(error.message, 240) });
+    return { status: "failed", error: clean(error.message, 240) };
+  }
+};
 
 export default async (request) => {
-  const SMS_TO = process.env.VOICE_NOTIFY_TO || "+46700243319";
-    const FROM_NAME = process.env.SMS_FROM || "NordicEM";
+  const auth = authorizeVoiceWebhook(request);
+  if (!auth.ok) {
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+    });
+  }
 
-      let from = "", state = "", duration = "0", actions = "";
-        try {
-            const ct = request.headers.get("content-type") || "";
-                if (ct.includes("application/x-www-form-urlencoded") || ct.includes("multipart/form-data")) {
-                      const fd = await request.formData();
-                            from = fd.get("from") || "";
-                                  state = fd.get("state") || "";
-                                        duration = fd.get("duration") || "0";
-                                              actions = fd.get("actions") || "";
-                                                  } else {
-                                                        const txt = await request.text();
-                                                              const p = new URLSearchParams(txt);
-                                                                    from = p.get("from") || "";
-                                                                          state = p.get("state") || "";
-                                                                                duration = p.get("duration") || "0";
-                                                                                    }
-                                                                                      } catch (e) {
-                                                                                          console.error("voice-notify parse error", e);
-                                                                                            }
+  const payload = await parsePayload(request);
+  const callerNo = clean(payload.from, 80) || "okant nummer";
+  const state = clean(payload.state || payload.result, 80);
+  const duration = Number(payload.duration || 0) || 0;
+  const actions = typeof payload.actions === "string" ? payload.actions : JSON.stringify(payload.actions || "");
+  const answered = (state === "success" && duration > 5) || actions.includes("connect");
+  const time = new Date().toLocaleTimeString("sv-SE", {
+    timeZone: "Europe/Stockholm",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  const message = answered
+    ? `[Nordic] ${time} Besvarat samtal fran ${callerNo} (${duration}s)`
+    : `[Nordic] ${time} MISSAT samtal fran ${callerNo}. Ring upp eller skicka SMS.`;
+  const sms = await sendInternalSms(message);
 
-                                                                                              const callerNo = from || "okänt nummer";
-                                                                                                const secs = parseInt(duration, 10) || 0;
-                                                                                                  const answered = (state === "success" && secs > 5) || actions.includes("connect");
-
-                                                                                                    const tid = new Date().toLocaleTimeString("sv-SE", { timeZone: "Europe/Stockholm", hour: "2-digit", minute: "2-digit" });
-                                                                                                      const msg = answered
-                                                                                                          ? `[Nordic] ${tid} Besvarat samtal från ${callerNo} (${secs}s)`
-                                                                                                              : `[Nordic] ${tid} MISSAT samtal från ${callerNo}. Ring upp eller skicka SMS.`;
-                                                                                                              
-                                                                                                                try {
-                                                                                                                    const auth = Buffer.from(`${process.env.ELKS_USERNAME}:${process.env.ELKS_PASSWORD}`).toString("base64");
-                                                                                                                        await fetch("https://api.46elks.com/a1/sms", {
-                                                                                                                              method: "POST",
-                                                                                                                                    headers: { Authorization: `Basic ${auth}`, "Content-Type": "application/x-www-form-urlencoded" },
-                                                                                                                                          body: new URLSearchParams({ from: FROM_NAME, to: SMS_TO, message: msg })
-                                                                                                                                              });
-                                                                                                                                                } catch (e) {
-                                                                                                                                                    console.error("voice-notify SMS error", e);
-                                                                                                                                                      }
-                                                                                                                                                      
-                                                                                                                                                        return new Response("{}", { status: 200, headers: { "Content-Type": "application/json" } });
-                                                                                                                                                        };
-                                                                                                                                                        
+  return new Response(JSON.stringify({ ok: true, sms, webhookSecretConfigured: auth.configured }), {
+    status: 200,
+    headers: { "Content-Type": "application/json; charset=utf-8" },
+  });
+};
