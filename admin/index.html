@@ -1690,12 +1690,54 @@ function showCustomerExportStatus(message,state=''){
   customerExportStatusEl.className=`customer-export-status ${state}`;
   customerExportStatusEl.textContent=message;
 }
-function customerExportWarningsText(warnings=[]){
+const CUSTOMER_EXPORT_PLACEHOLDER_EMAILS=new Set(['email@example.com','test@example.com']);
+function normalizeCustomerExportEmail(value){
+  const email=String(value||'').trim().toLowerCase();
+  return email&&/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email)&&!CUSTOMER_EXPORT_PLACEHOLDER_EMAILS.has(email)?email:'';
+}
+function normalizeCustomerExportPhone(value){
+  const raw=String(value||'').trim();
+  const lowered=raw.toLowerCase();
+  if(!raw||['saknas','telefon saknas','unknown','okand','test'].includes(lowered))return'';
+  const compact=raw.replace(/[^\d+]/g,'');
+  const digits=compact.replace(/\D/g,'');
+  if(digits.length<6)return'';
+  if(compact.startsWith('+'))return compact;
+  if(compact.startsWith('00'))return `+${compact.slice(2)}`;
+  if(compact.startsWith('46'))return `+${compact}`;
+  if(compact.startsWith('0'))return `+46${compact.slice(1)}`;
+  return compact;
+}
+function uniqueCustomerExportList(values,normalizer){
+  const found=new Map();
+  (Array.isArray(values)?values:[]).forEach((value)=>{
+    const normalized=normalizer(value);
+    if(normalized&&!found.has(normalized))found.set(normalized,normalized);
+  });
+  return [...found.values()].sort((a,b)=>a.localeCompare(b,'sv-SE'));
+}
+function customerExportFromLoadedCases(){
+  const emails=[];
+  const phones=[];
+  (Array.isArray(cases)?cases:[]).forEach((item)=>{
+    const customer=item&&item.customer||{};
+    emails.push(customer.email||item.email||item.customerEmail||'');
+    phones.push(customer.phone||item.customerPhone||item.phone||'');
+  });
+  return {
+    emails:uniqueCustomerExportList(emails,normalizeCustomerExportEmail),
+    phones:uniqueCustomerExportList(phones,normalizeCustomerExportPhone),
+    caseCount:Array.isArray(cases)?cases.length:0
+  };
+}
+function customerExportWarningsText(warnings=[],options={}){
   const items=Array.isArray(warnings)?warnings:[];
   if(!items.length)return'';
   const text=items.map((warning)=>String(warning&&warning.message||warning&&warning.code||warning||'')).join(' | ');
-  if(/MissingBlobsEnvironmentError|BlobsEnvironment/i.test(text)){
-    return ' Kundexportens Blob-k\u00e4lla \u00e4r inte konfigurerad i denna milj\u00f6. Akut uppf\u00f6ljning kan fortfarande matcha mot /api/cases.';
+  if(/MissingBlobsEnvironmentError|BlobsEnvironment|storage ej konfigurerad|Kundkortskallan/i.test(text)){
+    return options.usesLoadedCases
+      ? ' Separata exportk\u00e4llor saknas, men listan anv\u00e4nder redan laddade kundkort fr\u00e5n /api/cases.'
+      : ' Kundexportens Blob-k\u00e4lla \u00e4r inte konfigurerad i denna milj\u00f6. Akut uppf\u00f6ljning kan fortfarande matcha mot /api/cases.';
   }
   return ` Varningar: ${text.slice(0,260)}`;
 }
@@ -1705,28 +1747,38 @@ async function exportCustomerList(){
     if(!aiAdminToken()){showCustomerExportStatus('Admin-token saknas','warn');return;}
     button.disabled=true;
     showCustomerExportStatus('Hamtar kundlista read-only...');
+    if(!cases.length)await loadCases({background:true}).catch(()=>{});
+    const loadedCasesExport=customerExportFromLoadedCases();
     const data=await aiFunctionFetch('/.netlify/functions/customer-export');
-    latestCustomerEmails=Array.isArray(data.emails)?data.emails:[];
-    latestCustomerPhones=Array.isArray(data.phones)?data.phones:[];
+    latestCustomerEmails=uniqueCustomerExportList([...(Array.isArray(data.emails)?data.emails:[]),...loadedCasesExport.emails],normalizeCustomerExportEmail);
+    latestCustomerPhones=uniqueCustomerExportList([...(Array.isArray(data.phones)?data.phones:[]),...loadedCasesExport.phones],normalizeCustomerExportPhone);
     customerExportEmailsEl.value=latestCustomerEmails.join('\n');
     customerExportPhonesEl.value=latestCustomerPhones.join('\n');
     customerExportOutputEl.style.display='block';
-    const warnings=customerExportWarningsText(data.warnings);
+    const usedLoadedCases=Boolean(loadedCasesExport.caseCount&&(loadedCasesExport.emails.length||loadedCasesExport.phones.length));
+    const warnings=customerExportWarningsText(data.warnings,{usesLoadedCases:usedLoadedCases});
     const emailCount=Number(data.emailCount||data.count||latestCustomerEmails.length||0);
     const phoneCount=Number(data.phoneCount||latestCustomerPhones.length||0);
-    const message=emailCount
-      ? `Hittade ${emailCount} e-postadresser och ${phoneCount} telefonnummer. Inget mail skickades.${warnings}`
-      : phoneCount
-        ? `Inga e-postadresser hittades, men ${phoneCount} telefonnummer finns. Inget mail skickades.${warnings}`
+    const shownEmailCount=latestCustomerEmails.length||emailCount;
+    const shownPhoneCount=latestCustomerPhones.length||phoneCount;
+    const message=shownEmailCount
+      ? `Hittade ${shownEmailCount} e-postadresser och ${shownPhoneCount} telefonnummer. Inget mail skickades.${warnings}`
+      : shownPhoneCount
+        ? `Inga e-postadresser hittades, men ${shownPhoneCount} telefonnummer finns. Inget mail skickades.${warnings}`
         : `Inga e-postadresser eller telefonnummer hittades. Inget mail skickades.${warnings}`;
-    showCustomerExportStatus(message,emailCount?'':'warn');
+    showCustomerExportStatus(message,shownEmailCount?'':'warn');
   }catch(error){
-    latestCustomerEmails=[];
-    latestCustomerPhones=[];
+    const loadedCasesExport=customerExportFromLoadedCases();
+    latestCustomerEmails=loadedCasesExport.emails;
+    latestCustomerPhones=loadedCasesExport.phones;
     customerExportOutputEl.style.display='block';
-    customerExportEmailsEl.value='';
-    customerExportPhonesEl.value='';
-    showCustomerExportStatus(`Fel: ${error.message}`,'bad');
+    customerExportEmailsEl.value=latestCustomerEmails.join('\n');
+    customerExportPhonesEl.value=latestCustomerPhones.join('\n');
+    if(latestCustomerEmails.length||latestCustomerPhones.length){
+      showCustomerExportStatus(`Export-function kunde inte l\u00e4sas, men ${latestCustomerPhones.length} telefonnummer och ${latestCustomerEmails.length} e-postadresser finns i redan laddade kundkort. Inget mail skickades. Fel: ${error.message}`,'warn');
+    }else{
+      showCustomerExportStatus(`Fel: ${error.message}`,'bad');
+    }
   }finally{
     button.disabled=false;
   }

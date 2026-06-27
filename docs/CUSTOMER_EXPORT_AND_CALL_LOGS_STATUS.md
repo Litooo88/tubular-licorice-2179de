@@ -67,6 +67,27 @@ Om inga riktiga e-postadresser finns men telefonnummer finns ska admin visa:
 Det här är viktigt eftersom många production-kundkort saknar e-post men har
 telefonnummer.
 
+## Admin-export efter klickproblem 2026-06-27
+
+Sebastian observerade att knappen `Exportera kundlista` kunde visa tom export
+och tekniska `MissingBlobsEnvironmentError`-varningar trots att admin hade
+kundkort med telefonnummer.
+
+Orsaken var att exportpanelen litade for mycket pa separata/future
+Blob-kallor (`customers`, `communication_events`) och inte anvande den
+kundlista som redan var laddad i admin via `/api/cases`.
+
+Nu galler:
+
+- `customer-export` behandlar future-kallor som valfria.
+- `workshop-cases` / `/api/cases` ar fortsatt primar kundkortskalla.
+- Admin-knappen kompletterar endpoint-svaret med redan laddade kundkort fran
+  `cases[]`.
+- Om e-post saknas men telefonnummer finns visas telefonantalet tydligt.
+- Om export-function saknas lokalt eller Blob-kallor saknas kan admin anda
+  visa/kopiera telefonnummer fran de kundkort som redan laddats in.
+- Inga mail skickas och inga SMS skickas av exportpanelen.
+
 ## Call logs
 
 Endpoint:
