@@ -7,6 +7,10 @@ const json = (body, status = 200) =>
   });
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
+const CHAT_RATE_WINDOW_MS = 10 * 60 * 1000;
+const CHAT_RATE_LIMIT = 5;
+const chatRateLimitStore = globalThis.__nordicWorkshopChatRateLimit || new Map();
+globalThis.__nordicWorkshopChatRateLimit = chatRateLimitStore;
 
 const env = (name) => {
   try {
@@ -24,6 +28,32 @@ const normalizePhone = (phone) => {
   if (compact.startsWith("46")) return `+${compact}`;
   if (compact.startsWith("0")) return `+46${compact.slice(1)}`;
   return compact.length >= 7 ? `+46${compact}` : "";
+};
+
+const requestIp = (request) => {
+  const forwarded = request.headers.get("x-forwarded-for") || "";
+  return clean(
+    request.headers.get("x-nf-client-connection-ip")
+      || request.headers.get("client-ip")
+      || forwarded.split(",")[0]
+      || "unknown",
+    120
+  );
+};
+
+const rateLimitKey = (request, phone) => `${requestIp(request)}|${phone || "missing-phone"}`;
+
+const checkRateLimit = (request, phone) => {
+  const now = Date.now();
+  const key = rateLimitKey(request, phone);
+  const attempts = (chatRateLimitStore.get(key) || []).filter((at) => now - at < CHAT_RATE_WINDOW_MS);
+  attempts.push(now);
+  chatRateLimitStore.set(key, attempts);
+  return {
+    ok: attempts.length <= CHAT_RATE_LIMIT,
+    attempts: attempts.length,
+    retryAfterSeconds: Math.ceil(CHAT_RATE_WINDOW_MS / 1000),
+  };
 };
 
 const STAFF = {
@@ -140,11 +170,20 @@ export default async (request) => {
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   const body = await request.json().catch(() => ({}));
-  if (clean(body.company, 80)) return json({ ok: true, ignored: true });
+  if (clean(body.company || body.website || body["bot-field"] || body.botField, 80)) {
+    return json({ ok: true, ignored: true, reason: "bot_honeypot" });
+  }
 
   const topic = topicLabels[body.topic] ? body.topic : "other";
   const message = clean(body.message, 1200);
   const phone = normalizePhone(body.phone);
+  const limit = checkRateLimit(request, phone || clean(body.phone, 80) || "missing-phone");
+  if (!limit.ok) {
+    return json({
+      error: "For manga chattforsok. Vanta en stund och forsok igen.",
+      retryAfterSeconds: limit.retryAfterSeconds,
+    }, 429);
+  }
   const name = clean(body.name, 140) || "Chatkund";
   const model = clean(body.model, 180);
   const page = clean(body.page, 500);
