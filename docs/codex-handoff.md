@@ -29,6 +29,8 @@ Keep it current. When a larger feature, rescue operation, deploy-sensitive fix, 
 - AI/admin safety hardening from June 27 is merged: protected media requires `x-admin-token`, public booking diagnostics no longer expose provider detail, shared admin token comparison is timing-safe, AI SMS dry-run skips writes, timeline falls back to `/api/cases`, and old rescue cases route returns `410`.
 - Product Stripe Checkout now uses a server-controlled origin for return URLs and includes product metadata. `/.netlify/functions/stripe-webhook` verifies `STRIPE_WEBHOOK_SECRET` and stores verified `checkout.session.completed` events in `payments`. It is inactive with `503` until the secret is configured.
 - Public booking and workshop chat intake now have honeypot/rate-limit guards and idempotency mappings to avoid duplicate case/calendar/notification side effects on retries or double submits.
+- Netlify read-only check on 2026-06-27 found the production site `nordicemobility` deployed and `ready`, but `STRIPE_WEBHOOK_SECRET` was not configured. Stripe payment confirmation is therefore still webhook-inactive until Sebastian adds the real Stripe signing secret and connects the Stripe Dashboard webhook to `/.netlify/functions/stripe-webhook`.
+- The same Netlify check showed some sensitive operational variables were not marked as secret in Netlify metadata. Do not print or copy values into docs or commits. Recommended follow-up is to rotate sensitive values, mark them secret in Netlify, and then run an authenticated production smoke test.
 
 ## Important files
 

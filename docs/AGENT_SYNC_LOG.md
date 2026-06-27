@@ -32,6 +32,17 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-27 ~19:35Z — Codex — KLAR
+
+- **Branch:** `docs/netlify-env-hardening-followup`
+- **Gjorde:** Dokumenterade read-only Netlify-fynd efter PR #63: production
+  deploy är `ready`, men `STRIPE_WEBHOOK_SECRET` saknas och vissa känsliga
+  operativa env-vars behöver roteras/markeras som secret i Netlify.
+- **Filer/områden:** `docs/codex-handoff.md`, `docs/AGENT_SYNC_LOG.md`.
+- **Tester:** Inga buildtester körda; markdown-only.
+- **Säkerhet:** Inga env-värden skrevs i docs, inga SMS/mail, inga
+  production-writes, stashen poppades inte.
+
 ### 2026-06-27 ~18:55Z — Codex — KLAR
 
 - **Branch:** `fix/timing-safe-admin-auth`
