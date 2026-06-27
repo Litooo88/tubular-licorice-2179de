@@ -1,0 +1,102 @@
+{
+  "version": "0.1",
+  "updatedAt": "2026-06-26",
+  "currency": "SEK",
+  "approvalThreshold": 995,
+  "rules": [
+    {
+      "id": "puncture_standard_wheel",
+      "name": "Punktering vanligt hjul",
+      "category": "tires",
+      "startPrice": 349,
+      "likelyMin": 349,
+      "likelyMax": 595,
+      "requiresDiagnosis": false,
+      "requiresApproval": false
+    },
+    {
+      "id": "puncture_motor_wheel",
+      "name": "Punktering motorhjul",
+      "category": "tires",
+      "startPrice": 395,
+      "likelyMin": 395,
+      "likelyMax": 795,
+      "requiresDiagnosis": false,
+      "requiresApproval": false
+    },
+    {
+      "id": "diagnostics_standard",
+      "name": "Standard felsökning",
+      "category": "diagnostics",
+      "startPrice": 395,
+      "likelyMin": 395,
+      "likelyMax": 995,
+      "requiresDiagnosis": true,
+      "requiresApproval": false
+    },
+    {
+      "id": "diagnostics_advanced",
+      "name": "Avancerad felsökning",
+      "category": "diagnostics",
+      "startPrice": 645,
+      "likelyMin": 645,
+      "likelyMax": 1495,
+      "requiresDiagnosis": true,
+      "requiresApproval": true
+    },
+    {
+      "id": "brake_adjustment",
+      "name": "Bromsjustering",
+      "category": "brakes",
+      "startPrice": 289,
+      "likelyMin": 289,
+      "likelyMax": 595,
+      "requiresDiagnosis": false,
+      "requiresApproval": false
+    },
+    {
+      "id": "ewheels_e16",
+      "name": "E-Wheels E16 felsökning",
+      "category": "fault_code",
+      "brand": "E-Wheels",
+      "modelHint": "E2S V2 Pro LR",
+      "faultCode": "E16",
+      "startPrice": 395,
+      "likelyMin": 595,
+      "likelyMax": 1995,
+      "requiresDiagnosis": true,
+      "requiresApproval": true
+    },
+    {
+      "id": "battery_diagnostics",
+      "name": "Batterifelsökning",
+      "category": "battery",
+      "startPrice": 495,
+      "likelyMin": 495,
+      "likelyMax": null,
+      "requiresDiagnosis": true,
+      "requiresApproval": true,
+      "riskLevel": "high"
+    },
+    {
+      "id": "controller_replacement",
+      "name": "Controllerbyte",
+      "category": "electrical",
+      "startPrice": null,
+      "likelyMin": 995,
+      "likelyMax": 1995,
+      "requiresDiagnosis": true,
+      "requiresApproval": true
+    },
+    {
+      "id": "display_throttle",
+      "name": "Display/gasreglage",
+      "category": "electrical",
+      "startPrice": null,
+      "likelyMin": 595,
+      "likelyMax": 1495,
+      "requiresDiagnosis": true,
+      "requiresApproval": true
+    }
+  ]
+}

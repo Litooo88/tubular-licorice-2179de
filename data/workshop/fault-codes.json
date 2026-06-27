@@ -1,0 +1,27 @@
+{
+  "version": "0.1",
+  "updatedAt": "2026-06-26",
+  "faultCodes": [
+    {
+      "brand": "E-Wheels",
+      "model": "E-Wheels E2S V2 Pro LR",
+      "code": "E16",
+      "summary": "E16 kräver felsökning innan slutpris.",
+      "possibleAreas": ["display", "throttle", "controller", "wiring", "motor", "battery"],
+      "requiresDiagnosis": true,
+      "startPrice": 395,
+      "likelyMin": 595,
+      "likelyMax": 1995,
+      "requiresApproval": true,
+      "customerMessage": "Felkod E16 behöver felsökas. Startpris 395 kr, vanligt intervall 595-1995 kr. Slutpris bekräftas innan arbete."
+    },
+    {
+      "category": "battery_risk",
+      "code": "BATTERY_HIGH_RISK",
+      "summary": "Batteri, lukt, värme, svullnad, fukt eller laddproblem är high-risk.",
+      "requiresDiagnosis": true,
+      "requiresApproval": true,
+      "stopIf": ["smell", "heat", "swelling", "water_damage", "short_circuit"]
+    }
+  ]
+}

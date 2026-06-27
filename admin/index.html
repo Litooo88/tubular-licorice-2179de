@@ -70,6 +70,8 @@ button:disabled{opacity:.6;cursor:wait}
 .ai-test-result.show{display:block}
 .ai-test-result.bad{border-color:rgba(255,90,95,.45);color:#ffe1e3}
 .communication-radar{padding:16px;margin:0 0 14px}
+.communication-radar summary{cursor:pointer;list-style:none}
+.communication-radar summary::-webkit-details-marker{display:none}
 .communication-radar h2{margin:0 0 6px;font-size:22px}
 .communication-radar p{margin:0;color:#aab5ac;font-size:13px;line-height:1.45}
 .communication-radar-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
@@ -77,6 +79,7 @@ button:disabled{opacity:.6;cursor:wait}
 .communication-radar-status{color:#8ff5ae;font-size:12px;margin-top:8px}
 .communication-radar-status.bad{color:#ffb1b5}
 .communication-radar-status.warn{color:#ffe0a3}
+.communication-radar-warning{border:1px solid rgba(255,194,71,.35);background:rgba(255,194,71,.10);color:#fff1cf;border-radius:8px;padding:10px 12px;margin-top:12px;font-size:13px;line-height:1.45}
 .communication-radar-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
 .communication-radar-card{border:1px solid #29362d;border-radius:8px;background:#080d09;padding:12px;min-width:0}
 .communication-radar-card h3{font-size:13px;text-transform:uppercase;letter-spacing:.07em;color:#a8b2aa;margin:0 0 8px}
@@ -99,6 +102,28 @@ button:disabled{opacity:.6;cursor:wait}
 .customer-export-output{display:none;margin-top:10px}
 .customer-export-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .customer-export-output textarea{min-height:130px;font-family:Consolas,monospace;font-size:13px}
+.missed-call-console{padding:16px;margin:0 0 14px}
+.missed-call-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.missed-call-console h2{margin:0 0 6px;font-size:22px}
+.missed-call-console p{margin:0;color:#aab5ac;font-size:13px;line-height:1.45}
+.missed-call-grid{display:grid;grid-template-columns:minmax(320px,.95fr) minmax(360px,1.05fr);gap:12px;margin-top:12px}
+.missed-call-console textarea{font-family:Consolas,monospace;font-size:13px;min-height:150px}
+.missed-call-actions,.missed-call-export-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.missed-call-status{display:none;margin-top:10px;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.45}
+.missed-call-status.ok{display:block;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#e6ffef}
+.missed-call-status.warn{display:block;background:rgba(255,194,71,.12);border:1px solid rgba(255,194,71,.35);color:#fff1cf}
+.missed-call-status.bad{display:block;background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}
+.missed-call-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;margin-bottom:10px}
+.missed-call-table-wrap{overflow:auto;border:1px solid #263029;border-radius:8px;background:#060806}
+.missed-call-table{width:100%;border-collapse:collapse;min-width:1180px}
+.missed-call-table th,.missed-call-table td{border-bottom:1px solid #263029;padding:8px;text-align:left;vertical-align:top;font-size:13px}
+.missed-call-table th{color:#a8b2aa;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.missed-call-table tr:last-child td{border-bottom:0}
+.missed-call-priority-high{color:#ffc247;font-weight:900}
+.missed-call-priority-medium{color:#ffe0a3;font-weight:900}
+.missed-call-draft{margin-top:6px;color:#aab5ac;font-size:12px;line-height:1.45;max-width:420px}
+.missed-call-output{margin-top:10px}
+.missed-call-output textarea{min-height:120px}
   .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:16px 0}
 .stat{padding:16px}
 .stat span{display:block;color:#99a39b;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
@@ -151,6 +176,8 @@ button:disabled{opacity:.6;cursor:wait}
 .active-table .priority-stale{color:#ff9ba0;font-weight:900}
 .active-table button{padding:8px 10px;font-size:12px}
 .call-dashboard{overflow:auto}
+.call-dashboard>p:not(.call-dashboard-note){display:none}
+.call-dashboard-note{margin:0;color:#aab5ac;font-size:13px;line-height:1.45}
 .call-dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin:12px 0}
 .call-table{width:100%;border-collapse:collapse;min-width:1020px}
 .call-table th,.call-table td{border-bottom:1px solid #263029;padding:9px 8px;text-align:left;vertical-align:top;font-size:13px}
@@ -296,7 +323,7 @@ textarea{min-height:66px;resize:vertical}
 .contact-state.waiting::before{background:#4ba3ff;box-shadow:0 0 0 3px rgba(75,163,255,.18)}
   @media(max-width:1200px){.board,.workshop-tools{grid-template-columns:repeat(2,1fr)}}
   @media(max-width:980px){.workshop-tools,.ai-control-detail,.ai-test-results,.communication-radar-grid{grid-template-columns:1fr}}
-  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions,.media-grid,.content-actions,.tick-grid,.price-toolbar,.pos-grid,.pos-buttons,.sms-grid,.quote-grid,.customer-export-grid{grid-template-columns:1fr}.top,.ai-control-head,.customer-export-head{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}.pos-line{grid-template-columns:1fr 72px}.pos-line .pos-remove,.sms-grid .full,.quote-grid .full{grid-column:1 / -1}}
+  @media(max-width:760px){.wrap{padding:14px}.login,.board,.row,.contact-grid,.contact-inline,.completion-grid,.completion-actions,.media-grid,.content-actions,.tick-grid,.price-toolbar,.pos-grid,.pos-buttons,.sms-grid,.quote-grid,.customer-export-grid,.missed-call-grid{grid-template-columns:1fr}.top,.ai-control-head,.customer-export-head,.missed-call-head{display:block}.contact,.contact.tools,.quick-actions{grid-template-columns:1fr}.filters,.filters .search-filter{width:100%;min-width:0}.card-tabs{grid-template-columns:1fr}.pos-line{grid-template-columns:1fr 72px}.pos-line .pos-remove,.sms-grid .full,.quote-grid .full{grid-column:1 / -1}}
 </style>
 <script>
 window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debugMode:new URLSearchParams(window.location.search).has("ga_debug")};
@@ -400,11 +427,56 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <div class="ai-test-result" id="aiSmsTestResult"></div>
     </div>
   </section>
-  <section class="panel communication-radar">
+  <section class="panel missed-call-console" id="missedCallFollowupConsole">
+    <div class="missed-call-head">
+      <div>
+        <h2>Akut uppf&ouml;ljning &ndash; missade samtal</h2>
+        <p>Klistra in nummer fr&aring;n 46elks, matcha mot kundkort och kopiera uppf&ouml;ljningsutkast manuellt. <strong>Inget SMS skickas fr&aring;n denna vy.</strong></p>
+      </div>
+      <div class="missed-call-actions">
+        <button type="button" id="parseMissedCalls">Analysera nummer</button>
+        <button type="button" class="secondary" id="clearMissedCalls">Rensa</button>
+      </div>
+    </div>
+    <div class="missed-call-grid">
+      <div>
+        <label for="missedCallInput">Klistra in missade samtal / nummer fr&aring;n 46elks</label>
+        <textarea id="missedCallInput" placeholder="Klistra in nummer fr&aring;n 46elks h&auml;r. Exempel finns i docs/MISSED_CALL_FOLLOWUP_WORKFLOW.md."></textarea>
+        <div class="missed-call-status warn" id="missedCallStatus">Klistra in nummer och klicka p&aring; Analysera nummer. Matchning sker mot redan skyddade kundkort via /api/cases.</div>
+        <div class="missed-call-export-actions">
+          <button type="button" class="secondary" id="copyMissedCallNumbers">Kopiera alla unika nummer</button>
+          <button type="button" class="secondary" id="copyHighPriorityMissedCalls">Kopiera h&ouml;g prio</button>
+          <button type="button" class="secondary" id="copyUnknownMissedCalls">Kopiera ok&auml;nda nummer</button>
+          <button type="button" class="secondary" id="copyIdentifiedMissedCalls">Kopiera identifierade kunder</button>
+          <button type="button" class="secondary" id="copyIdentifiedMissedCallSmsText">Kopiera SMS-text identifierad kund</button>
+          <button type="button" class="secondary" id="copyUnknownMissedCallSmsText">Kopiera SMS-text ok&auml;nt nummer</button>
+          <button type="button" class="secondary" id="copyMissedCallReport">Kopiera rapport</button>
+        </div>
+      </div>
+      <div>
+        <div class="missed-call-stats">
+          <div class="panel stat"><span>Rader</span><b id="missedCallLineCount">0</b></div>
+          <div class="panel stat"><span>Unika nummer</span><b id="missedCallUniqueCount">0</b></div>
+          <div class="panel stat"><span>Dubbletter/f&ouml;rs&ouml;k</span><b id="missedCallRepeatCount">0</b></div>
+          <div class="panel stat"><span>Matchade kunder</span><b id="missedCallMatchedCount">0</b></div>
+          <div class="panel stat"><span>Ok&auml;nda nummer</span><b id="missedCallUnknownCount">0</b></div>
+          <div class="panel stat"><span>H&ouml;g prio</span><b id="missedCallHighPriorityCount">0</b></div>
+        </div>
+        <div class="missed-call-table-wrap" id="missedCallTable"><div class="empty">Ingen analys k&ouml;rd.</div></div>
+        <div class="missed-call-output">
+          <label for="missedCallExportOutput">Kopierbar export</label>
+          <textarea id="missedCallExportOutput" readonly placeholder="Analysresultat och SMS-utkast visas h&auml;r efter analys."></textarea>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <details class="panel communication-radar" id="communicationRadarPanel">
+    <summary>
     <div class="communication-radar-head">
       <div>
-        <h2>Kommunikationsradar</h2>
-        <p>Demo-s&auml;ker vy f&ouml;r mockade Gmail/SMS/samtal. Inga svar skickas och inga live-integrationer kopplas.</p>
+        <h2>Kommunikationsradar &ndash; demo/test</h2>
+        <p>Detta &auml;r mockdata. Inga riktiga Gmail/SMS/samtal h&auml;mtas h&auml;r.</p>
         <div class="communication-radar-status warn" id="communicationRadarStatus">Klicka p&aring; H&auml;mta demo-data f&ouml;r att ladda Kommunikationsradar.</div>
       </div>
       <div class="communication-radar-actions">
@@ -412,22 +484,26 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <button type="button" class="secondary" id="testCommunicationDraft">Skapa svarsf&ouml;rslag dry-run</button>
       </div>
     </div>
+    </summary>
+    <div class="communication-radar-warning">Detta &auml;r en demo/testpanel. Raderna nedan &auml;r inte riktiga kund&auml;renden och ska inte anv&auml;ndas som live-underlag.</div>
     <div class="communication-radar-grid">
-      <div class="communication-radar-card"><h3>Nya inkommande</h3><div class="communication-radar-list" id="communicationNewList"></div></div>
-      <div class="communication-radar-card"><h3>Kr&auml;ver svar</h3><div class="communication-radar-list" id="communicationReplyList"></div></div>
-      <div class="communication-radar-card"><h3>Risk&auml;renden</h3><div class="communication-radar-list" id="communicationRiskList"></div></div>
-      <div class="communication-radar-card"><h3>Leverant&ouml;rer</h3><div class="communication-radar-list" id="communicationSupplierList"></div></div>
-      <div class="communication-radar-card"><h3>Utkast</h3><div class="communication-radar-list" id="communicationDraftList"></div></div>
-      <div class="communication-radar-card"><h3>Koppla till &auml;rende</h3><div class="communication-radar-list" id="communicationLinkedList"></div></div>
+      <div class="communication-radar-card"><h3>Demo: nya inkommande</h3><div class="communication-radar-list" id="communicationNewList"></div></div>
+      <div class="communication-radar-card"><h3>Demo: kr&auml;ver svar</h3><div class="communication-radar-list" id="communicationReplyList"></div></div>
+      <div class="communication-radar-card"><h3>Demo: risk&auml;renden</h3><div class="communication-radar-list" id="communicationRiskList"></div></div>
+      <div class="communication-radar-card"><h3>Demo: leverant&ouml;rer</h3><div class="communication-radar-list" id="communicationSupplierList"></div></div>
+      <div class="communication-radar-card"><h3>Demo: utkast</h3><div class="communication-radar-list" id="communicationDraftList"></div></div>
+      <div class="communication-radar-card"><h3>Demo: koppla till &auml;rende</h3><div class="communication-radar-list" id="communicationLinkedList"></div></div>
     </div>
     <div class="communication-draft-preview" id="communicationDraftPreview"></div>
-  </section>
+  </details>
   <section class="panel call-dashboard">
     <h2>Live samtalsdashboard</h2>
     <p>Dagens inkommande samtal matchas mot kundregistret. Missade samtal och Verkstaden-samtal utan kundkort kan följas upp direkt med SMS.</p>
+    <p class="call-dashboard-note">Dagens inkommande samtal visas bara n&auml;r 46elks/call-log-k&auml;llan &auml;r konfigurerad. Saknas k&auml;llan anv&auml;nds akutpanelen f&ouml;r manuell uppf&ouml;ljning. Inget SMS skickas automatiskt.</p>
     <div class="call-dashboard-grid" id="callDashboardStats"></div>
     <div class="call-actions">
       <button type="button" class="secondary" id="refreshCalls">Uppdatera samtal</button>
+      <button type="button" class="secondary" id="openMissedCallFollowup">Klistra in missade samtal manuellt</button>
     </div>
     <div class="call-status" id="callDashboardStatus"></div>
     <div class="call-leads" id="callLeadsTable"></div>
@@ -594,10 +670,22 @@ const customerExportStatusEl=document.getElementById('customerExportStatus');
 const customerExportOutputEl=document.getElementById('customerExportOutput');
 const customerExportEmailsEl=document.getElementById('customerExportEmails');
 const customerExportPhonesEl=document.getElementById('customerExportPhones');
+const missedCallConsoleEl=document.getElementById('missedCallFollowupConsole');
+const missedCallInputEl=document.getElementById('missedCallInput');
+const missedCallStatusEl=document.getElementById('missedCallStatus');
+const missedCallTableEl=document.getElementById('missedCallTable');
+const missedCallExportOutputEl=document.getElementById('missedCallExportOutput');
+const missedCallLineCountEl=document.getElementById('missedCallLineCount');
+const missedCallUniqueCountEl=document.getElementById('missedCallUniqueCount');
+const missedCallRepeatCountEl=document.getElementById('missedCallRepeatCount');
+const missedCallMatchedCountEl=document.getElementById('missedCallMatchedCount');
+const missedCallUnknownCountEl=document.getElementById('missedCallUnknownCount');
+const missedCallHighPriorityCountEl=document.getElementById('missedCallHighPriorityCount');
 let callDashboardRows=[];
 let communicationRadarEvents=[];
 let latestCustomerEmails=[];
 let latestCustomerPhones=[];
+let missedCallFollowupRows=[];
 let cases=[];
 let isLoadingCases=false;
 let lastUserActivityAt=Date.now();
@@ -624,6 +712,16 @@ document.getElementById('testCommunicationDraft').addEventListener('click',testC
 document.getElementById('exportCustomers').addEventListener('click',exportCustomerList);
 document.getElementById('copyCustomerEmails').addEventListener('click',copyCustomerEmailList);
 document.getElementById('copyCustomerPhones').addEventListener('click',copyCustomerPhoneList);
+document.getElementById('parseMissedCalls').addEventListener('click',parseMissedCallFollowup);
+document.getElementById('clearMissedCalls').addEventListener('click',clearMissedCallFollowup);
+document.getElementById('copyMissedCallNumbers').addEventListener('click',()=>copyMissedCallExport('all_numbers'));
+document.getElementById('copyHighPriorityMissedCalls').addEventListener('click',()=>copyMissedCallExport('high_priority'));
+document.getElementById('copyUnknownMissedCalls').addEventListener('click',()=>copyMissedCallExport('unknown_numbers'));
+document.getElementById('copyIdentifiedMissedCalls').addEventListener('click',()=>copyMissedCallExport('identified_customers'));
+document.getElementById('copyIdentifiedMissedCallSmsText').addEventListener('click',()=>copyMissedCallExport('identified_sms_text'));
+document.getElementById('copyUnknownMissedCallSmsText').addEventListener('click',()=>copyMissedCallExport('unknown_sms_text'));
+document.getElementById('copyMissedCallReport').addEventListener('click',()=>copyMissedCallExport('report'));
+document.getElementById('openMissedCallFollowup').addEventListener('click',()=>missedCallConsoleEl.scrollIntoView({behavior:'smooth',block:'start'}));
 document.getElementById('calendarTest').addEventListener('click',testCalendar);
 ownerFilter.addEventListener('change',render);
 statusFilter.addEventListener('change',render);
@@ -655,6 +753,8 @@ callTableEl.addEventListener('click',async(event)=>{
   if(!row)return;
   if(button.dataset.callAction==='discount'){
     await sendLostLeadDiscount(row,button);
+  }else if(button.dataset.callAction==='copy-followup'){
+    await copyCallFollowupDraft(row,button);
   }else if(button.dataset.callAction==='create-case'){
     await createCaseFromCallLead(row,button);
   }else if(button.dataset.callAction==='ignore'){
@@ -668,6 +768,8 @@ callLeadsEl.addEventListener('click',async(event)=>{
   if(!row)return;
   if(button.dataset.callAction==='discount'){
     await sendLostLeadDiscount(row,button);
+  }else if(button.dataset.callAction==='copy-followup'){
+    await copyCallFollowupDraft(row,button);
   }else if(button.dataset.callAction==='create-case'){
     await createCaseFromCallLead(row,button);
   }else if(button.dataset.callAction==='ignore'){
@@ -1636,6 +1738,215 @@ async function copyCustomerPhoneList(){
     showCustomerExportStatus(`Kunde inte kopiera: ${error.message}`,'bad');
   }
 }
+const MISSED_CALL_SMS_IDENTIFIED='Hej! Jag ber om urs\u00e4kt att jag missat ditt samtal och att \u00e5terkopplingen dragit ut p\u00e5 tiden. Vi har haft ovanligt h\u00f6g belastning i verkstaden och tillf\u00e4lliga bemanningsproblem. Jag g\u00e5r nu igenom alla p\u00e5g\u00e5ende \u00e4renden i turordning. Skriv g\u00e4rna kort vad det g\u00e4ller och om fordonet redan st\u00e5r hos oss, s\u00e5 \u00e5terkommer jag s\u00e5 snabbt jag kan. F\u00f6r ny inl\u00e4mning bokas tid h\u00e4r: https://www.nordicemobility.se/book-online/ Mvh Sebastian, Nordic E-Mobility';
+const MISSED_CALL_SMS_UNKNOWN='Hej! Jag har missat ditt samtal till Nordic E-Mobility. Ber om urs\u00e4kt f\u00f6r sen \u00e5terkoppling, vi har haft v\u00e4ldigt h\u00f6g belastning i verkstaden. Skriv g\u00e4rna namn, modell p\u00e5 fordonet och vad \u00e4rendet g\u00e4ller, s\u00e5 \u00e5terkommer jag i turordning. F\u00f6r ny inl\u00e4mning bokas tid h\u00e4r: https://www.nordicemobility.se/book-online/ Mvh Sebastian, Nordic E-Mobility';
+
+function showMissedCallStatus(message,state='ok'){
+  missedCallStatusEl.className=`missed-call-status ${message?state:''}`;
+  missedCallStatusEl.textContent=message;
+  missedCallStatusEl.style.display=message?'block':'none';
+}
+function normalizeMissedCallPhone(value){
+  let compact=String(value||'').replace(/[^\d+]/g,'');
+  if(!compact)return'';
+  if(compact.startsWith('+')) compact=compact.slice(1);
+  if(compact.startsWith('00')) compact=compact.slice(2);
+  let subscriber='';
+  if(compact.startsWith('46')) subscriber=compact.slice(2);
+  else if(compact.startsWith('07')) subscriber=compact.slice(1);
+  else if(compact.startsWith('7')) subscriber=compact;
+  if(!subscriber.startsWith('7')||subscriber.length<9)return'';
+  return `+46${subscriber.slice(0,9)}`;
+}
+function extractMissedCallPhones(input){
+  const text=String(input||'');
+  const lines=text.split(/\r?\n/);
+  const matches=[];
+  lines.forEach((line,index)=>{
+    const candidates=line.match(/(?:\+46|0046|46|0)?\s*7(?:[\s\-().]*\d){7,10}/g)||[];
+    candidates.forEach((candidate)=>{
+      const phone=normalizeMissedCallPhone(candidate);
+      if(phone)matches.push({phone,line:index+1,raw:candidate});
+    });
+  });
+  return {lineCount:lines.filter((line)=>line.trim()).length,matches};
+}
+function casePhoneCandidates(item){
+  return [
+    item.customer&&item.customer.phone,
+    item.customerPhone,
+    item.phone,
+    item.contactPhone,
+  ].map(normalizeMissedCallPhone).filter(Boolean);
+}
+function latestCaseTime(item){
+  const time=new Date(item.updatedAt||item.createdAt||0).getTime();
+  return Number.isFinite(time)?time:0;
+}
+function matchMissedCallCase(phone){
+  const matches=cases.filter((item)=>casePhoneCandidates(item).includes(phone));
+  matches.sort((a,b)=>{
+    const aActive=['done','archived'].includes(a.status)?1:0;
+    const bActive=['done','archived'].includes(b.status)?1:0;
+    return aActive-bActive||latestCaseTime(b)-latestCaseTime(a);
+  });
+  return matches[0]||null;
+}
+function missedCallPriority(attempts,match){
+  if(attempts>=3&&match)return {level:'high',label:'H\u00f6g - matchad kund + 3+ f\u00f6rs\u00f6k',className:'missed-call-priority-high',score:0};
+  if(match)return {level:'high',label:'H\u00f6g - matchad kund',className:'missed-call-priority-high',score:1};
+  if(attempts>=3)return {level:'high',label:'H\u00f6g - 3+ f\u00f6rs\u00f6k',className:'missed-call-priority-high',score:2};
+  if(attempts===2)return {level:'medium',label:'Medel - \u00e5terkommande',className:'missed-call-priority-medium',score:3};
+  return {level:'normal',label:'Normal',className:'',score:4};
+}
+function missedCallSmsForRow(row){
+  return row.caseMatch?MISSED_CALL_SMS_IDENTIFIED:MISSED_CALL_SMS_UNKNOWN;
+}
+function missedCallRecommendedAction(row){
+  if(row.caseMatch)return row.attempts>=3?'Ring/svara h\u00f6g prio och kopiera identifierad kund-SMS':'Kopiera identifierad kund-SMS och be om kort status';
+  if(row.attempts>=3)return 'Ok\u00e4nd h\u00f6g prio: kopiera ok\u00e4nt nummer-SMS och be om namn/modell';
+  return 'Kopiera ok\u00e4nt nummer-SMS vid behov';
+}
+function buildMissedCallRows(input){
+  const parsed=extractMissedCallPhones(input);
+  const counts=new Map();
+  parsed.matches.forEach(({phone})=>counts.set(phone,(counts.get(phone)||0)+1));
+  const rows=[...counts.entries()].map(([phone,attempts])=>{
+    const caseMatch=matchMissedCallCase(phone);
+    const priority=missedCallPriority(attempts,caseMatch);
+    return {
+      phone,
+      attempts,
+      caseMatch,
+      customerName:caseMatch&&caseMatch.customer&&caseMatch.customer.name||'Ok\u00e4nd',
+      model:caseMatch&&caseMatch.vehicle&&caseMatch.vehicle.model||'',
+      status:caseMatch&&caseMatch.status||'',
+      email:caseMatch&&caseMatch.customer&&caseMatch.customer.email||'',
+      priority,
+      recommendedAction:'',
+      smsDraft:'',
+    };
+  }).sort((a,b)=>a.priority.score-b.priority.score||b.attempts-a.attempts||a.phone.localeCompare(b.phone));
+  rows.forEach((row)=>{row.smsDraft=missedCallSmsForRow(row);row.recommendedAction=missedCallRecommendedAction(row);});
+  const matchedCount=rows.filter((row)=>row.caseMatch).length;
+  const highPriorityCount=rows.filter((row)=>row.priority.level==='high').length;
+  return {
+    lineCount:parsed.lineCount,
+    uniqueCount:rows.length,
+    repeatCount:rows.filter((row)=>row.attempts>1).length,
+    matchedCount,
+    unknownCount:rows.length-matchedCount,
+    highPriorityCount,
+    rows,
+  };
+}
+function renderMissedCallRows(result){
+  missedCallLineCountEl.textContent=result.lineCount;
+  missedCallUniqueCountEl.textContent=result.uniqueCount;
+  missedCallRepeatCountEl.textContent=result.repeatCount;
+  missedCallMatchedCountEl.textContent=result.matchedCount||0;
+  missedCallUnknownCountEl.textContent=result.unknownCount||0;
+  missedCallHighPriorityCountEl.textContent=result.highPriorityCount||0;
+  if(!result.rows.length){
+    missedCallTableEl.innerHTML='<div class="empty">Inga svenska mobilnummer hittades.</div>';
+    missedCallExportOutputEl.value='';
+    return;
+  }
+  missedCallTableEl.innerHTML=`<table class="missed-call-table">
+    <thead><tr><th>Telefonnummer</th><th>F\u00f6rs\u00f6k</th><th>Matchad kund</th><th>Modell</th><th>Status</th><th>E-post</th><th>Prioritet</th><th>Rekommenderad \u00e5tg\u00e4rd</th><th>SMS-utkast</th></tr></thead>
+    <tbody>${result.rows.map((row)=>`<tr>
+      <td><strong>${html(row.phone)}</strong></td>
+      <td>${html(row.attempts)}</td>
+      <td>${row.caseMatch?`<strong>${html(row.customerName)}</strong><div class="muted">${html(shortId(row.caseMatch.id))}</div>`:'<span class="muted">Ingen match</span>'}</td>
+      <td>${html(row.model||'Saknas')}</td>
+      <td>${html(row.status?(statusLabels[row.status]||row.status):'-')}</td>
+      <td>${html(row.email||'Saknas')}</td>
+      <td class="${html(row.priority.className)}">${html(row.priority.label)}</td>
+      <td>${html(row.recommendedAction)}</td>
+      <td><div class="missed-call-draft">${html(row.smsDraft)}</div></td>
+    </tr>`).join('')}</tbody>
+  </table>`;
+  missedCallExportOutputEl.value=missedCallReportText(result.rows);
+}
+async function parseMissedCallFollowup(){
+  try{
+    const input=missedCallInputEl.value;
+    if(!input.trim()){showMissedCallStatus('Klistra in nummer f\u00f6rst.','warn');return;}
+    if(!cases.length&&aiAdminToken()){
+      showMissedCallStatus('Laddar kundkort f\u00f6r matchning...');
+      await loadCases({background:true});
+    }
+    const result=buildMissedCallRows(input);
+    missedCallFollowupRows=result.rows;
+    renderMissedCallRows(result);
+    const high=result.rows.filter((row)=>row.priority.level==='high').length;
+    const matchCount=result.rows.filter((row)=>row.caseMatch).length;
+    const tokenNote=aiAdminToken()?'':' Admin-token saknas: matchning kan vara ofullst\u00e4ndig.';
+    showMissedCallStatus(`Hittade ${result.uniqueCount} unika nummer, ${result.repeatCount} \u00e5terkommande, ${matchCount} matchade kundkort och ${high} h\u00f6g prio. SMS-utkast skapades lokalt. Inget skickades.${tokenNote}`,result.uniqueCount?'ok':'warn');
+  }catch(error){
+    showMissedCallStatus(`Fel vid analys: ${error.message}`,'bad');
+  }
+}
+function clearMissedCallFollowup(){
+  missedCallInputEl.value='';
+  missedCallFollowupRows=[];
+  missedCallLineCountEl.textContent='0';
+  missedCallUniqueCountEl.textContent='0';
+  missedCallRepeatCountEl.textContent='0';
+  missedCallMatchedCountEl.textContent='0';
+  missedCallUnknownCountEl.textContent='0';
+  missedCallHighPriorityCountEl.textContent='0';
+  missedCallTableEl.innerHTML='<div class="empty">Ingen analys k&ouml;rd.</div>';
+  missedCallExportOutputEl.value='';
+  showMissedCallStatus('Rensat. Inget SMS skickades.','warn');
+}
+function missedCallNumberText(rows){
+  return rows.map((row)=>`${row.phone}\n${row.smsDraft}`).join('\n\n---\n\n');
+}
+function missedCallIdentifiedText(rows){
+  return rows.filter((row)=>row.caseMatch).map((row)=>`${row.phone} - ${row.customerName} - ${row.model||'modell saknas'} - ${row.status?(statusLabels[row.status]||row.status):'status saknas'}`).join('\n');
+}
+function missedCallReportText(rows){
+  const header=[
+    'AKUT UPPFOLJNING - MISSADE SAMTAL',
+    `Skapad: ${new Date().toLocaleString('sv-SE')}`,
+    'Inget SMS skickades fran admin.',
+    '',
+  ].join('\n');
+  return header+rows.map((row)=>[
+    `${row.priority.label}: ${row.phone}`,
+    `Forsok: ${row.attempts}`,
+    `Kund: ${row.caseMatch?row.customerName:'Okand'}`,
+    `Modell: ${row.model||'Saknas'}`,
+    `Status: ${row.status?(statusLabels[row.status]||row.status):'-'}`,
+    `E-post: ${row.email||'Saknas'}`,
+    `Atgard: ${row.recommendedAction}`,
+    `SMS: ${row.smsDraft}`,
+  ].join('\n')).join('\n\n---\n\n');
+}
+function missedCallExportText(kind){
+  const rows=missedCallFollowupRows;
+  if(kind==='all_numbers')return rows.map((row)=>row.phone).join('\n');
+  if(kind==='high_priority')return rows.filter((row)=>row.priority.level==='high').map((row)=>row.phone).join('\n');
+  if(kind==='unknown_numbers')return rows.filter((row)=>!row.caseMatch).map((row)=>row.phone).join('\n');
+  if(kind==='identified_customers')return missedCallIdentifiedText(rows);
+  if(kind==='identified_sms_text')return MISSED_CALL_SMS_IDENTIFIED;
+  if(kind==='unknown_sms_text')return MISSED_CALL_SMS_UNKNOWN;
+  if(kind==='report')return missedCallReportText(rows);
+  return missedCallNumberText(rows);
+}
+async function copyMissedCallExport(kind){
+  try{
+    if(!missedCallFollowupRows.length){showMissedCallStatus('Analysera nummer f\u00f6rst.','warn');return;}
+    const text=missedCallExportText(kind);
+    if(!text.trim()){showMissedCallStatus('Inget att kopiera f\u00f6r valt urval.','warn');return;}
+    missedCallExportOutputEl.value=text;
+    await copyText(text);
+    showMissedCallStatus('Kopierat. Inget SMS skickades fr\u00e5n admin.','ok');
+  }catch(error){
+    showMissedCallStatus(`Kunde inte kopiera: ${error.message}`,'bad');
+  }
+}
 function communicationStatusLabel(item){
   if(item.displayStatus)return item.displayStatus;
   if(item.caseId)return'linked_to_case';
@@ -1856,12 +2167,24 @@ function renderActiveOverview(active){
 async function loadCallDashboard(){
   try{
     showCallStatus('Laddar samtalsdata...');
+    if(!aiAdminToken()){
+      renderCallDashboardUnavailable('Admin-token saknas.');
+      showCallStatus('Admin-token saknas. Samtalsk\u00e4lla kan inte kontrolleras.',true);
+      return;
+    }
+    const preCallLogStatus=await checkCallLogsSource();
+    if(preCallLogStatus&&preCallLogStatus.sourceUnavailable){
+      renderCallDashboardUnavailable('46elks/call-log k\u00e4lla saknas eller \u00e4r inte konfigurerad.',preCallLogStatus.warnings||[]);
+      showCallStatus('46elks/call-log k\u00e4lla saknas eller \u00e4r inte konfigurerad. Anv\u00e4nd akutpanelen f\u00f6r manuell uppf\u00f6ljning.',true);
+      return;
+    }
     const data=await api('/api/call-dashboard');
     callDashboardRows=data.rows||data.todayRows||[];
     renderCallDashboard(data);
     const callLogStatus=await checkCallLogsSource();
     if(callLogStatus&&callLogStatus.sourceUnavailable){
-      showCallStatus('Call logs källa saknas / ej konfigurerad',true);
+      renderCallDashboardUnavailable('46elks/call-log k\u00e4lla saknas eller \u00e4r inte konfigurerad.',callLogStatus.warnings||[]);
+      showCallStatus('46elks/call-log k\u00e4lla saknas eller \u00e4r inte konfigurerad. Anv\u00e4nd akutpanelen f\u00f6r manuell uppf\u00f6ljning.',true);
       return;
     }
     showCallStatus(`Samtal uppdaterade ${new Date().toLocaleTimeString('sv-SE')}.`);
@@ -1905,7 +2228,7 @@ function renderCallDashboard(data){
           ? row.cases.map((item)=>`<span class="call-case"><strong>${html(item.customerName||item.shortId)}</strong>${html(item.status)} &middot; ${html(item.service||'')} &middot; ${html(item.model||'modell saknas')}</span>`).join('')
           : '<strong>SAKNAS kundkort</strong>';
         const actionHtml=row.eligibleLostLead
-          ? `<button type="button" data-call-action="create-case" data-call-id="${html(row.id)}">Skapa kundkort</button><button type="button" class="secondary" data-call-action="discount" data-call-id="${html(row.id)}" ${row.followup?'disabled':''}>${row.followup?'SMS skickat':'Skicka RING10'}</button><button type="button" class="secondary" data-call-action="ignore" data-call-id="${html(row.id)}">Ignorera</button>`
+          ? `<button type="button" data-call-action="create-case" data-call-id="${html(row.id)}">Skapa kundkort</button><button type="button" class="secondary" data-call-action="copy-followup" data-call-id="${html(row.id)}">Kopiera SMS-utkast</button><button type="button" class="secondary" data-call-action="ignore" data-call-id="${html(row.id)}">Ignorera</button>`
           : row.hasCase ? '<span class="muted-small">Registrerad kund</span>' : '<span class="muted-small">Ej SMS-lämplig</span>';
         return `<tr class="${rowClass}">
           <td>${html(row.time)}</td>
@@ -1918,6 +2241,24 @@ function renderCallDashboard(data){
         </tr>`;
       }).join('')}</tbody>
     </table>`;
+}
+function renderCallDashboardUnavailable(message,warnings=[]){
+  callDashboardRows=[];
+  const statItems=[
+    ['Samtal idag','Ok\u00e4nt'],
+    ['Hanterade','Ok\u00e4nt'],
+    ['Verkstaden','Ok\u00e4nt'],
+    ['Sebastian','Ok\u00e4nt'],
+    ['R&ouml;stbrevl&aring;da','Ok\u00e4nt'],
+    ['Missade',0],
+    ['Kundkort','Ok\u00e4nt'],
+    ['Tapp-risk',0],
+    ['Leads att g&ouml;ra',0],
+  ];
+  callStatsEl.innerHTML=statItems.map(([label,value])=>`<div class="panel stat"><span>${label}</span><b>${html(value)}</b></div>`).join('');
+  callLeadsEl.innerHTML='<div class="muted">Live samtalsleads visas inte n&auml;r k&auml;llan saknas.</div>';
+  const warningText=Array.isArray(warnings)&&warnings.length?`<br><small>${html(warnings.map((warning)=>warning.message||warning.code||warning).join(' | '))}</small>`:'';
+  callTableEl.innerHTML=`<div class="empty"><strong>${html(message)}</strong><br>Anv&auml;nd knappen "Klistra in missade samtal manuellt" och kopiera uppf&ouml;ljningsutkast utan att skicka SMS.${warningText}</div>`;
 }
 function renderCallLeads(rows){
   const active=(rows||[]).filter((row)=>row.lead&&!['ignored','converted'].includes(row.lead.status));
@@ -1940,12 +2281,27 @@ function renderCallLeads(rows){
           <td><span class="call-lead-pill">${html(status)}</span></td>
           <td><div class="call-lead-actions">
             <button type="button" data-call-action="create-case" data-call-id="${html(row.id)}">Skapa kundkort</button>
-            <button type="button" class="secondary" data-call-action="discount" data-call-id="${html(row.id)}" ${row.followup?'disabled':''}>${row.followup?'SMS skickat':'Skicka RING10'}</button>
+            <button type="button" class="secondary" data-call-action="copy-followup" data-call-id="${html(row.id)}">Kopiera SMS-utkast</button>
             <button type="button" class="secondary" data-call-action="ignore" data-call-id="${html(row.id)}">Ignorera</button>
           </div></td>
         </tr>`;
       }).join('')}</tbody>
     </table>`;
+}
+async function copyCallFollowupDraft(row,button){
+  const original=button.textContent;
+  button.disabled=true;
+  button.textContent='Kopierar...';
+  try{
+    const text=`${row.phone}\n${MISSED_CALL_SMS_UNKNOWN}`;
+    await copyText(text);
+    showCallStatus(`SMS-utkast kopierat f\u00f6r ${row.phone}. Inget skickades.`);
+  }catch(error){
+    showCallStatus(`Kunde inte kopiera SMS-utkast: ${error.message}`,true);
+  }finally{
+    button.disabled=false;
+    button.textContent=original;
+  }
 }
 async function sendLostLeadDiscount(row,button){
   if(!confirm(`Skicka 10% rabatt-SMS till ${row.phone}?`))return;
