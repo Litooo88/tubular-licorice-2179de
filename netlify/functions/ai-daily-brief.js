@@ -1,4 +1,4 @@
-const { json, parseBody, requireAdmin, env, clean } = require("./_shared/http");
+const { json, parseBody, requireAdmin, env, clean, header } = require("./_shared/http");
 const { list, put } = require("./_shared/storage");
 const { assessRisk } = require("./_shared/operator");
 
@@ -6,6 +6,78 @@ const isDryRunRequest = (event, body) =>
   body.dryRun === true ||
   body.previewOnly === true ||
   event.queryStringParameters?.dryRun === "1";
+
+const MISSING_BLOBS_RE = /MissingBlobsEnvironmentError|BlobsEnvironment|not been configured to use Netlify Blobs/i;
+
+const isMissingBlobsEnvironment = (error) =>
+  MISSING_BLOBS_RE.test(`${error?.code || ""} ${error?.name || ""} ${error?.message || ""}`);
+
+const sourceError = (source, error) => ({
+  source,
+  error: clean(error?.code || error?.name || "SOURCE_UNAVAILABLE", 100),
+  message: clean(error?.message || "Kallan kunde inte lasas.", 240),
+  sourceUnavailable: isMissingBlobsEnvironment(error),
+});
+
+const originFor = (event) => {
+  const host = header(event, "host");
+  if (!host) return "";
+  const forwardedProto = header(event, "x-forwarded-proto");
+  const protocol = forwardedProto || (host.includes("localhost") || host.includes("127.0.0.1") ? "http" : "https");
+  return `${protocol}://${host}`;
+};
+
+const readCasesFromApi = async (event) => {
+  const origin = originFor(event);
+  if (!origin) throw Object.assign(new Error("Intern /api/cases URL saknas."), { code: "MISSING_ORIGIN" });
+  const response = await fetch(`${origin}/api/cases`, {
+    headers: { "x-admin-token": header(event, "x-admin-token") },
+    signal: AbortSignal.timeout(10000),
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) {
+    throw Object.assign(new Error(data?.error || response.statusText || `HTTP ${response.status}`), {
+      code: data?.code || `HTTP_${response.status}`,
+    });
+  }
+  return Array.isArray(data.cases) ? data.cases : [];
+};
+
+const readListSource = async (entity, options = {}) => {
+  const source = options.source || entity;
+  try {
+    const rows = await list(entity);
+    return { source, rows, available: true, count: rows.length };
+  } catch (error) {
+    const failure = sourceError(source, error);
+    console.error("ai-daily-brief source unavailable", failure);
+    return { ...failure, rows: [], available: false, count: 0 };
+  }
+};
+
+const readCases = async (event) => {
+  const sources = [];
+  try {
+    const rows = await readCasesFromApi(event);
+    sources.push({ source: "api_cases", path: "/api/cases", available: true, count: rows.length });
+    return { rows, sources, warnings: [] };
+  } catch (error) {
+    const failure = sourceError("api_cases", error);
+    sources.push({ ...failure, path: "/api/cases", available: false, count: 0 });
+  }
+
+  const storageSource = await readListSource("service_cases");
+  sources.push(storageSource);
+  return {
+    rows: storageSource.rows,
+    sources,
+    warnings: [
+      storageSource.available
+        ? "AI-brief kunde inte lasa /api/cases och anvande service_cases fallback."
+        : "AI-brief kunde inte lasa /api/cases eller service_cases.",
+    ],
+  };
+};
 
 const emptyDryRunBrief = (body = {}, method = "GET") => {
   const today = new Date().toISOString().slice(0, 10);
@@ -56,7 +128,12 @@ const functionError = (error, dryRun) => {
     dryRun,
     message: clean(error?.message || "", 240),
   });
-  return json(500, { error: "Function error", code, dryRun });
+  return json(500, {
+    error: "AI daily brief failed",
+    code,
+    message: clean(error?.message || "AI-brief kunde inte hamtas.", 240),
+    dryRun,
+  });
 };
 
 const isActive = (item) => !["done", "archived", "closed"].includes(item.status);
@@ -80,14 +157,29 @@ exports.handler = async (event) => {
     if (!["GET", "POST"].includes(event.httpMethod)) return json(405, { error: "Method not allowed" });
     if (writeDryRun) return json(200, emptyDryRunBrief(body, event.httpMethod));
 
-    const [cases, calls, drafts, parts] = writeDryRun
-      ? [[], [], [], []]
+    const caseRead = await readCases(event);
+    const optionalReads = writeDryRun
+      ? [
+          { source: "call_logs", rows: [], available: true, count: 0, skipped: true },
+          { source: "sms_drafts", rows: [], available: true, count: 0, skipped: true },
+          { source: "part_needs", rows: [], available: true, count: 0, skipped: true },
+        ]
       : await Promise.all([
-          list("service_cases"),
-          list("call_logs"),
-          list("sms_drafts"),
-          list("part_needs"),
+          readListSource("call_logs"),
+          readListSource("sms_drafts"),
+          readListSource("part_needs"),
         ]);
+    const [callRead, draftRead, partRead] = optionalReads;
+    const cases = Array.isArray(caseRead.rows) ? caseRead.rows : [];
+    const calls = Array.isArray(callRead.rows) ? callRead.rows : [];
+    const drafts = Array.isArray(draftRead.rows) ? draftRead.rows : [];
+    const parts = Array.isArray(partRead.rows) ? partRead.rows : [];
+    const sourceWarnings = [
+      ...(caseRead.warnings || []),
+      ...optionalReads
+        .filter((source) => !source.available)
+        .map((source) => `${source.source}: ${source.error}${source.sourceUnavailable ? " (storage unavailable)" : ""}`),
+    ];
     const active = cases.filter(isActive);
     const riskRows = active
       .map((item) => ({ item, risk: assessRisk({ caseItem: item, price: valueFor(item) }) }))
@@ -142,20 +234,37 @@ exports.handler = async (event) => {
       riskCases: riskRows.slice(0, 10).map(({ item, risk }) => ({ ...caseSummary(item), risk })),
       suggestedSocialPost: socialPost,
     };
+    const writeWarnings = [];
     if (event.httpMethod === "POST" && !writeDryRun) {
-      const recommendation = await put("ai_recommendations", {
-        kind: "daily_brief",
-        status: "proposed",
-        payload: { ...brief },
-        createdBy: body.operatorName || "AI operator",
-      });
-      brief.recommendation = {
-        id: recommendation.id,
-        kind: recommendation.kind,
-        status: recommendation.status,
-        createdAt: recommendation.createdAt,
-      };
+      try {
+        const recommendation = await put("ai_recommendations", {
+          kind: "daily_brief",
+          status: "proposed",
+          payload: { ...brief },
+          createdBy: body.operatorName || "AI operator",
+        });
+        brief.recommendation = {
+          id: recommendation.id,
+          kind: recommendation.kind,
+          status: recommendation.status,
+          createdAt: recommendation.createdAt,
+        };
+      } catch (error) {
+        const failure = sourceError("ai_recommendations", error);
+        writeWarnings.push(`ai_recommendations: ${failure.error}`);
+        brief.recommendationWrite = { skipped: true, ...failure };
+      }
     }
+    const sources = [...caseRead.sources, ...optionalReads].map((source) => ({
+      source: source.source,
+      path: source.path,
+      available: source.available !== false,
+      count: source.count || 0,
+      error: source.error,
+      sourceUnavailable: Boolean(source.sourceUnavailable),
+      skipped: Boolean(source.skipped),
+    }));
+    const storageUnavailable = sources.filter((source) => source.sourceUnavailable);
     return json(200, {
       summary: `${active.length} aktiva ärenden, ${riskRows.length} riskärenden och ${readyInvoice.length} klara för betalning.`,
       topPriorities: priority,
@@ -169,6 +278,16 @@ exports.handler = async (event) => {
       dryRun: writeDryRun || !env("OPENAI_API_KEY"),
       writesSkipped: writeDryRun && event.httpMethod === "POST" ? ["ai_recommendations"] : [],
       readsSkipped: writeDryRun ? ["service_cases", "call_logs", "sms_drafts", "part_needs"] : [],
+      dataSource: caseRead.sources?.find((source) => source.available !== false)?.source || "unavailable",
+      sources,
+      warnings: [...sourceWarnings, ...writeWarnings],
+      storageHealth: {
+        ok: storageUnavailable.length === 0,
+        unavailableSources: storageUnavailable.map((source) => ({
+          source: source.source,
+          error: source.error,
+        })),
+      },
       brief,
     });
   } catch (error) {

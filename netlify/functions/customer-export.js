@@ -180,7 +180,7 @@ exports.handler = async (event) => {
     sources.push(adminCasesSource);
     if (!adminCasesSource.count) {
       sources.push(await readSource("service_cases", collectFromCase, customersByEmail, customersByPhone, warnings, {
-        label: "workshop_cases_direct",
+        label: "service_cases",
       }));
     } else {
       sources.push({
@@ -207,6 +207,10 @@ exports.handler = async (event) => {
     const emails = customers.map((customer) => customer.email);
     const phoneCustomers = [...customersByPhone.values()].sort((a, b) => a.phone.localeCompare(b.phone));
     const phones = phoneCustomers.map((customer) => customer.phone);
+    const storageUnavailable = sources.filter((source) => source.sourceUnavailable);
+    if (storageUnavailable.length) {
+      warnings.push(`Customer export storage unavailable - kalla: ${storageUnavailable.map((source) => source.source).join(", ")} - error: ${storageUnavailable.map((source) => source.error).filter(Boolean).join(", ") || "STORAGE_UNAVAILABLE"}`);
+    }
     if (!emails.length && phones.length) warnings.push(`Inga e-postadresser hittades, men ${phones.length} telefonnummer finns.`);
     if (!emails.length && !phones.length) {
       const primaryUnavailable = sources.some((source) => !source.optional && source.sourceUnavailable);
@@ -224,6 +228,13 @@ exports.handler = async (event) => {
       count: emails.length,
       phoneCustomers,
       sources,
+      storageHealth: {
+        ok: storageUnavailable.length === 0,
+        unavailableSources: storageUnavailable.map((source) => ({
+          source: source.source,
+          error: source.error,
+        })),
+      },
       warnings,
       readOnly: true,
       sendsEmail: false,

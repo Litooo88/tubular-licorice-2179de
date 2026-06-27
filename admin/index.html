@@ -708,7 +708,7 @@ document.querySelectorAll('[data-admin-tab]').forEach((button)=>button.addEventL
 document.getElementById('saveToken').addEventListener('click',()=>{localStorage.setItem('nordicAdminToken',tokenInput.value.trim());showAiStatus(tokenInput.value.trim()?'Admin-token sparad. Klicka på Uppdatera AI-brief.':'Admin-token saknas',tokenInput.value.trim()?'':'warn');loadCases();});
 document.getElementById('refresh').addEventListener('click',loadCases);
 document.getElementById('refreshCalls').addEventListener('click',loadCallDashboard);
-document.getElementById('refreshAiControl').addEventListener('click',loadAiControlTower);
+document.getElementById('refreshAiControl').addEventListener('click',()=>loadAiControlTower());
 document.getElementById('testAiQuote').addEventListener('click',testAiQuote);
 document.getElementById('testAiSmsDraft').addEventListener('click',testAiSmsDraft);
 document.getElementById('refreshCommunicationRadar').addEventListener('click',loadCommunicationRadar);
@@ -1593,8 +1593,23 @@ async function aiFunctionFetch(path,{method='GET',body}={}){
   const response=await fetch(path,options);
   const data=await response.json().catch(()=>({}));
   if(response.status===401)throw new Error('Ej behörig');
-  if(!response.ok)throw new Error(data.error||'AI-funktionen kunde inte h&auml;mta data.');
+  if(!response.ok)throw new Error(functionErrorText(data,'AI-funktionen kunde inte hamta data.'));
   return data;
+}
+function functionErrorText(data={},fallback='Funktionen kunde inte hamta data.'){
+  const parts=[];
+  if(data.error)parts.push(String(data.error));
+  if(data.code)parts.push(`kod: ${data.code}`);
+  if(data.message)parts.push(String(data.message));
+  if(data.storageHealth&&Array.isArray(data.storageHealth.unavailableSources)&&data.storageHealth.unavailableSources.length){
+    parts.push(`storage saknas: ${data.storageHealth.unavailableSources.map((source)=>`${source.source||'okand'}=${source.error||'okant fel'}`).join(', ')}`);
+  }
+  if(Array.isArray(data.sources)){
+    const unavailable=data.sources.filter((source)=>source&&source.sourceUnavailable);
+    if(unavailable.length)parts.push(`kallor saknas: ${unavailable.map((source)=>`${source.source||'okand'}=${source.error||'okant fel'}`).join(', ')}`);
+  }
+  if(Array.isArray(data.warnings)&&data.warnings.length)parts.push(`varningar: ${data.warnings.slice(0,3).join(' | ')}`);
+  return parts.filter(Boolean).join(' - ')||fallback;
 }
 const CASE_EVENT_LABELS={
   sms:'SMS',
@@ -1734,7 +1749,7 @@ function customerExportWarningsText(warnings=[],options={}){
   const items=Array.isArray(warnings)?warnings:[];
   if(!items.length)return'';
   const text=items.map((warning)=>String(warning&&warning.message||warning&&warning.code||warning||'')).join(' | ');
-  if(/MissingBlobsEnvironmentError|BlobsEnvironment|storage ej konfigurerad|Kundkortskallan/i.test(text)){
+  if(/Customer export storage unavailable|MissingBlobsEnvironmentError|BlobsEnvironment|storage ej konfigurerad|Kundkortskallan/i.test(text)){
     return options.usesLoadedCases
       ? ' Separata exportk\u00e4llor saknas, men listan anv\u00e4nder redan laddade kundkort fr\u00e5n /api/cases.'
       : ' Kundexportens Blob-k\u00e4lla \u00e4r inte konfigurerad i denna milj\u00f6. Akut uppf\u00f6ljning kan fortfarande matcha mot /api/cases.';
@@ -2108,6 +2123,104 @@ async function testCommunicationDraft(){
     button.disabled=false;
   }
 }
+function aiValueForCase(item){
+  return Number(item&&item.completion&&item.completion.totalCost||item&&item.quote&&item.quote.amount||item&&item.estimatedValue||0);
+}
+function aiCaseSummaryFromCase(item){
+  return {
+    id:item&&item.id,
+    customer:item&&item.customer&&item.customer.name||'Okand kund',
+    model:item&&item.vehicle&&item.vehicle.model||'Modell saknas',
+    status:item&&item.status||'okand',
+    value:aiValueForCase(item)
+  };
+}
+function aiLocalRiskReasons(item){
+  const text=[item&&item.service,item&&item.message,item&&item.vehicle&&item.vehicle.model].filter(Boolean).join(' ').toLowerCase();
+  const reasons=[];
+  if(item&&item.priority==='urgent')reasons.push('Akut/prioriterad');
+  if(/batter|battery|bms|svull|brand|vatten/.test(text))reasons.push('Batteri/el-risk');
+  if(aiValueForCase(item)>995)reasons.push('Pris over 995 kr');
+  return reasons;
+}
+function localAiBriefFromCases(reason=''){
+  const active=(Array.isArray(cases)?cases:[]).filter((item)=>!['done','archived','closed'].includes(item.status));
+  const readyForPayment=active.filter((item)=>item.status==='ready'||item.payment&&item.payment.status==='invoice_ready');
+  const waitingParts=active.filter((item)=>item.status==='waiting_parts');
+  const riskCases=active
+    .map((item)=>({item,reasons:aiLocalRiskReasons(item)}))
+    .filter((entry)=>entry.reasons.length)
+    .slice(0,10)
+    .map((entry)=>({...aiCaseSummaryFromCase(entry.item),risk:{reasons:entry.reasons}}));
+  const topPriorities=[...active]
+    .sort((a,b)=>{
+      const score=(item)=>(item.priority==='urgent'?100:0)+(item.status==='ready'?80:0)+(item.status==='waiting_customer'?60:0)+(item.status==='new'?50:0);
+      return score(b)-score(a)||String(b.updatedAt||b.createdAt||'').localeCompare(String(a.updatedAt||a.createdAt||''));
+    })
+    .slice(0,8)
+    .map(aiCaseSummaryFromCase);
+  const salesOpportunities=active.filter((item)=>['new','contacted','diagnosing'].includes(item.status)).slice(0,10).map(aiCaseSummaryFromCase);
+  const metrics={
+    active:active.length,
+    missedCalls:0,
+    unansweredSms:0,
+    waitingCustomer:active.filter((item)=>item.status==='waiting_customer').length,
+    waitingParts:waitingParts.length,
+    readyInvoice:readyForPayment.length,
+    riskCases:riskCases.length,
+    possibleRevenueToday:topPriorities.reduce((sum,item)=>sum+Number(item.value||0),0)
+  };
+  return {
+    summary:`${active.length} aktiva arenden fran /api/cases, ${riskCases.length} riskarenden och ${readyForPayment.length} klara for betalning.`,
+    topPriorities,
+    cashToday:readyForPayment.reduce((sum,item)=>sum+aiValueForCase(item),0),
+    riskCases,
+    missedCallsToFollowUp:[],
+    partsToOrder:[],
+    readyForPayment:readyForPayment.map(aiCaseSummaryFromCase),
+    salesOpportunities,
+    socialMediaSuggestion:'Dagens verkstadsfokus: hogsasong for elscootrar. Boka service i forvag sa kan Nordic E-Mobility planera felsokning, delar och aterkoppling tryggare.',
+    dryRun:true,
+    dataSource:'api_cases_frontend',
+    warnings:[reason,'Brief byggd lokalt fran redan laddade /api/cases-data. Call logs och customer-export blockerar inte denna brief.'].filter(Boolean),
+    storageHealth:{ok:false,unavailableSources:[]},
+    brief:{metrics,priority:topPriorities,riskCases,readyInvoice:readyForPayment.map(aiCaseSummaryFromCase),suggestedSocialPost:'Dagens verkstadsfokus: hogsasong for elscootrar. Boka service i forvag sa kan Nordic E-Mobility planera felsokning, delar och aterkoppling tryggare.'}
+  };
+}
+function aiWarningText(data={}){
+  const warnings=Array.isArray(data.warnings)?data.warnings:[];
+  const unavailable=data.storageHealth&&Array.isArray(data.storageHealth.unavailableSources)?data.storageHealth.unavailableSources:[];
+  const parts=[];
+  if(data.dataSource)parts.push(`kalla: ${data.dataSource}`);
+  if(unavailable.length)parts.push(`storage saknas: ${unavailable.map((source)=>`${source.source}=${source.error}`).join(', ')}`);
+  if(warnings.length)parts.push(`varningar: ${warnings.slice(0,2).join(' | ')}`);
+  return parts.length?` (${parts.join(' - ')})`:'';
+}
+function renderAiControlTowerData(data){
+  const brief=data.brief||{};
+  const metrics=brief.metrics||{};
+  const priorities=data.topPriorities||brief.priority||[];
+  const missedCalls=data.missedCallsToFollowUp||brief.missedCalls||[];
+  const riskCases=data.riskCases||brief.riskCases||[];
+  const partsToOrder=data.partsToOrder||brief.openPartNeeds||[];
+  const readyForPayment=data.readyForPayment||brief.readyInvoice||[];
+  const salesOpportunities=data.salesOpportunities||[];
+  aiSummaryEl.textContent=data.summary||'Ingen sammanfattning tillganglig.';
+  document.getElementById('aiPriorityToday').textContent=priorities.length;
+  document.getElementById('aiMissedCalls').textContent=missedCalls.length;
+  document.getElementById('aiWaitingCustomer').textContent=metrics.waitingCustomer||0;
+  document.getElementById('aiWaitingParts').textContent=metrics.waitingParts||0;
+  document.getElementById('aiReadyInvoice').textContent=readyForPayment.length;
+  document.getElementById('aiRiskCases').textContent=riskCases.length;
+  document.getElementById('aiRevenueToday').textContent=money(metrics.possibleRevenueToday??data.cashToday??0);
+  aiPriorityListEl.innerHTML=aiListHtml(priorities);
+  aiRiskListEl.innerHTML=aiListHtml(riskCases,true);
+  aiMissedCallsListEl.innerHTML=aiListHtml(missedCalls);
+  aiPartsListEl.innerHTML=aiListHtml(partsToOrder);
+  aiReadyPaymentListEl.innerHTML=aiListHtml(readyForPayment);
+  aiSalesListEl.innerHTML=aiListHtml(salesOpportunities);
+  aiSocialPostEl.textContent=data.socialMediaSuggestion||brief.suggestedSocialPost||'Inget forslag tillgangligt.';
+}
 async function loadAiControlTower(){
   const button=document.getElementById('refreshAiControl');
   try{
@@ -2146,6 +2259,34 @@ async function loadAiControlTower(){
     button.disabled=false;
   }
 }
+loadAiControlTower=async function(){
+  const button=document.getElementById('refreshAiControl');
+  try{
+    if(!aiAdminToken()){showAiStatus('Admin-token saknas','warn');return;}
+    button.disabled=true;
+    showAiStatus('Laddar AI-brief...');
+    const data=await aiFunctionFetch('/.netlify/functions/ai-daily-brief');
+    renderAiControlTowerData(data);
+    const brief=data.brief||{};
+    const state=data.warnings&&data.warnings.length?'warn':data.dryRun?'warn':'';
+    showAiStatus(`Senast uppdaterad ${new Date().toLocaleTimeString('sv-SE')} - ${data.dryRun?'mock/dry-run-lage':brief.aiMode||'AI-lage'}${aiWarningText(data)}`,state);
+  }catch(error){
+    const message=String(error.message||'Okant fel');
+    if(message==='Ej behorig'||message==='Ej behÃ¶rig'){showAiStatus('Ej behorig','bad');return;}
+    try{
+      if(!cases.length)await loadCases({background:true});
+      if(cases.length){
+        const fallback=localAiBriefFromCases(message);
+        renderAiControlTowerData(fallback);
+        showAiStatus(`AI-brief function gav fel: ${message}. Brief byggd fran /api/cases i admin.`, 'warn');
+        return;
+      }
+    }catch(_fallbackError){}
+    showAiStatus(`Fel: ${message}`,'bad');
+  }finally{
+    button.disabled=false;
+  }
+};
 async function testAiQuote(){
   const button=document.getElementById('testAiQuote');
   try{
