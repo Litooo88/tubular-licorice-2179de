@@ -25,7 +25,10 @@ Keep it current. When a larger feature, rescue operation, deploy-sensitive fix, 
 - Admin has a first version of a price database and touch-friendly POS/pricing workflow.
 - Admin can be installed as a browser app on the workshop Windows touch computer through `/admin/`.
 - Admin has an overview tab with an active case list, operator tracking for future edits, and a protected live call dashboard backed by `/api/call-dashboard`.
-- Call dashboard now creates persistent `call-leads` for missed calls, voicemail calls, Verkstaden calls without a customer card, and long calls without a customer card. Admin can create a customer card from a lead, ignore it, or send the `RING10` follow-up SMS.
+- Call dashboard now creates persistent `call-leads` for missed calls, voicemail calls, Verkstaden calls without a customer card, and long calls without a customer card. Admin can create a customer card from a lead and ignore it. Live discount/follow-up SMS requires explicit `action: "send_discount"` plus `confirmLiveSms: true`; missing action no longer defaults to SMS send.
+- AI/admin safety hardening from June 27 is merged: protected media requires `x-admin-token`, public booking diagnostics no longer expose provider detail, shared admin token comparison is timing-safe, AI SMS dry-run skips writes, timeline falls back to `/api/cases`, and old rescue cases route returns `410`.
+- Product Stripe Checkout now uses a server-controlled origin for return URLs and includes product metadata. `/.netlify/functions/stripe-webhook` verifies `STRIPE_WEBHOOK_SECRET` and stores verified `checkout.session.completed` events in `payments`. It is inactive with `503` until the secret is configured.
+- Public booking and workshop chat intake now have honeypot/rate-limit guards and idempotency mappings to avoid duplicate case/calendar/notification side effects on retries or double submits.
 
 ## Important files
 
@@ -39,6 +42,8 @@ Keep it current. When a larger feature, rescue operation, deploy-sensitive fix, 
 - `netlify/functions/call-dashboard.mjs` - protected `/api/call-dashboard` endpoint; reads 46elks calls, matches cases, creates call leads, can create customer cards from call leads, ignore leads, and send lost-lead discount SMS.
 - `netlify/functions/price-catalog.mjs` - live `/api/price-catalog` endpoint backed by Netlify Blobs.
 - `netlify/functions/create-checkout.js` - Stripe Checkout for scooter purchases.
+- `netlify/functions/stripe-webhook.js` - signed Stripe webhook for verified checkout payment records.
+- `netlify/functions/cases.mjs` - disabled rescue endpoint; should return `410` and not be used for live admin.
 - `netlify.toml` and `_redirects` - Netlify routing/config.
 
 ## Architecture notes
@@ -46,6 +51,8 @@ Keep it current. When a larger feature, rescue operation, deploy-sensitive fix, 
 - Admin auth uses `ADMIN_TOKEN` sent as `x-admin-token`.
 - Workshop cases are stored in Netlify Blobs store `workshop-cases`.
 - Call leads are stored in Netlify Blobs store `call-leads`; discount follow-ups are stored in `call-followups`.
+- Booking idempotency keys are stored in `booking-idempotency`; workshop chat idempotency keys are stored in `workshop-chat-idempotency`.
+- Stripe webhook payment records are stored in `payments`.
 - Price catalog is stored in Netlify Blobs store `price-catalog`.
 - `/api/cases` supports listing, patching, deleting cases, and stores completion/payment/content fields.
 - `/api/price-catalog` supports GET and PUT/POST of price rows.
