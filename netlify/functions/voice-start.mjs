@@ -13,6 +13,18 @@ const env = (name) => {
 };
 
 const clean = (value, max = 1000) => String(value || "").trim().slice(0, max);
+const authorizeVoiceWebhook = (request) => {
+  const secret = clean(env("VOICE_WEBHOOK_SECRET"), 240);
+  if (!secret) return { ok: true, configured: false };
+  const url = new URL(request.url);
+  const provided = clean(
+    request.headers.get("x-nordic-webhook-secret") ||
+      url.searchParams.get("secret") ||
+      url.searchParams.get("token"),
+    240,
+  );
+  return { ok: provided === secret, configured: true };
+};
 
 const normalizePhone = (value) => {
   const compact = clean(value, 80).replace(/[^\d+]/g, "");
@@ -113,6 +125,8 @@ const sendMissedCallSms = async ({ customerNumber, result, callid }) => {
 };
 
 export default async (request) => {
+  const webhookAuth = authorizeVoiceWebhook(request);
+  if (!webhookAuth.ok) return json({ error: "Unauthorized" }, 401);
   const url = new URL(request.url);
   const stage = clean(url.searchParams.get("stage"), 40);
   const body = request.method === "POST" ? await parseBody(request) : {};
@@ -128,7 +142,7 @@ export default async (request) => {
       to: callConfig.sebastian,
       callerid: callConfig.workshopNumber,
       timeout: callConfig.timeout,
-      nextUrl: `${baseUrl}?stage=sebastian`,
+      nextUrl: `${baseUrl}?stage=sebastian${webhookAuth.configured ? `&secret=${encodeURIComponent(env("VOICE_WEBHOOK_SECRET"))}` : ""}`,
     });
     console.log("voice_start", { callid: body.callid || body.id, from: body.from, to: body.to, action: "sebastian" });
     return json(action);
@@ -151,7 +165,7 @@ export default async (request) => {
       to: callConfig.workshop,
       callerid: callConfig.workshopNumber,
       timeout: callConfig.timeout,
-      nextUrl: `${baseUrl}?stage=workshop`,
+      nextUrl: `${baseUrl}?stage=workshop${webhookAuth.configured ? `&secret=${encodeURIComponent(env("VOICE_WEBHOOK_SECRET"))}` : ""}`,
     }));
   }
 
