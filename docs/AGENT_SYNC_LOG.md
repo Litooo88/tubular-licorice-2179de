@@ -32,6 +32,22 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-27 ~16:00Z — Codex — KLAR
+
+- **Branch:** `fix/admin-operational-truth-dashboard`
+- **Gjorde:** Implementerade auditens admin-fixar: operativ KPI-modell med
+  `Gör nu`, AI brief via `/api/cases`, tydlig Blob/call-log källstatus och
+  mindre missvisande live-samtalsläge. Gjorde `/api/call-dashboard` GET
+  read-only som default och explicit för källsaknad.
+- **Filer/områden:** `admin/index.html`,
+  `netlify/functions/ai-daily-brief.js`, `netlify/functions/call-logs.js`,
+  `netlify/functions/customer-export.js`, `netlify/functions/call-dashboard.mjs`.
+- **Tester:** `node --check` på ändrade functions ✅, `npm run build` ✅,
+  `npm run verify:checkout-products` ✅, `cd nemob-callflow && npm run check`
+  ✅, lokal `ai-daily-brief` dry-run smoke ✅.
+- **Nästa / överlämning:** PR med titel `Fix admin operational truth dashboard`.
+- **Varning:** Inga SMS/mail, inga production-writes, stashen poppas inte.
+
 ### 2026-06-27 ~00:00Z — Codex — KLAR
 
 - **Branch:** `audit/admin-system-operational-map`

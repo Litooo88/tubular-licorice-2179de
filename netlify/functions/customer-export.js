@@ -207,6 +207,16 @@ exports.handler = async (event) => {
     const emails = customers.map((customer) => customer.email);
     const phoneCustomers = [...customersByPhone.values()].sort((a, b) => a.phone.localeCompare(b.phone));
     const phones = phoneCustomers.map((customer) => customer.phone);
+    const unavailableSources = sources.filter((source) => source.sourceUnavailable);
+    const storageHealth = {
+      ok: unavailableSources.length === 0,
+      storageAvailable: unavailableSources.length === 0,
+      unavailableSources: unavailableSources.map((source) => source.entity || source.source).filter(Boolean),
+      warnings: unavailableSources.map((source) => `${source.entity || source.source}: ${source.error || "storage_unavailable"}`),
+    };
+    if (unavailableSources.length) {
+      warnings.push(`Customer export storage unavailable: ${storageHealth.unavailableSources.join(", ")} (${storageHealth.warnings.join(" | ")}).`);
+    }
     if (!emails.length && phones.length) warnings.push(`Inga e-postadresser hittades, men ${phones.length} telefonnummer finns.`);
     if (!emails.length && !phones.length) {
       const primaryUnavailable = sources.some((source) => !source.optional && source.sourceUnavailable);
@@ -224,6 +234,7 @@ exports.handler = async (event) => {
       count: emails.length,
       phoneCustomers,
       sources,
+      storageHealth,
       warnings,
       readOnly: true,
       sendsEmail: false,

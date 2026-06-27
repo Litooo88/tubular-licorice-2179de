@@ -30,6 +30,7 @@ exports.handler = async (event) => {
           calls,
           storageAvailable: true,
           sourceUnavailable: false,
+          sourceLabel: "46elks/call-log",
           warnings: [],
         });
       } catch (error) {
@@ -39,6 +40,7 @@ exports.handler = async (event) => {
           calls: [],
           storageAvailable: false,
           sourceUnavailable: true,
+          sourceLabel: "Samtalsimport ej kopplad",
           warnings: [storageWarning(error)],
         });
       }
