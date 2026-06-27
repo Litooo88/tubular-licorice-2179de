@@ -1,3 +1,4 @@
+const { timingSafeEqual } = require("node:crypto");
 const catalog = require("../../data/products.json");
 
 const env = (name) => {
@@ -26,7 +27,10 @@ const checkoutOrigin = () =>
 const adminDebugAllowed = (event) => {
   const expected = env("ADMIN_TOKEN");
   const provided = event.headers["x-admin-token"] || event.headers["X-Admin-Token"] || "";
-  return Boolean(expected && provided && expected === provided);
+  if (!expected || !provided) return false;
+  const expectedBuffer = Buffer.from(expected);
+  const providedBuffer = Buffer.from(provided);
+  return expectedBuffer.length === providedBuffer.length && timingSafeEqual(expectedBuffer, providedBuffer);
 };
 
 const loadProducts = () =>

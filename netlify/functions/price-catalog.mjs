@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { requireAdminToken } from "./_shared/admin-auth.mjs";
 
 const CATALOG_KEY = "items";
 
@@ -16,12 +17,7 @@ const toNumber = (value, fallback = 0) => {
 const boolValue = (value) => value === true || value === "true" || value === "on" || value === 1 || value === "1";
 
 const requireAdmin = (request) => {
-  const expected = process.env.ADMIN_TOKEN || globalThis.Netlify?.env?.get?.("ADMIN_TOKEN");
-  const provided = request.headers.get("x-admin-token") || "";
-
-  if (!expected) return { ok: false, response: json({ error: "ADMIN_TOKEN saknas i Netlify miljo variabler." }, 503) };
-  if (provided !== expected) return { ok: false, response: json({ error: "Unauthorized" }, 401) };
-  return { ok: true };
+  return requireAdminToken(request, json, "ADMIN_TOKEN saknas i Netlify miljo variabler.");
 };
 
 const seedItems = () => [

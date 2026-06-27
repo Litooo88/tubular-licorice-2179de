@@ -1,4 +1,5 @@
 import { createSign } from "node:crypto";
+import { requireAdminToken } from "./_shared/admin-auth.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -17,13 +18,7 @@ const env = (name) => {
 };
 
 const requireAdmin = (request) => {
-  const expected = env("ADMIN_TOKEN");
-  const provided = request.headers.get("x-admin-token") || "";
-
-  if (!expected) return { ok: false, response: json({ error: "ADMIN_TOKEN saknas i Netlify." }, 503) };
-  if (provided !== expected) return { ok: false, response: json({ error: "Unauthorized" }, 401) };
-
-  return { ok: true };
+  return requireAdminToken(request, json);
 };
 
 const base64Url = (input) =>
