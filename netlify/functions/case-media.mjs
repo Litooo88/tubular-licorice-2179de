@@ -1,3 +1,4 @@
+import { timingSafeEqual } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 
 const json = (body, status = 200) =>
@@ -16,7 +17,9 @@ const requireAdmin = (request) => {
     return { ok: false, response: json({ error: "ADMIN_TOKEN saknas i Netlify miljo variabler." }, 503) };
   }
 
-  if (provided !== expected) {
+  const expectedBuffer = Buffer.from(expected);
+  const providedBuffer = Buffer.from(provided);
+  if (expectedBuffer.length !== providedBuffer.length || !timingSafeEqual(expectedBuffer, providedBuffer)) {
     return { ok: false, response: json({ error: "Unauthorized" }, 401) };
   }
 
@@ -60,6 +63,9 @@ export default async (request, context) => {
   const caseId = context.params?.id || context.params?.caseId;
   const mediaId = context.params?.mediaId;
 
+  const auth = requireAdmin(request);
+  if (!auth.ok) return auth.response;
+
   if (request.method === "GET" && caseId && mediaId) {
     const key = `${caseId}/${mediaId}`;
     const store = MEDIA_STORE();
@@ -70,13 +76,10 @@ export default async (request, context) => {
       status: 200,
       headers: {
         "Content-Type": meta?.metadata?.contentType || "application/octet-stream",
-        "Cache-Control": "public, max-age=3600",
+        "Cache-Control": "private, no-store",
       },
     });
   }
-
-  const auth = requireAdmin(request);
-  if (!auth.ok) return auth.response;
 
   if (!caseId) return json({ error: "Missing case id" }, 400);
 
