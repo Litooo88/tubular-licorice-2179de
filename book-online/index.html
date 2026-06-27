@@ -79,6 +79,12 @@ h1{font-size:clamp(34px,5vw,58px);line-height:.98;margin-bottom:18px;letter-spac
 .tag{display:inline-flex;border:1px solid rgba(255,189,74,.35);background:rgba(255,189,74,.1);color:#ffe0a2;border-radius:8px;padding:8px 10px;font-size:12px;font-weight:900;white-space:nowrap}
 .urgent-box{border:1px solid rgba(0,200,83,.38);background:rgba(0,200,83,.1);border-radius:8px;padding:16px;margin:0 0 18px;color:#e9fff0;line-height:1.55}
 .urgent-box strong{display:block;color:#fff;font-size:18px;margin-bottom:6px}
+.service-notice{border:1px solid rgba(255,194,71,.42);background:rgba(255,194,71,.09);border-radius:8px;padding:18px;margin:0 0 18px;color:#fff3d5;line-height:1.58}
+.service-notice h2{font-size:21px;margin-bottom:8px;color:#fff}
+.service-notice p{margin:10px 0 0;color:#f2e5c7}
+.service-notice ul{margin:12px 0 0 18px;color:#f2e5c7}
+.service-notice li{margin:6px 0}
+.service-notice strong{color:#fff}
 .hours-box{border:1px solid rgba(255,255,255,.1);background:#0b100c;border-radius:8px;padding:14px;margin:0 0 18px;color:#e9fff0}
 .hours-box strong{display:block;color:#fff;font-size:18px;margin-bottom:8px}
 .hours-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}
@@ -210,7 +216,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   <div class="hero-proof">
     <div class="proof"><b>349 kr</b><span>Punktering / d&auml;ck fr&aring;n tydligt startpris.</span></div>
     <div class="proof"><b>395 kr</b><span>Service, bromsar och fels&ouml;kning fr&aring;n 395 kr.</span></div>
-    <div class="proof"><b>24 h</b><span>Vi &aring;terkopplar snabbt om n&aring;got beh&ouml;ver justeras.</span></div>
+    <div class="proof"><b>Boka f&ouml;rst</b><span>Bokning hj&auml;lper oss planera och minskar risken f&ouml;r v&auml;ntetid.</span></div>
   </div>
 </div>
 </section>
@@ -229,12 +235,24 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <strong>Snabbast hj&auml;lp: boka direkt h&auml;r</strong>
       Vi lagar punktering, d&auml;ck, bromsar, service och elfel p&aring; elscooter. Du binder dig inte till reparation innan vi har bekr&auml;ftat pris och n&auml;sta steg.
     </div>
+    <div class="service-notice" aria-label="Aktuell serviceinformation">
+      <h2>Tillf&auml;llig information: h&ouml;g belastning i verkstaden</h2>
+      <p>Vi &auml;r en specialistverkstad och arbetar fr&auml;mst med bokade &auml;renden. Just nu &auml;r det h&ouml;gs&auml;song f&ouml;r el-scootrar och vi har ovanligt h&ouml;gt tryck i verkstaden. F&ouml;r att vi ska kunna planera bemanning, reservdelar och fels&ouml;kning p&aring; ett s&auml;kert s&auml;tt beh&ouml;ver inl&auml;mning bokas i god tid.</p>
+      <p>Vi har &auml;ven haft en tillf&auml;llig teknisk &aring;tkomstst&ouml;rning under veckan kopplad till telefon, e-post och kontoinloggning. Det kan ha gjort att vissa kunder f&aring;tt v&auml;nta l&auml;ngre &auml;n normalt p&aring; &aring;terkoppling. Vi ber om urs&auml;kt f&ouml;r detta och g&aring;r nu igenom missade samtal, bokningar och p&aring;g&aring;ende &auml;renden i turordning.</p>
+      <p>Observera ocks&aring; att vissa leverant&ouml;rer just nu har l&auml;ngre hanteringstid p&aring; reservdelar och transporter p&aring; grund av h&ouml;gs&auml;song. Vi &aring;terkopplar med status s&aring; snart vi har bekr&auml;ftad information fr&aring;n leverant&ouml;r.</p>
+      <p><strong>Ditt &auml;rende &auml;r viktigt f&ouml;r oss.</strong> Genom att boka tid i f&ouml;rv&auml;g kan vi hj&auml;lpa dig snabbare och minska risken f&ouml;r v&auml;ntetid.</p>
+      <ul>
+        <li>Boka helst minst 12 timmar innan inl&auml;mning.</li>
+        <li>Drop-in endast i m&aring;n av tid.</li>
+        <li>Vid akut batteririsk, brandlukt, svullet batteri eller vattenskada: ladda inte fordonet och kontakta oss innan inl&auml;mning.</li>
+      </ul>
+    </div>
     <div class="hours-box">
       <strong>Bokningsbar tid</strong>
-      Vi tar emot bokade &auml;renden under uppbyggnadsfasen. Se lediga tider i bokningen och skicka in ditt &auml;rende, s&aring; f&aring;r du svar inom 4 timmar.
+      Vi tar emot bokade &auml;renden under uppbyggnadsfasen. Se lediga tider i bokningen och skicka in ditt &auml;rende, s&aring; g&aring;r vi igenom det i turordning.
       <div class="hours-grid">
         <div class="hours-item"><span>N&auml;sta steg</span><b>Se lediga tider</b></div>
-        <div class="hours-item"><span>Svarstid</span><b>Inom 4 timmar</b></div>
+        <div class="hours-item"><span>&Aring;terkoppling</span><b>I turordning</b></div>
         <div class="hours-item"><span>Inl&auml;mning</span><b>Endast bokade &auml;renden</b></div>
       </div>
     </div>
