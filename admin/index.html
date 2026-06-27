@@ -283,6 +283,7 @@ button:disabled{opacity:.6;cursor:wait}
 .media-body small{display:block;color:#9ea79f;line-height:1.45}
 .media-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}
 .media-actions button,.media-actions a{padding:9px 10px;font-size:12px;text-align:center;text-decoration:none}
+.media-actions a[href^="/api/case-media"]{display:none}
 .media-empty{border:1px dashed #313b33;border-radius:8px;padding:16px;text-align:center;color:#8f9991;margin-top:10px}
 .content-builder{border:1px solid #263029;border-radius:8px;background:#061008;padding:12px;margin-top:12px}
 .content-builder h5{margin:0 0 10px;font-size:14px}
@@ -779,6 +780,19 @@ callLeadsEl.addEventListener('click',async(event)=>{
     await ignoreCallLead(row,button);
   }
 });
+boardEl.addEventListener('click',async(event)=>{
+  const button=event.target&&event.target.closest&&event.target.closest('.open-media');
+  if(!button)return;
+  event.preventDefault();
+  button.disabled=true;
+  try{
+    await openProtectedMedia(button.dataset.mediaUrl);
+  }catch(error){
+    showError(error.message);
+  }finally{
+    button.disabled=false;
+  }
+});
 function money(value){return new Intl.NumberFormat('sv-SE',{style:'currency',currency:'SEK',maximumFractionDigits:0}).format(Number(value||0));}
 function reviewUrl(){return String(adminPublicConfig.reviewUrl||'').trim();}
 async function loadPublicConfig(){
@@ -795,6 +809,37 @@ function html(value){return String(value||'').replace(/[&<>"']/g,(char)=>({'&':'
 function showError(message){errorEl.textContent=message;errorEl.style.display=message?'block':'none';}
 function showCalendarResult(result,bad=false){calendarResultEl.classList.toggle('bad',bad);calendarResultEl.innerHTML=result;calendarResultEl.style.display=result?'block':'none';}
 function showSmsDeskStatus(message,bad=false){smsDeskStatus.className=`sms-status ${message?(bad?'bad':'ok'):''}`;smsDeskStatus.textContent=message;smsDeskStatus.style.display=message?'block':'none';}
+const protectedMediaObjectUrls=new Map();
+async function protectedMediaObjectUrl(url){
+  const mediaUrl=String(url||'').trim();
+  if(!mediaUrl)throw new Error('Bild-URL saknas.');
+  if(protectedMediaObjectUrls.has(mediaUrl))return protectedMediaObjectUrls.get(mediaUrl);
+  const token=tokenInput.value.trim();
+  if(!token)throw new Error('Admin-token saknas for att lasa skyddad bild.');
+  const response=await fetch(mediaUrl,{headers:{'x-admin-token':token}});
+  if(response.status===401)throw new Error('Ej behorig att lasa skyddad bild.');
+  if(!response.ok)throw new Error('Kunde inte lasa skyddad bild.');
+  const objectUrl=URL.createObjectURL(await response.blob());
+  protectedMediaObjectUrls.set(mediaUrl,objectUrl);
+  return objectUrl;
+}
+async function hydrateProtectedMediaImages(root=document){
+  const thumbs=[...root.querySelectorAll('.auth-media-thumb[data-media-url]')].filter((node)=>!node.dataset.loaded);
+  await Promise.all(thumbs.map(async(node)=>{
+    try{
+      const objectUrl=await protectedMediaObjectUrl(node.dataset.mediaUrl);
+      node.dataset.loaded='true';
+      node.innerHTML=`<img src="${html(objectUrl)}" alt="${html(node.dataset.mediaAlt||'Skyddad bild')}" loading="lazy">`;
+    }catch(error){
+      node.dataset.loaded='error';
+      node.textContent=error.message;
+    }
+  }));
+}
+async function openProtectedMedia(url){
+  const objectUrl=await protectedMediaObjectUrl(url);
+  window.open(objectUrl,'_blank','noopener');
+}
 function showCallStatus(message,bad=false){
   callStatusEl.className=`call-status ${message?(bad?'bad':'ok'):''}`;
   callStatusEl.textContent=message;
@@ -1685,6 +1730,7 @@ function render(){
     items.forEach(item=>col.appendChild(caseCard(item)));
     boardEl.appendChild(col);
   });
+  hydrateProtectedMediaImages(boardEl).catch((error)=>console.warn('media hydration failed',error));
 }
 
 function aiListHtml(rows=[],risk=false){
@@ -2713,12 +2759,13 @@ function caseCard(item){
   const mediaHtml=media.length
     ? `<div class="media-grid">${media.map((entry)=>`
       <article class="media-card">
-        <div class="media-thumb"><img src="${html(entry.url)}" alt="${html((mediaCategoryLabels[entry.category]||entry.category||'Bild')+' '+(entry.name||''))}" loading="lazy"></div>
+        <div class="media-thumb auth-media-thumb" data-media-url="${html(entry.url)}" data-media-alt="${html((mediaCategoryLabels[entry.category]||entry.category||'Bild')+' '+(entry.name||''))}">Skyddad bild laddas...</div>
         <div class="media-body">
           <strong>${html(mediaCategoryLabels[entry.category]||entry.category||'Bild')}</strong>
           <small>${html(entry.note||entry.name||'Ingen notering')}<br>${html(dateShort(entry.uploadedAt))}${entry.publicOk?'<br>OK för content':''}</small>
           <div class="media-actions">
             <a class="secondary" href="${html(entry.url)}" target="_blank" rel="noopener">Öppna</a>
+            <button type="button" class="secondary open-media" data-media-url="${html(entry.url)}">Oppna skyddat</button>
             <button type="button" class="secondary delete-media" data-media-id="${html(entry.id)}">Ta bort</button>
           </div>
         </div>

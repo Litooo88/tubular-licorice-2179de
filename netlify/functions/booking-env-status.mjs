@@ -13,6 +13,14 @@ const env = (name) => {
 };
 
 const clean = (value, max = 5000) => String(value || "").trim().slice(0, max);
+const header = (request, name) => request.headers.get(name) || "";
+const requireAdmin = (request) => {
+  const expected = env("ADMIN_TOKEN");
+  const provided = header(request, "x-admin-token");
+  if (!expected) return { ok: false, response: json({ error: "ADMIN_TOKEN saknas i Netlify." }, 503) };
+  if (provided !== expected) return { ok: false, response: json({ error: "Unauthorized" }, 401) };
+  return { ok: true };
+};
 const googleCalendarDiagnostics = () => {
   const calendarId = clean(env("GOOGLE_CALENDAR_ID"), 500);
   const serviceEmail = clean(env("GOOGLE_SERVICE_ACCOUNT_EMAIL"), 240);
@@ -46,15 +54,25 @@ const expected = [
   "GOOGLE_REVIEW_URL",
 ];
 
-export default async () => {
+export default async (request) => {
+  const publicConfig = {
+    reviewUrl: clean(env("GOOGLE_REVIEW_URL"), 1000),
+  };
+  const auth = requireAdmin(request);
+  if (!auth.ok) {
+    return json({
+      ok: true,
+      publicConfig,
+      diagnosticsAvailable: false,
+    });
+  }
   const status = Object.fromEntries(expected.map((key) => [key, Boolean(env(key))]));
   return json({
     ok: true,
     status,
     googleCalendar: googleCalendarDiagnostics(),
-    publicConfig: {
-      reviewUrl: clean(env("GOOGLE_REVIEW_URL"), 1000),
-    },
+    publicConfig,
+    diagnosticsAvailable: true,
   });
 };
 

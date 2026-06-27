@@ -1,3 +1,5 @@
+const { timingSafeEqual } = require("node:crypto");
+
 const clean = (value, max = 2000) => String(value ?? "").trim().slice(0, max);
 
 const env = (name) => {
@@ -36,7 +38,11 @@ const header = (event, name) => {
 const requireAdmin = (event) => {
   const expected = env("ADMIN_TOKEN");
   if (!expected) return { ok: false, response: json(503, { error: "ADMIN_TOKEN saknas i Netlify-miljon." }) };
-  if (header(event, "x-admin-token") !== expected) return { ok: false, response: json(401, { error: "Unauthorized" }) };
+  const expectedBuffer = Buffer.from(expected);
+  const providedBuffer = Buffer.from(header(event, "x-admin-token"));
+  if (expectedBuffer.length !== providedBuffer.length || !timingSafeEqual(expectedBuffer, providedBuffer)) {
+    return { ok: false, response: json(401, { error: "Unauthorized" }) };
+  }
   return { ok: true };
 };
 
