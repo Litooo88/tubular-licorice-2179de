@@ -206,6 +206,11 @@ const applyPatch = (caseItem, body) => {
 };
 
 export default async (request) => {
+  return json({
+    error: "Rescue cases endpoint is disabled.",
+    replacement: "/api/cases",
+  }, 410);
+
   if (!authOk(request)) return json({ error: "Unauthorized" }, 401);
 
   const store = getStore({ name: "workshop-cases", consistency: "strong" });
