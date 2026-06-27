@@ -384,6 +384,12 @@ nav a:hover{color:#fff}
 /* CAMPAIGN */
 .campaign{background:linear-gradient(90deg,#00C853 0%,#00E676 100%);padding:16px 0;text-align:center}
 .campaign p{color:#000;font-weight:700;font-size:15px}
+.service-status{padding:22px 0;background:#080704;border-top:1px solid rgba(255,194,71,.22);border-bottom:1px solid rgba(255,194,71,.18)}
+.service-status-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px;align-items:center;background:rgba(255,194,71,.09);border:1px solid rgba(255,194,71,.35);border-radius:12px;padding:22px;color:#fff7df}
+.service-status-card h2{font-size:20px;margin-bottom:8px;color:#fff}
+.service-status-card p{color:#f0e5c8;line-height:1.55;font-size:14px;margin-top:8px}
+.service-status-card .btn-primary{font-size:14px;padding:12px 18px;white-space:nowrap;background:#ffc247;color:#1b1200}
+.service-status-card .btn-primary:hover{background:#ffd36b}
 
 /* HOW IT WORKS */
 .how-it-works{padding:72px 0;background:#0a0a0a;border-bottom:1px solid #1a1a1a}
@@ -594,6 +600,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 @media(max-width:900px){
   .hero h1{font-size:32px}
   .hero{padding:110px 0 60px}
+  .service-status-card{grid-template-columns:1fr}
   .pricing-grid,.problems-grid{grid-template-columns:1fr}
   .trust-grid{grid-template-columns:1fr}
   .calc-wrap{grid-template-columns:1fr}
@@ -739,6 +746,21 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 <!-- KAMPANJ -->
 <section class="campaign">
     <div class="container"><p><strong>Bokningsbar tid:</strong> se lediga tider online och boka direkt. Vi h&auml;mtar och l&auml;mnar i &Ouml;rebro med omnejd fr&aring;n 199 kr, eller hj&auml;lper dig skicka in via post.</p><p style="margin-top:8px"><a href="/book-online/" style="color:#000;text-decoration:underline;font-weight:900">Se lediga tider &#8594;</a></p></div>
+</section>
+
+<!-- SERVICE STATUS -->
+<section class="service-status" aria-label="Aktuell serviceinformation">
+<div class="container">
+  <div class="service-status-card">
+    <div>
+      <h2>Tillf&auml;llig information: h&ouml;g belastning i verkstaden</h2>
+      <p>Vi har just nu ovanligt h&ouml;g belastning i verkstaden och n&aring;got l&auml;ngre svarstider &auml;n normalt. Under veckan har vi &auml;ven haft en tillf&auml;llig teknisk &aring;tkomstst&ouml;rning kopplad till telefon/e-post och inloggning, vilket kan ha p&aring;verkat &aring;terkoppling p&aring; samtal och meddelanden.</p>
+      <p>Vi g&aring;r igenom missade kontakter l&ouml;pande och prioriterar bokade &auml;renden samt fordon som redan &auml;r inne hos oss. F&ouml;r snabbast hantering ber vi dig boka tid i f&ouml;rv&auml;g. Drop-in tas endast emot i m&aring;n av tid.</p>
+      <p>Under h&ouml;gs&auml;song kan vissa reservdelar och leveranser ta l&auml;ngre tid &auml;n normalt p&aring; grund av h&ouml;gt tryck hos leverant&ouml;rer.</p>
+    </div>
+    <a href="/book-online/" class="btn-primary">Boka service eller fels&ouml;kning</a>
+  </div>
+</div>
 </section>
 
 <!-- SÅ FUNKAR DET -->
