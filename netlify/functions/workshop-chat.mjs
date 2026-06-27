@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { createHash } from "node:crypto";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -54,6 +55,26 @@ const checkRateLimit = (request, phone) => {
     attempts: attempts.length,
     retryAfterSeconds: Math.ceil(CHAT_RATE_WINDOW_MS / 1000),
   };
+};
+
+const chatIdempotencyKey = (request, body = {}) => {
+  const provided = clean(request.headers.get("idempotency-key") || request.headers.get("x-idempotency-key"), 180);
+  if (provided) return `chat_header_${createHash("sha256").update(provided).digest("hex").slice(0, 48)}`;
+  const fingerprint = {
+    phone: normalizePhone(body.phone),
+    topic: clean(body.topic, 80).toLowerCase(),
+    message: clean(body.message, 1200).toLowerCase(),
+    model: clean(body.model, 180).toLowerCase(),
+    page: clean(body.page, 300).toLowerCase(),
+  };
+  return `chat_${createHash("sha256").update(JSON.stringify(fingerprint)).digest("hex").slice(0, 48)}`;
+};
+
+const existingIdempotentChat = async ({ idempotencyStore, caseStore, key }) => {
+  const existing = await idempotencyStore.get(key, { type: "json" }).catch(() => null);
+  if (!existing?.caseId) return null;
+  const caseItem = await caseStore.get(existing.caseId, { type: "json" }).catch(() => null);
+  return caseItem ? { idempotency: existing, caseItem } : null;
 };
 
 const STAFF = {
@@ -192,6 +213,22 @@ export default async (request) => {
   if (!message) return json({ error: "Skriv vad kunden behover hjalp med." }, 400);
   if (!phone) return json({ error: "Telefonnummer kravs sa verkstaden kan svara." }, 400);
 
+  const store = getStore({ name: "workshop-cases", consistency: "strong" });
+  const idempotencyStore = getStore({ name: "workshop-chat-idempotency", consistency: "strong" });
+  const idempotencyKey = chatIdempotencyKey(request, body);
+  const duplicate = await existingIdempotentChat({ idempotencyStore, caseStore: store, key: idempotencyKey });
+  if (duplicate) {
+    return json({
+      ok: true,
+      caseId: duplicate.caseItem.id,
+      status: "received",
+      duplicate: true,
+      idempotent: true,
+      assignedTo: duplicate.caseItem.assignedTo?.name || "",
+      notification: duplicate.caseItem.notifications?.chatStaffSms?.status || "not_repeated",
+    });
+  }
+
   const now = new Date().toISOString();
   const id = `case_${now.replace(/[:.]/g, "-")}_${Math.random().toString(36).slice(2, 8)}`;
   const assignee = assigneeFor(topic, message);
@@ -200,6 +237,7 @@ export default async (request) => {
     createdAt: now,
     updatedAt: now,
     status: "new",
+    idempotencyKey,
     source: "website_chat",
     channel: "chat",
     priority: topic === "booking" ? "high" : "normal",
@@ -265,8 +303,22 @@ export default async (request) => {
     ],
   };
 
-  const store = getStore({ name: "workshop-cases", consistency: "strong" });
   await store.setJSON(id, caseItem);
+  await idempotencyStore.setJSON(idempotencyKey, {
+    id: idempotencyKey,
+    caseId: id,
+    createdAt: now,
+    updatedAt: now,
+    phone,
+    topic,
+    model,
+    page,
+  }).catch((error) => {
+    console.warn("workshop_chat_idempotency_write_failed", {
+      name: error?.name,
+      message: clean(error?.message, 180),
+    });
+  });
   const alert = await sendWorkshopAlert(caseItem);
   caseItem.notifications.chatStaffSms = alert;
   caseItem.timeline.push({
