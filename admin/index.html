@@ -365,11 +365,21 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   </nav>
 
   <div class="admin-view" id="overviewView">
+  <section class="stats operational-kpis">
+    <div class="panel stat"><span>G&ouml;r nu</span><b id="doNowTotal">0</b></div>
+    <div class="panel stat"><span>Nya utan bekr&auml;ftelse</span><b id="unconfirmedTotal">0</b></div>
+    <div class="panel stat"><span>V&auml;ntar kund</span><b id="waitingCustomerTotal">0</b></div>
+    <div class="panel stat"><span>V&auml;ntar del</span><b id="waitingPartsTotal">0</b></div>
+    <div class="panel stat"><span>Klara att h&auml;mta</span><b id="readyPickupTotal">0</b></div>
+    <div class="panel stat"><span>Klara att fakturera/betala</span><b id="readyBillingTotal">0</b></div>
+    <div class="panel stat"><span>Risk / st&aring;tt stilla</span><b id="riskStaleTotal">0</b></div>
+    <div class="panel stat"><span>Ej arkiverade</span><b id="notArchivedTotal">0</b></div>
+  </section>
   <section class="panel ai-control-tower">
     <div class="ai-control-head">
       <div>
         <h2>AI Kontrolltorn</h2>
-        <p>Regelstyrd dagsbrief fr&aring;n skyddade Netlify Functions. F&ouml;rslag granskas alltid innan h&ouml;grisk&aring;tg&auml;rder.</p>
+        <p>Regelstyrd dagsbrief med /api/cases som prim&auml;r k&auml;lla. Blob-/call-log-k&auml;llor visas som status och f&aring;r inte blockera &auml;rendelistan.</p>
         <div class="ai-control-status" id="aiControlStatus">Klicka p&aring; Uppdatera AI-brief f&ouml;r att h&auml;mta data.</div>
       </div>
       <div class="ai-control-actions">
@@ -379,7 +389,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       </div>
     </div>
     <div class="ai-control-grid">
-      <div class="panel stat"><span>Dagens prioritet</span><b id="aiPriorityToday">0</b></div>
+      <div class="panel stat"><span>G&ouml;r nu</span><b id="aiPriorityToday">0</b></div>
       <div class="panel stat"><span>Missade samtal</span><b id="aiMissedCalls">0</b></div>
       <div class="panel stat"><span>V&auml;ntar kund</span><b id="aiWaitingCustomer">0</b></div>
       <div class="panel stat"><span>V&auml;ntar reservdel</span><b id="aiWaitingParts">0</b></div>
@@ -389,7 +399,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     </div>
     <div class="ai-control-detail">
       <div class="ai-control-box wide"><h3>Sammanfattning</h3><div class="ai-social-post" id="aiSummary">Ingen brief h&auml;mtad.</div></div>
-      <div class="ai-control-box"><h3>Dagens prioritet</h3><div class="ai-control-list" id="aiPriorityList"></div></div>
+      <div class="ai-control-box"><h3>G&ouml;r nu</h3><div class="ai-control-list" id="aiPriorityList"></div></div>
       <div class="ai-control-box"><h3>Risk&auml;renden</h3><div class="ai-control-list" id="aiRiskList"></div></div>
       <div class="ai-control-box"><h3>Missade samtal att f&ouml;lja upp</h3><div class="ai-control-list" id="aiMissedCallsList"></div></div>
       <div class="ai-control-box"><h3>Reservdelar att best&auml;lla</h3><div class="ai-control-list" id="aiPartsList"></div></div>
@@ -473,7 +483,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   </details>
   <section class="panel call-dashboard">
     <h2>Live samtalsdashboard</h2>
-    <p>Dagens inkommande samtal matchas mot kundregistret. Missade samtal och Verkstaden-samtal utan kundkort kan följas upp direkt med SMS.</p>
+    <p>Dagens inkommande samtal matchas mot kundregistret n&auml;r 46elks/call-log-k&auml;llan finns. Saknas k&auml;llan ska siffror inte tolkas som live.</p>
     <p class="call-dashboard-note">Dagens inkommande samtal visas bara n&auml;r 46elks/call-log-k&auml;llan &auml;r konfigurerad. Saknas k&auml;llan anv&auml;nds akutpanelen f&ouml;r manuell uppf&ouml;ljning. Inget SMS skickas automatiskt.</p>
     <div class="call-dashboard-grid" id="callDashboardStats"></div>
     <div class="call-actions">
@@ -516,21 +526,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div class="sms-status" id="smsDeskStatus"></div>
   </section>
 
-  <section class="stats">
-    <div class="panel stat"><span>Aktiva</span><b id="activeTotal">0</b></div>
-    <div class="panel stat"><span>V&auml;rde aktivt</span><b id="valueTotal">0 kr</b></div>
-    <div class="panel stat"><span>Nya</span><b id="newTotal">0</b></div>
-    <div class="panel stat"><span>Bekr&auml;ftelse saknas</span><b id="attentionTotal">0</b></div>
-    <div class="panel stat"><span>Inne</span><b id="insideTotal">0</b></div>
-    <div class="panel stat"><span>Klara</span><b id="readyTotal">0</b></div>
-    <div class="panel stat"><span>Betalda</span><b id="paidTotal">0</b></div>
-    <div class="panel stat"><span>Tyngre jobb</span><b id="heavyTotal">0</b></div>
-  </section>
-
   <section class="panel active-overview">
-    <h2>Aktiv &auml;rendelista</h2>
-    <p>Prioriterad lista &ouml;ver aktiva kundkort. Anv&auml;nd den h&auml;r f&ouml;r morgonm&ouml;te, uppf&ouml;ljning och f&ouml;r att se vilka kort som saknar tydlig modell eller har st&aring;tt stilla.</p>
-    <div id="activeOverview">Laddar aktiva &auml;renden...</div>
+    <h2>Operativ &auml;rendelista</h2>
+    <p>Prioriterad lista d&auml;r &ldquo;G&ouml;r nu&rdquo; betyder faktisk &aring;tg&auml;rd: bekr&auml;fta, kontakta kund, v&auml;nta in del, ta betalt eller f&aring;nga risk/stillest&aring;nd.</p>
+    <div id="activeOverview">Laddar &auml;renden...</div>
   </section>
 
   <details class="panel customer-export-panel">
@@ -1146,6 +1145,126 @@ function readyPaymentLine(item,overrides={}){
   if(payment.status==='invoice_ready')return `Underlag klart f\u00f6r faktura: ${amount}.`;
   return `Att betala vid upph\u00e4mtning: ${amount}.`;
 }
+const CLOSED_CASE_STATUSES=new Set(['done','archived','closed']);
+const PAID_OR_INVOICED_STATUSES=new Set(['paid','invoiced']);
+function isCaseClosed(item){
+  return CLOSED_CASE_STATUSES.has(String(item&&item.status||''));
+}
+function caseUpdatedTime(item){
+  const time=new Date(item&&item.updatedAt||item&&item.createdAt||0).getTime();
+  return Number.isFinite(time)?time:0;
+}
+function caseHasMissingModel(item){
+  const model=String(item&&item.vehicle&&item.vehicle.model||'').trim();
+  return !model||/^ok\u00e4nd|^okand|^test$/i.test(model);
+}
+function isCaseStale(item){
+  const updated=caseUpdatedTime(item);
+  return updated?Date.now()-updated>48*60*60*1000:false;
+}
+function isHighRiskCase(item){
+  const text=[
+    item&&item.priority,
+    item&&item.service,
+    item&&item.message,
+    item&&item.status
+  ].filter(Boolean).join(' ').toLowerCase();
+  return item&&item.priority==='urgent'||/batteri|bms|reklamation|missn\u00f6jd|missnojd|garanti|jurid|brand|kortslut/i.test(text);
+}
+function isNewWithoutConfirmation(item){
+  return item&&item.status==='new'&&needsCustomerAttention(item);
+}
+function isWaitingCustomer(item){
+  return item&&item.status==='waiting_customer';
+}
+function isWaitingParts(item){
+  return item&&item.status==='waiting_parts';
+}
+function isReadyPickupNeedsNotice(item){
+  if(!item||item.status!=='ready')return false;
+  const completion=completionData(item);
+  return !completion.customerNotifiedAt;
+}
+function isReadyForBilling(item){
+  if(!item||isCaseClosed(item))return false;
+  const payment=paymentData(item);
+  const completion=completionData(item);
+  if(PAID_OR_INVOICED_STATUSES.has(payment.status))return false;
+  return item.status==='ready'||payment.status==='invoice_ready'||payment.hasAmount||completion.totalCost>0;
+}
+function matchedMissedCallCaseIds(){
+  const ids=new Set();
+  (Array.isArray(callDashboardRows)?callDashboardRows:[]).forEach((row)=>{
+    const missed=['missed','unanswered','voicemail'].includes(String(row.status||row.callStatus||row.answeredBy||'').toLowerCase())||row.eligibleLostLead;
+    if(!missed)return;
+    (Array.isArray(row.cases)?row.cases:[]).forEach((caseItem)=>{
+      const id=caseItem&&caseItem.id||caseItem&&caseItem.caseId;
+      if(id)ids.add(String(id));
+    });
+  });
+  (Array.isArray(missedCallFollowupRows)?missedCallFollowupRows:[]).forEach((row)=>{
+    const id=row&&row.caseMatch&&row.caseMatch.id;
+    if(id)ids.add(String(id));
+  });
+  return ids;
+}
+function operationalReasons(item){
+  if(!item||isCaseClosed(item))return[];
+  const reasons=[];
+  if(isNewWithoutConfirmation(item))reasons.push('Ny utan bekr\u00e4ftelse');
+  if(isReadyPickupNeedsNotice(item))reasons.push('Klar - kund ej notifierad');
+  if(isReadyForBilling(item))reasons.push('Klar att fakturera/betala');
+  if(isWaitingCustomer(item))reasons.push('V\u00e4ntar kund');
+  if(isWaitingParts(item))reasons.push('V\u00e4ntar del');
+  if(isHighRiskCase(item))reasons.push('Risk');
+  if(isCaseStale(item))reasons.push('St\u00e5tt stilla');
+  if(caseHasMissingModel(item))reasons.push('Saknar modell');
+  if(matchedMissedCallCaseIds().has(String(item.id)))reasons.push('Missat samtal matchat');
+  return reasons;
+}
+function operationalPriorityScore(item){
+  const reasons=operationalReasons(item);
+  const scoreMap={
+    'Missat samtal matchat':100,
+    'Risk':90,
+    'St\u00e5tt stilla':80,
+    'Ny utan bekr\u00e4ftelse':75,
+    'Klar - kund ej notifierad':70,
+    'Klar att fakturera/betala':65,
+    'V\u00e4ntar kund':55,
+    'V\u00e4ntar del':50,
+    'Saknar modell':40
+  };
+  const score=reasons.reduce((sum,reason)=>sum+(scoreMap[reason]||10),0);
+  return score||1;
+}
+function operationalMetrics(caseRows=cases){
+  const all=Array.isArray(caseRows)?caseRows:[];
+  const notClosed=all.filter((item)=>!isCaseClosed(item));
+  const notArchived=all.filter((item)=>String(item&&item.status||'')!=='archived');
+  const newUnconfirmed=notClosed.filter(isNewWithoutConfirmation);
+  const waitingCustomer=notClosed.filter(isWaitingCustomer);
+  const waitingParts=notClosed.filter(isWaitingParts);
+  const readyPickup=notClosed.filter(isReadyPickupNeedsNotice);
+  const readyBilling=notClosed.filter(isReadyForBilling);
+  const riskStale=notClosed.filter((item)=>isHighRiskCase(item)||isCaseStale(item)||caseHasMissingModel(item));
+  const missedMatchedIds=matchedMissedCallCaseIds();
+  const doNow=notClosed
+    .filter((item)=>operationalReasons(item).length>0||missedMatchedIds.has(String(item.id)))
+    .sort((a,b)=>operationalPriorityScore(b)-operationalPriorityScore(a)||caseUpdatedTime(b)-caseUpdatedTime(a));
+  return {
+    notClosed,
+    notArchived,
+    doNow,
+    newUnconfirmed,
+    waitingCustomer,
+    waitingParts,
+    readyPickup,
+    readyBilling,
+    riskStale,
+    possibleRevenue:doNow.reduce((sum,item)=>sum+Number(paymentData(item).amount||completionData(item).totalCost||item.estimatedValue||0),0)
+  };
+}
 function readyDeliveryState(data){
   if(!data.canDraft)return {className:'warn',text:'Fyll i slutbelopp och utf\u00f6rda \u00e5tg\u00e4rder innan du draftar SMS eller mail.'};
   if(data.customerNotifiedAt)return {className:'good',text:`Klarmeddelandet \u00e4r markerat som skickat via ${data.customerNotifiedVia==='email'?'mail':'SMS'} ${dateShort(data.customerNotifiedAt)}.`};
@@ -1522,16 +1641,16 @@ async function testCalendar(){
 
 function render(){
   updateSmsCaseOptions();
-  const active=cases.filter(item=>!['done','archived'].includes(item.status));
-  renderActiveOverview(active);
-  document.getElementById('activeTotal').textContent=active.length;
-  document.getElementById('valueTotal').textContent=money(active.reduce((sum,item)=>sum+Number(item.estimatedValue||0),0));
-  document.getElementById('newTotal').textContent=cases.filter(item=>item.status==='new').length;
-  document.getElementById('attentionTotal').textContent=active.filter(item=>needsCustomerAttention(item)).length;
-  document.getElementById('insideTotal').textContent=cases.filter(item=>['checked_in','diagnosing','repairing'].includes(item.status)).length;
-  document.getElementById('readyTotal').textContent=cases.filter(item=>item.status==='ready').length;
-  document.getElementById('paidTotal').textContent=cases.filter(item=>(item.payment&&item.payment.status)==='paid').length;
-  document.getElementById('heavyTotal').textContent=active.filter(item=>(item.assignedTo&&item.assignedTo.key)==='sebastian').length;
+  const ops=operationalMetrics(cases);
+  renderActiveOverview(ops.doNow.length?ops.doNow:ops.notClosed);
+  document.getElementById('doNowTotal').textContent=ops.doNow.length;
+  document.getElementById('unconfirmedTotal').textContent=ops.newUnconfirmed.length;
+  document.getElementById('waitingCustomerTotal').textContent=ops.waitingCustomer.length;
+  document.getElementById('waitingPartsTotal').textContent=ops.waitingParts.length;
+  document.getElementById('readyPickupTotal').textContent=ops.readyPickup.length;
+  document.getElementById('readyBillingTotal').textContent=ops.readyBilling.length;
+  document.getElementById('riskStaleTotal').textContent=ops.riskStale.length;
+  document.getElementById('notArchivedTotal').textContent=ops.notArchived.length;
 
   const owner=ownerFilter.value;
   const status=statusFilter.value;
@@ -1593,8 +1712,103 @@ async function aiFunctionFetch(path,{method='GET',body}={}){
   const response=await fetch(path,options);
   const data=await response.json().catch(()=>({}));
   if(response.status===401)throw new Error('Ej behörig');
-  if(!response.ok)throw new Error(data.error||'AI-funktionen kunde inte h&auml;mta data.');
+  if(!response.ok){
+    const message=data.message||data.error||data.code||'AI-funktionen kunde inte h\u00e4mta data.';
+    const error=new Error(message);
+    error.status=response.status;
+    error.data=data;
+    throw error;
+  }
   return data;
+}
+function aiCaseSummaryFromCase(item){
+  const payment=paymentData(item);
+  const completion=completionData(item);
+  return {
+    id:item.id,
+    customer:item.customer&&item.customer.name||'Ok\u00e4nd kund',
+    model:item.vehicle&&item.vehicle.model||'Modell saknas',
+    status:statusLabels[item.status]||item.status||'ok\u00e4nd',
+    reason:operationalReasons(item).join(', '),
+    value:Number(payment.amount||completion.totalCost||item.estimatedValue||0)
+  };
+}
+function localAiBriefFromLoadedCases(error){
+  const ops=operationalMetrics(cases);
+  const topPriorities=ops.doNow.slice(0,8).map(aiCaseSummaryFromCase);
+  const riskCases=ops.riskStale.slice(0,10).map((item)=>({...aiCaseSummaryFromCase(item),risk:{reasons:operationalReasons(item)}}));
+  const readyForPayment=ops.readyBilling.slice(0,10).map(aiCaseSummaryFromCase);
+  const partsToOrder=ops.waitingParts.slice(0,10).map(aiCaseSummaryFromCase);
+  const missedCalls=(Array.isArray(missedCallFollowupRows)?missedCallFollowupRows:[])
+    .filter((row)=>row.priority&&row.priority.level==='high')
+    .slice(0,10)
+    .map((row)=>({phone:row.phone,customer:row.customerName,reason:row.priority.label,status:row.status||'missed_call'}));
+  const warnings=[error&&error.message?`ai-daily-brief: ${error.message}`:'ai-daily-brief: kunde inte h\u00e4mta serverbrief'];
+  const sourceStatus=error&&error.data&&error.data.sourceStatus?error.data.sourceStatus:{primary:'loaded_api_cases',warnings};
+  return {
+    summary:`${ops.doNow.length} \u00e4renden kr\u00e4ver \u00e5tg\u00e4rd nu. ${ops.waitingCustomer.length} v\u00e4ntar kund, ${ops.waitingParts.length} v\u00e4ntar del och ${ops.readyBilling.length} \u00e4r klara f\u00f6r betalning/faktura.`,
+    topPriorities,
+    cashToday:ops.possibleRevenue,
+    riskCases,
+    missedCallsToFollowUp:missedCalls,
+    partsToOrder,
+    readyForPayment,
+    salesOpportunities:ops.notClosed.filter((item)=>['new','contacted','diagnosing'].includes(item.status)).slice(0,10).map(aiCaseSummaryFromCase),
+    socialMediaSuggestion:'Inget live-AI-f\u00f6rslag h\u00e4mtat. Fokusera p\u00e5 akut uppf\u00f6ljning och klara \u00e4renden idag.',
+    dryRun:true,
+    localFallback:true,
+    warnings,
+    sourceStatus,
+    brief:{
+      aiMode:'local_cases_fallback',
+      metrics:{
+        doNow:ops.doNow.length,
+        waitingCustomer:ops.waitingCustomer.length,
+        waitingParts:ops.waitingParts.length,
+        readyInvoice:ops.readyBilling.length,
+        riskCases:ops.riskStale.length,
+        possibleRevenueToday:ops.possibleRevenue,
+      }
+    }
+  };
+}
+function aiSourceWarningText(data){
+  const warnings=[
+    ...(Array.isArray(data&&data.warnings)?data.warnings:[]),
+    ...(Array.isArray(data&&data.sourceStatus&&data.sourceStatus.warnings)?data.sourceStatus.warnings:[]),
+    ...(Array.isArray(data&&data.storageHealth&&data.storageHealth.warnings)?data.storageHealth.warnings:[])
+  ].map((warning)=>String(warning&&warning.message||warning&&warning.code||warning||'')).filter(Boolean);
+  if(!warnings.length)return'';
+  const normalized=[...new Set(warnings)].slice(0,4).join(' | ');
+  if(/MissingBlobsEnvironmentError|BlobsEnvironment|storage|call-log|call_logs/i.test(normalized)){
+    return ` K\u00e4llstatus: ${normalized}`;
+  }
+  return ` Varning: ${normalized}`;
+}
+function renderAiControlData(data){
+  const brief=data.brief||{};
+  const metrics=brief.metrics||{};
+  const priorities=data.topPriorities||brief.priority||[];
+  const missedCalls=data.missedCallsToFollowUp||brief.missedCalls||[];
+  const riskCases=data.riskCases||brief.riskCases||[];
+  const partsToOrder=data.partsToOrder||brief.openPartNeeds||[];
+  const readyForPayment=data.readyForPayment||brief.readyInvoice||[];
+  const salesOpportunities=data.salesOpportunities||[];
+  aiSummaryEl.textContent=data.summary||'Ingen sammanfattning tillg\u00e4nglig.';
+  document.getElementById('aiPriorityToday').textContent=metrics.doNow??priorities.length;
+  document.getElementById('aiMissedCalls').textContent=missedCalls.length;
+  document.getElementById('aiWaitingCustomer').textContent=metrics.waitingCustomer||0;
+  document.getElementById('aiWaitingParts').textContent=metrics.waitingParts||0;
+  document.getElementById('aiReadyInvoice').textContent=readyForPayment.length;
+  document.getElementById('aiRiskCases').textContent=riskCases.length;
+  document.getElementById('aiRevenueToday').textContent=money(metrics.possibleRevenueToday??data.cashToday??0);
+  aiPriorityListEl.innerHTML=aiListHtml(priorities);
+  aiRiskListEl.innerHTML=aiListHtml(riskCases,true);
+  aiMissedCallsListEl.innerHTML=aiListHtml(missedCalls);
+  aiPartsListEl.innerHTML=aiListHtml(partsToOrder);
+  aiReadyPaymentListEl.innerHTML=aiListHtml(readyForPayment);
+  aiSalesListEl.innerHTML=aiListHtml(salesOpportunities);
+  aiSocialPostEl.textContent=data.socialMediaSuggestion||brief.suggestedSocialPost||'Inget f\u00f6rslag tillg\u00e4ngligt.';
 }
 const CASE_EVENT_LABELS={
   sms:'SMS',
@@ -1734,10 +1948,10 @@ function customerExportWarningsText(warnings=[],options={}){
   const items=Array.isArray(warnings)?warnings:[];
   if(!items.length)return'';
   const text=items.map((warning)=>String(warning&&warning.message||warning&&warning.code||warning||'')).join(' | ');
-  if(/MissingBlobsEnvironmentError|BlobsEnvironment|storage ej konfigurerad|Kundkortskallan/i.test(text)){
+  if(/Customer export storage unavailable|MissingBlobsEnvironmentError|BlobsEnvironment|storage ej konfigurerad|Kundkortskallan/i.test(text)){
     return options.usesLoadedCases
-      ? ' Separata exportk\u00e4llor saknas, men listan anv\u00e4nder redan laddade kundkort fr\u00e5n /api/cases.'
-      : ' Kundexportens Blob-k\u00e4lla \u00e4r inte konfigurerad i denna milj\u00f6. Akut uppf\u00f6ljning kan fortfarande matcha mot /api/cases.';
+      ? ` Customer export storage unavailable. Separata exportk\u00e4llor saknas, men listan anv\u00e4nder redan laddade kundkort fr\u00e5n /api/cases. Detalj: ${text.slice(0,220)}`
+      : ` Customer export storage unavailable. Blob-k\u00e4lla saknas/ej konfigurerad. Detalj: ${text.slice(0,220)}`;
   }
   return ` Varningar: ${text.slice(0,260)}`;
 }
@@ -2114,7 +2328,21 @@ async function loadAiControlTower(){
     if(!aiAdminToken()){showAiStatus('Admin-token saknas','warn');return;}
     button.disabled=true;
     showAiStatus('Laddar AI-brief...');
-    const data=await aiFunctionFetch('/.netlify/functions/ai-daily-brief');
+    const data=await aiFunctionFetch('/.netlify/functions/ai-daily-brief').catch((error)=>{
+      if(cases.length&&error.status!==401){
+        const fallback=localAiBriefFromLoadedCases(error);
+        renderAiControlData(fallback);
+        showAiStatus(`Brief-k\u00e4lla saknas / storage ej konfigurerad. Visar lokal brief fr\u00e5n redan laddade /api/cases.${aiSourceWarningText(fallback)}`,'warn');
+        return null;
+      }
+      throw error;
+    });
+    if(!data)return;
+    renderAiControlData(data);
+    const sourceWarning=aiSourceWarningText(data);
+    const mode=data.localFallback?'lokal /api/cases-fallback':data.dryRun?'mock/dry-run-l\u00e4ge':data.brief&&data.brief.aiMode||'AI-l\u00e4ge';
+    showAiStatus(`Senast uppdaterad ${new Date().toLocaleTimeString('sv-SE')} - ${mode}.${sourceWarning}`,data.dryRun||sourceWarning?'warn':'');
+    return;
     const brief=data.brief||{};
     const metrics=brief.metrics||{};
     const priorities=data.topPriorities||brief.priority||[];
@@ -2188,6 +2416,7 @@ async function testAiSmsDraft(){
 }
 
 function activePriorityScore(item){
+  return -operationalPriorityScore(item);
   const statusOrder={ready:0,urgent:1,waiting_customer:2,new:3,contacted:4,checked_in:5,diagnosing:6,repairing:7,waiting_parts:8};
   const base=item.priority==='urgent'?0:(statusOrder[item.status]??9);
   const model=item.vehicle&&String(item.vehicle.model||'').trim();
@@ -2199,7 +2428,7 @@ function activePriorityScore(item){
 function renderActiveOverview(active){
   const sorted=[...active].sort((a,b)=>activePriorityScore(a)-activePriorityScore(b)||String(a.preferredDate||'').localeCompare(String(b.preferredDate||'')));
   if(!sorted.length){
-    activeOverviewEl.innerHTML='<div class="muted">Inga aktiva &auml;renden just nu.</div>';
+    activeOverviewEl.innerHTML='<div class="muted">Inga &ouml;ppna &auml;renden just nu.</div>';
     return;
   }
   activeOverviewEl.innerHTML=`
@@ -2213,10 +2442,11 @@ function renderActiveOverview(active){
         const lastTimeline=(Array.isArray(item.timeline)&&item.timeline.length?item.timeline[item.timeline.length-1].event:'Ingen h&auml;ndelse loggad');
         const createdBy=item.createdBy&&item.createdBy.name?item.createdBy.name:(item.source||item.channel||'ok&auml;nt');
         const updatedBy=item.updatedBy&&item.updatedBy.name?item.updatedBy.name:'saknas';
+        const operationalReasonList=operationalReasons(item);
         const priorityText=item.priority==='urgent'?'Akut':stale?'St&aring;tt stilla':missingModel?'Saknar modell':'Normal';
         const priorityClass=item.priority==='urgent'?'priority-urgent':stale||missingModel?'priority-stale':'';
         return `<tr>
-          <td class="${priorityClass}">${html(priorityText)}</td>
+          <td class="${operationalReasonList.length?'priority-urgent':priorityClass}">${html(operationalReasonList.length?operationalReasonList.slice(0,3).join(' + '):priorityText)}</td>
           <td><strong>${html(item.customer&&item.customer.name||'Ok&auml;nd kund')}</strong><span class="muted-small">${html(item.customer&&item.customer.phone||'Telefon saknas')}</span></td>
           <td><strong>${html(model||'MODELL SAKNAS')}</strong><span class="muted-small">${html(item.service||'Tj&auml;nst saknas')}</span></td>
           <td>${html(statusLabels[item.status]||item.status)}<span class="muted-small">${html(displayDate(item.preferredDate))}</span></td>
@@ -2239,17 +2469,22 @@ async function loadCallDashboard(){
     }
     const preCallLogStatus=await checkCallLogsSource();
     if(preCallLogStatus&&preCallLogStatus.sourceUnavailable){
-      renderCallDashboardUnavailable('46elks/call-log k\u00e4lla saknas eller \u00e4r inte konfigurerad.',preCallLogStatus.warnings||[]);
-      showCallStatus('46elks/call-log k\u00e4lla saknas eller \u00e4r inte konfigurerad. Anv\u00e4nd akutpanelen f\u00f6r manuell uppf\u00f6ljning.',true);
+      renderCallDashboardUnavailable('Samtalsimport ej kopplad: 46elks/call-log k\u00e4lla saknas eller \u00e4r inte konfigurerad.',preCallLogStatus.warnings||[]);
+      showCallStatus('Samtalsimport ej kopplad. Anv\u00e4nd akutpanelen f\u00f6r manuell uppf\u00f6ljning.',true);
       return;
     }
     const data=await api('/api/call-dashboard');
+    if(data&&data.sourceUnavailable){
+      renderCallDashboardUnavailable('Samtalsimport ej kopplad: 46elks/call-log k\u00e4lla saknas eller \u00e4r inte konfigurerad.',data.warnings||[]);
+      showCallStatus('Samtalsimport ej kopplad. Anv\u00e4nd akutpanelen f\u00f6r manuell uppf\u00f6ljning.',true);
+      return;
+    }
     callDashboardRows=data.rows||data.todayRows||[];
     renderCallDashboard(data);
     const callLogStatus=await checkCallLogsSource();
     if(callLogStatus&&callLogStatus.sourceUnavailable){
-      renderCallDashboardUnavailable('46elks/call-log k\u00e4lla saknas eller \u00e4r inte konfigurerad.',callLogStatus.warnings||[]);
-      showCallStatus('46elks/call-log k\u00e4lla saknas eller \u00e4r inte konfigurerad. Anv\u00e4nd akutpanelen f\u00f6r manuell uppf\u00f6ljning.',true);
+      renderCallDashboardUnavailable('Samtalsimport ej kopplad: 46elks/call-log k\u00e4lla saknas eller \u00e4r inte konfigurerad.',callLogStatus.warnings||[]);
+      showCallStatus('Samtalsimport ej kopplad. Anv\u00e4nd akutpanelen f\u00f6r manuell uppf\u00f6ljning.',true);
       return;
     }
     showCallStatus(`Samtal uppdaterade ${new Date().toLocaleTimeString('sv-SE')}.`);
@@ -2293,7 +2528,7 @@ function renderCallDashboard(data){
           ? row.cases.map((item)=>`<span class="call-case"><strong>${html(item.customerName||item.shortId)}</strong>${html(item.status)} &middot; ${html(item.service||'')} &middot; ${html(item.model||'modell saknas')}</span>`).join('')
           : '<strong>SAKNAS kundkort</strong>';
         const actionHtml=row.eligibleLostLead
-          ? `<button type="button" data-call-action="create-case" data-call-id="${html(row.id)}">Skapa kundkort</button><button type="button" class="secondary" data-call-action="copy-followup" data-call-id="${html(row.id)}">Kopiera SMS-utkast</button><button type="button" class="secondary" data-call-action="ignore" data-call-id="${html(row.id)}">Ignorera</button>`
+          ? (row.lead?`<button type="button" data-call-action="create-case" data-call-id="${html(row.id)}">Skapa kundkort</button><button type="button" class="secondary" data-call-action="copy-followup" data-call-id="${html(row.id)}">Kopiera SMS-utkast</button><button type="button" class="secondary" data-call-action="ignore" data-call-id="${html(row.id)}">Ignorera</button>`:`<button type="button" class="secondary" data-call-action="copy-followup" data-call-id="${html(row.id)}">Kopiera SMS-utkast</button><span class="muted-small">Read-only livevy: inget lead skapas automatiskt</span>`)
           : row.hasCase ? '<span class="muted-small">Registrerad kund</span>' : '<span class="muted-small">Ej SMS-lämplig</span>';
         return `<tr class="${rowClass}">
           <td>${html(row.time)}</td>
@@ -2310,6 +2545,7 @@ function renderCallDashboard(data){
 function renderCallDashboardUnavailable(message,warnings=[]){
   callDashboardRows=[];
   const statItems=[
+    ['Samtalsimport','Ej kopplad'],
     ['Samtal idag','Ok\u00e4nt'],
     ['Hanterade','Ok\u00e4nt'],
     ['Verkstaden','Ok\u00e4nt'],

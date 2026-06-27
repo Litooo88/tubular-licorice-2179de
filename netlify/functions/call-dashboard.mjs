@@ -48,6 +48,40 @@ const stockholmTime = (date) =>
     minute: "2-digit",
   }).format(date);
 
+const isCallSourceUnavailable = (error) =>
+  /46elks API saknas|MissingBlobsEnvironmentError|BlobsEnvironment|not been configured to use Netlify Blobs/i
+    .test(`${error?.code || ""} ${error?.name || ""} ${error?.message || ""}`);
+
+const emptyCallDashboard = (error) => {
+  const warning = {
+    source: "call-dashboard",
+    code: clean(error?.code || error?.name || "CALL_SOURCE_UNAVAILABLE", 100),
+    message: clean(error?.message || "46elks/call-log kalla saknas eller ar inte konfigurerad.", 240),
+  };
+  return {
+    ok: true,
+    sourceUnavailable: true,
+    sourceLabel: "Samtalsimport ej kopplad",
+    warnings: [warning],
+    rows: [],
+    todayRows: [],
+    activeLeadRows: [],
+    totals: {
+      date: stockholmDateKey(new Date()),
+      callsToday: 0,
+      handledToday: 0,
+      workshopToday: 0,
+      sebastianToday: 0,
+      voicemailToday: 0,
+      missedToday: 0,
+      registeredToday: 0,
+      lostLeadToday: 0,
+      activeLeads: 0,
+      newLeadsToday: 0,
+    },
+  };
+};
+
 const shortCaseId = (id) => clean(id, 120).replace(/^case_/, "").slice(0, 18).toUpperCase();
 const STAFF = {
   workshop: { key: "workshop", name: "Verkstaden", role: "Golv, mottagning och snabba jobb", phone: "010-138 54 98" },
@@ -264,7 +298,7 @@ const createCaseFromLead = async ({ lead, operatorName, note }) => {
   return next;
 };
 
-const buildCallRows = async () => {
+const buildCallRows = async ({ syncLeads = false } = {}) => {
   const [calls, cases] = await Promise.all([fetchCalls(), loadCases()]);
   const caseByPhone = new Map();
   for (const item of cases) {
@@ -317,7 +351,7 @@ const buildCallRows = async () => {
     })
     .sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)));
 
-  const syncedLeads = await syncCallLeads(rows, leadMap);
+  const syncedLeads = syncLeads ? await syncCallLeads(rows, leadMap) : leadMap;
   rows.forEach((row) => {
     const lead = syncedLeads.get(row.id) || null;
     row.lead = lead;
@@ -342,7 +376,7 @@ const buildCallRows = async () => {
     newLeadsToday: todayRows.filter((row) => row.lead?.status === "new").length,
   };
 
-  return { rows, todayRows, activeLeadRows, totals };
+  return { rows, todayRows, activeLeadRows, totals, readOnly: !syncLeads };
 };
 
 export default async (request) => {
@@ -351,9 +385,11 @@ export default async (request) => {
 
   if (request.method === "GET") {
     try {
-      const dashboard = await buildCallRows();
+      const syncLeads = new URL(request.url).searchParams.get("syncLeads") === "1";
+      const dashboard = await buildCallRows({ syncLeads });
       return json(dashboard);
     } catch (error) {
+      if (isCallSourceUnavailable(error)) return json(emptyCallDashboard(error));
       return json({ error: clean(error?.message || "Kunde inte läsa samtalslogg.", 240) }, 502);
     }
   }
