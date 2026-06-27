@@ -37,6 +37,10 @@ button:disabled{opacity:.6;cursor:wait}
 .sms-status{display:none;margin-top:10px;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.45}
 .sms-status.ok{display:block;background:rgba(0,200,83,.1);border:1px solid rgba(0,200,83,.3);color:#e6ffef}
 .sms-status.bad{display:block;background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}
+.live-send-panel{border-color:rgba(255,194,71,.45);box-shadow:0 0 0 1px rgba(255,194,71,.12) inset}
+.live-send-warning{display:block;margin:8px 0 10px;color:#fff1cf;background:rgba(255,194,71,.10);border:1px solid rgba(255,194,71,.35);border-radius:8px;padding:9px 10px;font-size:12px;line-height:1.45}
+button.live-send-action{background:#ffc247;color:#1b1200;border:1px solid #ffd98a}
+button.live-send-action:hover{filter:brightness(1.04)}
 .admin-tabs{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
 .admin-tabs button{background:#101410;color:#fff;border:1px solid #2b362e}
 .admin-tabs button.is-active{background:#00c853;color:#031006}
@@ -496,9 +500,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div id="callDashboardTable">Laddar samtal...</div>
   </section>
 
-  <section class="panel sms-panel">
-    <h2>SMS till kund</h2>
-    <p>V&auml;lj ett aktivt &auml;rende, skriv eller bygg en mall och skicka SMS direkt fr&aring;n admin. Utskicket sparas i kundens timeline.</p>
+  <section class="panel sms-panel live-send-panel">
+    <h2>SMS till kund – live-s&auml;ndning</h2>
+    <p>V&auml;lj ett aktivt &auml;rende, skriv eller bygg en mall. Kopiera-knappen &auml;r s&auml;ker; liveknappen skickar ett riktigt SMS via 46elks.</p>
+    <span class="live-send-warning">Varning: "Skicka riktigt SMS" skickar till kund och loggas p&aring; &auml;rendet. Test/AI-paneler ska anv&auml;nda dry-run eller kopiera utkast.</span>
     <div class="sms-grid">
       <div>
         <label for="smsCaseSelect">Kund / &auml;rende</label>
@@ -522,7 +527,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div class="sms-actions">
       <button type="button" class="secondary" id="smsApplyTemplate">Bygg mall</button>
       <button type="button" class="secondary" id="smsCopyDraft">Kopiera utkast</button>
-      <button type="button" id="smsSendButton">Skicka SMS</button>
+      <button type="button" class="live-send-action" id="smsSendButton">Skicka riktigt SMS</button>
     </div>
     <div class="sms-status" id="smsDeskStatus"></div>
   </section>
@@ -889,7 +894,7 @@ async function sendDeskSms(){
   const message=String(smsMessageText.value||'').trim();
   if(!item){showSmsDeskStatus('Välj kund först.',true);return;}
   if(!message){showSmsDeskStatus('Skriv SMS-text först.',true);return;}
-  if(!confirm(`Skicka SMS till ${item.customer&&item.customer.name||'kund'}?`))return;
+  if(!confirm(`Skicka RIKTIGT SMS via 46elks till ${item.customer&&item.customer.name||'kund'}?`))return;
   const button=document.getElementById('smsSendButton');
   const original=button.textContent;
   button.disabled=true;
@@ -2690,14 +2695,14 @@ async function copyCallFollowupDraft(row,button){
   }
 }
 async function sendLostLeadDiscount(row,button){
-  if(!confirm(`Skicka 10% rabatt-SMS till ${row.phone}?`))return;
+  if(!confirm(`Skicka RIKTIGT rabatt-SMS via 46elks till ${row.phone}? Rabatt kräver manuell kontroll.`))return;
   const original=button.textContent;
   button.disabled=true;
   button.textContent='Skickar...';
   try{
     const result=await api('/api/call-dashboard',{
       method:'POST',
-      body:JSON.stringify({callId:row.id,phone:row.phone,code:'RING10'})
+      body:JSON.stringify({action:'send_discount',callId:row.id,phone:row.phone,code:'RING10',confirmLiveSms:true})
     });
     if(!result.ok) throw new Error(result.followup&&result.followup.result&&result.followup.result.error||'SMS kunde inte skickas.');
     showCallStatus(`Rabatt-SMS skickat till ${row.phone}.`);
@@ -2929,18 +2934,20 @@ function caseCard(item){
           <div class="fact"><span>Kundtelefon</span><b><a href="${html(customerPhoneHref)}">${html(customerPhone)}</a></b></div>
           <div class="fact"><span>Kundmail</span><b><a href="${html(customerEmailHref)}">${html(customerEmailAddress)}</a></b></div>
         </div>
-        <form class="quote-box chat-reply" data-id="${html(item.id)}">
+        <form class="quote-box chat-reply live-send-panel" data-id="${html(item.id)}">
           <h4>Svara p&aring; chatt / SMS</h4>
           <p>Skickar ett riktigt SMS via 46elks till kunden och markerar &auml;rendet som v&auml;ntar p&aring; kund.</p>
+          <span class="live-send-warning">Live-s&auml;ndning: anv&auml;nd "Kopiera svar" om du bara vill granska eller skicka manuellt.</span>
           <textarea name="replyMessage" placeholder="Skriv svaret till kunden...">${html(chatReplyTemplate(item))}</textarea>
           <div class="quote-actions">
             <button type="button" class="secondary copy-chat-reply">Kopiera svar</button>
-            <button type="button" class="send-chat-reply">Skicka SMS-svar</button>
+            <button type="button" class="send-chat-reply live-send-action">Skicka riktigt SMS-svar</button>
           </div>
         </form>
-        <div class="quote-box">
+        <div class="quote-box live-send-panel">
           <h4>Prisf&ouml;rslag via SMS</h4>
           <p>F&ouml;r fels&ouml;kta fordon d&auml;r kunden ska godk&auml;nna pris innan &aring;tg&auml;rd. SMS:et ber kunden svara JA eller ringa Sebastian/Verkstaden.</p>
+          <span class="live-send-warning">Live-s&auml;ndning: pris, rabatt, batteri, reklamation och garanti ska vara kontrollerade innan du skickar.</span>
           <form class="quote-form" data-id="${html(item.id)}">
             <div class="quote-grid">
               <div><label>Pris inkl. moms</label><input name="quoteAmount" type="number" min="0" step="1" value="${item.quote&&item.quote.amount?Number(item.quote.amount):''}" placeholder="T.ex. 1295"></div>
@@ -2951,7 +2958,7 @@ function caseCard(item){
             <div class="quote-actions">
               <button type="button" class="secondary refresh-quote">Uppdatera preview</button>
               <button type="button" class="secondary copy-quote">Kopiera SMS</button>
-              <button type="button" class="send-quote">Skicka prisf&ouml;rslag</button>
+              <button type="button" class="send-quote live-send-action">Skicka prisf&ouml;rslag som riktigt SMS</button>
             </div>
             <div class="completion-note">Senast skickat: ${item.quote&&item.quote.sentAt?html(dateShort(item.quote.sentAt)):'Inte skickat'}${item.quote&&item.quote.status?` &middot; Status: ${html(item.quote.status)}`:''}</div>
           </form>
@@ -3338,7 +3345,7 @@ function caseCard(item){
     const message=String(replyForm.elements.replyMessage.value||'').trim();
     if(!message){showError('Skriv ett svar innan du skickar SMS.');return;}
     if(!item.customer||!item.customer.phone){showError('Kundtelefon saknas på ärendet.');return;}
-    if(!confirm(`Skicka SMS-svar till ${item.customer&&item.customer.name||'kund'}?`))return;
+    if(!confirm(`Skicka RIKTIGT SMS-svar via 46elks till ${item.customer&&item.customer.name||'kund'}?`))return;
     const button=replyForm.querySelector('.send-chat-reply');
     const original=button.textContent;
     button.disabled=true;
@@ -3374,7 +3381,7 @@ function caseCard(item){
     refreshQuotePreview();
     const values=quoteValues();
     if(!values.quoteAmount||!values.quoteSummary){showError('Fyll i pris och åtgärd innan du skickar prisförslag.');return;}
-    if(!confirm(`Skicka prisförslag till ${item.customer&&item.customer.name||'kund'}?`))return;
+    if(!confirm(`Skicka RIKTIGT prisförslag via SMS till ${item.customer&&item.customer.name||'kund'}? Kontrollera pris, garanti, rabatt och batteririsk först.`))return;
     const button=quoteForm.querySelector('.send-quote');
     const original=button.textContent;
     button.disabled=true;
