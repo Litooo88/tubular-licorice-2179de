@@ -32,6 +32,18 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-27 ~00:00Z — Codex — KLAR
+
+- **Branch:** `audit/admin-system-operational-map`
+- **Gjorde:** Full systemrevision av admin, bookingflöde, KPI:er och relevanta
+  Netlify Functions. Skapade operativ auditrapport.
+- **Filer/områden:** `docs/ADMIN_SYSTEM_AUDIT_2026_06.md` och denna sync-logg.
+- **Tester:** Ingen build/test körd eftersom endast dokumentation ändrades.
+- **Nästa / överlämning:** Implementera rekommenderade fixar i små separata PR:
+  KPI-modell, AI brief via `/api/cases`, tydlig call-log source status,
+  `ai-sms-draft` true dry-run och timeline fallback.
+- **Varning:** Ingen SMS/mail, inga production-writes, stashen poppas inte.
+
 ### 2026-06-26 ~12:40Z — Claude Code — KLAR
 
 - **Branch:** `seo/sitemap-favicon` → mergad till `main` via
