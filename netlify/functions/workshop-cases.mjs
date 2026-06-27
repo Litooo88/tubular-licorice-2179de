@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { requireAdminToken } from "./_shared/admin-auth.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -202,18 +203,7 @@ const workshopReviewSmsText = (caseItem) => {
 };
 
 const requireAdmin = (request) => {
-  const expected = process.env.ADMIN_TOKEN || globalThis.Netlify?.env?.get?.("ADMIN_TOKEN");
-  const provided = request.headers.get("x-admin-token") || "";
-
-  if (!expected) {
-    return { ok: false, response: json({ error: "ADMIN_TOKEN saknas i Netlify miljo variabler." }, 503) };
-  }
-
-  if (provided !== expected) {
-    return { ok: false, response: json({ error: "Unauthorized" }, 401) };
-  }
-
-  return { ok: true };
+  return requireAdminToken(request, json, "ADMIN_TOKEN saknas i Netlify miljo variabler.");
 };
 
 const normalizeOwner = (value) => value?.key === "sebastian" ? STAFF.sebastian : STAFF.workshop;

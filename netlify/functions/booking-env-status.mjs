@@ -1,3 +1,5 @@
+import { requireAdminToken } from "./_shared/admin-auth.mjs";
+
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -13,13 +15,8 @@ const env = (name) => {
 };
 
 const clean = (value, max = 5000) => String(value || "").trim().slice(0, max);
-const header = (request, name) => request.headers.get(name) || "";
 const requireAdmin = (request) => {
-  const expected = env("ADMIN_TOKEN");
-  const provided = header(request, "x-admin-token");
-  if (!expected) return { ok: false, response: json({ error: "ADMIN_TOKEN saknas i Netlify." }, 503) };
-  if (provided !== expected) return { ok: false, response: json({ error: "Unauthorized" }, 401) };
-  return { ok: true };
+  return requireAdminToken(request, json);
 };
 const googleCalendarDiagnostics = () => {
   const calendarId = clean(env("GOOGLE_CALENDAR_ID"), 500);

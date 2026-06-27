@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { adminTokenMatches } from "./_shared/admin-auth.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -41,9 +42,7 @@ const REVIEW_LINK = env("GOOGLE_REVIEW_LINK") || "https://www.google.com/search?
 const LOGO_URL = `${SITE_URL}/nordic_logo_transparent.png`;
 
 const authOk = (request) => {
-  const token = env("ADMIN_TOKEN");
-  if (!token) return false;
-  return request.headers.get("x-admin-token") === token;
+  return adminTokenMatches(request);
 };
 
 const smsConfig = () => ({
