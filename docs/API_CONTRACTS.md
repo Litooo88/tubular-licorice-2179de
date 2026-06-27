@@ -17,6 +17,7 @@ Publika intake/webhook-endpoints:
 - `POST /api/workshop-chat`
 - `/api/voice-start` för 46elks-flow
 - `POST /.netlify/functions/create-checkout`
+- `POST /.netlify/functions/stripe-webhook`
 
 Adminskyddade endpoints med `x-admin-token`:
 
@@ -117,6 +118,15 @@ Auth: verifierad 46elks-webhook.
 Ska uppdatera leveransstatus för ett tidigare SMS utan att ändra meddelandets
 innehåll. Tillåtna statusar bör vara `queued`, `sent`, `delivered`, `failed`
 och `unknown`.
+
+## Nuvarande: POST /.netlify/functions/stripe-webhook
+
+Auth: verifierad Stripe-signatur via `STRIPE_WEBHOOK_SECRET`.
+
+Status: finns idag för produkt-checkout. Endpointen returnerar `503` om
+`STRIPE_WEBHOOK_SECRET` saknas, `400` vid ogiltig signatur och skriver endast
+betalningspost till `payments` efter verifierad `checkout.session.completed`.
+Den skickar inga SMS eller mail.
 
 ## Rekommenderad auth-migrering
 
