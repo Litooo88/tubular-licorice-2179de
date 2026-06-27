@@ -92,6 +92,8 @@ button:disabled{opacity:.6;cursor:wait}
 .communication-draft-preview{display:none;border:1px solid #29362d;border-radius:8px;background:#061008;padding:12px;margin-top:10px;font-size:13px;line-height:1.5;white-space:pre-wrap}
 .communication-draft-preview.show{display:block}
 .customer-export-panel{padding:14px 16px;margin:0 0 14px}
+.customer-export-panel summary{cursor:pointer;list-style:none}
+.customer-export-panel summary::-webkit-details-marker{display:none}
 .customer-export-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
 .customer-export-panel h2{margin:0 0 6px;font-size:18px}
 .customer-export-panel p{margin:0;color:#aab5ac;font-size:13px;line-height:1.45}
@@ -357,33 +359,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   <div class="error" id="error"></div>
   <div class="calendar-result" id="calendarResult"></div>
   <section class="panel notice"><strong>Automatiskt fl&ouml;de:</strong> Nya bokningar sparas h&auml;r, kunden ska f&aring; SMS och e-post direkt, och verkstaden f&aring;r avisering. Om ett kort markeras med r&ouml;d kundbekr&auml;ftelse beh&ouml;ver kunden f&ouml;ljas upp manuellt direkt.</section>
-  <section class="panel customer-export-panel">
-    <div class="customer-export-head">
-      <div>
-        <h2>Kundexport</h2>
-        <p>Read-only export av sparade kunders e-postadresser. Ingen massutskick-funktion och inget mail skickas.</p>
-        <div class="customer-export-status warn" id="customerExportStatus">Klicka p&aring; Exportera kundlista f&ouml;r att h&auml;mta e-postadresser.</div>
-      </div>
-      <div class="customer-export-actions">
-        <button type="button" class="secondary" id="exportCustomers">Exportera kundlista</button>
-        <button type="button" class="secondary" id="copyCustomerEmails">Kopiera e-postlista</button>
-        <button type="button" class="secondary" id="copyCustomerPhones">Kopiera telefonlista</button>
-      </div>
-    </div>
-    <div class="customer-export-output" id="customerExportOutput">
-      <div class="customer-export-grid">
-        <div>
-          <label for="customerExportEmails">E-postadresser</label>
-          <textarea id="customerExportEmails" readonly placeholder="Inga adresser h&auml;mtade."></textarea>
-        </div>
-        <div>
-          <label for="customerExportPhones">Telefonnummer</label>
-          <textarea id="customerExportPhones" readonly placeholder="Inga telefonnummer h&auml;mtade."></textarea>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <nav class="admin-tabs" aria-label="Adminvyer">
     <button type="button" class="is-active" data-admin-tab="overview">Översikt & samtal</button>
     <button type="button" data-admin-tab="cards">Kundkort</button>
@@ -557,6 +532,35 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <p>Prioriterad lista &ouml;ver aktiva kundkort. Anv&auml;nd den h&auml;r f&ouml;r morgonm&ouml;te, uppf&ouml;ljning och f&ouml;r att se vilka kort som saknar tydlig modell eller har st&aring;tt stilla.</p>
     <div id="activeOverview">Laddar aktiva &auml;renden...</div>
   </section>
+
+  <details class="panel customer-export-panel">
+    <summary>
+      <div class="customer-export-head">
+        <div>
+          <h2>Kundexport</h2>
+          <p>Sekund&auml;rt read-only verktyg f&ouml;r e-post/telefonexport. Ingen massutskick-funktion och inget mail skickas.</p>
+          <div class="customer-export-status warn" id="customerExportStatus">Nedf&auml;lld tills du beh&ouml;ver exportera. Akut uppf&ouml;ljning anv&auml;nder kundkort via /api/cases.</div>
+        </div>
+      </div>
+    </summary>
+    <div class="customer-export-actions">
+      <button type="button" class="secondary" id="exportCustomers">Exportera kundlista</button>
+      <button type="button" class="secondary" id="copyCustomerEmails">Kopiera e-postlista</button>
+      <button type="button" class="secondary" id="copyCustomerPhones">Kopiera telefonlista</button>
+    </div>
+    <div class="customer-export-output" id="customerExportOutput">
+      <div class="customer-export-grid">
+        <div>
+          <label for="customerExportEmails">E-postadresser</label>
+          <textarea id="customerExportEmails" readonly placeholder="Inga adresser h&auml;mtade."></textarea>
+        </div>
+        <div>
+          <label for="customerExportPhones">Telefonnummer</label>
+          <textarea id="customerExportPhones" readonly placeholder="Inga telefonnummer h&auml;mtade."></textarea>
+        </div>
+      </div>
+    </div>
+  </details>
   </div>
 
   <div class="admin-view" id="cardsView" hidden>
@@ -1686,6 +1690,15 @@ function showCustomerExportStatus(message,state=''){
   customerExportStatusEl.className=`customer-export-status ${state}`;
   customerExportStatusEl.textContent=message;
 }
+function customerExportWarningsText(warnings=[]){
+  const items=Array.isArray(warnings)?warnings:[];
+  if(!items.length)return'';
+  const text=items.map((warning)=>String(warning&&warning.message||warning&&warning.code||warning||'')).join(' | ');
+  if(/MissingBlobsEnvironmentError|BlobsEnvironment/i.test(text)){
+    return ' Kundexportens Blob-k\u00e4lla \u00e4r inte konfigurerad i denna milj\u00f6. Akut uppf\u00f6ljning kan fortfarande matcha mot /api/cases.';
+  }
+  return ` Varningar: ${text.slice(0,260)}`;
+}
 async function exportCustomerList(){
   const button=document.getElementById('exportCustomers');
   try{
@@ -1698,7 +1711,7 @@ async function exportCustomerList(){
     customerExportEmailsEl.value=latestCustomerEmails.join('\n');
     customerExportPhonesEl.value=latestCustomerPhones.join('\n');
     customerExportOutputEl.style.display='block';
-    const warnings=Array.isArray(data.warnings)&&data.warnings.length?` Varningar: ${data.warnings.join(' | ')}`:'';
+    const warnings=customerExportWarningsText(data.warnings);
     const emailCount=Number(data.emailCount||data.count||latestCustomerEmails.length||0);
     const phoneCount=Number(data.phoneCount||latestCustomerPhones.length||0);
     const message=emailCount
