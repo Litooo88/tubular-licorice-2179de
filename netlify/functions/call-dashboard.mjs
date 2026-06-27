@@ -396,15 +396,17 @@ export default async (request) => {
 
   if (request.method === "POST") {
     const body = await request.json().catch(() => ({}));
-    const action = clean(body.action, 40) || "send_discount";
+    const action = clean(body.action, 40);
     const phone = normalizePhone(body.phone);
     const callId = clean(body.callId, 160);
     const operatorName = clean(body.operatorName, 80) || "admin";
-    const leadStore = getStore({ name: "call-leads", consistency: "strong" });
-    const currentLead = callId ? await leadStore.get(callId, { type: "json" }).catch(() => null) : null;
+
+    if (!action) return json({ error: "Explicit action kravs." }, 400);
 
     if (action === "ignore") {
       if (!callId) return json({ error: "Call ID saknas." }, 400);
+      const leadStore = getStore({ name: "call-leads", consistency: "strong" });
+      const currentLead = await leadStore.get(callId, { type: "json" }).catch(() => null);
       const now = new Date().toISOString();
       const lead = {
         ...(currentLead || { id: callId, callId, phone }),
@@ -422,6 +424,8 @@ export default async (request) => {
     }
 
     if (action === "create_case") {
+      const leadStore = getStore({ name: "call-leads", consistency: "strong" });
+      const currentLead = callId ? await leadStore.get(callId, { type: "json" }).catch(() => null) : null;
       if (!currentLead) return json({ error: "Samtalslead saknas. Uppdatera samtal och prova igen." }, 404);
       if (currentLead.status === "converted" && currentLead.caseId) return json({ ok: true, lead: currentLead, caseId: currentLead.caseId });
       const caseItem = await createCaseFromLead({ lead: currentLead, operatorName, note: body.note });
@@ -438,12 +442,27 @@ export default async (request) => {
       return json({ ok: true, lead, case: caseItem });
     }
 
+    if (!["send_discount", "discount"].includes(action)) return json({ error: "Okand action." }, 400);
+    if (body.confirmLiveSms !== true) {
+      return json({ error: "Live-SMS kraver explicit confirmLiveSms=true." }, 409);
+    }
     const code = clean(body.code, 30) || "RING10";
     if (!phone || phone === "+46") return json({ error: "Telefonnummer saknas." }, 400);
     if (!callId) return json({ error: "Call ID saknas." }, 400);
     const message =
       clean(body.message, 918) ||
       `Hej! Vi såg att du ringt Nordic E-Mobility. Boka service via nordicemobility.se och ange koden ${code} så får du 10% rabatt på verkstadsarbetet. Gäller ny bokning inom 7 dagar. /Nordic E-Mobility`;
+    if (body.dryRun === true || body.previewOnly === true) {
+      return json({
+        ok: true,
+        dryRun: true,
+        sent: false,
+        followup: { callId, phone, code, message, result: { status: "dry_run", sent: false } },
+        writesSkipped: ["call-followups", "call-leads"],
+      });
+    }
+    const leadStore = getStore({ name: "call-leads", consistency: "strong" });
+    const currentLead = callId ? await leadStore.get(callId, { type: "json" }).catch(() => null) : null;
     const result = await postSms({ to: phone, message });
     const entry = {
       callId,
