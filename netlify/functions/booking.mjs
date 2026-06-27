@@ -1,5 +1,5 @@
 import { getStore } from "@netlify/blobs";
-import { createSign } from "node:crypto";
+import { createHash, createSign } from "node:crypto";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -963,6 +963,26 @@ const isRateLimited = (key, { limit = 4, windowMs = 10 * 60 * 1000 } = {}) => {
 const hasHoneypotValue = (body = {}) =>
   Boolean(clean(body["bot-field"] || body.botField || body.website || body.company, 240));
 
+const bookingIdempotencyKey = (request, body = {}) => {
+  const provided = clean(request.headers.get("idempotency-key") || request.headers.get("x-idempotency-key"), 180);
+  if (provided) return `booking_header_${createHash("sha256").update(provided).digest("hex").slice(0, 48)}`;
+  const fingerprint = {
+    phone: normalizePhone(body.phone),
+    preferredDate: clean(body.preferredDate, 120),
+    service: clean(body.service, 240).toLowerCase(),
+    vehicle: clean(body.scooter || body.vehicle, 240).toLowerCase(),
+    pickupCaseId: clean(body.pickupCaseId, 180),
+  };
+  return `booking_${createHash("sha256").update(JSON.stringify(fingerprint)).digest("hex").slice(0, 48)}`;
+};
+
+const existingIdempotentBooking = async ({ idempotencyStore, caseStore, key }) => {
+  const existing = await idempotencyStore.get(key, { type: "json" }).catch(() => null);
+  if (!existing?.caseId) return null;
+  const caseItem = await caseStore.get(existing.caseId, { type: "json" }).catch(() => null);
+  return caseItem ? { idempotency: existing, caseItem } : null;
+};
+
 export default async (request, context) => {
   if (request.method !== "POST") {
     return json({ error: "Method not allowed" }, 405);
@@ -1051,6 +1071,21 @@ export default async (request, context) => {
       return json({ error: "Du maste godkanna villkoren innan bokningen skickas." }, 400);
     }
 
+    const store = getStore({ name: "workshop-cases", consistency: "strong" });
+    const idempotencyStore = getStore({ name: "booking-idempotency", consistency: "strong" });
+    const idempotencyKey = bookingIdempotencyKey(request, body);
+    caseItem.idempotencyKey = idempotencyKey;
+    const duplicate = await existingIdempotentBooking({ idempotencyStore, caseStore: store, key: idempotencyKey });
+    if (duplicate) {
+      return json({
+        ok: true,
+        id: duplicate.caseItem.id,
+        case: duplicate.caseItem,
+        duplicate: true,
+        idempotent: true,
+      }, 200);
+    }
+
     const availability = await checkCalendarAvailability(caseItem);
     caseItem.notifications.calendarAvailability = availability;
     if (availability.status !== "checked") {
@@ -1067,8 +1102,22 @@ export default async (request, context) => {
     }
     caseItem.timeline.push({ at: availability.checkedAt, event: "Kalendern kontrollerad: tiden var ledig." });
 
-    const store = getStore({ name: "workshop-cases", consistency: "strong" });
     await store.setJSON(id, caseItem);
+    await idempotencyStore.setJSON(idempotencyKey, {
+      id: idempotencyKey,
+      caseId: id,
+      createdAt: now,
+      updatedAt: now,
+      phone: normalizePhone(body.phone),
+      preferredDate: caseItem.preferredDate,
+      service: caseItem.service,
+      vehicle: caseItem.vehicle.model,
+    }).catch((error) => {
+      console.warn("booking_idempotency_write_failed", {
+        name: error?.name,
+        message: clean(error?.message, 180),
+      });
+    });
     if (caseItem.pickup_for_case_id) {
       const originalCase = await store.getJSON(caseItem.pickup_for_case_id).catch(() => null);
       if (originalCase) {
