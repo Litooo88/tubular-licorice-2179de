@@ -32,6 +32,29 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-27 ~18:10Z — Codex — KLAR
+
+- **Branch:** flera fokuserade branches, mergeade via PR #52-#61 till `main`.
+- **Gjorde:** Stängde kvarvarande PR/buggspår från admin/audit-rundan:
+  hardening av booking/voice ingress, admin media/auth-diagnostik, AI SMS
+  true dry-run, timeline fallback från `/api/cases`, workshop-chat
+  rate/idempotency, Stripe checkout origin + signerad webhook, live-SMS UI/POST
+  safety, booking idempotency och riktig avstängning av gamla rescue
+  `cases.mjs`.
+- **Filer/områden:** `admin/index.html`, `netlify/functions/booking.mjs`,
+  `workshop-chat.mjs`, `call-dashboard.mjs`, `create-checkout.js`,
+  `stripe-webhook.js`, `cases.mjs`, AI/timeline functions och docs.
+- **Tester:** Efter varje merge kördes `npm run build` ✅,
+  `npm run verify:checkout-products` ✅ och
+  `cd nemob-callflow && npm run check` ✅. Relevanta `node --check` och lokala
+  handler-smokes kördes per PR.
+- **Nästa / överlämning:** Open PR-listan var tom efter PR #61. Kvar som
+  separat arbete: Netlify env/setup för `STRIPE_WEBHOOK_SECRET` och Stripe
+  Dashboard webhook, samt ev. SEO/prestanda-fynd som stor logotyp och JSON-LD
+  för `/priser/`.
+- **Varning:** Inga SMS/mail skickades i tester, inga production-writes gjordes,
+  stashen `feature/ai-operator-mvp3-timeline` poppades inte.
+
 ### 2026-06-27 ~16:00Z — Codex — KLAR
 
 - **Branch:** `fix/admin-operational-truth-dashboard`
