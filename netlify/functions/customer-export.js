@@ -3,6 +3,7 @@ const { list } = require("./_shared/storage");
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const PLACEHOLDERS = new Set(["email@example.com", "test@example.com"]);
+const MISSING_BLOBS_RE = /MissingBlobsEnvironmentError|BlobsEnvironment|not been configured to use Netlify Blobs/i;
 const PHONE_PLACEHOLDERS = new Set(["saknas", "telefon saknas", "unknown", "okand", "okänd", "test"]);
 
 const normalizeEmail = (value) => clean(value, 240).toLowerCase();
@@ -76,21 +77,43 @@ const collectFromCustomer = (emailMap, phoneMap, item, source) => {
   });
 };
 
-const readSource = async (entity, collector, emailMap, phoneMap, warnings) => {
+const isMissingBlobsEnvironment = (error) =>
+  MISSING_BLOBS_RE.test(`${error?.code || ""} ${error?.name || ""} ${error?.message || ""}`);
+
+const sourceLabel = (entity) => ({
+  service_cases: "workshop_cases",
+  customers: "customers",
+  communication_events: "communication_events",
+})[entity] || entity;
+
+const readSource = async (entity, collector, emailMap, phoneMap, warnings, options = {}) => {
+  const label = options.label || sourceLabel(entity);
   try {
     const rows = await list(entity);
     if (!rows.length) {
-      warnings.push(`${entity}: tom eller saknar poster.`);
-      return { source: entity, count: 0 };
+      if (!options.optional) warnings.push(`${label}: tom eller saknar poster.`);
+      return { source: label, entity, count: 0, optional: Boolean(options.optional) };
     }
-    rows.forEach((row) => collector(emailMap, phoneMap, row, entity));
-    return { source: entity, count: rows.length };
+    rows.forEach((row) => collector(emailMap, phoneMap, row, label));
+    return { source: label, entity, count: rows.length, optional: Boolean(options.optional) };
   } catch (error) {
     const code = clean(error?.code || error?.name || "STORAGE_UNAVAILABLE", 80);
     const message = clean(error?.message || "Kallan kunde inte lasas.", 240);
     console.error("customer-export source failed", { source: entity, code, message });
-    warnings.push(`${entity}: kunde inte lasas (${code}).`);
-    return { source: entity, count: 0, error: code };
+    const sourceUnavailable = isMissingBlobsEnvironment(error);
+    if (!options.optional) {
+      warnings.push(sourceUnavailable
+        ? `${label}: storage ej konfigurerad for denna function.`
+        : `${label}: kunde inte lasas (${code}).`);
+    }
+    return {
+      source: label,
+      entity,
+      count: 0,
+      error: code,
+      optional: Boolean(options.optional),
+      sourceUnavailable,
+    };
   }
 };
 
@@ -153,9 +176,22 @@ exports.handler = async (event) => {
     const customersByPhone = new Map();
     const sources = [];
 
-    sources.push(await readAdminCasesSource(event, customersByEmail, customersByPhone, warnings));
-    sources.push(await readSource("service_cases", collectFromCase, customersByEmail, customersByPhone, warnings));
-    sources.push(await readSource("customers", collectFromCustomer, customersByEmail, customersByPhone, warnings));
+    const adminCasesSource = await readAdminCasesSource(event, customersByEmail, customersByPhone, warnings);
+    sources.push(adminCasesSource);
+    if (!adminCasesSource.count) {
+      sources.push(await readSource("service_cases", collectFromCase, customersByEmail, customersByPhone, warnings, {
+        label: "workshop_cases_direct",
+      }));
+    } else {
+      sources.push({
+        source: "workshop_cases_direct",
+        entity: "service_cases",
+        count: 0,
+        skipped: true,
+        reason: "admin_cases_api already read workshop-cases",
+      });
+    }
+    sources.push(await readSource("customers", collectFromCustomer, customersByEmail, customersByPhone, warnings, { optional: true }));
     sources.push(await readSource("communication_events", (emailMap, phoneMap, item, source) => {
       addEmailCandidate(emailMap, phoneMap, {
         email: item?.from,
@@ -165,14 +201,19 @@ exports.handler = async (event) => {
         customerId: item?.customerId,
         source,
       });
-    }, customersByEmail, customersByPhone, warnings));
+    }, customersByEmail, customersByPhone, warnings, { optional: true }));
 
     const customers = [...customersByEmail.values()].sort((a, b) => a.email.localeCompare(b.email));
     const emails = customers.map((customer) => customer.email);
     const phoneCustomers = [...customersByPhone.values()].sort((a, b) => a.phone.localeCompare(b.phone));
     const phones = phoneCustomers.map((customer) => customer.phone);
     if (!emails.length && phones.length) warnings.push(`Inga e-postadresser hittades, men ${phones.length} telefonnummer finns.`);
-    if (!emails.length && !phones.length) warnings.push("Inga riktiga kund-e-postadresser eller telefonnummer hittades. Placeholder/testadresser filtrerades bort.");
+    if (!emails.length && !phones.length) {
+      const primaryUnavailable = sources.some((source) => !source.optional && source.sourceUnavailable);
+      warnings.push(primaryUnavailable
+        ? "Kundkortskallan kunde inte lasas fran denna function. Admin kan fortfarande anvanda redan laddade kundkort fran /api/cases."
+        : "Inga riktiga kund-e-postadresser eller telefonnummer hittades. Placeholder/testadresser filtrerades bort.");
+    }
 
     return json(200, {
       customers,
