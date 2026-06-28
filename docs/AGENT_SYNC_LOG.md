@@ -32,6 +32,22 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~15:02Z — Codex — KLAR
+
+- **Branch:** `main`
+- **Gjorde:** Fortsatte verifiering/triage efter PR #76. Bekräftade rent
+  worktree före loggändringen, att stashen ligger kvar och att centrala
+  read-only/dry-run handlers beter sig kontrollerat lokalt.
+- **Filer/områden:** Ingen produktkod ändrad; endast sync-logg.
+- **Tester:** Lokal handler-smoke: `ai-quote` 401 utan/fel token och E16 dry-run
+  201 med 395 / 595–1995, `ai-daily-brief` 401 utan token och 200 med dry-run,
+  `call-logs`, `customer-export` och `storage-health` 401 utan token och 200 med
+  token i read-only/fallback-läge.
+- **Nästa / överlämning:** Externa blockerare kvar: konfigurera
+  `VOICE_WEBHOOK_SECRET` i Netlify och uppdatera 46elks voice-start URL med
+  secret; `STRIPE_WEBHOOK_SECRET` saknas fortfarande för Stripe webhook.
+- **Varning:** Poppa inte stashen, inga SMS/mail och inga production-writes.
+
 ### 2026-06-28 ~15:00Z — Codex — KLAR
 
 - **Branch:** `codex/update-voice-secret-handoff`
