@@ -54,8 +54,8 @@ Autoskick ska vara transaktionella, server-side, loggade och idempotenta.
 
 - Admin-token sparas idag i `localStorage`.
 - Auth- och storage-hjälpare är duplicerade mellan Netlify-funktioner.
-- `GET /api/case-media/:caseId/:mediaId` sker före admin-auth och svarar med
-  publik cache-header.
+- `GET /api/case-media/:caseId/:mediaId` ska kräva `x-admin-token` och svara
+  med privat/no-store cache-header för kundbilder.
 - `/api/booking-env-status` ska vara adminskyddad. Den får endast visa
   integrationsstatus och publicConfig efter giltig `x-admin-token`.
 
