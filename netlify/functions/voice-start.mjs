@@ -17,7 +17,14 @@ const env = (name) => {
 const clean = (value, max = 1000) => String(value || "").trim().slice(0, max);
 const authorizeVoiceWebhook = (request) => {
   const secret = clean(env("VOICE_WEBHOOK_SECRET"), 240);
-  if (!secret) return { ok: true, configured: false };
+  if (!secret) {
+    return {
+      ok: false,
+      configured: false,
+      status: 503,
+      body: { error: "VOICE_WEBHOOK_SECRET saknas i Netlify.", code: "VOICE_WEBHOOK_SECRET_MISSING" },
+    };
+  }
   const url = new URL(request.url);
   const provided = clean(
     request.headers.get("x-nordic-webhook-secret") ||
@@ -71,7 +78,7 @@ const smsConfig = () => ({
 });
 
 const smsRecipients = () => {
-  const configured = (env("VOICE_MISSED_SMS_TO") || env("WORKSHOP_SMS_TO") || "+46101385498")
+  const configured = (env("VOICE_MISSED_SMS_TO") || env("WORKSHOP_SMS_TO"))
     .split(",")
     .map((item) => normalizePhone(item))
     .filter(Boolean);
@@ -128,7 +135,7 @@ const sendMissedCallSms = async ({ customerNumber, result, callid }) => {
 
 export default async (request) => {
   const webhookAuth = authorizeVoiceWebhook(request);
-  if (!webhookAuth.ok) return json({ error: "Unauthorized" }, 401);
+  if (!webhookAuth.ok) return json(webhookAuth.body || { error: "Unauthorized" }, webhookAuth.status || 401);
   const url = new URL(request.url);
   const stage = clean(url.searchParams.get("stage"), 40);
   const body = request.method === "POST" ? await parseBody(request) : {};

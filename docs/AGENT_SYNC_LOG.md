@@ -32,6 +32,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~05:12Z — Codex — KLAR
+
+- **Branch:** `codex/require-voice-webhook-secret`
+- **Gjorde:** Gör `VOICE_WEBHOOK_SECRET` obligatorisk för Netlify voice-webhooks
+  så routing/SMS inte kan aktiveras publikt om secret saknas.
+- **Filer/områden:** `voice-start.mjs`, `voice-notify.mjs`,
+  `voice-simple.mjs`, `docs/46elks-voice-fallback.md`, sync-logg.
+- **Tester:** `node --check` för berörda functions ✅, lokal voice-smoke:
+  saknad secret 503 ✅, fel secret 401 ✅, rätt secret 200 ✅, notify utan
+  SMS-config gav `not_configured` utan SMS ✅, `npm run build` ✅,
+  `npm run verify:checkout-products` ✅, `cd nemob-callflow && npm run check`
+  ✅.
+- **Nästa / överlämning:** PR/merge om GitHub är grön.
+- **Varning:** Inga SMS/mail, inga production-writes, stashen poppas inte.
+
 ### 2026-06-28 ~04:58Z — Codex — KLAR
 
 - **Branch:** `codex/anonymize-missed-call-doc-numbers`
