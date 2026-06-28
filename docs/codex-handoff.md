@@ -31,6 +31,10 @@ Keep it current. When a larger feature, rescue operation, deploy-sensitive fix, 
 - Public booking and workshop chat intake now have honeypot/rate-limit guards and idempotency mappings to avoid duplicate case/calendar/notification side effects on retries or double submits.
 - Netlify read-only check on 2026-06-27 found the production site `nordicemobility` deployed and `ready`, but `STRIPE_WEBHOOK_SECRET` was not configured. Stripe payment confirmation is therefore still webhook-inactive until Sebastian adds the real Stripe signing secret and connects the Stripe Dashboard webhook to `/.netlify/functions/stripe-webhook`.
 - The same Netlify check showed some sensitive operational variables were not marked as secret in Netlify metadata. Do not print or copy values into docs or commits. Recommended follow-up is to rotate sensitive values, mark them secret in Netlify, and then run an authenticated production smoke test.
+- Netlify voice webhooks now require `VOICE_WEBHOOK_SECRET`. Production returns
+  `503` for `/api/voice-start`, `voice-notify`, and `voice-simple` until the
+  secret is configured and the 46elks `voice_start` URL includes
+  `?secret=<VOICE_WEBHOOK_SECRET>`.
 
 ## Important files
 
@@ -233,8 +237,13 @@ Verkstaden = workshop operator.
 - Added `/api/voice-start` in `netlify/functions/voice-start.mjs` for incoming 46elks calls.
 - Current public 46elks fixed voice number is `+46101385498`.
 - Flow is Sebastian first, then Verkstaden fallback, then optional missed-call SMS if both miss the call.
+- `VOICE_WEBHOOK_SECRET` is required before Netlify voice webhooks route calls
+  or send missed-call SMS. Configure 46elks `voice_start` as
+  `https://www.nordicemobility.se/api/voice-start?secret=<VOICE_WEBHOOK_SECRET>`.
 - Sebastian/Verkstaden routing numbers must be configured through Netlify env vars; private mobile fallbacks are not stored in the repo. Default timeout is 18 seconds per person.
-- Override with Netlify env vars `VOICE_CALLER_ID`, `VOICE_SEBASTIAN_PHONE`, `VOICE_WORKSHOP_PHONE`, `VOICE_TIMEOUT_SECONDS`, and `VOICE_MISSED_SMS_TO`.
+- Override with Netlify env vars `VOICE_CALLER_ID`, `VOICE_WEBHOOK_SECRET`,
+  `VOICE_SEBASTIAN_PHONE`, `VOICE_WORKSHOP_PHONE`, `VOICE_TIMEOUT_SECONDS`, and
+  `VOICE_MISSED_SMS_TO`.
 - Setup/test notes live in `docs/46elks-voice-fallback.md`.
 
 ### Cloudflare 46elks callflow worker
