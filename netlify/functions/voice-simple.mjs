@@ -14,7 +14,14 @@ const clean = (value, max = 1000) => String(value || "").trim().slice(0, max);
 
 const authorizeVoiceWebhook = (request) => {
   const secret = clean(env("VOICE_WEBHOOK_SECRET"), 240);
-  if (!secret) return { ok: true, configured: false };
+  if (!secret) {
+    return {
+      ok: false,
+      configured: false,
+      status: 503,
+      body: { error: "VOICE_WEBHOOK_SECRET saknas i Netlify.", code: "VOICE_WEBHOOK_SECRET_MISSING" },
+    };
+  }
   const url = new URL(request.url);
   const provided = clean(
     request.headers.get("x-nordic-webhook-secret") ||
@@ -40,7 +47,7 @@ const callbackUrl = (origin) => {
 
 export default async (request) => {
   const auth = authorizeVoiceWebhook(request);
-  if (!auth.ok) return json({ error: "Unauthorized" }, 401);
+  if (!auth.ok) return json(auth.body || { error: "Unauthorized" }, auth.status || 401);
 
   const sebastian = clean(env("VOICE_PRIMARY_NUMBER") || env("VOICE_SEBASTIAN_PHONE"), 40);
   const origin = new URL(request.url).origin;
