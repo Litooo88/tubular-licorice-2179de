@@ -4,6 +4,7 @@ const { list } = require("./_shared/storage");
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const PLACEHOLDERS = new Set(["email@example.com", "test@example.com"]);
 const MISSING_BLOBS_RE = /MissingBlobsEnvironmentError|BlobsEnvironment|not been configured to use Netlify Blobs/i;
+const EXPORT_VERSION = "customer-export-v2-api-cases";
 const PHONE_PLACEHOLDERS = new Set(["saknas", "telefon saknas", "unknown", "okand", "okänd", "test"]);
 
 const normalizeEmail = (value) => clean(value, 240).toLowerCase();
@@ -226,6 +227,7 @@ exports.handler = async (event) => {
     }
 
     return json(200, {
+      version: EXPORT_VERSION,
       customers,
       emails,
       phones,
@@ -246,6 +248,7 @@ exports.handler = async (event) => {
       message: clean(error?.message || "", 240),
     });
     return json(500, {
+      version: EXPORT_VERSION,
       error: "Function error",
       code: clean(error?.code || error?.name || "CUSTOMER_EXPORT_ERROR", 80),
       customers: [],
@@ -255,7 +258,16 @@ exports.handler = async (event) => {
       phoneCount: 0,
       count: 0,
       sources: [],
+      storageHealth: {
+        ok: false,
+        storageAvailable: false,
+        unavailableSources: [],
+        warnings: ["customer-export: ovantat fel."],
+      },
       warnings: ["customer-export: ovantat fel, ingen export skapad."],
+      readOnly: true,
+      sendsEmail: false,
+      sendsSms: false,
     });
   }
 };

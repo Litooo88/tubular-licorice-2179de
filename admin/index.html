@@ -466,7 +466,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div class="communication-radar-head">
       <div>
         <h2>Kommunikationsradar &ndash; demo/test</h2>
-        <p>Detta &auml;r mockdata. Inga riktiga Gmail/SMS/samtal h&auml;mtas h&auml;r.</p>
+        <p>Detta &auml;r mockdata. Inga riktiga Gmail/SMS/samtal h&auml;mtas h&auml;r. Inget skickas.</p>
         <div class="communication-radar-status warn" id="communicationRadarStatus">Klicka p&aring; H&auml;mta demo-data f&ouml;r att ladda Kommunikationsradar.</div>
       </div>
       <div class="communication-radar-actions">
@@ -2041,10 +2041,21 @@ function customerExportWarningsText(warnings=[],options={}){
   const text=items.map((warning)=>String(warning&&warning.message||warning&&warning.code||warning||'')).join(' | ');
   if(/Customer export storage unavailable|MissingBlobsEnvironmentError|BlobsEnvironment|storage ej konfigurerad|Kundkortskallan/i.test(text)){
     return options.usesLoadedCases
-      ? ` Customer export storage unavailable. Separata exportk\u00e4llor saknas, men listan anv\u00e4nder redan laddade kundkort fr\u00e5n /api/cases. Detalj: ${text.slice(0,220)}`
-      : ` Customer export storage unavailable. Blob-k\u00e4lla saknas/ej konfigurerad. Detalj: ${text.slice(0,220)}`;
+      ? ` Kundk\u00e4lla saknas eller kunde inte l\u00e4sas i separata exportk\u00e4llor, men listan anv\u00e4nder redan laddade kundkort fr\u00e5n /api/cases. Detalj: ${text.slice(0,220)}`
+      : ` Kundk\u00e4lla saknas eller kunde inte l\u00e4sas. Blob-k\u00e4lla saknas/ej konfigurerad. Detalj: ${text.slice(0,220)}`;
   }
   return ` Varningar: ${text.slice(0,260)}`;
+}
+function customerExportSourceSummary(data={},loadedCasesExport={}){
+  const version=data.version||'customer-export version saknas';
+  const sources=Array.isArray(data.sources)?data.sources:[];
+  const active=sources.filter((source)=>source&&source.count&&!source.skipped).map((source)=>`${source.source||source.entity}:${source.count}`);
+  if(loadedCasesExport.caseCount&&(loadedCasesExport.emails.length||loadedCasesExport.phones.length))active.push(`admin_loaded_cases:${loadedCasesExport.caseCount}`);
+  const unavailable=sources.filter((source)=>source&&source.sourceUnavailable).map((source)=>source.source||source.entity).filter(Boolean);
+  const parts=[`version ${version}`];
+  parts.push(active.length?`k\u00e4lla ${active.join(', ')}`:'k\u00e4lla saknas/0 poster');
+  if(unavailable.length)parts.push(`saknas ${unavailable.join(', ')}`);
+  return parts.join(' · ');
 }
 async function exportCustomerList(){
   const button=document.getElementById('exportCustomers');
@@ -2066,11 +2077,12 @@ async function exportCustomerList(){
     const phoneCount=Number(data.phoneCount||latestCustomerPhones.length||0);
     const shownEmailCount=latestCustomerEmails.length||emailCount;
     const shownPhoneCount=latestCustomerPhones.length||phoneCount;
+    const sourceInfo=customerExportSourceSummary(data,loadedCasesExport);
     const message=shownEmailCount
-      ? `Hittade ${shownEmailCount} e-postadresser och ${shownPhoneCount} telefonnummer. Inget mail skickades.${warnings}`
+      ? `Hittade ${shownEmailCount} e-postadresser och ${shownPhoneCount} telefonnummer. ${sourceInfo}. Inget mail skickades.${warnings}`
       : shownPhoneCount
-        ? `Inga e-postadresser hittades, men ${shownPhoneCount} telefonnummer finns. Inget mail skickades.${warnings}`
-        : `Inga e-postadresser eller telefonnummer hittades. Inget mail skickades.${warnings}`;
+        ? `Inga e-postadresser hittades, men ${shownPhoneCount} telefonnummer finns. ${sourceInfo}. Inget mail skickades.${warnings}`
+        : `Kundk\u00e4lla saknas eller kunde inte l\u00e4sas. Inga e-postadresser eller telefonnummer hittades. ${sourceInfo}. Inget mail skickades.${warnings}`;
     showCustomerExportStatus(message,shownEmailCount?'':'warn');
   }catch(error){
     const loadedCasesExport=customerExportFromLoadedCases();
@@ -2080,9 +2092,9 @@ async function exportCustomerList(){
     customerExportEmailsEl.value=latestCustomerEmails.join('\n');
     customerExportPhonesEl.value=latestCustomerPhones.join('\n');
     if(latestCustomerEmails.length||latestCustomerPhones.length){
-      showCustomerExportStatus(`Export-function kunde inte l\u00e4sas, men ${latestCustomerPhones.length} telefonnummer och ${latestCustomerEmails.length} e-postadresser finns i redan laddade kundkort. Inget mail skickades. Fel: ${error.message}`,'warn');
+      showCustomerExportStatus(`Kundk\u00e4lla saknas eller kunde inte l\u00e4sas i export-function, men ${latestCustomerPhones.length} telefonnummer och ${latestCustomerEmails.length} e-postadresser finns i redan laddade kundkort. Inget mail skickades. Fel: ${error.message}`,'warn');
     }else{
-      showCustomerExportStatus(`Fel: ${error.message}`,'bad');
+      showCustomerExportStatus(`Kundk\u00e4lla saknas eller kunde inte l\u00e4sas. Fel: ${error.message}`,'bad');
     }
   }finally{
     button.disabled=false;

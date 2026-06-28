@@ -32,6 +32,25 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~15:18Z — Codex — KLAR
+
+- **Branch:** `fix/admin-operational-stability-audit`
+- **Gjorde:** Stabiliserade admin som operativ kontrollpanel utan att ta bort
+  paneler eller ersätta live-funktioner med mock. Kundexport fick tydligare
+  versions-/källstatus, Kommunikationsradar säger uttryckligen att inget
+  skickas, och operativ status/SMS-flöden dokumenterades.
+- **Filer/områden:** Adminpanelen, kundexport, AI Kontrolltorn, demo/test-radar,
+  live samtal, missade samtal, SMS/chattflöden och dokumentation.
+- **Tester:** Baseline: `npm run build`, `npm run verify:checkout-products`,
+  `cd nemob-callflow && npm run check` ✅. Efter ändring: `node --check
+  netlify/functions/customer-export.js`, workshop JSON-parse, `npm run build`,
+  `npm run verify:checkout-products`, `cd nemob-callflow && npm run check`,
+  lokal handler-smoke och statisk admin-smoke ✅.
+- **Nästa / överlämning:** PR/merge om GitHub är grön. Fortsatt extern config
+  kvar: `VOICE_WEBHOOK_SECRET` och `STRIPE_WEBHOOK_SECRET`.
+- **Varning:** Poppa inte stashen. Inga SMS/mail, inga production-writes, ingen
+  Supabase och ingen Claude/Next-merge.
+
 ### 2026-06-28 ~15:02Z — Codex — KLAR
 
 - **Branch:** `main`
