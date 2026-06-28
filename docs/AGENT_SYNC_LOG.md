@@ -32,6 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~04:58Z — Codex — KLAR
+
+- **Branch:** `codex/anonymize-missed-call-doc-numbers`
+- **Gjorde:** Anonymiserar gamla exempelnummer i missade-samtal-workflow så
+  kund-/privatnummer inte ligger i repo.
+- **Filer/områden:** `docs/MISSED_CALL_FOLLOWUP_WORKFLOW.md`, sync-logg.
+- **Tester:** Riktad `rg` efter gamla nummer ✅. Docs-only; build ej körd.
+- **Nästa / överlämning:** PR/merge om GitHub är grön.
+- **Varning:** Inga SMS/mail, inga production-writes, stashen poppas inte.
+
 ### 2026-06-28 ~04:52Z — Codex — KLAR
 
 - **Branch:** `codex/remove-hardcoded-voice-fallbacks`

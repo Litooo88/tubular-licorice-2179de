@@ -24,13 +24,13 @@ skickar något automatiskt.
 Använd dessa endast för lokal/manuell test, inte som aktiv mockdata i UI:
 
 ```text
-+46702102025
-+46702102025
-+46707544800
-+46704923079
-0700593391
-+46700731460
-0739973717
++46700000001
++46700000001
++46700000002
++46700000003
+0700000004
++46700000005
+0700000006
 ```
 
 Förväntat: 7 rader, 7 nummerträffar, 6 unika nummer och 1 återkommande nummer.
