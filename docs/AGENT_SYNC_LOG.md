@@ -32,6 +32,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~04:52Z — Codex — KLAR
+
+- **Branch:** `codex/remove-hardcoded-voice-fallbacks`
+- **Gjorde:** Tar bort hårdkodade privata telefonfallbacks ur voice-flöden och
+  låter Netlify env vara enda källa för staff-routing/notify.
+- **Filer/områden:** `voice-simple.mjs`, `voice-notify.mjs`,
+  `call-dashboard.mjs`, sync-logg.
+- **Tester:** `node --check` för berörda functions ✅, lokal voice-smoke utan
+  configured primary/utan secret/fel secret/rätt secret ✅, notify utan
+  mottagare gav `not_configured` utan SMS ✅, `npm run build` ✅,
+  `npm run verify:checkout-products` ✅, `cd nemob-callflow && npm run check`
+  ✅, `rg` hittade inga hårdkodade privata nummer ✅.
+- **Nästa / överlämning:** PR/merge om GitHub är grön.
+- **Varning:** Inga SMS/mail, inga production-writes, stashen poppas inte.
+
 ### 2026-06-28 ~04:50Z — Codex — KLAR
 
 - **Branch:** `codex/update-case-media-auth-docs`

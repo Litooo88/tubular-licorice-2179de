@@ -45,7 +45,7 @@ const smsConfig = () => ({
   username: env("ELKS_USERNAME") || env("SMS_API_USERNAME"),
   password: env("ELKS_PASSWORD") || env("SMS_API_PASSWORD"),
   from: clean(env("SMS_FROM") || "NordicEM", 11),
-  to: clean(env("VOICE_NOTIFY_TO") || "+46700243319", 40),
+  to: clean(env("VOICE_NOTIFY_TO") || env("VOICE_MISSED_SMS_TO"), 40),
 });
 
 const sendInternalSms = async (message) => {
