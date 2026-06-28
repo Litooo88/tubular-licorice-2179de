@@ -127,7 +127,8 @@ Ingen ny kund- eller betaldata får läggas där.
 - Masterliknande admin-token ligger i browserns `localStorage`.
 - Auth-, env- och storage-hjälpare är duplicerade mellan funktioner.
 - Schemalösa Blob-dokument saknar migrationskontroll.
-- Publik media-GET och publik booking-env-status behöver säkerhetsgranskning.
+- Publik media-GET och publik booking-env-status har säkerhetsgranskats och ska
+  vara adminskyddade med `x-admin-token`.
 - Publika intake-endpoints behöver rate limiting/spamskydd.
 - Två parallella telefoniimplementationer finns: Netlify fallback och
   Cloudflare Worker.
