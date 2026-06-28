@@ -32,6 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~15:00Z — Codex — KLAR
+
+- **Branch:** `codex/update-voice-secret-handoff`
+- **Gjorde:** Uppdaterar durable handoff efter PR #75 så framtida agenter ser att
+  Netlify voice-webhooks kräver `VOICE_WEBHOOK_SECRET`.
+- **Filer/områden:** `docs/codex-handoff.md`, sync-logg.
+- **Tester:** Docs-only; production no-secret smoke för voice endpoints gav 503.
+- **Nästa / överlämning:** PR/merge om GitHub är grön.
+- **Varning:** Inga SMS/mail, inga production-writes, stashen poppas inte.
+
 ### 2026-06-28 ~05:12Z — Codex — KLAR
 
 - **Branch:** `codex/require-voice-webhook-secret`
