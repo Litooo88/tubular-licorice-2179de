@@ -141,15 +141,22 @@ const loadBlobMap = async (storeName) => {
   return { store, items };
 };
 
+const staffVoiceNumbers = () => ({
+  workshop: normalizePhone(env("VOICE_WORKSHOP_PHONE")),
+  sebastian: normalizePhone(env("VOICE_SEBASTIAN_PHONE") || env("VOICE_PRIMARY_NUMBER")),
+});
+
 const answeredBy = (call) => {
   const success = (Array.isArray(call.legs) ? call.legs : []).find((leg) => leg.state === "success");
   if (!success) {
     if (Array.isArray(call.recordings) && call.recordings.length) return { key: "voicemail", label: "Röstmeddelande" };
     return { key: "missed", label: "Missad/ej svar" };
   }
-  if (success.to === "+46722607753") return { key: "workshop", label: "Verkstaden" };
-  if (success.to === "+46700243319") return { key: "sebastian", label: "Sebastian" };
-  return { key: "other", label: success.to || "Annan" };
+  const successTo = normalizePhone(success.to);
+  const staff = staffVoiceNumbers();
+  if (staff.workshop && successTo === staff.workshop) return { key: "workshop", label: "Verkstaden" };
+  if (staff.sebastian && successTo === staff.sebastian) return { key: "sebastian", label: "Sebastian" };
+  return { key: "other", label: successTo || "Annan" };
 };
 
 const ivrChoice = (call) => {
