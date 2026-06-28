@@ -32,6 +32,19 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~01:45Z — Codex — KLAR
+
+- **Branch:** `fix/optimize-root-assets`
+- **Gjorde:** Stängde kvarvarande prestandafynd: optimerade root-logotyperna och
+  tar bort orefererade stora root-PNG:er.
+- **Filer/områden:** `logo.png`, `nordic_logo_transparent.png`,
+  orefererade root-bilder, sync-logg.
+- **Tester:** Loggorna verifierade 512x512 och byte-identiska ✅, oanvända
+  root-PNG:er har inga referenser ✅, `npm run build` ✅,
+  `npm run verify:checkout-products` ✅, `cd nemob-callflow && npm run check`
+  ✅.
+- **Säkerhet:** Inga SMS/mail, inga production-writes, stashen poppas inte.
+
 ### 2026-06-28 ~01:25Z — Codex — KLAR
 
 - **Branch:** `fix/prices-json-ld`
