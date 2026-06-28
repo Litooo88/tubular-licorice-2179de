@@ -5,6 +5,38 @@ Branch: `audit/admin-system-operational-map`
 Scope: read-only systemrevision av Nordic E-Mobility admin, bookingflöde och
 de viktigaste Netlify Functions.
 
+## Statusuppdatering 2026-06-28
+
+Denna rapport är en historisk snapshot från innan hardening-PR:erna #50-#64.
+Fynden i "Kort slutsats", datakartan och "Rekommenderad nästa fixordning" ska
+därför inte läsas som aktuella buggar utan att kontrolleras mot koden.
+
+Följande centrala auditfynd är nu åtgärdade i `main`:
+
+- Adminens huvud-KPI använder operativa buckets som "Gör nu", "Väntar kund",
+  "Väntar del", "Klara att hämta", "Klara att fakturera/betala" och
+  "Ej arkiverade" i stället för att göra "Aktiva" till huvudsignal.
+- AI Kontrolltorn och `ai-daily-brief` använder `/api/cases` som primär
+  ärendekälla och behandlar Blob-källor som optional/best-effort.
+- Live samtalsdashboard visar "samtalsimport ej kopplad" när 46elks/call-log
+  saknas och ska inte längre visa falska live-siffror.
+- Kommunikationsradar är märkt som demo/test och separerad från operativa
+  kundärenden.
+- `ai-sms-draft`, `ai-quote` och `ai-daily-brief` har dry-run/read-only-stöd för
+  production smoke utan writes.
+- Timeline och SMS-utkast faller tillbaka kontrollerat när Blob-källor saknas.
+- Publika intake-flöden har honeypot/rate-limit/idempotency-skydd.
+- Admin-tokenjämförelse är timing-safe i både CJS-helpern och kvarvarande
+  MJS-adminfunctions.
+
+Kvarvarande kända blocker är utanför applikationskoden:
+
+- `STRIPE_WEBHOOK_SECRET` saknas fortfarande i Netlify production, så signerad
+  Stripe webhook är kodmässigt klar men production-inaktiv tills Sebastian
+  lägger in rätt signing secret och kopplar Stripe Dashboard webhooken.
+- Vissa Netlify env-vars behöver roteras och markeras som secret i Netlify.
+  Skriv aldrig ut värden i terminalrapport, docs eller commits.
+
 ## Regler för revisionen
 
 - Inga SMS skickades.
@@ -404,6 +436,11 @@ som huvud-KPI.
   optional/future sources.
 
 ## Rekommenderad nästa fixordning
+
+Historisk lista från första audit-tillfället. Se statusuppdateringen högst upp:
+punkterna 1-7 är implementerade eller omhändertagna i efterföljande PR:er
+#50-#64. Använd inte denna lista som aktuell backlog utan ny kontroll mot
+`main`.
 
 1. Byt admin-KPI:n "Aktiva" till ny KPI-modell och döp om totalen till
    "Ej arkiverade" om den ska finnas kvar.

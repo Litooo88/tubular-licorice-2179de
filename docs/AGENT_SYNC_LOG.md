@@ -32,6 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~00:20Z — Codex — KLAR
+
+- **Branch:** `docs/update-admin-audit-resolution`
+- **Gjorde:** Uppdaterade admin-auditens status så gamla "trasigt"/nästa-steg-fynd
+  inte längre kan misstas för nuläge efter PR #50-#64.
+- **Filer/områden:** `docs/ADMIN_SYSTEM_AUDIT_2026_06.md` och sync-logg.
+- **Tester:** Inga buildtester körda; markdown-only.
+- **Säkerhet:** Dokumentation endast. Inga SMS/mail, inga production-writes,
+  stashen poppas inte.
+
 ### 2026-06-27 ~19:35Z — Codex — KLAR
 
 - **Branch:** `docs/netlify-env-hardening-followup`
