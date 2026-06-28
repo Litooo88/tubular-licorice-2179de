@@ -32,6 +32,17 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~04:42Z — Codex — KLAR
+
+- **Branch:** `codex/fix-product-page-redirect`
+- **Gjorde:** Fixar kvarvarande redirect-konflikt där `_redirects` pekar gamla
+  `/product-page/*` mot hemhash medan `netlify.toml` pekar mot katalogen.
+- **Filer/områden:** `_redirects`, sync-logg.
+- **Tester:** `npm run build` ✅, `npm run verify:checkout-products` ✅,
+  `cd nemob-callflow && npm run check` ✅.
+- **Nästa / överlämning:** PR/merge om GitHub är grön.
+- **Varning:** Inga SMS/mail, inga production-writes, stashen poppas inte.
+
 ### 2026-06-28 ~01:45Z — Codex — KLAR
 
 - **Branch:** `fix/optimize-root-assets`
