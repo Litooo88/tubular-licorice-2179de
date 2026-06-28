@@ -131,8 +131,8 @@ Ingen ny kund- eller betaldata får läggas där.
 - Publika intake-endpoints behöver rate limiting/spamskydd.
 - Två parallella telefoniimplementationer finns: Netlify fallback och
   Cloudflare Worker.
-- `nordic-emobility-site/` är en äldre nested kopia och riskerar felaktiga
-  ändringar.
+- Den äldre nested kopian `nordic-emobility-site/` togs bort ur `main` efter
+  hardening-rundan och är ignorerad för att inte råka återinföras.
 - Äldre docs och vissa texter kan vara historiska eller inaktuella.
 - Root-build testar inte automatiskt hela Cloudflare Worker-delen.
 

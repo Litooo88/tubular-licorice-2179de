@@ -32,6 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~01:05Z — Codex — KLAR
+
+- **Branch:** `fix/remove-nested-site-copy`
+- **Gjorde:** Tog bort tracked äldre nested `nordic-emobility-site/`-kopia från
+  deploy-repot och lägger ignore så den inte råkar återinföras.
+- **Filer/områden:** nested kopia, `.gitignore`, recovery docs.
+- **Tester:** `npm run build` ✅, `npm run verify:checkout-products` ✅,
+  `cd nemob-callflow && npm run check` ✅.
+- **Säkerhet:** Inga SMS/mail, inga production-writes, stashen poppas inte.
+
 ### 2026-06-28 ~00:45Z — Codex — KLAR
 
 - **Branch:** `fix/voice-webhook-timing-safe`
