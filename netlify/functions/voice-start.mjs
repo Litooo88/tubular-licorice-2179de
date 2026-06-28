@@ -1,3 +1,5 @@
+import { tokenMatches } from "./_shared/admin-auth.mjs";
+
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
     status,
@@ -23,7 +25,7 @@ const authorizeVoiceWebhook = (request) => {
       url.searchParams.get("token"),
     240,
   );
-  return { ok: provided === secret, configured: true };
+  return { ok: tokenMatches(secret, provided), configured: true };
 };
 
 const normalizePhone = (value) => {

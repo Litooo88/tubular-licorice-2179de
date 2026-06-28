@@ -32,6 +32,19 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~00:45Z — Codex — KLAR
+
+- **Branch:** `fix/voice-webhook-timing-safe`
+- **Gjorde:** Hårdade 46elks voice-webhook secret-jämförelse så
+  `VOICE_WEBHOOK_SECRET` inte jämförs med vanlig strängjämförelse.
+- **Filer/områden:** `netlify/functions/voice-start.mjs`,
+  `netlify/functions/voice-notify.mjs`, auth-helper och tester.
+- **Tester:** `node --check` på berörda filer ✅, lokal voice-webhook
+  auth-smoke utan/fel/rätt secret ✅, `npm run build` ✅,
+  `npm run verify:checkout-products` ✅, `cd nemob-callflow && npm run check`
+  ✅.
+- **Säkerhet:** Inga SMS/mail, inga production-writes, stashen poppas inte.
+
 ### 2026-06-28 ~00:20Z — Codex — KLAR
 
 - **Branch:** `docs/update-admin-audit-resolution`

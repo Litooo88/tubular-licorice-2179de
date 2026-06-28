@@ -1,5 +1,7 @@
 // 46elks whenhangup callback - sends an internal missed/answered call SMS when configured.
 
+import { tokenMatches } from "./_shared/admin-auth.mjs";
+
 const env = (name) => {
   try {
     return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
@@ -20,7 +22,7 @@ const authorizeVoiceWebhook = (request) => {
       url.searchParams.get("token"),
     240,
   );
-  return { ok: provided === secret, configured: true };
+  return { ok: tokenMatches(secret, provided), configured: true };
 };
 
 const parsePayload = async (request) => {
