@@ -32,6 +32,17 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~01:25Z — Codex — KLAR
+
+- **Branch:** `fix/prices-json-ld`
+- **Gjorde:** Lade JSON-LD/structured data på publika `/priser/` för att stänga
+  kvarvarande SEO-fynd från handoffen.
+- **Filer/områden:** `priser/index.html`, sync-logg.
+- **Tester:** JSON-LD parse-smoke ✅, `npm run build` ✅,
+  `npm run verify:checkout-products` ✅, `cd nemob-callflow && npm run check`
+  ✅.
+- **Säkerhet:** Inga SMS/mail, inga production-writes, stashen poppas inte.
+
 ### 2026-06-28 ~01:05Z — Codex — KLAR
 
 - **Branch:** `fix/remove-nested-site-copy`
