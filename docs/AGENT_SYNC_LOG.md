@@ -32,6 +32,26 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~15:35Z — Codex — KLAR
+
+- **Branch:** `main` för triage; ny fix-branch skapas först när en verifierad
+  bugg/issue kräver kodändring.
+- **Gjorde:** Fortsatt GitHub-triage enligt målet att hitta öppna PR:ar/issues,
+  fixa verifierade buggar och PR/merge:a tills funktionerna är verifierade.
+  GitHub connector + rå GitHub API visade 0 öppna PR:ar och 0 öppna issues.
+  Verifierade även production no-token-skydd och admin-panelmarkörer.
+- **Filer/områden:** GitHub PR/issues, admin/API/Netlify functions beroende på
+  vad triagen visar.
+- **Tester:** `node --check` på centrala Netlify functions ✅, statisk
+  admin-smoke ✅, `npm run build` ✅, `npm run verify:checkout-products` ✅,
+  `cd nemob-callflow && npm run check` ✅. Production read-only/no-token:
+  `/admin/` 200 med huvudpaneler ✅, authade functions utan token 401 ✅.
+- **Nästa / överlämning:** Inga öppna GitHub-items att fixa just nu. Kvarvarande
+  kända blockerare är extern config: `VOICE_WEBHOOK_SECRET` och
+  `STRIPE_WEBHOOK_SECRET`.
+- **Varning:** Poppa inte stashen. Inga SMS/mail, inga production-writes, ingen
+  Supabase och ingen Claude/Next-merge.
+
 ### 2026-06-28 ~15:18Z — Codex — KLAR
 
 - **Branch:** `fix/admin-operational-stability-audit`
