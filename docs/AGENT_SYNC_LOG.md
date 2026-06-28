@@ -32,6 +32,17 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~04:50Z — Codex — KLAR
+
+- **Branch:** `codex/update-case-media-auth-docs`
+- **Gjorde:** Rättar kvarvarande docs som påstår att `case-media` är publik,
+  efter verifiering att production ger 401 utan token.
+- **Filer/områden:** API/safety docs, sync-logg.
+- **Tester:** Production no-token smoke för `/api/case-media/test-case/test-media`
+  gav 401 ✅. Docs-only; build ej körd.
+- **Nästa / överlämning:** PR/merge om GitHub är grön.
+- **Varning:** Inga SMS/mail, inga production-writes, stashen poppas inte.
+
 ### 2026-06-28 ~04:46Z — Codex — KLAR
 
 - **Branch:** `codex/protect-booking-env-status`

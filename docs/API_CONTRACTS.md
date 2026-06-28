@@ -30,7 +30,8 @@ Adminskyddade endpoints med `x-admin-token`:
 
 Övrigt:
 
-- `GET /api/case-media/:caseId/:mediaId` är idag publik.
+- `GET /api/case-media/:caseId/:mediaId` kräver `x-admin-token`; ärendebilder
+  är interna och får inte serveras publikt.
 - `GET /api/booking-env-status` kräver `x-admin-token` och får inte exponera
   integrationsdiagnostik eller publicConfig utan admin-auth.
 - `netlify/functions/cases.mjs` använder avsiktligt disabled rescue-routes.
