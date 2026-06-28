@@ -2,5 +2,5 @@
 /nordic-emobility-site  /  301!
 /nordic-emobility-site/*  /:splat  301!
 /book-online  /book-online/  301
-/product-page/*  /#produkter  301
+/product-page/*  /nya-elscootrar/  301
 /bookings-checkout/*  /book-online/  301
