@@ -31,7 +31,8 @@ Adminskyddade endpoints med `x-admin-token`:
 Övrigt:
 
 - `GET /api/case-media/:caseId/:mediaId` är idag publik.
-- `GET /api/booking-env-status` är idag publik.
+- `GET /api/booking-env-status` kräver `x-admin-token` och får inte exponera
+  integrationsdiagnostik eller publicConfig utan admin-auth.
 - `netlify/functions/cases.mjs` använder avsiktligt disabled rescue-routes.
 - Cloudflare Worker-routes dokumenteras i `nemob-callflow/README.md`.
 

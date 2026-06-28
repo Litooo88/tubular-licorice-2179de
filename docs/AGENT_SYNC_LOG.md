@@ -32,6 +32,20 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-28 ~04:46Z — Codex — KLAR
+
+- **Branch:** `codex/protect-booking-env-status`
+- **Gjorde:** Stänger kvarvarande publik config-disclosure där
+  `/api/booking-env-status` svarar 200 utan admin-token.
+- **Filer/områden:** `netlify/functions/booking-env-status.mjs`,
+  `admin/index.html`, relevanta docs, sync-logg.
+- **Tester:** `node --check netlify/functions/booking-env-status.mjs` ✅,
+  lokal handler-smoke utan/fel/rätt token ✅, `npm run build` ✅,
+  `npm run verify:checkout-products` ✅, `cd nemob-callflow && npm run check`
+  ✅.
+- **Nästa / överlämning:** PR/merge om GitHub är grön.
+- **Varning:** Inga SMS/mail, inga production-writes, stashen poppas inte.
+
 ### 2026-06-28 ~04:42Z — Codex — KLAR
 
 - **Branch:** `codex/fix-product-page-redirect`

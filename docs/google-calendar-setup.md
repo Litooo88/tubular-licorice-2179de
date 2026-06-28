@@ -120,7 +120,7 @@ Production-varde racker for live-sidan.
 
 ## Steg 9: Kontrollera status
 
-Oppna:
+Oppna adminskyddat med `x-admin-token`:
 
 ```text
 https://www.nordicemobility.se/api/booking-env-status

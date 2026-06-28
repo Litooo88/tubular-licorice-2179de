@@ -52,17 +52,12 @@ const expected = [
 ];
 
 export default async (request) => {
+  const auth = requireAdmin(request);
+  if (!auth.ok) return auth.response;
+
   const publicConfig = {
     reviewUrl: clean(env("GOOGLE_REVIEW_URL"), 1000),
   };
-  const auth = requireAdmin(request);
-  if (!auth.ok) {
-    return json({
-      ok: true,
-      publicConfig,
-      diagnosticsAvailable: false,
-    });
-  }
   const status = Object.fromEntries(expected.map((key) => [key, Boolean(env(key))]));
   return json({
     ok: true,

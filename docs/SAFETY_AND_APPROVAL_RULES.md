@@ -56,7 +56,7 @@ Autoskick ska vara transaktionella, server-side, loggade och idempotenta.
 - Auth- och storage-hjälpare är duplicerade mellan Netlify-funktioner.
 - `GET /api/case-media/:caseId/:mediaId` sker före admin-auth och svarar med
   publik cache-header.
-- `/api/booking-env-status` är publik och visar vilka integrationer som är
-  konfigurerade.
+- `/api/booking-env-status` ska vara adminskyddad. Den får endast visa
+  integrationsstatus och publicConfig efter giltig `x-admin-token`.
 
 Dessa är återhämtnings- och hardeningpunkter, inte rekommenderade mönster.

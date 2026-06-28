@@ -802,7 +802,9 @@ function money(value){return new Intl.NumberFormat('sv-SE',{style:'currency',cur
 function reviewUrl(){return String(adminPublicConfig.reviewUrl||'').trim();}
 async function loadPublicConfig(){
   try{
-    const response=await fetch('/api/booking-env-status');
+    const token=tokenInput.value.trim();
+    if(!token)return;
+    const response=await fetch('/api/booking-env-status',{headers:{'x-admin-token':token}});
     const data=await response.json().catch(()=>({}));
     if(response.ok&&data.publicConfig&&data.publicConfig.reviewUrl){
       adminPublicConfig.reviewUrl=String(data.publicConfig.reviewUrl).trim();
