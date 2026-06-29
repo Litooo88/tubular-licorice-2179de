@@ -1,4 +1,4 @@
-const CACHE_NAME = "nordic-admin-shell-v2";
+const CACHE_NAME = "nordic-admin-shell-v3";
 const SHELL_FILES = ["/admin/", "/admin/index.html", "/logo.png", "/nordic_logo_transparent.png"];
 
 self.addEventListener("install", (event) => {
@@ -17,6 +17,9 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
+  // Only handle same-scheme web requests. Browser extensions issue
+  // chrome-extension:// requests that the Cache API rejects on put().
+  if (url.protocol !== "http:" && url.protocol !== "https:") return;
   if (url.pathname.startsWith("/api/")) return;
   if (url.pathname === "/admin/" || url.pathname === "/admin/index.html") {
     event.respondWith(
