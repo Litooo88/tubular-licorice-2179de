@@ -32,6 +32,27 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-30 — Claude Code — KLAR (Service worker cachade function-svar)
+
+- **Branch:** `fix/sw-no-cache-functions` → PR mot `main` (öppen, ej mergad).
+- **VIKTIG INSIKT:** Deployen fungerar (Netlify visade `main@675ba35 Published`).
+  Anledningen att production "körde gammal kod" var att **admin/service-worker.js
+  cachade `/.netlify/functions/*`-svar cache-first** — den exkluderade `/api/`
+  men inte `/.netlify/`. Därför var `/api/cases` färsk (131) men `storage-health`
+  /`customer-export` infrusna på sina första (v1) svar i browsern.
+- **Gjorde:** Skrev om SW:s fetch-handler: hanterar bara same-origin GET, cachar
+  ALDRIG `/api/`- eller `/.netlify/`-svar, bumpade `CACHE_NAME` v3→v4 (rensar
+  gamla infrusna svar vid activate).
+- **Filer:** `admin/service-worker.js`. Ingen datakod, inga writes.
+- **Tester:** `node --check` ✅. (Build/verify ej relevant — bara SW.)
+- **Nästa / överlämning:** Efter merge+deploy måste varje admin-browser hämta nya
+  SW:n: ladda om `/admin/` 1–2 ggr, eller DevTools → Application → Service
+  Workers → Unregister + reload. Då rensas v3-cachen och alla function-svar blir
+  live. Därefter: PR 1 (operativ chatt/SMS). Alla Blobs/v2-fixar är redan på main
+  och live — det var bara SW-cachen som dolde dem.
+- **Varning till Codex:** SW cachar inte längre API/function-svar — räkna inte
+  med SW-cache för dynamisk data.
+
 ### 2026-06-30 — Claude Code — KLAR (PR 0 / Steg 2b: connectLambda för v1-Blobs)
 
 - **Branch:** `fix/blobs-connect-lambda-v1` → PR mot `main` (öppen, ej mergad).
