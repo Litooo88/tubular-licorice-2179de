@@ -1,5 +1,5 @@
 const { clean, json, requireAdmin } = require("./_shared/http");
-const { list } = require("./_shared/storage");
+const { connectBlobs, list } = require("./_shared/storage");
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i;
 const PLACEHOLDERS = new Set(["email@example.com", "test@example.com"]);
@@ -167,6 +167,7 @@ const readAdminCasesSource = async (event, emailMap, phoneMap, warnings) => {
 };
 
 exports.handler = async (event) => {
+  connectBlobs(event);
   try {
     const auth = requireAdmin(event);
     if (!auth.ok) return auth.response;

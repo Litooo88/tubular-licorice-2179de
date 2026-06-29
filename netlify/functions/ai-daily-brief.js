@@ -1,5 +1,5 @@
 const { clean, env, header, json, parseBody, requireAdmin } = require("./_shared/http");
-const { list, put } = require("./_shared/storage");
+const { connectBlobs, list, put } = require("./_shared/storage");
 const { assessRisk } = require("./_shared/operator");
 
 const MISSING_BLOBS_RE = /MissingBlobsEnvironmentError|BlobsEnvironment|not been configured to use Netlify Blobs/i;
@@ -282,6 +282,7 @@ const buildBrief = ({ body, cases, calls, drafts, parts, warnings, sources }) =>
 };
 
 exports.handler = async (event) => {
+  connectBlobs(event);
   let writeDryRun = false;
   try {
     const body = parseBody(event);

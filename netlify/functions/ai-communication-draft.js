@@ -1,5 +1,5 @@
 const { clean, json, parseBody, requireAdmin } = require("./_shared/http");
-const { appendCaseEvent, get, put } = require("./_shared/storage");
+const { connectBlobs, appendCaseEvent, get, put } = require("./_shared/storage");
 const {
   caseEventPreviewFor,
   draftForEvent,
@@ -27,6 +27,7 @@ const eventFromBody = async (body = {}, dryRun = false) => {
 };
 
 exports.handler = async (event) => {
+  connectBlobs(event);
   let dryRun = false;
   try {
     const auth = requireAdmin(event);

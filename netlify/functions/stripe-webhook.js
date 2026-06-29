@@ -1,6 +1,6 @@
 const Stripe = require("stripe");
 const { clean, env, header, json } = require("./_shared/http");
-const { put } = require("./_shared/storage");
+const { connectBlobs, put } = require("./_shared/storage");
 
 const stripe = () => Stripe(env("STRIPE_SECRET_KEY") || "sk_test_placeholder");
 
@@ -35,6 +35,7 @@ const checkoutPaymentRecord = (session, stripeEvent) => {
 };
 
 exports.handler = async (event) => {
+  connectBlobs(event);
   if (event.httpMethod !== "POST") return json(405, { error: "Method not allowed" });
 
   const webhookSecret = env("STRIPE_WEBHOOK_SECRET");

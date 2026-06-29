@@ -1,5 +1,5 @@
 const { json, parseBody, requireAdmin, clean } = require("./_shared/http");
-const { appendCaseEvent, get, put } = require("./_shared/storage");
+const { connectBlobs, appendCaseEvent, get, put } = require("./_shared/storage");
 const { assessRisk, deterministicSmsDraft, intentFromInput, tryOpenAiJson, withSmsSignature } = require("./_shared/operator");
 
 const isDryRunRequest = (event, body) => {
@@ -11,6 +11,7 @@ const isDryRunRequest = (event, body) => {
 };
 
 exports.handler = async (event) => {
+  connectBlobs(event);
   let dryRun = false;
   try {
     const auth = requireAdmin(event);

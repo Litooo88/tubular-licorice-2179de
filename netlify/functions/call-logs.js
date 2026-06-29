@@ -1,5 +1,5 @@
 const { clean, json, parseBody, requireAdmin } = require("./_shared/http");
-const { appendCaseEvent, list, put } = require("./_shared/storage");
+const { connectBlobs, appendCaseEvent, list, put } = require("./_shared/storage");
 
 const isReadOnlyRequest = (event, body = {}) =>
   body.dryRun === true ||
@@ -16,6 +16,7 @@ const storageWarning = (error, source = "call_logs") => ({
 });
 
 exports.handler = async (event) => {
+  connectBlobs(event);
   let readOnly = false;
   try {
     const auth = requireAdmin(event);
