@@ -57,6 +57,28 @@ löpande "konversation".
 - **Varning till Codex:** Rör inte `fix/storage-health-v2-blobs` eller
   `fix/admin-panel-cleanup` (PR #79). Konvertera inte samma v1-functions
   parallellt — koordinera här först.
+### 2026-06-29 — Claude Code — KLAR (Steg 1 av admin-audit)
+
+- **Branch:** `fix/admin-panel-cleanup` →
+  [PR #79](https://github.com/Litooo88/tubular-licorice-2179de/pull/79) (öppen,
+  ej mergad).
+- **Gjorde:** Full audit av admin-panelen på begäran. Steg 1 = säkra städfixar:
+  tog bort död kod i `loadAiControlTower`, enade admin-token-källan
+  (`aiFunctionFetch` + `api()`), tog bort dubbel `call-logs`-probe, förtydligade
+  att `cases.mjs` är disablad/legacy (inte live `/api/cases`).
+- **Filer/områden:** `admin/index.html`, `netlify/functions/cases.mjs`. Ingen
+  datakod, inga writes, inga SMS/mail.
+- **Tester:** `node --check cases.mjs` ✅, inline-JS syntaxkoll 0 fel ✅,
+  `npm run build` ✅, `verify:checkout-products` ✅, `nemob-callflow check` ✅.
+- **Nästa / överlämning:** Steg 2 (Blobs i production) är **blockerat** tills
+  Sebastian kör `storage-health` + `/api/cases`-count från admin-browsern — det
+  avgör om `MissingBlobsEnvironmentError` är global (admin visar cache) eller
+  bara saknade stores. Identiskt `getStore`-anrop i `workshop-cases.mjs` (funkar)
+  och i nya CJS-functions (failar) ⇒ skillnaden är runtime/deploy, inte kod.
+  Steg 3 = call-log-ingest från Cloudflare D1 (`call_log`)/46elks; Netlify
+  `call-logs.js` läser i dag Blob-storen `call-logs` som aldrig fylls.
+- **Varning till Codex:** Rör inte `fix/admin-panel-cleanup`. Om du också ändrar
+  `admin/index.html`, koordinera här först — vi vill inte krocka i samma fil.
 
 ### 2026-06-28 ~15:35Z — Codex — KLAR
 
