@@ -1752,7 +1752,8 @@ function showAiStatus(message,state=''){
   aiControlStatusEl.textContent=message;
 }
 function aiAdminToken(){
-  return String(localStorage.getItem('nordicAdminToken')||'').trim();
+  const live=tokenInput&&typeof tokenInput.value==='string'?tokenInput.value.trim():'';
+  return live||String(localStorage.getItem('nordicAdminToken')||'').trim();
 }
 async function aiFunctionFetch(path,{method='GET',body}={}){
   const token=aiAdminToken();
@@ -2445,31 +2446,6 @@ async function loadAiControlTower(){
     const sourceWarning=aiSourceWarningText(data);
     const mode=data.localFallback?'lokal /api/cases-fallback':data.dryRun?'mock/dry-run-l\u00e4ge':data.brief&&data.brief.aiMode||'AI-l\u00e4ge';
     showAiStatus(`Senast uppdaterad ${new Date().toLocaleTimeString('sv-SE')} - ${mode}.${sourceWarning}`,data.dryRun||sourceWarning?'warn':'');
-    return;
-    const brief=data.brief||{};
-    const metrics=brief.metrics||{};
-    const priorities=data.topPriorities||brief.priority||[];
-    const missedCalls=data.missedCallsToFollowUp||brief.missedCalls||[];
-    const riskCases=data.riskCases||brief.riskCases||[];
-    const partsToOrder=data.partsToOrder||brief.openPartNeeds||[];
-    const readyForPayment=data.readyForPayment||brief.readyInvoice||[];
-    const salesOpportunities=data.salesOpportunities||[];
-    aiSummaryEl.textContent=data.summary||'Ingen sammanfattning tillgänglig.';
-    document.getElementById('aiPriorityToday').textContent=priorities.length;
-    document.getElementById('aiMissedCalls').textContent=missedCalls.length;
-    document.getElementById('aiWaitingCustomer').textContent=metrics.waitingCustomer||0;
-    document.getElementById('aiWaitingParts').textContent=metrics.waitingParts||0;
-    document.getElementById('aiReadyInvoice').textContent=readyForPayment.length;
-    document.getElementById('aiRiskCases').textContent=riskCases.length;
-    document.getElementById('aiRevenueToday').textContent=money(metrics.possibleRevenueToday??data.cashToday??0);
-    aiPriorityListEl.innerHTML=aiListHtml(priorities);
-    aiRiskListEl.innerHTML=aiListHtml(riskCases,true);
-    aiMissedCallsListEl.innerHTML=aiListHtml(missedCalls);
-    aiPartsListEl.innerHTML=aiListHtml(partsToOrder);
-    aiReadyPaymentListEl.innerHTML=aiListHtml(readyForPayment);
-    aiSalesListEl.innerHTML=aiListHtml(salesOpportunities);
-    aiSocialPostEl.textContent=data.socialMediaSuggestion||brief.suggestedSocialPost||'Inget förslag tillgängligt.';
-    showAiStatus(`Senast uppdaterad ${new Date().toLocaleTimeString('sv-SE')} - ${data.dryRun?'mock/dry-run-läge':brief.aiMode||'AI-läge'}`,data.dryRun?'warn':'');
   }catch(error){
     const message=String(error.message||'Okänt fel');
     showAiStatus(message==='Ej behörig'?'Ej behörig':`Fel: ${message}`,'bad');
@@ -2585,12 +2561,6 @@ async function loadCallDashboard(){
     }
     callDashboardRows=data.rows||data.todayRows||[];
     renderCallDashboard(data);
-    const callLogStatus=await checkCallLogsSource();
-    if(callLogStatus&&callLogStatus.sourceUnavailable){
-      renderCallDashboardUnavailable('Samtalsimport ej kopplad: 46elks/call-log k\u00e4lla saknas eller \u00e4r inte konfigurerad.',callLogStatus.warnings||[]);
-      showCallStatus('Samtalsimport ej kopplad. Anv\u00e4nd akutpanelen f\u00f6r manuell uppf\u00f6ljning.',true);
-      return;
-    }
     showCallStatus(`Samtal uppdaterade ${new Date().toLocaleTimeString('sv-SE')}.`);
   }catch(error){
     showCallStatus(error.message,true);
