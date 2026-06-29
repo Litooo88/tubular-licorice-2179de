@@ -1,5 +1,5 @@
 const { clean, json, parseBody, requireAdmin } = require("./_shared/http");
-const { appendCaseEvent, get, list, put } = require("./_shared/storage");
+const { connectBlobs, appendCaseEvent, get, list, put } = require("./_shared/storage");
 
 const STATUSES = new Set(["draft", "approved", "rejected", "sent", "dry_run"]);
 const STATUS_ACTIONS = Object.freeze({
@@ -19,6 +19,7 @@ const sourceWarning = (error) => ({
 });
 
 exports.handler = async (event) => {
+  connectBlobs(event);
   try {
     const auth = requireAdmin(event);
     if (!auth.ok) return auth.response;

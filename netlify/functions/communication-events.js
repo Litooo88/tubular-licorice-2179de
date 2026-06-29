@@ -1,5 +1,5 @@
 const { clean, json, parseBody, requireAdmin } = require("./_shared/http");
-const { appendCaseEvent, list, put } = require("./_shared/storage");
+const { connectBlobs, appendCaseEvent, list, put } = require("./_shared/storage");
 const {
   caseEventPreviewFor,
   demoEvents,
@@ -18,6 +18,7 @@ const approvedForWrite = (body = {}) =>
   String(body.approvalStatus || "").toLowerCase() === "approved";
 
 exports.handler = async (event) => {
+  connectBlobs(event);
   try {
     const auth = requireAdmin(event);
     if (!auth.ok) return auth.response;

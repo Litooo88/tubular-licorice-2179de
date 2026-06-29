@@ -11,6 +11,22 @@ const getNetlifyStore = () => {
   return getStore;
 };
 
+// Legacy (v1) Netlify Functions do NOT receive the Netlify Blobs context
+// automatically the way v2 (export default) functions do, which makes getStore()
+// throw MissingBlobsEnvironmentError. Calling connectLambda(event) at the start
+// of a v1 handler wires the context from the Lambda event. Safe no-op for v2,
+// local fs fallback, or when the context is already connected.
+let connectLambdaFn;
+const connectBlobs = (event) => {
+  if (!event || process.env.NORDIC_LOCAL_STORAGE_FALLBACK === "1") return;
+  try {
+    if (!connectLambdaFn) ({ connectLambda: connectLambdaFn } = require("@netlify/blobs"));
+    connectLambdaFn(event);
+  } catch {
+    // getStore() will surface a clear error if Blobs is genuinely unavailable.
+  }
+};
+
 const ENTITIES = Object.freeze({
   customers: { store: "customers" },
   service_cases: { store: "workshop-cases" },
@@ -197,4 +213,4 @@ const appendCaseEvent = async ({
   return event;
 };
 
-module.exports = { ENTITIES, appendCaseEvent, get, idFor, list, put, remove, storeFor };
+module.exports = { ENTITIES, appendCaseEvent, connectBlobs, get, idFor, list, put, remove, storeFor };

@@ -1,5 +1,5 @@
 const { json, parseBody, requireAdmin, clean } = require("./_shared/http");
-const { appendCaseEvent, get, list, put } = require("./_shared/storage");
+const { connectBlobs, appendCaseEvent, get, list, put } = require("./_shared/storage");
 const { assessRisk, deterministicQuote, tryOpenAiJson } = require("./_shared/operator");
 
 const isDryRunRequest = (event, body) =>
@@ -18,6 +18,7 @@ const functionError = (error, dryRun) => {
 };
 
 exports.handler = async (event) => {
+  connectBlobs(event);
   let writeDryRun = false;
   try {
     const body = parseBody(event);

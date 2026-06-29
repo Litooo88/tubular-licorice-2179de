@@ -32,6 +32,29 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-30 — Claude Code — KLAR (PR 0 / Steg 2b: connectLambda för v1-Blobs)
+
+- **Branch:** `fix/blobs-connect-lambda-v1` → PR mot `main` (öppen, ej mergad).
+- **EXAKT ROTORSAK:** `@netlify/blobs` v8 — v1-funktioner (`exports.handler`)
+  får INTE Blobs-kontexten automatiskt; de måste anropa `connectLambda(event)`
+  före `getStore()`. v2 (`export default`) auto-ansluter. Därför failade alla
+  10 v1-Blobs-functions med `MissingBlobsEnvironmentError` trots identiskt anrop.
+  Detta är den minimala, korrekta fixen (en rad/funktion) i stället för full
+  v2-omskrivning.
+- **Gjorde:** La `connectBlobs(event)`-helper i `_shared/storage.js` och anrop
+  högst upp i alla 10 v1-Blobs-handlers: `ai-communication-draft`,
+  `ai-daily-brief`, `ai-quote`, `ai-sms-draft`, `call-logs`, `case-events`,
+  `communication-events`, `customer-export`, `sms-drafts`, `stripe-webhook`.
+- **Tester:** `node --check` alla 11 ✅, lokal smoke (401 utan token, dryRun 200
+  utan Blobs, export 200 med token) ✅, `npm run build` ✅,
+  `verify:checkout-products` ✅, `nemob-callflow check` ✅.
+- **Nästa / överlämning:** När mergad+deployad: kör `storage-health` (nu v2) +
+  testa `customer-export`/`ai-sms-draft` (icke-dryRun) — Blobs ska nu fungera i
+  hela v1-lagret. Sedan: PR 1 (operativ chatt/SMS, återanvänd `ai-*-draft`),
+  PR 2 (call-log read-only proxy från D1).
+- **Varning till Codex:** Rör inte `fix/blobs-connect-lambda-v1`. Om du ändrar
+  någon av de 10 functions parallellt — koordinera här först.
+
 ### 2026-06-29 — Claude Code — KLAR (Steg 2: Blobs-rotorsak + v2-probe)
 
 - **Branch:** `fix/storage-health-v2-blobs` → PR mot `main` (öppen, ej mergad).
