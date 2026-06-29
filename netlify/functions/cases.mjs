@@ -1,3 +1,8 @@
+// ⚠️ DISABLED / LEGACY — does NOT serve /api/cases.
+// The live cases API is `workshop-cases.mjs` (config.path = /api/cases, /api/cases/:id).
+// This rescued duplicate is parked at /api/rescue-cases-disabled and must NOT be
+// re-activated without analysing the /api/cases route collision first
+// (see docs/CODEBASE_RECOVERY_SUMMARY.md). Kept only as historical reference.
 import { getStore } from "@netlify/blobs";
 import { adminTokenMatches } from "./_shared/admin-auth.mjs";
 
