@@ -32,6 +32,32 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-29 — Claude Code — KLAR (Steg 2: Blobs-rotorsak + v2-probe)
+
+- **Branch:** `fix/storage-health-v2-blobs` → PR mot `main` (öppen, ej mergad).
+- **ROTORSAK BEKRÄFTAD i production:** `storage-health` (v1, `exports.handler`)
+  ger `MissingBlobsEnvironmentError` på ALLA stores inkl. `workshop-cases`,
+  MEN `/api/cases` (v2, `workshop-cases.mjs`) returnerar 131 ärenden. Slutsats:
+  **endast v2-funktioner (`export default` + `export const config`) får Netlify
+  Blobs-kontexten; v1 (`exports.handler`) får den inte.** Det förklarar varför
+  identiskt `getStore({name,consistency})` funkar i `.mjs` men inte i `.js`.
+- **Gjorde:** Konverterade `storage-health.js` → `storage-health.mjs` (v2) som
+  bevis-probe; la till `hasBlobsContext` (= `NETLIFY_BLOBS_CONTEXT` finns) och
+  `functionVersion`. La även en protokoll-guard i `admin/service-worker.js` så
+  `chrome-extension://`-requests inte kraschar `cache.put` (rad 41).
+- **Filer:** `netlify/functions/storage-health.mjs` (ny), `storage-health.js`
+  (borttagen), `admin/service-worker.js`. Ingen datakod, inga writes.
+- **Tester:** `node --check` ✅ (mjs + sw), `npm run build` ✅,
+  `verify:checkout-products` ✅, `nemob-callflow check` ✅.
+- **Nästa / överlämning:** När denna PR mergats + deployats: kör `storage-health`
+  igen — om `blobsAvailable:true` / `hasBlobsContext:true` är teorin spikad och
+  **Steg 2b** = konvertera övriga Blobs-läsande v1-functions till v2
+  (`customer-export`, `call-logs`, `communication-events`, `case-events`,
+  `sms-drafts` + `_shared/storage.js`-interop). Steg 3 = call-log-ingest D1.
+- **Varning till Codex:** Rör inte `fix/storage-health-v2-blobs` eller
+  `fix/admin-panel-cleanup` (PR #79). Konvertera inte samma v1-functions
+  parallellt — koordinera här först.
+
 ### 2026-06-28 ~15:35Z — Codex — KLAR
 
 - **Branch:** `main` för triage; ny fix-branch skapas först när en verifierad
