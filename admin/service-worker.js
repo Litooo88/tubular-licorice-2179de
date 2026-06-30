@@ -1,4 +1,4 @@
-const CACHE_NAME = "nordic-admin-shell-v3";
+const CACHE_NAME = "nordic-admin-shell-v4";
 const SHELL_FILES = ["/admin/", "/admin/index.html", "/logo.png", "/nordic_logo_transparent.png"];
 
 self.addEventListener("install", (event) => {
@@ -17,15 +17,18 @@ self.addEventListener("activate", (event) => {
 
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
-  // Only handle same-scheme web requests. Browser extensions issue
-  // chrome-extension:// requests that the Cache API rejects on put().
-  if (url.protocol !== "http:" && url.protocol !== "https:") return;
-  if (url.pathname.startsWith("/api/")) return;
+  // Only ever touch same-origin GET requests. This skips chrome-extension://
+  // (Cache API rejects it on put), cross-origin analytics, and non-GET calls.
+  if (event.request.method !== "GET") return;
+  if (url.origin !== self.location.origin) return;
+  // NEVER cache API or serverless-function responses — they must always hit the
+  // network. Caching them made the admin serve stale data from an old deploy.
+  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/.netlify/")) return;
   if (url.pathname === "/admin/" || url.pathname === "/admin/index.html") {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          if (event.request.method === "GET" && response.ok) {
+          if (response.ok) {
             const copy = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
           }
@@ -36,10 +39,11 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
+  // Static shell assets only (logo, etc.): cache-first.
   event.respondWith(
     caches.match(event.request).then((cached) =>
       cached || fetch(event.request).then((response) => {
-        if (event.request.method === "GET" && response.ok) {
+        if (response.ok) {
           const copy = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
         }
