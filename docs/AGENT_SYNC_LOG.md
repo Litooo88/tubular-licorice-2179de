@@ -32,6 +32,27 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-30 — Claude Code — KLAR (PR 2: admin litar på riktig 46elks-samtalskälla)
+
+- **Branch:** `fix/admin-call-source-46elks` → PR mot `main` (öppen, ej mergad).
+- **Insikt:** Den riktiga samtalskällan är `/api/call-dashboard` (`call-dashboard.mjs`,
+  v2) som hämtar LIVE från 46elks (`api.46elks.com/a1/calls`), matchar mot
+  `/api/cases` och räknar missade/besvarade. Ingen Cloudflare D1-proxy behövdes —
+  D1 i `nemob-callflow` är Workerns egen IVR-logg, inte admins källa.
+- **Buggen:** Admin gatade på en separat `call-logs`-probe mot den **tomma**
+  Blob-storen `call-logs` (manuell fallback) INNAN den anropade den riktiga
+  46elks-dashboarden → visade alltid "Ej kopplad" även när 46elks fanns.
+- **Gjorde:** Tog bort `checkCallLogsSource`-proben i `loadCallDashboard`; admin
+  litar nu på `call-dashboard`s egen `sourceUnavailable` (som speglar 46elks).
+  Tog bort den oanvända `checkCallLogsSource`-funktionen.
+- **Filer:** `admin/index.html`. Ingen datakod, inga writes.
+- **Tester:** inline-JS 0 fel ✅, build/verify ✅.
+- **Beroende:** Kräver `ELKS_USERNAME`/`ELKS_PASSWORD` i Netlify (samma som SMS).
+  Saknas de → call-dashboard returnerar `sourceUnavailable` → admin visar ärligt
+  "Ej kopplad". Manuell call-log (`call-logs.js`) kvarstår som fallback.
+- **Nästa:** PR 5 (morgonbrief — `ai-daily-brief` finns redan, ev. förbättring).
+- **Varning till Codex:** Rör inte `fix/admin-call-source-46elks`.
+
 ### 2026-06-30 — Claude Code — KLAR (PR 1: operativ AI-svar i kontakt-tabben)
 
 - **Branch:** `feat/admin-ai-reply` → PR mot `main` (öppen, ej mergad).
