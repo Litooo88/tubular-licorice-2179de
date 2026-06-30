@@ -1505,6 +1505,10 @@ function chatReplyTemplate(item){
   }
   return `Hej ${first}! Vi återkommer om ditt ärende. Svara gärna här om du vill komplettera med modell, bild eller önskad tid.\n/ Nordic E-Mobility`;
 }
+function missedCallReplyTemplate(item){
+  const first=(item.customer&&item.customer.name||'').split(/\s+/).filter(Boolean)[0]||'där';
+  return `Hej ${first}! Vi såg att du sökte Nordic E-Mobility men missade tyvärr ditt samtal. Ursäkta sena återkopplingen – det har varit hög belastning i verkstaden. Svara gärna med modell och vad som är fel, så hjälper vi dig vidare.\n/ Nordic E-Mobility`;
+}
 function contentDrafts(item,overrides={}){
   const data=completionData(item,overrides);
   const model=data.vehicleModel;
@@ -2923,6 +2927,19 @@ function caseCard(item){
           <p>Skickar ett riktigt SMS via 46elks till kunden och markerar &auml;rendet som v&auml;ntar p&aring; kund.</p>
           <span class="live-send-warning">Live-s&auml;ndning: anv&auml;nd "Kopiera svar" om du bara vill granska eller skicka manuellt.</span>
           <textarea name="replyMessage" placeholder="Skriv svaret till kunden...">${html(chatReplyTemplate(item))}</textarea>
+          <div class="reply-ai-tools" style="display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px">
+            <button type="button" class="secondary ai-suggest-reply">AI-svarsförslag</button>
+            <button type="button" class="secondary reply-template" data-template="chat">Mall: ny chatt</button>
+            <button type="button" class="secondary reply-template" data-template="missed">Mall: missat samtal</button>
+          </div>
+          <div class="reply-ai-steer" style="display:none;flex-wrap:wrap;gap:6px;align-items:center;margin:0 0 4px">
+            <span style="font-size:12px;opacity:.75">Justera:</span>
+            <button type="button" class="secondary ai-steer" data-steer="Skriv kortare och mer koncist, behåll det vänliga tonläget.">Kortare</button>
+            <button type="button" class="secondary ai-steer" data-steer="Skriv mer ursäktande och empatiskt om sen återkoppling.">Mer ursäktande</button>
+            <button type="button" class="secondary ai-steer" data-steer="Avsluta med en tydlig uppmaning att boka tid via bokningssidan.">Be kunden boka</button>
+            <button type="button" class="secondary ai-steer" data-steer="Ge en ungefärlig prisindikation men betona tydligt att slutpris bekräftas innan arbete påbörjas.">Ge prisindikation</button>
+          </div>
+          <div class="reply-ai-status" aria-live="polite" style="font-size:12px;min-height:16px;opacity:.85"></div>
           <div class="quote-actions">
             <button type="button" class="secondary copy-chat-reply">Kopiera svar</button>
             <button type="button" class="send-chat-reply live-send-action">Skicka riktigt SMS-svar</button>
@@ -3344,6 +3361,31 @@ function caseCard(item){
     }catch(error){showError(error.message)}
     finally{button.disabled=false;button.textContent=original}
   });
+  const replyAiStatusEl=replyForm.querySelector('.reply-ai-status');
+  const replySteerEl=replyForm.querySelector('.reply-ai-steer');
+  function setReplyAiStatus(msg,state){if(!replyAiStatusEl)return;replyAiStatusEl.textContent=msg||'';replyAiStatusEl.style.color=state==='bad'?'#c0392b':state==='warn'?'#b8860b':'';}
+  async function generateAiReply(steer){
+    const ta=replyForm.elements.replyMessage;
+    const btn=replyForm.querySelector('.ai-suggest-reply');
+    const original=btn.textContent;
+    btn.disabled=true;btn.textContent='Tänker...';
+    setReplyAiStatus('AI skapar förslag...');
+    try{
+      const context=[item.message?('Kundens meddelande: '+item.message):'',item.service?('Ärende: '+item.service):'',item.vehicle&&item.vehicle.model?('Modell: '+item.vehicle.model):'',steer||''].filter(Boolean).join(' ');
+      const data=await aiFunctionFetch('/.netlify/functions/ai-sms-draft',{method:'POST',body:{caseId:item.id,eventType:(item.channel==='chat'||item.source==='website_chat')?'model_or_fault_question':'missed_call_followup',context,aiPreview:true,operatorName:caseOperatorName()}});
+      if(data.smsDraft)ta.value=data.smsDraft;
+      if(replySteerEl)replySteerEl.style.display='flex';
+      const mode=data.dryRun?'mall – OpenAI ej aktiv':'AI';
+      setReplyAiStatus(`Förslag klart (${mode}). Risk: ${data.riskLevel||'okänd'}${data.requiresApproval?' – kräver godkännande':''}. Granska och redigera innan du skickar.`,data.requiresApproval?'warn':'');
+    }catch(error){setReplyAiStatus('Kunde inte skapa AI-förslag: '+error.message,'bad');}
+    finally{btn.disabled=false;btn.textContent=original;}
+  }
+  replyForm.querySelector('.ai-suggest-reply').addEventListener('click',()=>generateAiReply(''));
+  replyForm.querySelectorAll('.ai-steer').forEach((b)=>b.addEventListener('click',()=>generateAiReply(b.dataset.steer)));
+  replyForm.querySelectorAll('.reply-template').forEach((b)=>b.addEventListener('click',()=>{
+    replyForm.elements.replyMessage.value=b.dataset.template==='missed'?missedCallReplyTemplate(item):chatReplyTemplate(item);
+    setReplyAiStatus('Mall infogad. Redigera och skicka.');
+  }));
   function quoteValues(){
     const data=new FormData(quoteForm);
     return {

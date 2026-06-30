@@ -32,6 +32,28 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-06-30 — Claude Code — KLAR (PR 1: operativ AI-svar i kontakt-tabben)
+
+- **Branch:** `feat/admin-ai-reply` → PR mot `main` (öppen, ej mergad).
+- **Bekräftat först:** Blobs-fundamentet är LIVE i production (storage-health v2,
+  `blobsAvailable:true`; customer-export = 105 telefon + 66 e-post, 0 fel). Det
+  som dolde det var SW-cachen (PR #82).
+- **Gjorde (PR 1):** På befintliga `chat-reply`-formen i kundkortets kontakt-tabb:
+  knapp **AI-svarsförslag** + styrknappar (Kortare / Mer ursäktande / Be kunden
+  boka / Ge prisindikation) + två mallar (ny chatt / missat samtal). AI-förslag
+  fyller textarean; befintlig "Kopiera svar" + "Skicka riktigt SMS-svar"
+  (confirm → `send_sms` → timeline) oförändrade. Inga autosvar.
+- **Backend:** La `aiPreview`-läge i `ai-sms-draft.js` — använder OpenAI men
+  skriver INGET (så styrning kan itereras utan timeline-spam). Riktig sändning
+  går separat via `send_sms`. Kräver `OPENAI_API_KEY` (Sebastian satte den);
+  utan nyckel faller den tillbaka till deterministisk mall (graceful).
+- **Filer:** `admin/index.html`, `netlify/functions/ai-sms-draft.js`.
+- **Tester:** `node --check` ✅, admin inline-JS 0 fel ✅, lokal aiPreview-smoke
+  (200, inga writes, references null) ✅, build/verify/callflow ✅.
+- **Nästa:** PR 2 (call-log read-only proxy från Cloudflare D1), PR 5
+  (morgonbrief). PR 4 i ChatGPT-planen är redan gjord i #79.
+- **Varning till Codex:** Rör inte `feat/admin-ai-reply`. Om du ändrar
+  `ai-sms-draft.js` eller `chat-reply`-formen i admin — koordinera här först.
 ### 2026-06-30 — Claude Code — KLAR (Service worker cachade function-svar)
 
 - **Branch:** `fix/sw-no-cache-functions` → PR mot `main` (öppen, ej mergad).

@@ -20,6 +20,11 @@ exports.handler = async (event) => {
 
     const body = parseBody(event);
     dryRun = isDryRunRequest(event, body);
+    // aiPreview: use OpenAI to generate a draft but do NOT persist anything, so
+    // the operator can iterate (steering) without spamming the timeline. A real
+    // send still goes through send_sms separately.
+    const aiPreview = !dryRun && (body.aiPreview === true || event.queryStringParameters?.aiPreview === "1");
+    const skipWrites = dryRun || aiPreview;
     const intent = intentFromInput(body);
     const providedCaseItem = body.case || body.caseItem || null;
     const caseItem = dryRun
@@ -27,7 +32,7 @@ exports.handler = async (event) => {
       : body.caseId
         ? await get("service_cases", body.caseId)
         : null;
-    if (!dryRun && body.caseId && !caseItem) return json(404, { error: "Arendet hittades inte." });
+    if (!skipWrites && body.caseId && !caseItem) return json(404, { error: "Arendet hittades inte." });
 
   const fallbackMessage = deterministicSmsDraft({ ...body, intent, caseItem });
   const aiCaseContext = caseItem
@@ -56,10 +61,10 @@ exports.handler = async (event) => {
     const customerId = clean(body.customerId || body.customer?.id || caseItem?.customerId || caseItem?.customer?.id, 180);
     let draft = null;
     let recommendation = null;
-    const writesSkipped = dryRun
+    const writesSkipped = skipWrites
       ? ["sms_drafts", "ai_recommendations", ...(body.caseId ? ["case_events"] : [])]
       : [];
-    if (!dryRun) {
+    if (!skipWrites) {
       draft = await put("sms_drafts", {
         caseId: body.caseId || "",
         customerId,
@@ -84,7 +89,7 @@ exports.handler = async (event) => {
         aiMode: generated.mode,
       });
     }
-    if (!dryRun && body.caseId) {
+    if (!skipWrites && body.caseId) {
       await appendCaseEvent({
         caseId: body.caseId,
       customerId,
@@ -127,7 +132,7 @@ exports.handler = async (event) => {
     `SMS-utkast skapat för ${caseItem?.service || intent || "ärendet"}. Risk: ${risk.level}. ${risk.reasons.length ? `Godkännande krävs: ${risk.reasons.join(", ")}.` : "Lågriskutkast."}`,
     800
   );
-  return json(dryRun ? 200 : 201, {
+  return json(skipWrites ? 200 : 201, {
     smsDraft: message,
     riskLevel: risk.level,
     requiresApproval: risk.approvalRequired,
