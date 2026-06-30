@@ -48,7 +48,13 @@ const storeFor = (entity) => {
   const config = ENTITIES[entity];
   if (!config) throw new Error(`Okand storage-entitet: ${entity}`);
   if (process.env.NORDIC_LOCAL_STORAGE_FALLBACK === "1") return localStore(config.store);
-  return getNetlifyStore()({ name: config.store, consistency: "strong" });
+  // NOTE: do NOT request `consistency: "strong"` here. These v1 functions get
+  // their Blobs context from connectLambda(event), which lacks the
+  // `uncachedEdgeURL` that strong-consistency reads require — so strong reads
+  // throw BlobsConsistencyError. Default (eventual) consistency is the only mode
+  // available to v1/Lambda functions. (v2 functions like workshop-cases.mjs keep
+  // strong consistency via their own getStore; this helper is v1-only.)
+  return getNetlifyStore()({ name: config.store });
 };
 
 const localRoot = () => path.join(process.cwd(), ".local", "nordic-storage");
