@@ -2547,12 +2547,10 @@ async function loadCallDashboard(){
       showCallStatus('Admin-token saknas. Samtalsk\u00e4lla kan inte kontrolleras.',true);
       return;
     }
-    const preCallLogStatus=await checkCallLogsSource();
-    if(preCallLogStatus&&preCallLogStatus.sourceUnavailable){
-      renderCallDashboardUnavailable('Samtalsimport ej kopplad: 46elks/call-log k\u00e4lla saknas eller \u00e4r inte konfigurerad.',preCallLogStatus.warnings||[]);
-      showCallStatus('Samtalsimport ej kopplad. Anv\u00e4nd akutpanelen f\u00f6r manuell uppf\u00f6ljning.',true);
-      return;
-    }
+    // The real call source is /api/call-dashboard (live 46elks). It reports its
+    // own sourceUnavailable when 46elks env is missing, so we no longer gate on
+    // the separate call-logs Blob store (which is only the manual-entry fallback
+    // and is normally empty \u2014 it was falsely showing "ej kopplad").
     const data=await api('/api/call-dashboard');
     if(data&&data.sourceUnavailable){
       renderCallDashboardUnavailable('Samtalsimport ej kopplad: 46elks/call-log k\u00e4lla saknas eller \u00e4r inte konfigurerad.',data.warnings||[]);
@@ -2564,13 +2562,6 @@ async function loadCallDashboard(){
     showCallStatus(`Samtal uppdaterade ${new Date().toLocaleTimeString('sv-SE')}.`);
   }catch(error){
     showCallStatus(error.message,true);
-  }
-}
-async function checkCallLogsSource(){
-  try{
-    return await aiFunctionFetch('/.netlify/functions/call-logs?readOnly=1');
-  }catch(error){
-    return {sourceUnavailable:true,warnings:[error.message]};
   }
 }
 function renderCallDashboard(data){
