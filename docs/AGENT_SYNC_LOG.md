@@ -53,6 +53,49 @@ löpande "konversation".
 - **Nästa:** PR 5 (morgonbrief — `ai-daily-brief` finns redan, ev. förbättring).
 - **Varning till Codex:** Rör inte `fix/admin-call-source-46elks`.
 
+### 2026-06-30 — Claude Code — KLAR (PR 1: operativ AI-svar i kontakt-tabben)
+
+- **Branch:** `feat/admin-ai-reply` → PR mot `main` (öppen, ej mergad).
+- **Bekräftat först:** Blobs-fundamentet är LIVE i production (storage-health v2,
+  `blobsAvailable:true`; customer-export = 105 telefon + 66 e-post, 0 fel). Det
+  som dolde det var SW-cachen (PR #82).
+- **Gjorde (PR 1):** På befintliga `chat-reply`-formen i kundkortets kontakt-tabb:
+  knapp **AI-svarsförslag** + styrknappar (Kortare / Mer ursäktande / Be kunden
+  boka / Ge prisindikation) + två mallar (ny chatt / missat samtal). AI-förslag
+  fyller textarean; befintlig "Kopiera svar" + "Skicka riktigt SMS-svar"
+  (confirm → `send_sms` → timeline) oförändrade. Inga autosvar.
+- **Backend:** La `aiPreview`-läge i `ai-sms-draft.js` — använder OpenAI men
+  skriver INGET (så styrning kan itereras utan timeline-spam). Riktig sändning
+  går separat via `send_sms`. Kräver `OPENAI_API_KEY` (Sebastian satte den);
+  utan nyckel faller den tillbaka till deterministisk mall (graceful).
+- **Filer:** `admin/index.html`, `netlify/functions/ai-sms-draft.js`.
+- **Tester:** `node --check` ✅, admin inline-JS 0 fel ✅, lokal aiPreview-smoke
+  (200, inga writes, references null) ✅, build/verify/callflow ✅.
+- **Nästa:** PR 2 (call-log read-only proxy från Cloudflare D1), PR 5
+  (morgonbrief). PR 4 i ChatGPT-planen är redan gjord i #79.
+- **Varning till Codex:** Rör inte `feat/admin-ai-reply`. Om du ändrar
+  `ai-sms-draft.js` eller `chat-reply`-formen i admin — koordinera här först.
+### 2026-06-30 — Claude Code — KLAR (Service worker cachade function-svar)
+
+- **Branch:** `fix/sw-no-cache-functions` → PR mot `main` (öppen, ej mergad).
+- **VIKTIG INSIKT:** Deployen fungerar (Netlify visade `main@675ba35 Published`).
+  Anledningen att production "körde gammal kod" var att **admin/service-worker.js
+  cachade `/.netlify/functions/*`-svar cache-first** — den exkluderade `/api/`
+  men inte `/.netlify/`. Därför var `/api/cases` färsk (131) men `storage-health`
+  /`customer-export` infrusna på sina första (v1) svar i browsern.
+- **Gjorde:** Skrev om SW:s fetch-handler: hanterar bara same-origin GET, cachar
+  ALDRIG `/api/`- eller `/.netlify/`-svar, bumpade `CACHE_NAME` v3→v4 (rensar
+  gamla infrusna svar vid activate).
+- **Filer:** `admin/service-worker.js`. Ingen datakod, inga writes.
+- **Tester:** `node --check` ✅. (Build/verify ej relevant — bara SW.)
+- **Nästa / överlämning:** Efter merge+deploy måste varje admin-browser hämta nya
+  SW:n: ladda om `/admin/` 1–2 ggr, eller DevTools → Application → Service
+  Workers → Unregister + reload. Då rensas v3-cachen och alla function-svar blir
+  live. Därefter: PR 1 (operativ chatt/SMS). Alla Blobs/v2-fixar är redan på main
+  och live — det var bara SW-cachen som dolde dem.
+- **Varning till Codex:** SW cachar inte längre API/function-svar — räkna inte
+  med SW-cache för dynamisk data.
+
 ### 2026-06-30 — Claude Code — KLAR (PR 0 / Steg 2b: connectLambda för v1-Blobs)
 
 - **Branch:** `fix/blobs-connect-lambda-v1` → PR mot `main` (öppen, ej mergad).
