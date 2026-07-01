@@ -39,13 +39,26 @@ exports.handler = async (event) => {
           input: { diagnosis: body.diagnosis, service: body.service, model: body.model, partCost: body.partCost, fallback },
           fallback,
         });
+    // Merge the OpenAI result conservatively on top of the deterministic rule:
+    // text fields freely, numbers only if finite and NOT below the rule's floor
+    // (the AI must never undercut the price rules). Risk is re-assessed on the
+    // merged values below. Without this merge the OpenAI call was dead spend.
+    const aiValue = generated.mode === "openai" && generated.value && typeof generated.value === "object" ? generated.value : {};
+    const mergedNumber = (candidate, fallbackNumber, floor) => {
+      const value = Number(candidate);
+      if (!Number.isFinite(value) || value <= 0) return fallbackNumber;
+      return value < floor ? fallbackNumber : Math.round(value);
+    };
     const proposed = {
       ...fallback,
-      from: fallback.from,
-      min: fallback.min,
-      max: fallback.max,
-      summary: fallback.summary,
+      label: clean(aiValue.label, 160) || fallback.label,
+      from: mergedNumber(aiValue.from, fallback.from, fallback.from),
+      min: mergedNumber(aiValue.min, fallback.min, fallback.from),
+      max: fallback.max ? mergedNumber(aiValue.max, fallback.max, fallback.from) : fallback.max,
+      summary: clean(aiValue.summary, 600) || fallback.summary,
+      diagnosticRequired: typeof aiValue.diagnosticRequired === "boolean" ? aiValue.diagnosticRequired : fallback.diagnosticRequired,
     };
+    if (proposed.max && proposed.min > proposed.max) { proposed.min = fallback.min; proposed.max = fallback.max; }
     proposed.risk = assessRisk({ ...body, ...proposed, price: proposed.max, caseItem });
     proposed.approvalRequired = proposed.approvalRequired || proposed.risk.approvalRequired;
 

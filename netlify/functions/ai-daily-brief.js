@@ -155,6 +155,7 @@ const readAdminCases = async (event, warnings) => {
   try {
     const response = await fetch(`${origin}/api/cases`, {
       headers: { "x-admin-token": header(event, "x-admin-token") },
+      signal: AbortSignal.timeout(10000),
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) {

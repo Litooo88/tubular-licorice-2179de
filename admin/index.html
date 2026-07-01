@@ -2693,14 +2693,14 @@ async function sendLostLeadDiscount(row,button){
   }
 }
 async function createCaseFromCallLead(row,button){
-  if(!confirm(`Skapa kundkort fÃ¶r ${row.phone}?`))return;
+  if(!confirm(`Skapa kundkort för ${row.phone}?`))return;
   const original=button.textContent;
   button.disabled=true;
   button.textContent='Skapar...';
   try{
     const result=await api('/api/call-dashboard',{
       method:'POST',
-      body:JSON.stringify({action:'create_case',callId:row.id,phone:row.phone,note:'Skapat frÃ¥n samtalsdashboard.'})
+      body:JSON.stringify({action:'create_case',callId:row.id,phone:row.phone,note:'Skapat från samtalsdashboard.'})
     });
     showCallStatus(`Kundkort skapat: ${result.case&&result.case.id?shortId(result.case.id):row.phone}.`);
     await Promise.all([loadCallDashboard(),loadCases({background:true})]);
@@ -2711,7 +2711,7 @@ async function createCaseFromCallLead(row,button){
   }
 }
 async function ignoreCallLead(row,button){
-  if(!confirm(`Ignorera samtalslead fÃ¶r ${row.phone}?`))return;
+  if(!confirm(`Ignorera samtalslead för ${row.phone}?`))return;
   const original=button.textContent;
   button.disabled=true;
   button.textContent='Sparar...';
@@ -2720,7 +2720,7 @@ async function ignoreCallLead(row,button){
       method:'POST',
       body:JSON.stringify({action:'ignore',callId:row.id,phone:row.phone,note:'Ignorerad i samtalsdashboard.'})
     });
-    showCallStatus(`Samtalslead ignorerat fÃ¶r ${row.phone}.`);
+    showCallStatus(`Samtalslead ignorerat för ${row.phone}.`);
     await loadCallDashboard();
   }catch(error){
     showCallStatus(error.message,true);
@@ -3355,21 +3355,27 @@ function caseCard(item){
   const replyAiStatusEl=replyForm.querySelector('.reply-ai-status');
   const replySteerEl=replyForm.querySelector('.reply-ai-steer');
   function setReplyAiStatus(msg,state){if(!replyAiStatusEl)return;replyAiStatusEl.textContent=msg||'';replyAiStatusEl.style.color=state==='bad'?'#c0392b':state==='warn'?'#b8860b':'';}
+  function replyAiButtons(){return replyForm.querySelectorAll('.ai-suggest-reply,.ai-steer');}
   async function generateAiReply(steer){
     const ta=replyForm.elements.replyMessage;
     const btn=replyForm.querySelector('.ai-suggest-reply');
     const original=btn.textContent;
-    btn.disabled=true;btn.textContent='Tänker...';
+    replyAiButtons().forEach((b)=>{b.disabled=true;});
+    btn.textContent='Tänker...';
     setReplyAiStatus('AI skapar förslag...');
     try{
-      const context=[item.message?('Kundens meddelande: '+item.message):'',item.service?('Ärende: '+item.service):'',item.vehicle&&item.vehicle.model?('Modell: '+item.vehicle.model):'',steer||''].filter(Boolean).join(' ');
-      const data=await aiFunctionFetch('/.netlify/functions/ai-sms-draft',{method:'POST',body:{caseId:item.id,eventType:(item.channel==='chat'||item.source==='website_chat')?'model_or_fault_question':'missed_call_followup',context,aiPreview:true,operatorName:caseOperatorName()}});
+      // Chat cases answer the customer's question; other cases get a neutral
+      // status reply — never a missed-call apology for a normal booking.
+      const isChat=item.channel==='chat'||item.source==='website_chat';
+      const currentDraft=steer?String(ta.value||'').trim():'';
+      const context=[item.message?('Kundens meddelande: '+item.message):'',item.service?('Ärende: '+item.service):'',item.vehicle&&item.vehicle.model?('Modell: '+item.vehicle.model):'',currentDraft?('Nuvarande utkast att utgå ifrån: "'+currentDraft+'"'):'',steer||''].filter(Boolean).join(' ');
+      const data=await aiFunctionFetch('/.netlify/functions/ai-sms-draft',{method:'POST',body:{caseId:item.id,eventType:isChat?'model_or_fault_question':'simple_status',context,aiPreview:true,operatorName:caseOperatorName()}});
       if(data.smsDraft)ta.value=data.smsDraft;
       if(replySteerEl)replySteerEl.style.display='flex';
       const mode=data.dryRun?'mall – OpenAI ej aktiv':'AI';
       setReplyAiStatus(`Förslag klart (${mode}). Risk: ${data.riskLevel||'okänd'}${data.requiresApproval?' – kräver godkännande':''}. Granska och redigera innan du skickar.`,data.requiresApproval?'warn':'');
     }catch(error){setReplyAiStatus('Kunde inte skapa AI-förslag: '+error.message,'bad');}
-    finally{btn.disabled=false;btn.textContent=original;}
+    finally{replyAiButtons().forEach((b)=>{b.disabled=false;});btn.textContent=original;}
   }
   replyForm.querySelector('.ai-suggest-reply').addEventListener('click',()=>generateAiReply(''));
   replyForm.querySelectorAll('.ai-steer').forEach((b)=>b.addEventListener('click',()=>generateAiReply(b.dataset.steer)));
