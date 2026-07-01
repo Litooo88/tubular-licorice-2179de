@@ -390,7 +390,8 @@ export default async (request, context) => {
     const current = await loadCase(store, id);
     if (!current) return json({ error: "Not found" }, 404);
 
-    const body = await request.json();
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== "object") return json({ error: "Ogiltig JSON i PATCH-body." }, 400);
     const now = new Date().toISOString();
     const operatorName = clean(body.operatorName, 80);
     const currentPayment = current.payment || {};
@@ -776,13 +777,23 @@ export default async (request, context) => {
     next.timeline = timeline;
 
     if ((next.status === "done" || next.payment?.status === "paid") && next.notifications?.thankYou?.status !== "sent") {
-      const thankYou = await sendThankYou(next);
-      next.coupon = thankYou.coupon;
-      next.notifications = {
-        ...(next.notifications || {}),
-        thankYou: { status: thankYou.email.status, ...thankYou },
-      };
-      next.timeline.push({ at: thankYou.sentAt || now, event: "Tackmail med rabattkod skickat efter avslutat/betalt arende." });
+      // A provider failure (Resend timeout/network) must not lose the whole
+      // PATCH — the status/payment change still has to be persisted below.
+      try {
+        const thankYou = await sendThankYou(next);
+        next.coupon = thankYou.coupon;
+        next.notifications = {
+          ...(next.notifications || {}),
+          thankYou: { status: thankYou.email.status, ...thankYou },
+        };
+        next.timeline.push({ at: thankYou.sentAt || now, event: "Tackmail med rabattkod skickat efter avslutat/betalt arende." });
+      } catch (error) {
+        next.notifications = {
+          ...(next.notifications || {}),
+          thankYou: { status: "failed", error: clean(error?.message, 180) },
+        };
+        next.timeline.push({ at: now, event: "Tackmail kunde inte skickas (provider-fel). Arendet sparades anda." });
+      }
     }
 
     await store.setJSON(id, next);

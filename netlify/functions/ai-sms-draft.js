@@ -32,7 +32,9 @@ exports.handler = async (event) => {
       : body.caseId
         ? await get("service_cases", body.caseId)
         : null;
-    if (!skipWrites && body.caseId && !caseItem) return json(404, { error: "Arendet hittades inte." });
+    // Applies to aiPreview too: a preview draft generated without the case it
+    // claims to be for would silently lack case context.
+    if (!dryRun && body.caseId && !caseItem) return json(404, { error: "Arendet hittades inte." });
 
   const fallbackMessage = deterministicSmsDraft({ ...body, intent, caseItem });
   const aiCaseContext = caseItem
@@ -134,6 +136,7 @@ exports.handler = async (event) => {
   );
   return json(skipWrites ? 200 : 201, {
     smsDraft: message,
+    aiPreview,
     riskLevel: risk.level,
     requiresApproval: risk.approvalRequired,
     suggestedNextStatus,

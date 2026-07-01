@@ -32,6 +32,42 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-01 — Claude Code — KLAR (Audit runda 2: buggfixar efter full genomgång)
+
+- **Branch:** `fix/audit-round2-hardening` → PR mot `main` (öppen, ej mergad).
+- **Bakgrund:** Full trippel-audit (backend, admin-frontend, säkerhet). Säkerhet:
+  ALLA 8 tidigare fynd verifierade FIXADE (case-media IDOR, voice-secrets,
+  Stripe-webhook, booking honeypot/rate-limit, env-status auth, timing-safe
+  tokens, Origin-allowlist, privata nummer borta). Denna PR täpper nya fynd:
+- **Fixat (admin/index.html):** (1) AI-svarsförslag skickade
+  `missed_call_followup` för vanliga bokningar → ursäkts-SMS för samtal som
+  aldrig fanns; nu `simple_status` för icke-chat. (2) Styrknappar ("Kortare"
+  m.fl.) skickar nu nuvarande utkast som kontext så AI:n faktiskt justerar
+  texten i rutan. (3) Styrknappar disablas under generering (race).
+  (4) Mojibake fixad (`fÃ¶r`→`för` m.fl.) i samtalslead-dialoger/notes.
+- **Fixat (service-worker.js):** cache-first gäller nu ENDAST shell-filerna;
+  övriga assets (analytics.js, manifest) går direkt till nätet. Offline-fallback
+  nycklas på pathname så `/admin/?case=X`-djuplänkar funkar och cachen inte
+  växer per query. `CACHE_NAME` v4→v5.
+- **Fixat (functions):** `ai-sms-draft`: aiPreview med försvunnet case → 404
+  (inte tyst utkast utan kontext) + `aiPreview` echo:as i svaret.
+  `workshop-cases.mjs`: Resend-fel i tackmail förlorar inte längre hela
+  PATCH:en (try/catch + failed-status + timeline-notis); trasig JSON → 400.
+  `ai-daily-brief`: timeout (10s) på intern `/api/cases`-fetch.
+  `ai-quote`: OpenAI-resultatet mergas nu (konservativt — AI kan aldrig sänka
+  under prisregelns golv); tidigare kastades det (död AI-kostnad).
+- **Tester:** `node --check` 5 filer ✅, inline-JS 0 fel ✅, lokala smokes
+  (aiPreview+missing→404, echo, dryRun, quote-merge) ✅, build/verify/callflow ✅.
+- **KVARSTÅENDE (dokumenterat, ej fixat här):** (a) HIGH: `appendCaseEvent`
+  read-modify-write på hela case-blobben med eventual consistency kan tappa
+  parallella PATCH-uppdateringar — behöver designbeslut (ETag-conditional
+  writes eller timeline-on-read). (b) admin-token i localStorage (MVP-känt).
+  (c) call-dashboard POST saknar try/catch; 46elks-fetch endast första sidan.
+  (d) 6 duplicerade funktionsdeklarationer i admin (döda kopior).
+  (e) render() på varje tangenttryck tappar osparade formulär.
+- **Varning till Codex:** Rör inte `fix/audit-round2-hardening`. Ta gärna (d)
+  duplicerade deklarationer som separat städ-PR — koordinera här.
+
 ### 2026-06-30 — Claude Code — KLAR (PR 2: admin litar på riktig 46elks-samtalskälla)
 
 - **Branch:** `fix/admin-call-source-46elks` → PR mot `main` (öppen, ej mergad).

@@ -1,5 +1,6 @@
-const CACHE_NAME = "nordic-admin-shell-v4";
+const CACHE_NAME = "nordic-admin-shell-v5";
 const SHELL_FILES = ["/admin/", "/admin/index.html", "/logo.png", "/nordic_logo_transparent.png"];
+const SHELL_SET = new Set(SHELL_FILES);
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(SHELL_FILES)));
@@ -25,27 +26,33 @@ self.addEventListener("fetch", (event) => {
   // network. Caching them made the admin serve stale data from an old deploy.
   if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/.netlify/")) return;
   if (url.pathname === "/admin/" || url.pathname === "/admin/index.html") {
+    // Network-first with offline fallback. Cache/match on the pathname (not the
+    // full URL) so deep links like /admin/?case=X reuse the cached shell instead
+    // of missing the fallback and piling up one cache entry per query string.
     event.respondWith(
       fetch(event.request)
         .then((response) => {
           if (response.ok) {
             const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+            caches.open(CACHE_NAME).then((cache) => cache.put("/admin/index.html", copy));
           }
           return response;
         })
-        .catch(() => caches.match(event.request)),
+        .catch(() => caches.match("/admin/index.html").then((cached) => cached || caches.match("/admin/"))),
     );
     return;
   }
 
-  // Static shell assets only (logo, etc.): cache-first.
+  // Cache-first ONLY for the fixed shell assets (logos). Everything else
+  // (e.g. /assets/analytics.js, manifest) goes straight to the network so a
+  // deploy is picked up without bumping CACHE_NAME.
+  if (!SHELL_SET.has(url.pathname)) return;
   event.respondWith(
-    caches.match(event.request).then((cached) =>
+    caches.match(url.pathname).then((cached) =>
       cached || fetch(event.request).then((response) => {
         if (response.ok) {
           const copy = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          caches.open(CACHE_NAME).then((cache) => cache.put(url.pathname, copy));
         }
         return response;
       }),
