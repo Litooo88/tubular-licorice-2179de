@@ -32,6 +32,25 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-02 — Claude Code — KLAR (Gallerilyft 19 produkter + KuKirin A1, samma PR #87)
+
+- **Branch:** `feat/teverun-range-prisgaranti` (samma PR som Teverun-utökningen).
+- **Gjorde:** Svepte officiella produktsidor (kukirinscooter.com +
+  teverun-europe.com) via agenter och hotlänkade galleribilder: **19 produkter
+  lyfta från 1→4 bilder** (7 KuKirin + 12 Teverun). La till **KuKirin A1**
+  (7 490 kr förslag; netto ~€380 enligt KuKirin-implementations-PDF:en i Drive —
+  samma netto som G2 som säljs för 7 990). Nu 32 produkter; endast 8 kvar med
+  1 bild (NAVEE, lokala assets — kan lyftas separat).
+- **Ej gjort / flaggat:** KuKirin G2 Ultra har foton i Drive men INGET pris
+  någonstans — behöver Sebastians inköpspris innan den läggs upp.
+  "Verkstads bilder"/"bilder till hemsidan"-mapparna i Drive returnerar tomt
+  via connectorn — Sebastian får peka ut var verkstadsfotona ligger.
+- **OBS:** Denna branch bär även Codex 3 lokala SEO-commits (`bc4e60f` m.fl.)
+  som inte var pushade till origin — de följer med upp när PR #87 mergas.
+- **Tester:** `generate:products` (32) ✅, `verify:checkout-products` (32) ✅,
+  build ✅.
+- **Varning till Codex:** Rör inte `data/products.json` förrän PR #87 är mergad.
+
 ### 2026-07-02 — Claude Code — KLAR (Teverun-sortiment +7 modeller & prisgaranti Mini Blade Ultra)
 
 - **Branch:** `feat/teverun-range-prisgaranti` → PR mot `main` (öppen, ej mergad).
