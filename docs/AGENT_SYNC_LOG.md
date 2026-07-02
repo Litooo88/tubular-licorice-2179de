@@ -32,6 +32,32 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-02 — Claude Code — KLAR (Teverun-sortiment +7 modeller & prisgaranti Mini Blade Ultra)
+
+- **Branch:** `feat/teverun-range-prisgaranti` → PR mot `main` (öppen, ej mergad).
+- **Bakgrund:** Sebastian delade Teveruns grossistlista (EUR, SRP/nettopris/
+  lagerstatus). Beslut: INGEN rabattkampanj på Mini Blade Ultra (skyddar kunden
+  som nyss betalade ~19k) — i stället **prisgaranti på endast den modellen**.
+- **Gjorde (data/products.json → generator):**
+  - **Prisgaranti** på `teverun-blade-mini-ultra`: badge "Prisgaranti" + villkor
+    i short (svensk auktoriserad återförsäljare, före köp, med länk). Pris
+    oförändrat 17 990.
+  - **+7 nya Teverun-modeller** (24→31 produkter, Teverun 6→13): Blade Mini Pro
+    14 990 (pa-vag juli) · Blade Mini Pro eKFV 15 490 (i-lager) · Blade Mini
+    Ultra eKFV 19 990 (pa-vag) · Blade GT+ II 28 990 (pa-vag) · Fighter Mini
+    23 990 (i-lager, fåtal) · Fighter Mini Pro 26 990 (pa-vag) · Fighter Supreme
+    Ultra 49 990 (beställningsvara). Priser satta enligt husets befintliga
+    EUR→SEK-kurva (13–15x SRP); marginaler 4 700–12 000 kr/st mot nettopriser.
+    Bilder hotlänkas från teverun-europe.com (etablerat mönster).
+  - **Lagerkorrigeringar:** Space Lite slut hos Teverun → `pa-vag`;
+    Fighter Eleven+ "fåtal kvar hos leverantören" i delivery-texten.
+- **Tester:** `generate:products` (31 produkter) ✅, `verify:checkout-products`
+  (31 verifierade) ✅, `npm run build` ✅.
+- **OBS till Sebastian:** priserna på de 7 nya är mina förslag enligt er
+  priskurva — justera gärna i PR:en innan merge.
+- **Varning till Codex:** Rör inte `feat/teverun-range-prisgaranti` eller
+  `data/products.json` förrän PR:en är mergad.
+
 ### 2026-07-02 — Claude Code — KLAR (SEO: on-page-förbättringar elscooter-sökord Örebro)
 
 - **Branch:** `main`, commit `bc4e60f`. Endast statiska sidor + sitemap, ingen
