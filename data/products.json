@@ -25,7 +25,10 @@
         "lång-rackvidd"
       ],
       "images": [
-        "https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png"
+        "https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png",
+        "https://www.naveetech.com/wp-content/plugins/sytech-fronteditor/sytpl/ut5-ultra1-ut5_banner/assets/img/ut5u-banner.jpg",
+        "https://www.naveetech.com/wp-content/plugins/sytech-fronteditor/sytpl/ut5-ultra4-ut5_intro1/assets/img/ut5u-intro1.jpg",
+        "https://www.naveetech.com/wp-content/plugins/sytech-fronteditor/sytpl/ut5-ultra12-ut5_intro9/assets/img/ut5u-intro9.jpg"
       ]
     },
     {
@@ -72,7 +75,9 @@
         "pendling"
       ],
       "images": [
-        "https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png"
+        "https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png",
+        "https://www.naveetech.com/wp-content/plugins/sytech-fronteditor/sytpl/nt5-ultrax1-nt5_banner/assets/img/nt5u-banner.jpg",
+        "https://www.naveetech.com/wp-content/plugins/sytech-fronteditor/sytpl/nt5-ultrax4-nt5_intro1/assets/img/nt5u-intro1.jpg"
       ]
     },
     {
@@ -94,7 +99,32 @@
         "komfort"
       ],
       "images": [
-        "https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png"
+        "https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png",
+        "https://www.naveetech.com/wp-content/plugins/sytech-fronteditor/sytpl/xt5-pro1-xt5_banner/assets/img/xt5p-banner.jpg",
+        "https://www.naveetech.com/wp-content/plugins/sytech-fronteditor/sytpl/xt5-pro5-xt5_intro2/assets/img/xt5p-intro2.jpg"
+      ]
+    },
+    {
+      "id": "navee-st5-max",
+      "brand": "NAVEE",
+      "name": "NAVEE ST5 Max",
+      "priceSek": 11990,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Räckvidd",
+      "spec": "500W • upp till 90 km räckvidd • 20 km/h",
+      "short": "Långdistans-pendlaren i NAVEE-familjen – upp till 90 km räckvidd till mellanklasspris.",
+      "positioning": "Räckviddsmästare i mellanklassen",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "pendling"
+      ],
+      "images": [
+        "https://www.naveetech.com/wp-content/uploads/2025/12/ST5-Max.png",
+        "https://www.naveetech.com/wp-content/uploads/2025/12/ST5-MAX-20251223-154254.png",
+        "https://www.naveetech.com/wp-content/uploads/2025/12/ST5-Max%E5%AE%98%E7%BD%91EU_01.jpg"
       ]
     },
     {
@@ -116,7 +146,9 @@
         "komfort"
       ],
       "images": [
-        "https://www.naveetech.com/wp-content/uploads/2026/03/NT5-max-12.31.1.png"
+        "https://www.naveetech.com/wp-content/uploads/2026/03/NT5-max-12.31.1.png",
+        "https://www.naveetech.com/wp-content/plugins/sytech-fronteditor/sytpl/nt5-max1-nt5_banner/assets/img/nt5m-banner.jpg",
+        "https://www.naveetech.com/wp-content/plugins/sytech-fronteditor/sytpl/nt5-max4-nt5_intro1-nt5m/assets/img/nt5m-intro1.jpg"
       ]
     },
     {
@@ -184,7 +216,10 @@
         "budget"
       ],
       "images": [
-        "/assets/products/navee/g5-drive.jpg"
+        "/assets/products/navee/g5-drive.jpg",
+        "https://www.naveetech.com/wp-content/uploads/2025/12/G5-%E5%8F%B3%E4%BE%A745%C2%B0.png",
+        "https://www.naveetech.com/wp-content/uploads/2025/12/G5-%E7%BA%AF%E4%BE%A7%E9%9D%A2.png",
+        "https://www.naveetech.com/wp-content/uploads/2025/12/G5%E4%BA%A7%E5%93%81%E7%AB%99%E9%80%82%E9%85%8D_PCProduct-details-page_PC_1-%E6%8B%B7%E8%B4%9D.jpg"
       ]
     },
     {
@@ -206,7 +241,10 @@
         "vardag"
       ],
       "images": [
-        "https://www.naveetech.com/wp-content/uploads/2025/07/v25i-II-1-500x500.png"
+        "https://www.naveetech.com/wp-content/uploads/2025/07/v25i-II-1-500x500.png",
+        "https://www.naveetech.com/wp-content/uploads/2025/07/v25i-II.png",
+        "https://www.naveetech.com/wp-content/uploads/2025/07/1-KV.jpg",
+        "https://www.naveetech.com/wp-content/uploads/2025/07/v25i-II-1-1.png"
       ]
     },
     {
@@ -227,7 +265,10 @@
         "budget"
       ],
       "images": [
-        "https://www.naveetech.com/wp-content/uploads/2025/09/k100-com1.png"
+        "https://www.naveetech.com/wp-content/uploads/2025/09/k100-com1.png",
+        "https://www.naveetech.com/wp-content/plugins/sytech-fronteditor/sytpl/k1001-k100_banner/assets/img/k100-banner1.jpg",
+        "https://www.naveetech.com/wp-content/plugins/sytech-fronteditor/sytpl/k1004-k100_spec/assets/img/k100-pd1.png",
+        "https://www.naveetech.com/wp-content/plugins/sytech-fronteditor/sytpl/k1008-k100_advantage/assets/img/k100-img1.jpg"
       ]
     },
     {

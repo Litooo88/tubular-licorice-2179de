@@ -32,6 +32,22 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-02 — Claude Code — KLAR (NAVEE-gallerier + ST5 Max — katalogen komplett, PR #87)
+
+- **Branch:** `feat/teverun-range-prisgaranti` (samma PR #87, tredje commiten).
+- **Gjorde:** Svepte naveetech.com (agent, alla URL:er HTTP- och visuellt
+  verifierade): **7 NAVEE-produkter lyfta 1→3-4 bilder**. La till
+  **NAVEE ST5 Max 11 990 kr** — pris/status direkt från NAVEE:s officiella
+  "Nordic Product List for Sale" i Drive ("On sale", Nederländerna-lagret),
+  inget gissat. Nu **33 produkter**; endast `teverun-blade-gt-plus-ii` har 1
+  bild (ny modell utan egen produktsida hos Teverun än — delar GT II-foto).
+- **Tester:** `generate:products` (33) ✅, `verify:checkout-products` (33) ✅,
+  build ✅.
+- **Katalogen är nu komplett** förutom: KuKirin G2 Ultra (väntar Sebastians
+  inköpspris) och verkstadsfoton (väntar på var de ligger — Drive-mapparna
+  returnerar tomt via connectorn).
+- **Varning till Codex:** Rör inte `data/products.json` förrän PR #87 mergats.
+
 ### 2026-07-02 — Claude Code — KLAR (Gallerilyft 19 produkter + KuKirin A1, samma PR #87)
 
 - **Branch:** `feat/teverun-range-prisgaranti` (samma PR som Teverun-utökningen).
