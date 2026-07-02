@@ -32,19 +32,29 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-07-02 — Claude Code — PÅGÅR (produktstruktur: hjälm bort, G4-kostnad, populärast, begagnat/NEMOB Edition)
+### 2026-07-02 — Claude Code — KLAR (produktstruktur: hjälm bort, G4-kostnad, populärast, begagnat/NEMOB Edition)
 
-- **Branch:** `main`. Tar: `data/products.json`, `scripts/generate-products.mjs`,
-  `index.html` (hero-choice + genererad PRODUKTER-sektion), `nya-elscootrar/`
-  (genererad sektion), `sitemap.xml`, `docs/codex-handoff.md`.
-- **Gör:** 1) G4 inköp 683 EUR som intern kostnadsdata + prisöversyns-flagga,
-  2) all "hjälm ingår"-copy bort (datafil + generator + handskriven hero),
-  3) "Populärast just nu"-sektion på startsidan med badges/premium-CTA,
-  4) saknade modeller (KuKirin G2 Pro/G2 Master/A1/C1 Pro, NAVEE GT3 Max/ST3 Pro)
-  som förbeställ utan pris, 5) ny sektion "Begagnat, renoverat & NEMOB Edition"
-  på utbudssidan, 6) Dualtron Eagle Pro NEMOB Edition som kommande renovering,
-  7) juridisk notis för custombyggen. Rör INTE checkout-/Stripe-flödet
-  (nya modeller får `checkout: false`).
+- **Branch:** `main`, commit `570a59d`. Filer: `data/products.json`,
+  `scripts/generate-products.mjs`, `index.html`, `nya-elscootrar/index.html`,
+  `sitemap.xml`, `docs/codex-handoff.md`, `.claude/launch.json` (ny, preview).
+- **Gjort:** 1) HJÄLM-KAMPANJEN BORTTAGEN överallt — säg aldrig att hjälm ingår
+  (endast rekommendation kvar). 2) G4 inköp 683 EUR internt (`costEur`, renderas
+  ALDRIG publikt) + `needsPriceReview: true` — 9 950 kr ger nära noll marginal,
+  PRIS MÅSTE SES ÖVER. 3) Startsidan: "Populärast just nu" med 6 större kort +
+  badges + trust-rad. 4) 6 nya modeller utan pris (`checkout: false`, CTA
+  "Kontakta oss för pris"): KuKirin G2 Master/G2 Pro/A1/C1 Pro 26Ah, NAVEE
+  GT3 Max/ST3 Pro — inga bilder ännu (fallback verkstadsbild), inga påhittade
+  specs/priser. 5) Ny `refurbished`-array i products.json + sektion
+  "Begagnat, renoverat & NEMOB Edition" (`#begagnat-renoverat`) på utbudssidan.
+  6) Dualtron Eagle Pro NEMOB Edition som kommande renovering — Storm
+  Limited-motor och 72V-konvertering är UNDER UTVÄRDERING, ej installerade.
+  7) Juridisk notis för custombyggen på båda sidorna.
+- **Tester:** `npm run build` ✅ (idempotent), `verify:checkout-products` ✅
+  (31 köpbara oförändrat), `nemob-callflow npm run check` ✅, browserkontroll
+  via lokal preview ✅ (badges, CTA:er, begagnat-sektion, 0 hjälm-löften).
+- **Varning till Codex:** costEur i products.json är internt inköpspris —
+  exponera aldrig i genererad HTML. Nya modeller får inte ges checkout: true
+  utan Stripe-produkt + pris.
 
 ### 2026-07-02 — Claude Code — KLAR (Teverun-sortiment +7 modeller & prisgaranti Mini Blade Ultra)
 
