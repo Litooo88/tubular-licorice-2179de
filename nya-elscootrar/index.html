@@ -285,6 +285,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         .brand-row p{color:var(--muted);max-width:520px}
         .fighter-push{margin-top:24px;border:1px solid rgba(255,138,28,.34);background:linear-gradient(135deg,rgba(255,138,28,.13),rgba(0,200,83,.07));border-radius:8px;padding:22px}
         .accessory-card .product-media{height:190px}
+        .refurb-card{border-color:rgba(255,138,28,.36)}
+        .refurb-details{margin:10px 0 4px;padding:0;display:grid;gap:5px}
+        .refurb-details li{list-style:none;font-size:12px;color:#cdd7d0;border-left:2px solid rgba(255,138,28,.5);padding-left:9px;line-height:1.45}
+        .refurb-promise{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+        .refurb-promise span{border:1px solid rgba(255,138,28,.3);background:rgba(255,138,28,.08);color:#ffd9b3;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800}
         .catalog-product-modal{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);padding:18px}
         .catalog-product-modal.is-open{display:flex}
         .catalog-product-dialog{width:min(920px,100%);max-height:calc(100vh - 36px);overflow:auto;background:#0d0f0e;border:1px solid #26342b;border-radius:8px;color:#fff;box-shadow:0 30px 90px rgba(0,0,0,.55)}
@@ -313,9 +318,9 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <div class="section-head">
         <div>
           <span class="eyebrow">NYA ELSCOOTRAR</span>
-          <h2>Hela utbudet från NAVEE, Teverun och KuKirin.</h2>
+          <h2>Utvalda elscootrar — med verkstaden bakom varje köp.</h2>
         </div>
-        <p>Vi visar hela sortimentet SEO-vänligt direkt i sidan, med samma pris och status som checkout. Kunden ska kunna jämföra, klicka på modell, se bilder och gå vidare till köp utan att fastna.</p>
+        <p>Vi säljer modeller vi själva kan serva. Hela sortimentet från NAVEE, Teverun och KuKirin med samma pris och status som checkout — och service, garanti och reservdelar i vår verkstad i Örebro efter köpet.</p>
       </div>
       <div class="catalog-intro">
         <div class="catalog-note">
@@ -325,12 +330,13 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <a href="#brand-navee">NAVEE</a>
             <a href="#brand-teverun">Teverun</a>
             <a href="#brand-kukirin">KuKirin</a>
+            <a href="#begagnat-renoverat">Begagnat &amp; NEMOB Edition</a>
             <a href="#tillbehor-reservdelar">Tillbehor och reservdelar</a>
           </div>
         </div>
         <div class="catalog-note">
           <h3>Köp med verkstadsstöd</h3>
-          <p>Betala tryggt via checkout. KuKirin har gratis hemleverans eller gratis leverans till vår verkstad med leverans 5 arbetsdagar efter mottagen betalning. Teverun har fraktavgift 60 EUR och leverans 5-7 arbetsdagar. Vi kontaktar kunden om leverans, montering, hjälm, inbyte och efterservice.</p>
+          <p>Betala tryggt via checkout. KuKirin har gratis hemleverans eller gratis leverans till vår verkstad med leverans 5 arbetsdagar efter mottagen betalning. Teverun har fraktavgift 60 EUR och leverans 5-7 arbetsdagar. Vi kontaktar kunden om leverans, montering, inbyte och efterservice. Hjälm rekommenderas alltid – vi hjälper gärna till med rätt storlek och modell.</p>
           <div class="payment-methods" aria-label="Tillgängliga betalsätt i checkout">
               <span class="pay-logo klarna">Klarna</span>
               <span class="pay-logo apple">Apple Pay</span>
@@ -354,7 +360,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>NAVEE XT5 Ultra</h3>
             <p class="spec">2x500W • 46.8V 19.2Ah • 899 Wh • upp till 90 km</p>
             <p class="copy">Premiumvalet från NAVEE för kunden som vill ha komfort, räckvidd och modern känsla.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">16 990 kr</div>
             <p class="klarna">Ca 708 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -384,7 +389,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>NAVEE N65i</h3>
             <p class="spec">450W • upp till 65 km • stabil vardagsmodell</p>
             <p class="copy">Stadigare vardagsmodell för kunden som vill ha mer komfort utan att ga hela vägen upp i premium.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">8 499 kr</div>
             <p class="klarna">Ca 355 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -414,7 +418,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>NAVEE V50i Pro</h3>
             <p class="spec">350W • upp till 50 km • smidig pendlare</p>
             <p class="copy">Smidig pendlare för vardagskunden som vill ha rätt pris, lag troskel och verkstadsstod.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">5 990 kr</div>
             <p class="klarna">Ca 250 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -444,7 +447,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Fighter Eleven+</h3>
             <p class="spec">2x1600W • 60V 35Ah LG • 2100 Wh</p>
             <p class="copy">Premium från Teverun för kunden som vill ha riktig kraft, stabilitet och en mer seriös scooter.</p>
-
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">39 990 kr</div>
             <p class="klarna">Ca 1 667 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -474,7 +476,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>KuKirin G2</h3>
             <p class="spec">800W • 48V 15Ah • 720 Wh</p>
             <p class="copy">Budgetvalet vi hellre visar tydligt än att blanda in för många svaga alternativ.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">7 990 kr</div>
             <p class="klarna">Ca 333 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -495,7 +496,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp&quot;]">
           <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G4-Special-Edition" data-open-product aria-label="Visa bilder och information om KuKirin G4 Special Edition">
-            <span class="tag orange">Special Edition</span>
+            <span class="tag orange">Kundfavorit</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272" alt="KuKirin G4 Special Edition">
           </a>
           <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 2"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp" alt="KuKirin G4 Special Edition extra bild 2"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 3"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp" alt="KuKirin G4 Special Edition extra bild 3"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 4"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp" alt="KuKirin G4 Special Edition extra bild 4"></button></div>
@@ -503,8 +504,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <div class="product-meta"><span>KuKirin</span><span>I LAGER</span></div>
             <h3>KuKirin G4 Special Edition</h3>
             <p class="spec">2000W • 60V 20Ah • 1200 Wh • upp till 75 km</p>
-            <p class="copy">Kampanjmodellen med tydlig premiumkänsla. Svart crosshjälm ingår för de 5 första G4 Special Edition-ordrarna.</p>
-            <p class="campaign-note"><strong>Kampanj:</strong> svart crosshjälm ingår för de 5 första G4 Special Edition-ordrarna.</p>
+            <p class="copy">Vår mest valda modell. Rejäl kraft och räckvidd till ett pris som är svårslaget i klassen — levereras genomgången med verkstadsstöd i Örebro.</p>
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">9 950 kr</div>
             <p class="klarna">Ca 415 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -544,7 +544,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Fighter Mini Pro eKFV</h3>
             <p class="spec">2x250W Bosch • 52V 30.8Ah Samsung • TFT</p>
             <p class="copy">Kompakt premium för kunden som vill ha seriös byggkvalitet och regelfokus där eKFV-status är relevant.</p>
-
             <p class="product-legal">Regelstatus beror på exakt version och användning. Vi kontrollerar innan affär.</p>
             <div class="price">27 990 kr</div>
             <p class="klarna">Ca 1 167 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -574,7 +573,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Fighter Mini</h3>
             <p class="spec">2x1000W • 52V 30Ah BOSCH • System 2.0/4&quot; LCD/KKE</p>
             <p class="copy">Fighter-seriens kompakta instegsmodell med Bosch-batteri och KKE-fjädring. Fåtal kvar.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">23 990 kr</div>
             <p class="klarna">Ca 1 000 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -604,7 +602,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Fighter Mini Pro</h3>
             <p class="spec">2x1000W • 60V 31.8Ah BOSCH • System 2.0/4&quot; TFT/KKE</p>
             <p class="copy">Uppgraderad Fighter Mini med 60V-system, större Bosch-batteri och TFT-display.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">26 990 kr</div>
             <p class="klarna">Ca 1 125 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -634,7 +631,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Fighter Supreme Ultra</h3>
             <p class="spec">2x1600W • 72V 60Ah SK • NFC/4&quot; TFT/APP</p>
             <p class="copy">Supreme-seriens Ultra: 72V-system och enormt 60Ah SK-batteri för maximal räckvidd och kraft.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">49 990 kr</div>
             <p class="klarna">Ca 2 083 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -664,7 +660,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Fighter Eleven+</h3>
             <p class="spec">2x1600W • 60V 35Ah LG • 2100 Wh</p>
             <p class="copy">Premium från Teverun för kunden som vill ha riktig kraft, stabilitet och en mer seriös scooter.</p>
-
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">39 990 kr</div>
             <p class="klarna">Ca 1 667 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -691,7 +686,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <span class="eyebrow">NAVEE</span>
             <h3>NAVEE sortiment</h3>
           </div>
-          <p>10 modeller i katalogen. Status och pris kommer från samma produktdata som checkout.</p>
+          <p>12 modeller i katalogen. Status och pris kommer från samma produktdata som checkout.</p>
         </div>
         <div class="grid three catalog-grid">
 
@@ -706,7 +701,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>NAVEE UT5 Ultra X</h3>
             <p class="spec">2x1100W • 72V 15.6Ah • 1123 Wh</p>
             <p class="copy">NAVEE:s starkaste premiumval för kunden som vill ha komfort, kontroll och rejalt med kraft.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">23 490 kr</div>
             <p class="klarna">Ca 979 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -736,7 +730,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>NAVEE XT5 Ultra</h3>
             <p class="spec">2x500W • 46.8V 19.2Ah • 899 Wh • upp till 90 km</p>
             <p class="copy">Premiumvalet från NAVEE för kunden som vill ha komfort, räckvidd och modern känsla.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">16 990 kr</div>
             <p class="klarna">Ca 708 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -766,7 +759,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>NAVEE NT5 Ultra X</h3>
             <p class="spec">2x700W • premiumplattform</p>
             <p class="copy">Starkt NAVEE-alternativ för kunden som vill ha mer kraft men inte ga upp till storsta modellen.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">13 490 kr</div>
             <p class="klarna">Ca 563 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -796,7 +788,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>NAVEE XT5 Pro</h3>
             <p class="spec">Premiumkomfort • XT5-plattform</p>
             <p class="copy">Kommande NAVEE-modell för kunden som vill ha XT5-känsla till lägre pris an Ultra.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">11 990 kr</div>
             <p class="klarna">Ca 500 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -826,7 +817,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>NAVEE NT5 Max</h3>
             <p class="spec">NT5-plattform • vardag och komfort</p>
             <p class="copy">Kommande NAVEE-modell för dig som vill ha ett tryggt mellansteg med modern känsla.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">10 990 kr</div>
             <p class="klarna">Ca 458 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -856,7 +846,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>NAVEE N65i</h3>
             <p class="spec">450W • upp till 65 km • stabil vardagsmodell</p>
             <p class="copy">Stadigare vardagsmodell för kunden som vill ha mer komfort utan att ga hela vägen upp i premium.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">8 499 kr</div>
             <p class="klarna">Ca 355 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -886,7 +875,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>NAVEE V50i Pro</h3>
             <p class="spec">350W • upp till 50 km • smidig pendlare</p>
             <p class="copy">Smidig pendlare för vardagskunden som vill ha rätt pris, lag troskel och verkstadsstod.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">5 990 kr</div>
             <p class="klarna">Ca 250 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -916,7 +904,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>NAVEE G5</h3>
             <p class="spec">Vardagsmodell - verkstadsstöd efter köp</p>
             <p class="copy">Prisvärt NAVEE-val för enklare vardagskörning med lokal hjälp efter köpet.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">5 490 kr</div>
             <p class="klarna">Ca 229 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -946,7 +933,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>NAVEE V25i Pro II</h3>
             <p class="spec">Instegsmodell • NAVEE-känsla</p>
             <p class="copy">Ett enklare NAVEE-val för kortare vardagsresor och lägre inkopstrappa.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">4 490 kr</div>
             <p class="klarna">Ca 188 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -976,7 +962,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>NAVEE K100 Max</h3>
             <p class="spec">Prisvart insteg • kortare vardag</p>
             <p class="copy">Lagsta NAVEE-prispunkten i sortimentet för enklare vardagsbehov.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">3 499 kr</div>
             <p class="klarna">Ca 146 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -991,6 +976,50 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <p class="stock-copy">Leverans 1-2 veckor efter beställning</p>
             <div class="card-actions">
               <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-K100-Max" data-product="navee-k100-max">Köp nu</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="card product-card" data-brand="NAVEE" data-status="forbestall" data-gallery="[]">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-GT3-Max" data-open-product aria-label="Visa bilder och information om NAVEE GT3 Max">
+            <span class="tag ">Kommer snart</span>
+            <img loading="lazy" src="/assets/workshop/scooter-on-bench.jpg" alt="NAVEE GT3 Max">
+          </a>
+          <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
+          <div class="card-body">
+            <div class="product-meta"><span>NAVEE</span><span>FÖRBESTÄLL</span></div>
+            <h3>NAVEE GT3 Max</h3>
+            <p class="spec">Specifikation bekräftas vid lansering</p>
+            <p class="copy">Kommande NAVEE-modell i GT-serien. Anmäl förhandsintresse så hör vi av oss först av alla.</p>
+            <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
+            <div class="price">Kontakta oss för pris</div>
+
+
+            <p class="stock-copy">På väg in i sortimentet – specifikation och pris bekräftas vid lansering.</p>
+            <div class="card-actions">
+              <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-GT3-Max">Kontakta oss för pris</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="card product-card" data-brand="NAVEE" data-status="forbestall" data-gallery="[]">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=NAVEE-ST3-Pro" data-open-product aria-label="Visa bilder och information om NAVEE ST3 Pro">
+            <span class="tag ">Kommer snart</span>
+            <img loading="lazy" src="/assets/workshop/scooter-on-bench.jpg" alt="NAVEE ST3 Pro">
+          </a>
+          <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
+          <div class="card-body">
+            <div class="product-meta"><span>NAVEE</span><span>FÖRBESTÄLL</span></div>
+            <h3>NAVEE ST3 Pro</h3>
+            <p class="spec">Specifikation bekräftas vid lansering</p>
+            <p class="copy">Kommande NAVEE-modell i ST-serien. Anmäl förhandsintresse så hör vi av oss först av alla.</p>
+            <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
+            <div class="price">Kontakta oss för pris</div>
+
+
+            <p class="stock-copy">På väg in i sortimentet – specifikation och pris bekräftas vid lansering.</p>
+            <div class="card-actions">
+              <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=NAVEE-ST3-Pro">Kontakta oss för pris</a>
             </div>
           </div>
         </article>
@@ -1018,7 +1047,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Space Lite</h3>
             <p class="spec">Kompakt Teverun • premiumkänsla</p>
             <p class="copy">Teverun-alternativet för kunden som vill in i premiumkänsla i ett smidigare format.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">12 990 kr</div>
             <p class="klarna">Ca 542 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1048,7 +1076,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Blade Mini Pro</h3>
             <p class="spec">2x500W • 48V 27Ah • Easy App/B-LCD/NFC</p>
             <p class="copy">Instegsmodellen i Blade-serien: kompakt dubbelmotor med rejäl räckvidd för daglig pendling.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">14 990 kr</div>
             <p class="klarna">Ca 625 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1078,7 +1105,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Blade Mini Pro eKFV</h3>
             <p class="spec">2x250W • 52V 22.5Ah DMEGC • Bosch/Spring/APP • NFC/LCD</p>
             <p class="copy">Gatuanpassad version av Blade Mini Pro med 20 km/h-klassning, NFC-lås och inbyggd LCD.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">15 490 kr</div>
             <p class="klarna">Ca 646 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1108,7 +1134,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Blade Mini Ultra</h3>
             <p class="spec">Blade-serien • stark byggkänsla</p>
             <p class="copy">Starkt mellansteg för kunden som vill ha mer premiumkänsla och komponentniva. Prisgaranti: hittar du samma modell billigare hos en svensk auktoriserad återförsäljare matchar vi priset – kontakta oss med länk innan köp.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">17 990 kr</div>
             <p class="klarna">Ca 750 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1138,7 +1163,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Blade Mini Ultra eKFV</h3>
             <p class="spec">2x250W • 52V 30Ah DMEGC • Bosch/Spring/APP • NFC/LCD • 6A-laddare</p>
             <p class="copy">Mini Ultra i gatuanpassad 20 km/h-version med stort 30Ah-batteri och snabbladdare.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">19 990 kr</div>
             <p class="klarna">Ca 833 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1159,7 +1183,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 
         <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/d105d84cfc45a3e1c40bed8ee5077350.png&quot;]">
           <a class="product-media" href="/book-online?service=bestallning&amp;modell=Teverun-Blade-GT-II" data-open-product aria-label="Visa bilder och information om Teverun Blade GT II">
-            <span class="tag ">Blade GT</span>
+            <span class="tag ">Premiumval</span>
             <img loading="lazy" src="https://teverun-europe.com/wp-content/uploads/2026/04/d105d84cfc45a3e1c40bed8ee5077350.png" alt="Teverun Blade GT II">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
@@ -1168,7 +1192,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Blade GT II</h3>
             <p class="spec">Premiumplattform - höjdkänsla</p>
             <p class="copy">För kunden som vill ha mer Teverun-känsla, mer stabilitet och högre komponentniva.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">24 990 kr</div>
             <p class="klarna">Ca 1 042 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1198,7 +1221,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Blade GT+ II</h3>
             <p class="spec">2x1500W • 60V 31.5Ah • APP/b-LCD/KKE</p>
             <p class="copy">GT II med större batteri och KKE-fjädring – för den som vill ha mer räckvidd i GT-klassen.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">28 990 kr</div>
             <p class="klarna">Ca 1 208 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1228,7 +1250,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Fighter Mini Pro eKFV</h3>
             <p class="spec">2x250W Bosch • 52V 30.8Ah Samsung • TFT</p>
             <p class="copy">Kompakt premium för kunden som vill ha seriös byggkvalitet och regelfokus där eKFV-status är relevant.</p>
-
             <p class="product-legal">Regelstatus beror på exakt version och användning. Vi kontrollerar innan affär.</p>
             <div class="price">27 990 kr</div>
             <p class="klarna">Ca 1 167 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1258,7 +1279,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Fighter Mini</h3>
             <p class="spec">2x1000W • 52V 30Ah BOSCH • System 2.0/4&quot; LCD/KKE</p>
             <p class="copy">Fighter-seriens kompakta instegsmodell med Bosch-batteri och KKE-fjädring. Fåtal kvar.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">23 990 kr</div>
             <p class="klarna">Ca 1 000 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1288,7 +1308,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Fighter Mini Pro</h3>
             <p class="spec">2x1000W • 60V 31.8Ah BOSCH • System 2.0/4&quot; TFT/KKE</p>
             <p class="copy">Uppgraderad Fighter Mini med 60V-system, större Bosch-batteri och TFT-display.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">26 990 kr</div>
             <p class="klarna">Ca 1 125 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1318,7 +1337,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Fighter Supreme Ultra</h3>
             <p class="spec">2x1600W • 72V 60Ah SK • NFC/4&quot; TFT/APP</p>
             <p class="copy">Supreme-seriens Ultra: 72V-system och enormt 60Ah SK-batteri för maximal räckvidd och kraft.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">49 990 kr</div>
             <p class="klarna">Ca 2 083 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1348,7 +1366,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Fighter Eleven+</h3>
             <p class="spec">2x1600W • 60V 35Ah LG • 2100 Wh</p>
             <p class="copy">Premium från Teverun för kunden som vill ha riktig kraft, stabilitet och en mer seriös scooter.</p>
-
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">39 990 kr</div>
             <p class="klarna">Ca 1 667 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1378,7 +1395,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>Teverun Supreme 7260R</h3>
             <p class="spec">72V 60Ah • premiumprestanda</p>
             <p class="copy">Toppspår för privat mark, specialanvändning och kunden som uttryckligen vill ha storsta Teverun-klassen.</p>
-
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">54 990 kr</div>
             <p class="klarna">Ca 2 292 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1405,7 +1421,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <span class="eyebrow">KuKirin</span>
             <h3>KuKirin sortiment</h3>
           </div>
-          <p>8 modeller i katalogen. Status och pris kommer från samma produktdata som checkout.</p>
+          <p>12 modeller i katalogen. Status och pris kommer från samma produktdata som checkout.</p>
         </div>
         <div class="grid three catalog-grid">
 
@@ -1420,7 +1436,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>KuKirin S1 Max</h3>
             <p class="spec">Kompakt instegsmodell</p>
             <p class="copy">Enklare KuKirin för kortare resor och lag inkopstrappa.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">4 990 kr</div>
             <p class="klarna">Ca 208 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1450,7 +1465,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>KuKirin G2</h3>
             <p class="spec">800W • 48V 15Ah • 720 Wh</p>
             <p class="copy">Budgetvalet vi hellre visar tydligt än att blanda in för många svaga alternativ.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">7 990 kr</div>
             <p class="klarna">Ca 333 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1480,7 +1494,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>KuKirin M4 Max</h3>
             <p class="spec">Prisvard KuKirin • vardagskraft</p>
             <p class="copy">Prisvart alternativ för kunden som vill ha mer scooter för pengarna.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">7 490 kr</div>
             <p class="klarna">Ca 313 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1501,7 +1514,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp&quot;]">
           <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G4-Special-Edition" data-open-product aria-label="Visa bilder och information om KuKirin G4 Special Edition">
-            <span class="tag orange">Special Edition</span>
+            <span class="tag orange">Kundfavorit</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272" alt="KuKirin G4 Special Edition">
           </a>
           <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 2"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp" alt="KuKirin G4 Special Edition extra bild 2"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 3"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp" alt="KuKirin G4 Special Edition extra bild 3"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 4"><img loading="lazy" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp" alt="KuKirin G4 Special Edition extra bild 4"></button></div>
@@ -1509,8 +1522,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <div class="product-meta"><span>KuKirin</span><span>I LAGER</span></div>
             <h3>KuKirin G4 Special Edition</h3>
             <p class="spec">2000W • 60V 20Ah • 1200 Wh • upp till 75 km</p>
-            <p class="copy">Kampanjmodellen med tydlig premiumkänsla. Svart crosshjälm ingår för de 5 första G4 Special Edition-ordrarna.</p>
-            <p class="campaign-note"><strong>Kampanj:</strong> svart crosshjälm ingår för de 5 första G4 Special Edition-ordrarna.</p>
+            <p class="copy">Vår mest valda modell. Rejäl kraft och räckvidd till ett pris som är svårslaget i klassen — levereras genomgången med verkstadsstöd i Örebro.</p>
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">9 950 kr</div>
             <p class="klarna">Ca 415 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1540,7 +1552,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>KuKirin G3</h3>
             <p class="spec">1200W • 48V 18Ah • 864 Wh</p>
             <p class="copy">Starkt mellanval för kunden som vill upp från enklare modeller.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">10 490 kr</div>
             <p class="klarna">Ca 438 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1561,7 +1572,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2_Max_29.jpg?v=1774526365&quot;]">
           <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G2-Max" data-open-product aria-label="Visa bilder och information om KuKirin G2 Max">
-            <span class="tag orange">I lager</span>
+            <span class="tag orange">Bäst för pendling</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2_Max_29.jpg?v=1774526365" alt="KuKirin G2 Max">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
@@ -1570,7 +1581,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>KuKirin G2 Max</h3>
             <p class="spec">1000W • 48V 20Ah • 960 Wh</p>
             <p class="copy">Mellanklass med mer räckvidd och komfort för kunden som vill ha mer an insteg.</p>
-
             <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
             <div class="price">10 990 kr</div>
             <p class="klarna">Ca 458 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1591,7 +1601,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/KuKirin_G3_Pro_36.jpg?v=1774524745&quot;]">
           <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G3-Pro" data-open-product aria-label="Visa bilder och information om KuKirin G3 Pro">
-            <span class="tag orange">Pro</span>
+            <span class="tag orange">Premiumval</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/KuKirin_G3_Pro_36.jpg?v=1774524745" alt="KuKirin G3 Pro">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
@@ -1600,7 +1610,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>KuKirin G3 Pro</h3>
             <p class="spec">2x1200W • 52V 23Ah • 1196 Wh</p>
             <p class="copy">Starkare KuKirin för kunden som vill ha mer premium och mer kraft.</p>
-
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">18 990 kr</div>
             <p class="klarna">Ca 792 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1621,7 +1630,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 
         <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/74b96dbb2d19db9758ba306fc55ad040.jpg?v=1708069782&quot;]">
           <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G4-Max" data-open-product aria-label="Visa bilder och information om KuKirin G4 Max">
-            <span class="tag orange">Max</span>
+            <span class="tag orange">NEMOB rekommenderar</span>
             <img loading="lazy" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/74b96dbb2d19db9758ba306fc55ad040.jpg?v=1708069782" alt="KuKirin G4 Max">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
@@ -1630,7 +1639,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <h3>KuKirin G4 Max</h3>
             <p class="spec">2x1600W • 60V 35Ah • 2100 Wh</p>
             <p class="copy">Stora KuKirin-valet för kunden som vill ha maximal prestanda och stor batteriplattform.</p>
-
             <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
             <div class="price">26 990 kr</div>
             <p class="klarna">Ca 1 125 kr/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>
@@ -1648,7 +1656,131 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             </div>
           </div>
         </article>
+
+        <article class="card product-card" data-brand="KuKirin" data-status="forbestall" data-gallery="[]">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G2-Master" data-open-product aria-label="Visa bilder och information om KuKirin G2 Master">
+            <span class="tag orange">På väg in</span>
+            <img loading="lazy" src="/assets/workshop/scooter-on-bench.jpg" alt="KuKirin G2 Master">
+          </a>
+          <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
+          <div class="card-body">
+            <div class="product-meta"><span>KuKirin</span><span>FÖRBESTÄLL</span></div>
+            <h3>KuKirin G2 Master</h3>
+            <p class="spec">2000W • 20.8Ah • toppmodellen i G2-serien</p>
+            <p class="copy">Starkaste G2:an fyller gapet mellan G2 Max och G3 Pro. Tas hem på förfrågan.</p>
+            <p class="product-legal">Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.</p>
+            <div class="price">Kontakta oss för pris</div>
+
+
+            <p class="stock-copy">På väg in i sortimentet – anmäl förhandsintresse så återkommer vi med pris och leveranstid.</p>
+            <div class="card-actions">
+              <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-G2-Master">Kontakta oss för pris</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="card product-card" data-brand="KuKirin" data-status="forbestall" data-gallery="[]">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-G2-Pro" data-open-product aria-label="Visa bilder och information om KuKirin G2 Pro">
+            <span class="tag orange">På väg in</span>
+            <img loading="lazy" src="/assets/workshop/scooter-on-bench.jpg" alt="KuKirin G2 Pro">
+          </a>
+          <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
+          <div class="card-body">
+            <div class="product-meta"><span>KuKirin</span><span>FÖRBESTÄLL</span></div>
+            <h3>KuKirin G2 Pro</h3>
+            <p class="spec">600W • 48V 15Ah • upp till 55 km</p>
+            <p class="copy">Mellansteget i G2-serien för kunden som vill ha mer räckvidd än basmodellen.</p>
+            <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
+            <div class="price">Kontakta oss för pris</div>
+
+
+            <p class="stock-copy">På väg in i sortimentet – anmäl förhandsintresse så återkommer vi med pris och leveranstid.</p>
+            <div class="card-actions">
+              <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-G2-Pro">Kontakta oss för pris</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="card product-card" data-brand="KuKirin" data-status="forbestall" data-gallery="[]">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-A1" data-open-product aria-label="Visa bilder och information om KuKirin A1">
+            <span class="tag orange">På väg in</span>
+            <img loading="lazy" src="/assets/workshop/scooter-on-bench.jpg" alt="KuKirin A1">
+          </a>
+          <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
+          <div class="card-body">
+            <div class="product-meta"><span>KuKirin</span><span>FÖRBESTÄLL</span></div>
+            <h3>KuKirin A1</h3>
+            <p class="spec">800W • 48V 13Ah</p>
+            <p class="copy">Kompakt allroundmodell från KuKirin. Tas hem på förfrågan.</p>
+            <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
+            <div class="price">Kontakta oss för pris</div>
+
+
+            <p class="stock-copy">På väg in i sortimentet – anmäl förhandsintresse så återkommer vi med pris och leveranstid.</p>
+            <div class="card-actions">
+              <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-A1">Kontakta oss för pris</a>
+            </div>
+          </div>
+        </article>
+
+        <article class="card product-card" data-brand="KuKirin" data-status="forbestall" data-gallery="[]">
+          <a class="product-media" href="/book-online?service=bestallning&amp;modell=KuKirin-C1-Pro-26Ah" data-open-product aria-label="Visa bilder och information om KuKirin C1 Pro 26Ah">
+            <span class="tag orange">På väg in</span>
+            <img loading="lazy" src="/assets/workshop/scooter-on-bench.jpg" alt="KuKirin C1 Pro 26Ah">
+          </a>
+          <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
+          <div class="card-body">
+            <div class="product-meta"><span>KuKirin</span><span>FÖRBESTÄLL</span></div>
+            <h3>KuKirin C1 Pro 26Ah</h3>
+            <p class="spec">500W • 26Ah • sadel och lång räckvidd</p>
+            <p class="copy">Sittmodell med stort batteri för kunden som vill pendla bekvämt sittande.</p>
+            <p class="product-legal">Kontrollera användningsområde och regler innan köp.</p>
+            <div class="price">Kontakta oss för pris</div>
+
+
+            <p class="stock-copy">På väg in i sortimentet – anmäl förhandsintresse så återkommer vi med pris och leveranstid.</p>
+            <div class="card-actions">
+              <a class="btn ghost" href="/book-online?service=bestallning&amp;modell=KuKirin-C1-Pro-26Ah">Kontakta oss för pris</a>
+            </div>
+          </div>
+        </article>
         </div>
+      </section>
+
+      <section class="catalog-brand" id="begagnat-renoverat">
+        <div class="brand-row">
+          <div>
+            <span class="eyebrow">BEGAGNAT, RENOVERAT &amp; NEMOB EDITION</span>
+            <h3>Unika byggen från verkstaden.</h3>
+          </div>
+          <p>Utvalda premium-scootrar som renoveras, uppgraderas och kvalitetssäkras i vår verkstad i Örebro. För dig som vill ha något mer personligt än standard.</p>
+        </div>
+        <div class="refurb-promise">
+          <span>Genomgångna fordon</span><span>Renoverade delar</span><span>Funktionskontroll</span><span>Möjlig uppgradering</span><span>Estetisk förbättring</span><span>Hållbar återanvändning</span><span>Begränsat antal — varje exemplar är unikt</span>
+        </div>
+        <div class="grid three catalog-grid">
+
+        <article class="card product-card refurb-card" data-brand="Dualtron">
+          <div class="product-media">
+            <span class="tag orange">NEMOB Edition</span>
+            <img loading="lazy" src="/assets/workshop/scooter-on-bench.jpg" alt="Renovering pågår i verkstaden – riktiga bilder på Dualtron Eagle Pro – NEMOB Edition publiceras när bygget är klart">
+          </div>
+          <div class="card-body">
+            <div class="product-meta"><span>Dualtron</span><span>Under renovering / snart klar</span></div>
+            <h3>Dualtron Eagle Pro – NEMOB Edition</h3>
+            <p class="spec">Unikt renoveringsprojekt • 1 exemplar</p>
+            <p class="copy">Dualtron Eagle Pro NEMOB Edition är ett unikt renoveringsprojekt från Nordic E-Mobility. Scootern har nylackerats i mattsvart med pianolackade detaljer och uppgraderas med bland annat ny EY4-display och nytt gasreglage. Controller byts/uppgraderas eftersom originalcontrollern är defekt.</p>
+            <ul class="refurb-details"><li>Ny EY4-display</li><li>Nytt gasreglage</li><li>Nylackerad mattsvart finish</li><li>Pianolackade detaljer</li><li>Controller byts eller uppgraderas (originalet defekt)</li><li>Under utvärdering: specialuppgradering med Storm Limited-motor</li><li>Under utvärdering: 72 V-konvertering efter teknisk validering</li><li>Slutlig specifikation fastställs efter testning</li></ul>
+            <p class="product-legal">Avsedd för privat mark, bana eller inhägnat område beroende på slutlig specifikation.</p>
+            <div class="price">Pris sätts efter slutlig specifikation</div>
+            <p class="stock-copy">Under renovering / snart klar • Riktiga produktbilder publiceras när bygget är klart.</p>
+            <div class="card-actions">
+              <a class="btn ghost" href="/book-online?service=bestallning&modell=Dualtron-Eagle-Pro-NEMOB-Edition">Anmäl intresse</a>
+            </div>
+          </div>
+        </article>
+        </div>
+        <p class="rule-note">Kraftigare elscootrar och custombyggen kan omfattas av andra regler än vanliga elsparkcyklar. Kontrollera alltid gällande regler innan användning i trafik.</p>
       </section>
       <section class="catalog-brand" id="tillbehor-reservdelar">
         <div class="brand-row">
@@ -1721,7 +1853,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </article>
         </div>
       </section>
-      <p class="rule-note">Obs: Prestandamodeller och ombyggda fordon kan omfattas av särskilda regler. Fråga oss eller läs <a href="/regler-elscooter/">regelguiden</a> innan du väljer modell för allmän väg.</p>
+      <p class="rule-note">Kraftigare elscootrar och custombyggen kan omfattas av andra regler än vanliga elsparkcyklar. Kontrollera alltid gällande regler innan användning i trafik — fråga oss eller läs <a href="/regler-elscooter/">regelguiden</a> innan du väljer modell för allmän väg.</p>
       <div class="order-list" id="bestall-scooter">
         <h3>Snabb beställning</h3>
         <p>Har kunden redan valt modell kan köp startas direkt. Samma produkt-ID används av Stripe-checkout.</p>

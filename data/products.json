@@ -3,7 +3,9 @@
   "notes": [
     "Two older NAVEE references are intentionally excluded from the sellable catalog.",
     "Use status i-lager för products available from supplier with normal delivery, not necessarily physically in the workshop.",
-    "Do not label high-power models as road legal unless registration status is confirmed per model."
+    "Do not label high-power models as road legal unless registration status is confirmed per model.",
+    "costEur är internt inköpspris (leverantörens EU-prislista) och får ALDRIG renderas publikt.",
+    "PRISÖVERSYN 2026-07-02: KuKirin G4 (kukirin-g4-special) inköp höjt till 683 EUR — marginalen vid 9 950 kr är nära noll. Nytt pris behöver beslutas."
   ],
   "products": [
     {
@@ -344,7 +346,7 @@
       "priceSek": 24990,
       "status": "i-lager",
       "delivery": "Leverans 5-7 arbetsdagar. Teverun-frakt 60 EUR tillkommer.",
-      "badge": "Blade GT",
+      "badge": "Premiumval",
       "spec": "Premiumplattform - höjdkänsla",
       "short": "För kunden som vill ha mer Teverun-känsla, mer stabilitet och högre komponentniva.",
       "positioning": "Premium",
@@ -582,12 +584,15 @@
       "brand": "KuKirin",
       "name": "KuKirin G4 Special Edition",
       "priceSek": 9950,
+      "costEur": 683,
+      "costUpdated": "2026-07-02",
+      "needsPriceReview": true,
       "status": "i-lager",
       "delivery": "Gratis hemleverans från KuKirin eller gratis leverans till vår verkstad. Leverans 5 arbetsdagar efter mottagen betalning.",
-      "badge": "Special Edition",
+      "badge": "Kundfavorit",
       "spec": "2000W • 60V 20Ah • 1200 Wh • upp till 75 km",
-      "short": "Kampanjmodellen med tydlig premiumkänsla. Svart crosshjälm ingår för de 5 första G4 Special Edition-ordrarna.",
-      "positioning": "Kampanjmodell",
+      "short": "Vår mest valda modell. Rejäl kraft och räckvidd till ett pris som är svårslaget i klassen — levereras genomgången med verkstadsstöd i Örebro.",
+      "positioning": "Kundfavorit",
       "legality": "off-road-only",
       "checkout": true,
       "featured": true,
@@ -631,7 +636,7 @@
       "priceSek": 10990,
       "status": "i-lager",
       "delivery": "Gratis hemleverans från KuKirin eller gratis leverans till vår verkstad. Leverans 5 arbetsdagar efter mottagen betalning.",
-      "badge": "I lager",
+      "badge": "Bäst för pendling",
       "spec": "1000W • 48V 20Ah • 960 Wh",
       "short": "Mellanklass med mer räckvidd och komfort för kunden som vill ha mer an insteg.",
       "positioning": "Mellanklass",
@@ -653,7 +658,7 @@
       "priceSek": 18990,
       "status": "i-lager",
       "delivery": "Gratis hemleverans från KuKirin eller gratis leverans till vår verkstad. Leverans 5 arbetsdagar efter mottagen betalning.",
-      "badge": "Pro",
+      "badge": "Premiumval",
       "spec": "2x1200W • 52V 23Ah • 1196 Wh",
       "short": "Starkare KuKirin för kunden som vill ha mer premium och mer kraft.",
       "positioning": "Pro-prestanda",
@@ -675,7 +680,7 @@
       "priceSek": 26990,
       "status": "i-lager",
       "delivery": "Gratis hemleverans från KuKirin eller gratis leverans till vår verkstad. Leverans 5 arbetsdagar efter mottagen betalning.",
-      "badge": "Max",
+      "badge": "NEMOB rekommenderar",
       "spec": "2x1600W • 60V 35Ah • 2100 Wh",
       "short": "Stora KuKirin-valet för kunden som vill ha maximal prestanda och stor batteriplattform.",
       "positioning": "Max-prestanda",
@@ -689,6 +694,148 @@
       "images": [
         "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/74b96dbb2d19db9758ba306fc55ad040.jpg?v=1708069782"
       ]
+    },
+    {
+      "id": "kukirin-g2-master",
+      "brand": "KuKirin",
+      "name": "KuKirin G2 Master",
+      "priceNote": "Kontakta oss för pris",
+      "status": "forbestall",
+      "delivery": "På väg in i sortimentet – anmäl förhandsintresse så återkommer vi med pris och leveranstid.",
+      "badge": "På väg in",
+      "spec": "2000W • 20.8Ah • toppmodellen i G2-serien",
+      "short": "Starkaste G2:an fyller gapet mellan G2 Max och G3 Pro. Tas hem på förfrågan.",
+      "positioning": "Kommande prestanda",
+      "legality": "off-road-only",
+      "checkout": false,
+      "featured": false,
+      "use": [
+        "prestanda"
+      ],
+      "images": []
+    },
+    {
+      "id": "kukirin-g2-pro",
+      "brand": "KuKirin",
+      "name": "KuKirin G2 Pro",
+      "priceNote": "Kontakta oss för pris",
+      "status": "forbestall",
+      "delivery": "På väg in i sortimentet – anmäl förhandsintresse så återkommer vi med pris och leveranstid.",
+      "badge": "På väg in",
+      "spec": "600W • 48V 15Ah • upp till 55 km",
+      "short": "Mellansteget i G2-serien för kunden som vill ha mer räckvidd än basmodellen.",
+      "positioning": "Kommande mellanklass",
+      "legality": "check-rules",
+      "checkout": false,
+      "featured": false,
+      "use": [
+        "pendling",
+        "vardag"
+      ],
+      "images": []
+    },
+    {
+      "id": "kukirin-a1",
+      "brand": "KuKirin",
+      "name": "KuKirin A1",
+      "priceNote": "Kontakta oss för pris",
+      "status": "forbestall",
+      "delivery": "På väg in i sortimentet – anmäl förhandsintresse så återkommer vi med pris och leveranstid.",
+      "badge": "På väg in",
+      "spec": "800W • 48V 13Ah",
+      "short": "Kompakt allroundmodell från KuKirin. Tas hem på förfrågan.",
+      "positioning": "Kommande allround",
+      "legality": "check-rules",
+      "checkout": false,
+      "featured": false,
+      "use": [
+        "vardag"
+      ],
+      "images": []
+    },
+    {
+      "id": "kukirin-c1-pro-26ah",
+      "brand": "KuKirin",
+      "name": "KuKirin C1 Pro 26Ah",
+      "priceNote": "Kontakta oss för pris",
+      "status": "forbestall",
+      "delivery": "På väg in i sortimentet – anmäl förhandsintresse så återkommer vi med pris och leveranstid.",
+      "badge": "På väg in",
+      "spec": "500W • 26Ah • sadel och lång räckvidd",
+      "short": "Sittmodell med stort batteri för kunden som vill pendla bekvämt sittande.",
+      "positioning": "Kommande komfort",
+      "legality": "check-rules",
+      "checkout": false,
+      "featured": false,
+      "use": [
+        "pendling",
+        "komfort"
+      ],
+      "images": []
+    },
+    {
+      "id": "navee-gt3-max",
+      "brand": "NAVEE",
+      "name": "NAVEE GT3 Max",
+      "priceNote": "Kontakta oss för pris",
+      "status": "forbestall",
+      "delivery": "På väg in i sortimentet – specifikation och pris bekräftas vid lansering.",
+      "badge": "Kommer snart",
+      "spec": "Specifikation bekräftas vid lansering",
+      "short": "Kommande NAVEE-modell i GT-serien. Anmäl förhandsintresse så hör vi av oss först av alla.",
+      "positioning": "Kommande GT-serie",
+      "legality": "check-rules",
+      "checkout": false,
+      "featured": false,
+      "use": [
+        "premium"
+      ],
+      "images": []
+    },
+    {
+      "id": "navee-st3-pro",
+      "brand": "NAVEE",
+      "name": "NAVEE ST3 Pro",
+      "priceNote": "Kontakta oss för pris",
+      "status": "forbestall",
+      "delivery": "På väg in i sortimentet – specifikation och pris bekräftas vid lansering.",
+      "badge": "Kommer snart",
+      "spec": "Specifikation bekräftas vid lansering",
+      "short": "Kommande NAVEE-modell i ST-serien. Anmäl förhandsintresse så hör vi av oss först av alla.",
+      "positioning": "Kommande ST-serie",
+      "legality": "check-rules",
+      "checkout": false,
+      "featured": false,
+      "use": [
+        "pendling"
+      ],
+      "images": []
+    }
+  ],
+  "refurbished": [
+    {
+      "id": "dualtron-eagle-pro-nemob",
+      "brand": "Dualtron",
+      "name": "Dualtron Eagle Pro – NEMOB Edition",
+      "priceNote": "Pris sätts efter slutlig specifikation",
+      "status": "renovering",
+      "statusText": "Under renovering / snart klar",
+      "badge": "NEMOB Edition",
+      "spec": "Unikt renoveringsprojekt • 1 exemplar",
+      "short": "Dualtron Eagle Pro NEMOB Edition är ett unikt renoveringsprojekt från Nordic E-Mobility. Scootern har nylackerats i mattsvart med pianolackade detaljer och uppgraderas med bland annat ny EY4-display och nytt gasreglage. Controller byts/uppgraderas eftersom originalcontrollern är defekt.",
+      "details": [
+        "Ny EY4-display",
+        "Nytt gasreglage",
+        "Nylackerad mattsvart finish",
+        "Pianolackade detaljer",
+        "Controller byts eller uppgraderas (originalet defekt)",
+        "Under utvärdering: specialuppgradering med Storm Limited-motor",
+        "Under utvärdering: 72 V-konvertering efter teknisk validering",
+        "Slutlig specifikation fastställs efter testning"
+      ],
+      "legalNote": "Avsedd för privat mark, bana eller inhägnat område beroende på slutlig specifikation.",
+      "cta": "Anmäl intresse",
+      "images": []
     }
   ],
   "accessories": [

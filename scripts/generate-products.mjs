@@ -8,6 +8,7 @@ const catalog = JSON.parse(fs.readFileSync(path.join(root, "data", "products.jso
 
 const products = catalog.products;
 const accessories = catalog.accessories || [];
+const refurbished = catalog.refurbished || [];
 
 const escapeHtml = (value = "") =>
   String(value)
@@ -55,7 +56,7 @@ const legalityText = {
 const ctaText = (item) => {
   if (item.status === "i-lager") return "Köp nu";
   if (item.status === "pa-vag") return "Förbeställ";
-  if (item.status === "forbestall") return "Begär offert";
+  if (item.status === "forbestall") return item.priceSek ? "Begär offert" : "Kontakta oss för pris";
   if (item.status === "demo-bara") return "Boka demo";
   return "Fraga oss";
 };
@@ -82,10 +83,6 @@ function productCard(item, options = {}) {
   const price = formatPrice(item.priceSek) || escapeHtml(item.priceNote || "Pris efter modell");
   const monthly = item.priceSek ? Math.ceil(item.priceSek / 24) : null;
   const legal = item.legality ? `<p class="product-legal">${escapeHtml(legalityText[item.legality] || item.legality)}</p>` : "";
-  const campaignNote =
-    item.id === "kukirin-g4-special"
-      ? `<p class="campaign-note"><strong>Kampanj:</strong> svart crosshjälm ingår för de 5 första G4 Special Edition-ordrarna.</p>`
-      : "";
   const thumbs = images
     .slice(1, 4)
     .map((src, index) => `<button type="button" data-open-product aria-label="Visa ${escapeAttr(item.name)} bild ${index + 2}"><img loading="lazy" src="${escapeAttr(src)}" alt="${escapeAttr(item.name)} extra bild ${index + 2}"></button>`)
@@ -102,7 +99,6 @@ function productCard(item, options = {}) {
             <h3>${escapeHtml(item.name)}</h3>
             <p class="spec">${escapeHtml(item.spec)}</p>
             <p class="copy">${escapeHtml(item.short)}</p>
-            ${campaignNote}
             ${legal}
             <div class="price">${price}</div>
             ${monthly ? `<p class="klarna">Ca ${formatPrice(monthly)}/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>` : ""}
@@ -132,6 +128,57 @@ function accessoryCard(item) {
             <div class="card-actions"><a class="btn ghost" href="/book-online/">Begär offert</a></div>
           </div>
         </article>`;
+}
+
+function refurbCard(item) {
+  const detailList = (item.details || [])
+    .map((detail) => `<li>${escapeHtml(detail)}</li>`)
+    .join("");
+  const legal = item.legalNote ? `<p class="product-legal">${escapeHtml(item.legalNote)}</p>` : "";
+  const image = item.images?.length
+    ? `<img loading="lazy" src="${escapeAttr(item.images[0])}" alt="${escapeAttr(item.name)}">`
+    : `<img loading="lazy" src="/assets/workshop/scooter-on-bench.jpg" alt="Renovering pågår i verkstaden – riktiga bilder på ${escapeAttr(item.name)} publiceras när bygget är klart">`;
+  return `
+        <article class="card product-card refurb-card" data-brand="${escapeAttr(item.brand)}">
+          <div class="product-media">
+            <span class="tag orange">${escapeHtml(item.badge || "NEMOB Edition")}</span>
+            ${image}
+          </div>
+          <div class="card-body">
+            <div class="product-meta"><span>${escapeHtml(item.brand)}</span><span>${escapeHtml(item.statusText || "Under renovering")}</span></div>
+            <h3>${escapeHtml(item.name)}</h3>
+            <p class="spec">${escapeHtml(item.spec)}</p>
+            <p class="copy">${escapeHtml(item.short)}</p>
+            ${detailList ? `<ul class="refurb-details">${detailList}</ul>` : ""}
+            ${legal}
+            <div class="price">${escapeHtml(item.priceNote || "Pris efter specifikation")}</div>
+            <p class="stock-copy">${escapeHtml(item.statusText || "")} • Riktiga produktbilder publiceras när bygget är klart.</p>
+            <div class="card-actions">
+              <a class="btn ghost" href="/book-online?service=bestallning&modell=${slugModel(item.name)}">${escapeHtml(item.cta || "Anmäl intresse")}</a>
+            </div>
+          </div>
+        </article>`;
+}
+
+function refurbishedSection() {
+  if (!refurbished.length) return "";
+  return `
+      <section class="catalog-brand" id="begagnat-renoverat">
+        <div class="brand-row">
+          <div>
+            <span class="eyebrow">BEGAGNAT, RENOVERAT &amp; NEMOB EDITION</span>
+            <h3>Unika byggen från verkstaden.</h3>
+          </div>
+          <p>Utvalda premium-scootrar som renoveras, uppgraderas och kvalitetssäkras i vår verkstad i Örebro. För dig som vill ha något mer personligt än standard.</p>
+        </div>
+        <div class="refurb-promise">
+          <span>Genomgångna fordon</span><span>Renoverade delar</span><span>Funktionskontroll</span><span>Möjlig uppgradering</span><span>Estetisk förbättring</span><span>Hållbar återanvändning</span><span>Begränsat antal — varje exemplar är unikt</span>
+        </div>
+        <div class="grid three catalog-grid">
+${refurbished.map((item) => refurbCard(item)).join("\n")}
+        </div>
+        <p class="rule-note">Kraftigare elscootrar och custombyggen kan omfattas av andra regler än vanliga elsparkcyklar. Kontrollera alltid gällande regler innan användning i trafik.</p>
+      </section>`;
 }
 
 function brandSection(brand) {
@@ -191,6 +238,11 @@ function nyaElscootrarSection() {
         .brand-row p{color:var(--muted);max-width:520px}
         .fighter-push{margin-top:24px;border:1px solid rgba(255,138,28,.34);background:linear-gradient(135deg,rgba(255,138,28,.13),rgba(0,200,83,.07));border-radius:8px;padding:22px}
         .accessory-card .product-media{height:190px}
+        .refurb-card{border-color:rgba(255,138,28,.36)}
+        .refurb-details{margin:10px 0 4px;padding:0;display:grid;gap:5px}
+        .refurb-details li{list-style:none;font-size:12px;color:#cdd7d0;border-left:2px solid rgba(255,138,28,.5);padding-left:9px;line-height:1.45}
+        .refurb-promise{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+        .refurb-promise span{border:1px solid rgba(255,138,28,.3);background:rgba(255,138,28,.08);color:#ffd9b3;border-radius:999px;padding:7px 12px;font-size:12px;font-weight:800}
         .catalog-product-modal{position:fixed;inset:0;z-index:10000;display:none;align-items:center;justify-content:center;background:rgba(0,0,0,.82);backdrop-filter:blur(8px);padding:18px}
         .catalog-product-modal.is-open{display:flex}
         .catalog-product-dialog{width:min(920px,100%);max-height:calc(100vh - 36px);overflow:auto;background:#0d0f0e;border:1px solid #26342b;border-radius:8px;color:#fff;box-shadow:0 30px 90px rgba(0,0,0,.55)}
@@ -219,9 +271,9 @@ function nyaElscootrarSection() {
       <div class="section-head">
         <div>
           <span class="eyebrow">NYA ELSCOOTRAR</span>
-          <h2>Hela utbudet från NAVEE, Teverun och KuKirin.</h2>
+          <h2>Utvalda elscootrar — med verkstaden bakom varje köp.</h2>
         </div>
-        <p>Vi visar hela sortimentet SEO-vänligt direkt i sidan, med samma pris och status som checkout. Kunden ska kunna jämföra, klicka på modell, se bilder och gå vidare till köp utan att fastna.</p>
+        <p>Vi säljer modeller vi själva kan serva. Hela sortimentet från NAVEE, Teverun och KuKirin med samma pris och status som checkout — och service, garanti och reservdelar i vår verkstad i Örebro efter köpet.</p>
       </div>
       <div class="catalog-intro">
         <div class="catalog-note">
@@ -231,12 +283,13 @@ function nyaElscootrarSection() {
             <a href="#brand-navee">NAVEE</a>
             <a href="#brand-teverun">Teverun</a>
             <a href="#brand-kukirin">KuKirin</a>
+            <a href="#begagnat-renoverat">Begagnat &amp; NEMOB Edition</a>
             <a href="#tillbehor-reservdelar">Tillbehor och reservdelar</a>
           </div>
         </div>
         <div class="catalog-note">
           <h3>Köp med verkstadsstöd</h3>
-          <p>Betala tryggt via checkout. KuKirin har gratis hemleverans eller gratis leverans till vår verkstad med leverans 5 arbetsdagar efter mottagen betalning. Teverun har fraktavgift 60 EUR och leverans 5-7 arbetsdagar. Vi kontaktar kunden om leverans, montering, hjälm, inbyte och efterservice.</p>
+          <p>Betala tryggt via checkout. KuKirin har gratis hemleverans eller gratis leverans till vår verkstad med leverans 5 arbetsdagar efter mottagen betalning. Teverun har fraktavgift 60 EUR och leverans 5-7 arbetsdagar. Vi kontaktar kunden om leverans, montering, inbyte och efterservice. Hjälm rekommenderas alltid – vi hjälper gärna till med rätt storlek och modell.</p>
           ${paymentStrip()}
         </div>
       </div>
@@ -258,6 +311,7 @@ ${teverun.map((item) => productCard(item, { primary: item.id === "teverun-fighte
       ${brandSection("NAVEE")}
       ${brandSection("Teverun")}
       ${brandSection("KuKirin")}
+      ${refurbishedSection()}
       <section class="catalog-brand" id="tillbehor-reservdelar">
         <div class="brand-row">
           <div>
@@ -270,7 +324,7 @@ ${teverun.map((item) => productCard(item, { primary: item.id === "teverun-fighte
 ${accessories.map((item) => accessoryCard(item)).join("\n")}
         </div>
       </section>
-      <p class="rule-note">Obs: Prestandamodeller och ombyggda fordon kan omfattas av särskilda regler. Fråga oss eller läs <a href="/regler-elscooter/">regelguiden</a> innan du väljer modell för allmän väg.</p>
+      <p class="rule-note">Kraftigare elscootrar och custombyggen kan omfattas av andra regler än vanliga elsparkcyklar. Kontrollera alltid gällande regler innan användning i trafik — fråga oss eller läs <a href="/regler-elscooter/">regelguiden</a> innan du väljer modell för allmän väg.</p>
       <div class="order-list" id="bestall-scooter">
         <h3>Snabb beställning</h3>
         <p>Har kunden redan valt modell kan köp startas direkt. Samma produkt-ID används av Stripe-checkout.</p>
@@ -326,38 +380,54 @@ function homeProductCard(item) {
   const gallery = galleryAttr(item);
   const border = item.brand === "KuKirin" ? "#ff6d00" : item.brand === "Teverun" ? "rgba(0,200,83,.35)" : "rgba(0,200,83,.3)";
   const buttonStyle = item.brand === "KuKirin" ? ' style="background:rgba(255,109,0,.15);border-color:rgba(255,109,0,.4);color:#ff6d00"' : "";
-  const campaignNote =
-    item.id === "kukirin-g4-special"
-      ? `<div style="border:1px solid rgba(255,109,0,.42);background:rgba(255,109,0,.13);color:#ffd0a6;border-radius:8px;padding:8px 9px;font-size:11px;line-height:1.45;font-weight:800;margin:8px 0">Kampanj: svart crosshjälm ingår för de 5 första ordrarna.</div>`
-      : "";
-  return `    <div class="prod" data-gallery="${gallery}" style="border-color:${border}">
+  return `    <div class="prod pop-card" data-gallery="${gallery}" style="border-color:${border}">
       <div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">
-        <div style="position:absolute;top:8px;left:8px;background:${item.brand === "KuKirin" ? "#ff6d00" : "#00C853"};color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">${escapeHtml(item.badge || statusLabel[item.status])}</div>
-        <div style="position:absolute;top:8px;right:8px;background:#fff;color:#000;font-size:9px;font-weight:700;padding:2px 6px;border-radius:3px;z-index:1">${escapeHtml(statusLabel[item.status])}</div>
+        <div class="pop-badge" style="background:${item.brand === "KuKirin" ? "#ff6d00" : "#00C853"}">${escapeHtml(item.badge || statusLabel[item.status])}</div>
+        <div style="position:absolute;top:10px;right:10px;background:#fff;color:#000;font-size:10px;font-weight:800;padding:3px 8px;border-radius:3px;z-index:1">${escapeHtml(statusLabel[item.status])}</div>
         <img width="500" height="500" loading="lazy" decoding="async" src="${escapeAttr(mainImage(item))}" alt="${escapeAttr(item.name)}" style="max-height:100%;max-width:100%;object-fit:contain;filter:brightness(.95)" onerror="this.outerHTML='&#9889;'">
       </div>
       <div class="prod-body">
         <div class="prod-name">${escapeHtml(item.name.replace(/^NAVEE |^KuKirin |^Teverun /, ""))}</div>
         <div style="font-size:11px;color:#888;margin:4px 0">${escapeHtml(item.spec)}</div>
-        <div style="font-size:11px;color:#b0b0b0;line-height:1.5;margin-bottom:10px">${escapeHtml(item.short)}</div>
-        ${campaignNote}
+        <div style="font-size:12px;color:#b8c2bb;line-height:1.5;margin-bottom:10px">${escapeHtml(item.short)}</div>
         <div class="prod-price">${price}</div>
+        <div class="pop-trust">Service, garanti &amp; reservdelar i vår verkstad i Örebro</div>
         ${paymentStrip(true)}
-        <a href="${escapeAttr(bookingHref(item))}" class="prod-btn" data-product="${escapeAttr(item.id)}" data-price="${item.priceSek}"${buttonStyle}>${escapeHtml(ctaText(item))}</a>
+        <a href="${escapeAttr(bookingHref(item))}" class="prod-btn pop-cta" data-product="${escapeAttr(item.id)}" data-price="${item.priceSek}"${buttonStyle}>${escapeHtml(ctaText(item))}</a>
+      </div>
+    </div>`;
+}
+
+function homeComingSoonCard(item, options = {}) {
+  const href = options.href || bookingHref(item);
+  const cta = options.cta || ctaText(item);
+  const note = options.note ? `<div style="font-size:11px;color:#ffd9b3;line-height:1.5;margin:6px 0 10px">${escapeHtml(options.note)}</div>` : "";
+  return `    <div class="prod soon-card">
+      <div class="prod-body">
+        <span class="soon-badge">${escapeHtml(item.badge || "Kommer snart")}</span>
+        <div class="prod-name" style="margin-top:8px">${escapeHtml(item.name)}</div>
+        <div style="font-size:11px;color:#888;margin:4px 0">${escapeHtml(item.spec)}</div>
+        <div style="font-size:12px;color:#b0b0b0;line-height:1.5;margin-bottom:8px">${escapeHtml(item.short)}</div>
+        ${note}
+        <a href="${escapeAttr(href)}" class="prod-btn" style="background:transparent;border:1px solid rgba(0,200,83,.4);color:#7ee2a8">${escapeHtml(cta)}</a>
       </div>
     </div>`;
 }
 
 function homeProductsSection() {
-  const homeOrder = [
-    "navee-xt5-ultra",
-    "navee-n65i",
-    "navee-v50i-pro",
+  const popularOrder = [
     "kukirin-g4-special",
-    "kukirin-g2",
-    "teverun-fighter-eleven-plus"
+    "kukirin-g2-max",
+    "kukirin-g3-pro",
+    "teverun-blade-mini-ultra",
+    "teverun-blade-gt-ii",
+    "kukirin-g4-max"
   ];
-  const featured = homeOrder.map((id) => products.find((item) => item.id === id)).filter(Boolean);
+  const popular = popularOrder.map((id) => products.find((item) => item.id === id)).filter(Boolean);
+  const comingSoon = ["navee-gt3-max", "navee-st3-pro"]
+    .map((id) => products.find((item) => item.id === id))
+    .filter(Boolean);
+  const eaglePro = refurbished.find((item) => item.id === "dualtron-eagle-pro-nemob");
   return `<!-- PRODUKTER -->
 <section class="products" id="produkter">
 <div class="container">
@@ -370,15 +440,37 @@ function homeProductsSection() {
     .pay-logo.gpay{background:#fff;color:#1f1f1f}
     .pay-logo.card{background:#15251a;color:#dfffea;border:1px solid rgba(0,200,83,.24)}
     .pay-logo.stripe{background:#635bff;color:#fff}
+    .pop-card{box-shadow:0 12px 34px rgba(0,0,0,.35);transition:transform .18s,box-shadow .18s}
+    .pop-card:hover{transform:translateY(-4px);box-shadow:0 20px 48px rgba(0,200,83,.14)}
+    .pop-card .prod-img{min-height:250px}
+    .pop-badge{position:absolute;top:10px;left:10px;color:#000;font-size:11px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;padding:4px 10px;border-radius:999px;z-index:1;box-shadow:0 4px 14px rgba(0,0,0,.4)}
+    .pop-trust{font-size:11px;color:#8fd3a8;font-weight:700;margin:2px 0 6px}
+    .pop-cta{font-weight:900;letter-spacing:.02em}
+    .soon-card{border-style:dashed;border-color:rgba(0,200,83,.3);background:rgba(0,200,83,.03)}
+    .soon-badge{display:inline-block;background:rgba(0,200,83,.14);border:1px solid rgba(0,200,83,.3);color:#7ee2a8;font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:999px}
+    .nemob-band{margin-top:26px;border:1px solid rgba(255,138,28,.32);background:linear-gradient(135deg,rgba(255,138,28,.1),rgba(0,200,83,.05));border-radius:10px;padding:20px 22px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:14px}
+    .nemob-band h3{margin:0 0 6px;font-size:20px}
+    .nemob-band p{margin:0;color:#c9d3cc;font-size:13px;line-height:1.55;max-width:640px}
   </style>
-  <span class="section-label">Produkter</span>
-  <h2 class="section-title">6 modeller vi vill lyfta just nu</h2>
-  <p class="section-sub">Startsidan visar bara de tydligaste valen. Hela katalogen med NAVEE, Teverun, KuKirin, Monorim och reservdelar finns på utbudssidan.</p>
-  <div class="legal-note">Produktinfo ska läsas tillsammans med användningsområde. Modeller med hög effekt eller hög hastighet kan vara avsedda för privat mark eller inhägnat område, inte vanlig trafik. <a href="/regler-elscooter/">Läs regelguiden innan köp</a>.</div>
+  <span class="section-label">Populärast just nu</span>
+  <h2 class="section-title">Modellerna våra kunder väljer.</h2>
+  <p class="section-sub">Vi säljer modeller vi själva kan serva. Varje köp backas av rådgivning, garanti och reservdelar från vår specialistverkstad i Örebro — så att du kommer tillbaka på vägen utan krångel.</p>
+  <div class="legal-note">Kraftigare elscootrar och custombyggen kan omfattas av andra regler än vanliga elsparkcyklar. Kontrollera alltid gällande regler innan användning i trafik. <a href="/regler-elscooter/">Läs regelguiden innan köp</a>.</div>
   <div class="legal-note" style="margin-bottom:10px;background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.22);color:#dce8df">Betala tryggt med <strong>Klarna, Apple Pay, Google Pay, kort och andra tillgängliga betalsätt</strong>. KuKirin har gratis leveransval och 5 arbetsdagars leverans efter mottagen betalning. Teverun har fraktavgift 60 EUR och leverans 5-7 arbetsdagar. Vi hjälper dig med leverans, rådgivning och service efter köpet.</div>
   ${paymentStrip()}
   <div class="products-grid" style="grid-template-columns:repeat(3,1fr)">
-${featured.map((item) => homeProductCard(item)).join("\n")}
+${popular.map((item) => homeProductCard(item)).join("\n")}
+  </div>
+  <div class="products-grid" style="grid-template-columns:repeat(3,1fr);margin-top:14px">
+${comingSoon.map((item) => homeComingSoonCard(item)).join("\n")}
+${eaglePro ? homeComingSoonCard(eaglePro, { href: "/nya-elscootrar/#begagnat-renoverat", cta: "Anmäl intresse", note: eaglePro.legalNote }) : ""}
+  </div>
+  <div class="nemob-band">
+    <div>
+      <h3>Begagnat, renoverat &amp; NEMOB Edition</h3>
+      <p>Utvalda premium-scootrar som renoveras, uppgraderas och kvalitetssäkras i vår verkstad i Örebro. Begränsat antal — varje exemplar är unikt. För dig som vill ha något mer personligt än standard.</p>
+    </div>
+    <a href="/nya-elscootrar/#begagnat-renoverat" class="btn-secondary">Se aktuella byggen &#8594;</a>
   </div>
   <div style="margin-top:24px;text-align:center"><a href="/nya-elscootrar/" class="btn-secondary">Se hela utbudet &#8594;</a></div>
 </div>

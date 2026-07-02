@@ -285,7 +285,8 @@ Verkstaden = workshop operator.
 - Product detail modals support image galleries/carousels. Add exported customer/project images as local assets or stable public URLs before wiring them into the gallery arrays; Google Photos album links are not directly usable by the static site.
 - KuKirin product cards should state free home delivery from KuKirin or free delivery to the Nordic E-Mobility workshop, with delivery 5 business days after payment is received. Stripe Checkout offers these two free shipping options for KuKirin products.
 - Teverun product cards should state that Teverun shipping is 60 EUR and delivery is 5-7 business days. Stripe Checkout charges this as a separate shipping option: `Teverun-frakt 60 EUR` at 699 SEK.
-- KuKirin G4 Special Edition campaign copy currently says a black cross helmet is included for the first 5 G4 Special Edition orders.
+- REMOVED 2026-07-02: the helmet campaign ("black cross helmet included for the first 5 G4 Special Edition orders") is discontinued. No copy may state or imply that a helmet is included in any purchase. Safety wording that recommends a helmet is fine.
+- KuKirin G4 purchase price is 683 EUR as of 2026-07-02 (stored internally as `costEur` in data/products.json — never render publicly). The 9 950 kr campaign price gives near-zero margin and needs review.
 
 ## Next priorities
 
