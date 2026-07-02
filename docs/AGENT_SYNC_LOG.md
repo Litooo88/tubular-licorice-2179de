@@ -32,15 +32,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-07-02 — Claude Code — PÅGÅR (SEO: ranka på elscooter-sökord i Örebro)
+### 2026-07-02 — Claude Code — KLAR (SEO: on-page-förbättringar elscooter-sökord Örebro)
 
-- **Branch:** `main` (små, avgränsade on-page SEO-ändringar i statiska sidor).
-- **Tar:** `index.html`, `elscooter-reparation-orebro/`, `punktering-elscooter-orebro/`,
-  `batterireparation-elscooter/`, `elcykel-service-orebro/`, `sitemap.xml`.
-- **Plan (max 5 försök, sedan redovisning):** 1) synonymtäckning "elsparkcykel"
-  i title/meta/brödtext, 2) FAQPage-schema på tjänstesidor som saknar det,
-  3) sitemap/lastmod + indexeringskoll, 4) intern länkning + Service-schema,
-  5) build + verifiering. Inga funktions- eller datakodändringar.
+- **Branch:** `main`, commit `bc4e60f`. Endast statiska sidor + sitemap, ingen
+  funktions- eller datakod.
+- **Gjorde (5 försök):** 1) synonymen "elsparkcykel" i description/keywords/
+  brödtext på startsida, reparation, punktering, batteri; 2) FAQ-sektion +
+  FAQPage-schema på `/elscooter-reparation-orebro/`; 3) Service-schema fixat
+  (svenska namn med Ö, `alternateName` elsparkcykel, svensk `serviceType`) +
+  sitemap `lastmod` 2026-07-02; 4) startsidans H1 innehåller nu
+  "elscooter" + "Örebro"; 5) verifiering.
+- **Tester:** `npm run build` ✅, `npm run verify:checkout-products` ✅,
+  alla JSON-LD-block på ändrade sidor parsar som giltig JSON ✅.
+- **Kvarvarande risk/nästa:** off-page (Google Business Profile, recensioner,
+  lokala länkar) styr lokal ranking mest — kan inte göras i repot. FAQ-schema
+  ger sällan rich results för kommersiella sajter numera men skadar inte.
 
 ### 2026-07-01 — Claude Code — KLAR (Audit runda 2: buggfixar efter full genomgång)
 
