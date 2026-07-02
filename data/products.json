@@ -1,5 +1,5 @@
 {
-  "updated": "2026-05-17",
+  "updated": "2026-07-02",
   "notes": [
     "Two older NAVEE references are intentionally excluded from the sellable catalog.",
     "Use status i-lager för products available from supplier with normal delivery, not necessarily physically in the workshop.",
@@ -235,8 +235,8 @@
       "brand": "Teverun",
       "name": "Teverun Space Lite",
       "priceSek": 12990,
-      "status": "i-lager",
-      "delivery": "Leverans 5-7 arbetsdagar. Teverun-frakt 60 EUR tillkommer.",
+      "status": "pa-vag",
+      "delivery": "Tillfälligt slut hos Teverun – kontakta oss för leveransbesked.",
       "badge": "Teverun",
       "spec": "Kompakt Teverun • premiumkänsla",
       "short": "Teverun-alternativet för kunden som vill in i premiumkänsla i ett smidigare format.",
@@ -253,15 +253,57 @@
       ]
     },
     {
+      "id": "teverun-blade-mini-pro",
+      "brand": "Teverun",
+      "name": "Teverun Blade Mini Pro",
+      "priceSek": 14990,
+      "status": "pa-vag",
+      "delivery": "Nästa leverans från Teverun i slutet av juli. Leverans 5-7 arbetsdagar. Teverun-frakt 60 EUR tillkommer.",
+      "badge": "Blade",
+      "spec": "2x500W • 48V 27Ah • Easy App/B-LCD/NFC",
+      "short": "Instegsmodellen i Blade-serien: kompakt dubbelmotor med rejäl räckvidd för daglig pendling.",
+      "positioning": "Kompakt prestanda",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "pendling"
+      ],
+      "images": [
+        "https://teverun-europe.com/wp-content/uploads/2026/04/8a399348fe32e1fcd0cc81ecccf01512-uai-750x1000.jpg"
+      ]
+    },
+    {
+      "id": "teverun-blade-mini-pro-ekfv",
+      "brand": "Teverun",
+      "name": "Teverun Blade Mini Pro eKFV",
+      "priceSek": 15490,
+      "status": "i-lager",
+      "delivery": "Leverans 5-7 arbetsdagar. Teverun-frakt 60 EUR tillkommer.",
+      "badge": "Blade",
+      "spec": "2x250W • 52V 22.5Ah DMEGC • Bosch/Spring/APP • NFC/LCD",
+      "short": "Gatuanpassad version av Blade Mini Pro med 20 km/h-klassning, NFC-lås och inbyggd LCD.",
+      "positioning": "Reglementsanpassad pendlare",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "pendling"
+      ],
+      "images": [
+        "https://teverun-europe.com/wp-content/uploads/2026/02/BLADE-MINI-PRO-EKFV-BILA-uai-750x1000.jpg"
+      ]
+    },
+    {
       "id": "teverun-blade-mini-ultra",
       "brand": "Teverun",
       "name": "Teverun Blade Mini Ultra",
       "priceSek": 17990,
       "status": "i-lager",
       "delivery": "Leverans 5-7 arbetsdagar. Teverun-frakt 60 EUR tillkommer.",
-      "badge": "Blade",
+      "badge": "Prisgaranti",
       "spec": "Blade-serien • stark byggkänsla",
-      "short": "Starkt mellansteg för kunden som vill ha mer premiumkänsla och komponentniva.",
+      "short": "Starkt mellansteg för kunden som vill ha mer premiumkänsla och komponentniva. Prisgaranti: hittar du samma modell billigare hos en svensk auktoriserad återförsäljare matchar vi priset – kontakta oss med länk innan köp.",
       "positioning": "Premium mellanklass",
       "legality": "check-rules",
       "checkout": true,
@@ -271,6 +313,28 @@
       ],
       "images": [
         "https://teverun-europe.com/wp-content/uploads/2026/02/Blade-Mini-Ultra-Yellow-1.png"
+      ]
+    },
+    {
+      "id": "teverun-blade-mini-ultra-ekfv",
+      "brand": "Teverun",
+      "name": "Teverun Blade Mini Ultra eKFV",
+      "priceSek": 19990,
+      "status": "pa-vag",
+      "delivery": "Nästa leverans från Teverun i juli. Leverans 5-7 arbetsdagar. Teverun-frakt 60 EUR tillkommer.",
+      "badge": "Blade",
+      "spec": "2x250W • 52V 30Ah DMEGC • Bosch/Spring/APP • NFC/LCD • 6A-laddare",
+      "short": "Mini Ultra i gatuanpassad 20 km/h-version med stort 30Ah-batteri och snabbladdare.",
+      "positioning": "Reglementsanpassad premium",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "pendling",
+        "premium"
+      ],
+      "images": [
+        "https://teverun-europe.com/wp-content/uploads/2026/02/BLADE-MINI-ULTRA-EKFV-BILA-uai-750x1000.jpg"
       ]
     },
     {
@@ -292,6 +356,27 @@
       ],
       "images": [
         "https://teverun-europe.com/wp-content/uploads/2026/04/d105d84cfc45a3e1c40bed8ee5077350.png"
+      ]
+    },
+    {
+      "id": "teverun-blade-gt-plus-ii",
+      "brand": "Teverun",
+      "name": "Teverun Blade GT+ II",
+      "priceSek": 28990,
+      "status": "pa-vag",
+      "delivery": "Nästa leverans från Teverun i slutet av juli. Leverans 5-7 arbetsdagar. Teverun-frakt 60 EUR tillkommer.",
+      "badge": "Blade",
+      "spec": "2x1500W • 60V 31.5Ah • APP/b-LCD/KKE",
+      "short": "GT II med större batteri och KKE-fjädring – för den som vill ha mer räckvidd i GT-klassen.",
+      "positioning": "Prestanda och räckvidd",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium"
+      ],
+      "images": [
+        "https://teverun-europe.com/wp-content/uploads/2025/09/FIGHTER-GT-II_3-1.jpg"
       ]
     },
     {
@@ -319,12 +404,75 @@
       ]
     },
     {
+      "id": "teverun-fighter-mini",
+      "brand": "Teverun",
+      "name": "Teverun Fighter Mini",
+      "priceSek": 23990,
+      "status": "i-lager",
+      "delivery": "Fåtal kvar hos leverantören. Leverans 5-7 arbetsdagar. Teverun-frakt 60 EUR tillkommer.",
+      "badge": "Fighter",
+      "spec": "2x1000W • 52V 30Ah BOSCH • System 2.0/4\" LCD/KKE",
+      "short": "Fighter-seriens kompakta instegsmodell med Bosch-batteri och KKE-fjädring. Fåtal kvar.",
+      "positioning": "Kompakt Fighter",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium"
+      ],
+      "images": [
+        "https://teverun-europe.com/wp-content/uploads/2026/04/6643ca9ac1214019731faf555c6b9e6e.jpg"
+      ]
+    },
+    {
+      "id": "teverun-fighter-mini-pro",
+      "brand": "Teverun",
+      "name": "Teverun Fighter Mini Pro",
+      "priceSek": 26990,
+      "status": "pa-vag",
+      "delivery": "Nästa leverans från Teverun i slutet av juli. Leverans 5-7 arbetsdagar. Teverun-frakt 60 EUR tillkommer.",
+      "badge": "Fighter",
+      "spec": "2x1000W • 60V 31.8Ah BOSCH • System 2.0/4\" TFT/KKE",
+      "short": "Uppgraderad Fighter Mini med 60V-system, större Bosch-batteri och TFT-display.",
+      "positioning": "Prestanda i kompakt format",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium"
+      ],
+      "images": [
+        "https://teverun-europe.com/wp-content/uploads/2026/04/6643ca9ac1214019731faf555c6b9e6e.jpg"
+      ]
+    },
+    {
+      "id": "teverun-fighter-supreme-ultra",
+      "brand": "Teverun",
+      "name": "Teverun Fighter Supreme Ultra",
+      "priceSek": 49990,
+      "status": "pa-vag",
+      "delivery": "Beställningsvara – tillfälligt slut hos Teverun. Kontakta oss för leveransbesked.",
+      "badge": "Supreme",
+      "spec": "2x1600W • 72V 60Ah SK • NFC/4\" TFT/APP",
+      "short": "Supreme-seriens Ultra: 72V-system och enormt 60Ah SK-batteri för maximal räckvidd och kraft.",
+      "positioning": "Flaggskeppsklass",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "premium"
+      ],
+      "images": [
+        "https://teverun-europe.com/wp-content/uploads/2025/10/d2cb5435d93e0a342653e7233dd1b356.jpg"
+      ]
+    },
+    {
       "id": "teverun-fighter-eleven-plus",
       "brand": "Teverun",
       "name": "Teverun Fighter Eleven+",
       "priceSek": 39990,
       "status": "i-lager",
-      "delivery": "I lager hos leverantör. Leverans 5-7 arbetsdagar. Teverun-frakt 60 EUR tillkommer.",
+      "delivery": "Fåtal kvar hos leverantören – först till kvarn. Leverans 5-7 arbetsdagar. Teverun-frakt 60 EUR tillkommer.",
       "badge": "I LAGER",
       "spec": "2x1600W • 60V 35Ah LG • 2100 Wh",
       "short": "Premium från Teverun för kunden som vill ha riktig kraft, stabilitet och en mer seriös scooter.",
