@@ -32,6 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-02 — Claude Code — PÅGÅR (SEO: ranka på elscooter-sökord i Örebro)
+
+- **Branch:** `main` (små, avgränsade on-page SEO-ändringar i statiska sidor).
+- **Tar:** `index.html`, `elscooter-reparation-orebro/`, `punktering-elscooter-orebro/`,
+  `batterireparation-elscooter/`, `elcykel-service-orebro/`, `sitemap.xml`.
+- **Plan (max 5 försök, sedan redovisning):** 1) synonymtäckning "elsparkcykel"
+  i title/meta/brödtext, 2) FAQPage-schema på tjänstesidor som saknar det,
+  3) sitemap/lastmod + indexeringskoll, 4) intern länkning + Service-schema,
+  5) build + verifiering. Inga funktions- eller datakodändringar.
+
 ### 2026-07-01 — Claude Code — KLAR (Audit runda 2: buggfixar efter full genomgång)
 
 - **Branch:** `fix/audit-round2-hardening` → PR mot `main` (öppen, ej mergad).
