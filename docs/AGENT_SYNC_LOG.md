@@ -32,6 +32,20 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-02 — Claude Code — PÅGÅR (produktstruktur: hjälm bort, G4-kostnad, populärast, begagnat/NEMOB Edition)
+
+- **Branch:** `main`. Tar: `data/products.json`, `scripts/generate-products.mjs`,
+  `index.html` (hero-choice + genererad PRODUKTER-sektion), `nya-elscootrar/`
+  (genererad sektion), `sitemap.xml`, `docs/codex-handoff.md`.
+- **Gör:** 1) G4 inköp 683 EUR som intern kostnadsdata + prisöversyns-flagga,
+  2) all "hjälm ingår"-copy bort (datafil + generator + handskriven hero),
+  3) "Populärast just nu"-sektion på startsidan med badges/premium-CTA,
+  4) saknade modeller (KuKirin G2 Pro/G2 Master/A1/C1 Pro, NAVEE GT3 Max/ST3 Pro)
+  som förbeställ utan pris, 5) ny sektion "Begagnat, renoverat & NEMOB Edition"
+  på utbudssidan, 6) Dualtron Eagle Pro NEMOB Edition som kommande renovering,
+  7) juridisk notis för custombyggen. Rör INTE checkout-/Stripe-flödet
+  (nya modeller får `checkout: false`).
+
 ### 2026-07-02 — Claude Code — KLAR (Teverun-sortiment +7 modeller & prisgaranti Mini Blade Ultra)
 
 - **Branch:** `feat/teverun-range-prisgaranti` → PR mot `main` (öppen, ej mergad).
