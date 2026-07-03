@@ -32,6 +32,34 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-03 — Claude Code — KLAR (Safe timeline writes — lost update-risken täppt)
+
+- **Branch:** `fix/safe-case-timeline-writes` → PR mot `main` (öppen, ej mergad).
+- **Problemet (HIGH från audit runda 2):** `appendCaseEvent` i
+  `_shared/storage.js` läste hela case-blobben (eventual consistency = kan vara
+  INAKTUELL), pushade timeline och skrev tillbaka HELA blobben →
+  en samtidig/nyss gjord PATCH (status/betalning) kunde tyst återställas.
+- **Vald design (Sebastians preferens 1):** appendCaseEvent skriver ALDRIG mer
+  case-blobben — events lever enbart i separata `case-events`-storen.
+  Motivering: (a) admin läser redan case-events som primär timeline-källa
+  (case.timeline är bara fallback), (b) workshop-vyn använder inte timeline
+  alls, (c) @netlify/blobs 8.2.0 saknar conditional writes (`onlyIfMatch`
+  finns inte) så etag-strategi är omöjlig utan lib-uppgradering, (d) embedden
+  från v1-funktioner har bara fungerat sedan 2026-06-30 (connectLambda-fixen)
+  — inget beror på den. `workshop-cases.mjs` (v2) fortsätter embedda i sina
+  EGNA single-request-writes — orört och säkert.
+- **Filer:** `netlify/functions/_shared/storage.js` (RMW-blocket + oanvända
+  `timelineText` borttagna), NY `scripts/smoke-safe-timeline.mjs`.
+- **Tester:** smoke 5/5 PASS (status+payment kvar efter event, case-blob
+  byte-identisk, event i case-events) ✅, `node --check` storage + alla 7
+  callers ✅, build/verify/callflow ✅. Inga SMS/mail/production-writes.
+- **Kvarstående (acceptabel) risk:** case-events blir enda källan för
+  v1-genererade händelser; admin-fallbacken visar dem inte om case-events-
+  endpointen är nere (samma läge som innan 30 juni). `updatedAt` bumpas inte
+  längre av events (sorteringspåverkan marginell).
+- **Varning till Codex:** Rör inte `fix/safe-case-timeline-writes`. Återinför
+  ALDRIG case-blob-skrivning i appendCaseEvent — se kommentaren i storage.js.
+
 ### 2026-07-03 — Claude Code — KLAR (read-only briefing-endpoint /api/claude-brief/:slug)
 
 - **Branch:** `main`. NY fil: `netlify/functions/claude-brief.mjs` (v2, inget annat rört).
