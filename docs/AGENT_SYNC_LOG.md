@@ -32,6 +32,14 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-03 — Claude Code — PÅGÅR (read-only briefing-endpoint /api/claude-brief/:slug)
+
+- **Branch:** `main`. Tar: NY fil `netlify/functions/claude-brief.mjs` (rör inget annat).
+- **Gör:** GET-endpoint med hemlig slug (env `CLAUDE_BRIEF_SLUG`), 404 vid fel/saknad
+  slug, 60 req/h rate limit (in-memory, inga writes), aggregerad dagsbrief från
+  `workshop-cases`-storen utan PII (endast förnamn, inga telefonnummer/mail/adresser/
+  betaldata). Helt read-only.
+
 ### 2026-07-02 — Claude Code — KLAR (produktstruktur: hjälm bort, G4-kostnad, populärast, begagnat/NEMOB Edition)
 
 - **Branch:** `main`, commit `570a59d`. Filer: `data/products.json`,
