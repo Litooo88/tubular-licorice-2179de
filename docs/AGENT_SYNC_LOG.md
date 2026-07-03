@@ -32,6 +32,14 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-03 — Claude Code — PÅGÅR (SEO runda 2: elsparkcykel + punktering)
+
+- **Branch:** `main`. Tar: NY sida `laga-elsparkcykel-orebro/`, `punktering-elscooter-orebro/`,
+  intern länkning i `index.html` + `elscooter-reparation-orebro/`, `sitemap.xml`.
+- **Mål:** #1 på "elsparkcykel verkstad/laga elsparkcykel Örebro" (idag topp-10)
+  och "punktering elscooter Örebro" (idag #2 bakom MC-verkstads däcksida).
+  5 nya försök beslutade av Sebastian efter redovisning av runda 1.
+
 ### 2026-07-03 — Claude Code — KLAR (Safe timeline writes — lost update-risken täppt)
 
 - **Branch:** `fix/safe-case-timeline-writes` → PR mot `main` (öppen, ej mergad).
