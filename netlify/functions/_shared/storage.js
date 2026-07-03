@@ -154,26 +154,16 @@ const remove = async (entity, id) => {
   return { ok: true, id };
 };
 
-const timelineText = (type, content, metadata = {}) => {
-  const labels = {
-    sms: "SMS",
-    call: "Samtal",
-    status: "Statusandring",
-    status_change: "Statusandring",
-    quote: "Prisforslag",
-    payment: "Betalning",
-    part: "Reservdel",
-    note: "Intern notering",
-    ai: "AI-forslag",
-    ai_suggestion: "AI-forslag",
-    booking: "Bokning",
-  };
-  return clean(
-    `${labels[type] || type}: ${content || metadata.summary || metadata.message || metadata.status || metadata.text || "handelse registrerad"}`,
-    600
-  );
-};
-
+// SAFE TIMELINE WRITES: appendCaseEvent must NEVER write the main case blob.
+// It used to read the whole case, push a timeline entry and write the blob
+// back. With eventual-consistency reads (the only mode available to these v1
+// functions) that read can return a STALE case, and writing it back silently
+// reverts concurrent PATCH updates (status/payment/completion) — a lost
+// update. @netlify/blobs 8.2.0 has no conditional writes (onlyIfMatch), so
+// the only robust fix is to keep events solely in the separate `case-events`
+// store. Admin already reads that store as its primary timeline source
+// (case.timeline is only a fallback), and the v2 workshop-cases.mjs keeps
+// embedding its OWN timeline entries safely within its single-request writes.
 const appendCaseEvent = async ({
   id,
   caseId,
@@ -194,7 +184,7 @@ const appendCaseEvent = async ({
     content || eventMetadata.summary || eventMetadata.message || eventMetadata.status || eventMetadata.text || "Handelse registrerad.",
     2000
   );
-  const event = await put("case_events", {
+  return put("case_events", {
     caseId: clean(caseId, 180),
     customerId: clean(customerId, 180),
     type: clean(type, 60),
@@ -204,19 +194,6 @@ const appendCaseEvent = async ({
     createdBy: clean(createdBy || actor, 120) || "system",
     createdAt: createdAt || at || new Date().toISOString(),
   }, { id });
-  const caseItem = await get("service_cases", caseId);
-  if (caseItem) {
-    caseItem.timeline = Array.isArray(caseItem.timeline) ? caseItem.timeline : [];
-    caseItem.timeline.push({
-      at: event.createdAt,
-      event: timelineText(event.type, event.content, event.metadata),
-      type: event.type,
-      eventId: event.id,
-    });
-    caseItem.updatedAt = event.createdAt;
-    await storeFor("service_cases").setJSON(caseId, caseItem);
-  }
-  return event;
 };
 
 module.exports = { ENTITIES, appendCaseEvent, connectBlobs, get, idFor, list, put, remove, storeFor };

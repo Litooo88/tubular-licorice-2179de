@@ -32,13 +32,54 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-07-03 — Claude Code — PÅGÅR (read-only briefing-endpoint /api/claude-brief/:slug)
+### 2026-07-03 — Claude Code — KLAR (Safe timeline writes — lost update-risken täppt)
 
-- **Branch:** `main`. Tar: NY fil `netlify/functions/claude-brief.mjs` (rör inget annat).
-- **Gör:** GET-endpoint med hemlig slug (env `CLAUDE_BRIEF_SLUG`), 404 vid fel/saknad
-  slug, 60 req/h rate limit (in-memory, inga writes), aggregerad dagsbrief från
-  `workshop-cases`-storen utan PII (endast förnamn, inga telefonnummer/mail/adresser/
-  betaldata). Helt read-only.
+- **Branch:** `fix/safe-case-timeline-writes` → PR mot `main` (öppen, ej mergad).
+- **Problemet (HIGH från audit runda 2):** `appendCaseEvent` i
+  `_shared/storage.js` läste hela case-blobben (eventual consistency = kan vara
+  INAKTUELL), pushade timeline och skrev tillbaka HELA blobben →
+  en samtidig/nyss gjord PATCH (status/betalning) kunde tyst återställas.
+- **Vald design (Sebastians preferens 1):** appendCaseEvent skriver ALDRIG mer
+  case-blobben — events lever enbart i separata `case-events`-storen.
+  Motivering: (a) admin läser redan case-events som primär timeline-källa
+  (case.timeline är bara fallback), (b) workshop-vyn använder inte timeline
+  alls, (c) @netlify/blobs 8.2.0 saknar conditional writes (`onlyIfMatch`
+  finns inte) så etag-strategi är omöjlig utan lib-uppgradering, (d) embedden
+  från v1-funktioner har bara fungerat sedan 2026-06-30 (connectLambda-fixen)
+  — inget beror på den. `workshop-cases.mjs` (v2) fortsätter embedda i sina
+  EGNA single-request-writes — orört och säkert.
+- **Filer:** `netlify/functions/_shared/storage.js` (RMW-blocket + oanvända
+  `timelineText` borttagna), NY `scripts/smoke-safe-timeline.mjs`.
+- **Tester:** smoke 5/5 PASS (status+payment kvar efter event, case-blob
+  byte-identisk, event i case-events) ✅, `node --check` storage + alla 7
+  callers ✅, build/verify/callflow ✅. Inga SMS/mail/production-writes.
+- **Kvarstående (acceptabel) risk:** case-events blir enda källan för
+  v1-genererade händelser; admin-fallbacken visar dem inte om case-events-
+  endpointen är nere (samma läge som innan 30 juni). `updatedAt` bumpas inte
+  längre av events (sorteringspåverkan marginell).
+- **Varning till Codex:** Rör inte `fix/safe-case-timeline-writes`. Återinför
+  ALDRIG case-blob-skrivning i appendCaseEvent — se kommentaren i storage.js.
+
+### 2026-07-03 — Claude Code — KLAR (read-only briefing-endpoint /api/claude-brief/:slug)
+
+- **Branch:** `main`. NY fil: `netlify/functions/claude-brief.mjs` (v2, inget annat rört).
+- **Beteende:** GET `/api/claude-brief/:slug`; slug timing-safe mot env
+  `CLAUDE_BRIEF_SLUG` (kräver ≥48 tecken). Fel slug ELLER saknad env → 404
+  (aldrig 401 — endpointen ska inte gå att skilja från icke-existerande sida).
+  60 req/h rate limit (medvetet in-memory per varm instans: endpointen får inte
+  göra writes, så Blobs-räknare var uteslutet). Läser endast `workshop-cases`.
+- **Svar:** generated_at, todays_bookings (time/first_name/vehicle/case_type/
+  status), open_jobs (id/vehicle/status/days_open), overdue_offers_count
+  (contacted/waiting_customer med pris, >3 dygn utan uppdatering),
+  unpaid_invoices_count (payment.status=invoiced), week_revenue_sek (paid
+  senaste 7 dygn), new_bookings_since_yesterday (channel != internal, skapade
+  igår/idag Stockholm-tid). INGEN PII: endast förnamn, inga telefon/mail/
+  adresser/betaldetaljer.
+- **Tester:** fixture-test (aggregation + PII-läckagekontroll + 404/405/429)
+  ✅, `npm run build` ✅, `verify:checkout-products` ✅.
+- **Kräver:** Netlify env `CLAUDE_BRIEF_SLUG` (64-teckens slug genererad och
+  lämnad till Sebastian, ej i repot). Utan env svarar endpointen 404 = safe
+  not_configured-läge.
 
 ### 2026-07-02 — Claude Code — KLAR (produktstruktur: hjälm bort, G4-kostnad, populärast, begagnat/NEMOB Edition)
 
