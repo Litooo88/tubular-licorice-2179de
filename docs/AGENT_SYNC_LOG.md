@@ -32,13 +32,20 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-07-03 — Claude Code — PÅGÅR (SEO runda 2: elsparkcykel + punktering)
+### 2026-07-03 — Claude Code — KLAR (SEO runda 2: elsparkcykel-landningssida + punktering-FAQ)
 
-- **Branch:** `main`. Tar: NY sida `laga-elsparkcykel-orebro/`, `punktering-elscooter-orebro/`,
-  intern länkning i `index.html` + `elscooter-reparation-orebro/`, `sitemap.xml`.
-- **Mål:** #1 på "elsparkcykel verkstad/laga elsparkcykel Örebro" (idag topp-10)
-  och "punktering elscooter Örebro" (idag #2 bakom MC-verkstads däcksida).
-  5 nya försök beslutade av Sebastian efter redovisning av runda 1.
+- **Mål:** #1 på "elsparkcykel"-sökord (var topp-10) och "punktering elscooter
+  Örebro" (var #2). 5 nya försök beslutade av Sebastian efter runda 1.
+- **Gjort:** 1) NY landningssida `/laga-elsparkcykel-orebro/` (unik copy,
+  Service/Breadcrumb/FAQPage-schema, semantisk brygga "elsparkcykel = elscooter");
+  2) punkteringssidan: FAQ-sektion + FAQPage-schema + punkteringsfria
+  däck-innehåll (konkurrenten på #1 är en däcksida); 3) intern länkning:
+  startsidans seo-cards + footer, relaterade tjänster på reparation- och
+  punkteringssidorna; 4) sitemap: ny sida + lastmod 2026-07-03; 5) verifiering.
+- **Tester:** build ✅, verify:checkout-products ✅, JSON-LD giltig (3+3 block)
+  ✅, browserkontroll av båda sidorna ✅ (title/H1/FAQ/länkar/inga trasiga bilder).
+- **Obs:** claude-brief-endpointen mergades till main via PR #88 (låg i samma
+  branch-historik) — Netlify env `CLAUDE_BRIEF_SLUG` måste sättas av Sebastian.
 
 ### 2026-07-03 — Claude Code — KLAR (Safe timeline writes — lost update-risken täppt)
 
