@@ -32,6 +32,42 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-04 — Claude Code — KLAR (CRO Förtroendepaketet: startsida + bokningssida)
+
+- **Branch:** `fix/cro-trust-package` → PR mot `main` (öppen, ej mergad).
+- **Bakgrund:** Full UX/CRO/SEO-audit (2 agenter + prestandamätning). Största
+  fyndet: sajten ber om ursäkt innan den säljer — krisnotiser som sektion 2 på
+  startsidan OCH före bokningsformuläret, prismotsägelser, obelagt 5.0-betyg,
+  intern jargong synlig för kund.
+- **Gjort (index.html + book-online/index.html, ENDAST text/HTML — inga
+  funktioner, inga generated-block):**
+  1. Krisnotiserna → lugn rad ("Högsäsong — boka tid så prioriteras du");
+     batterisäkerhetsraden BEHÅLLEN på bokningssidan. "under uppbyggnadsfasen"
+     och "teknisk åtkomststörning" borta överallt.
+  2. Klickbar telefon i desktop-nav (`nav-phone`, döljs på mobil där hamburgare
+     + sticky redan har tel).
+  3. Prisfixar: batteri-CTA:er 349→745 kr (= prislistans "Batterifelsökning
+     grund"); dubblettraden "Hämtning enligt tabell fr. 349" borttagen (199 kr-
+     raden i Extra tjänster + kampanjstrip är nu enda priset). **OBS Sebastian:
+     bekräfta 745 resp. 199 — annars justera i PR:en.**
+  4. "Se lediga tider" (falskt livetids-löfte) → "Boka tid" överallt.
+  5. Intern jargong bort: "lättare för Google", "ärende i dashboarden",
+     "Bättre Google-signaler", "speglas mot interna prisdatabasen" → kundspråk.
+  6. "5.0 på Google" länkar nu till Google-recensionssökningen (samma URL-
+     mönster som backend REVIEW_LINK). "Drop-in eller bokning" → "Bokning —
+     drop-in i mån av tid" (konsistens).
+  7. Emoji-bloggtumnaglar → riktiga verkstads-/showroombilder; partner-
+     brickorna läsbarare (#555→#9aa39c). Oanvänd hero-preload borttagen från
+     bokningssidan.
+- **Tester:** `npm run build` (generatorn: "No HTML changes needed" — inga
+  generated-block rörda) ✅, `verify:checkout-products` (31) ✅, 0 kvarvarande
+  "lediga tider"/"uppbyggnadsfasen"/"åtkomststörning" ✅, bloggbilderna finns ✅.
+- **Nästa (från audit, ej i denna PR):** formulärfriktion (e-post valfri vid
+  "Ring mig" — kräver booking.mjs-verifiering), Product JSON-LD + bildhygien i
+  generatorn, logga 2×353KB→1×~30KB, katalog-title/filter.
+- **Varning till Codex:** Rör inte `fix/cro-trust-package`. Om du ändrar
+  startsidans notis/pris-sektioner — koordinera här först.
+
 ### 2026-07-03 — Claude Code — KLAR (SEO runda 2: elsparkcykel-landningssida + punktering-FAQ)
 
 - **Mål:** #1 på "elsparkcykel"-sökord (var topp-10) och "punktering elscooter
