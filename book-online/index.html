@@ -239,14 +239,15 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <ul>
         <li>Vid akut batteririsk, brandlukt, svullet batteri eller vattenskada: ladda inte fordonet och kontakta oss innan inl&auml;mning.</li>
       </ul>
+      <p style="margin-top:10px">Vi v&auml;xer &mdash; vi s&ouml;ker just nu en tekniker till verkstan. Tips? <a href="/kontakt/" style="color:#ffe0a2;text-decoration:underline">H&ouml;r av dig</a>.</p>
     </div>
     <div class="hours-box">
-      <strong>S&aring; g&aring;r det till</strong>
-      V&auml;lj dag och tid i formul&auml;ret s&aring; bekr&auml;ftar vi ditt &auml;rende via SMS och e-post.
+      <strong>Inl&auml;mningstider</strong>
+      Tisdag&ndash;l&ouml;rdag kl 15&ndash;18. M&aring;ndag och s&ouml;ndag &auml;r st&auml;ngt f&ouml;r inl&auml;mning. V&auml;lj dag och tid i formul&auml;ret s&aring; bekr&auml;ftar vi ditt &auml;rende via SMS och e-post.
       <div class="hours-grid">
-        <div class="hours-item"><span>N&auml;sta steg</span><b>Boka tid</b></div>
+        <div class="hours-item"><span>Inl&auml;mning</span><b>Tis&ndash;l&ouml;r 15&ndash;18</b></div>
         <div class="hours-item"><span>&Aring;terkoppling</span><b>Inom 4 timmar</b></div>
-        <div class="hours-item"><span>Inl&auml;mning</span><b>Bokade &auml;renden f&ouml;rst</b></div>
+        <div class="hours-item"><span>Prioritet</span><b>Bokade &auml;renden f&ouml;rst</b></div>
       </div>
     </div>
 
@@ -427,9 +428,12 @@ function isoDay(date){return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${
 function fillDayOptions(){
   if(!preferredDay)return;
   preferredDay.innerHTML='';
-  for(let offset=0;offset<21;offset+=1){
+  // Inlämning tisdag-lördag: söndag (0) och måndag (1) är stängda för inlämning.
+  for(let offset=0;offset<28;offset+=1){
     const date=new Date();
     date.setDate(date.getDate()+offset);
+    const weekday=date.getDay();
+    if(weekday===0||weekday===1)continue;
     const option=document.createElement('option');
     option.value=isoDay(date);
     option.textContent=date.toLocaleDateString('sv-SE',{weekday:'short',day:'numeric',month:'short'});
@@ -439,7 +443,8 @@ function fillDayOptions(){
 function fillTimeOptions(){
   if(!preferredClock)return;
   preferredClock.innerHTML='';
-  ['09:00','09:30','10:00','10:30','11:00','11:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'].forEach((time)=>{
+  // Inlämningstider 15:00-18:00, tisdag-lördag.
+  ['15:00','15:30','16:00','16:30','17:00','17:30','18:00'].forEach((time)=>{
     const option=document.createElement('option');
     option.value=time;
     option.textContent=time;
