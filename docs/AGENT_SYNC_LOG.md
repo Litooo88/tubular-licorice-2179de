@@ -32,6 +32,29 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-05 — Claude Code — KLAR (klickbara ärendekort i AI Kontrolltorn/brief)
+
+- **Branch:** `fix/clickable-operational-brief-cards` → PR mot `main`.
+- **Vad:** Alla sex operativa listor i AI Kontrolltorn (prioriteringar, risk,
+  missade samtal, väntar reservdel, klara för betalning, sälj/intäktspotential)
+  renderas nu som `<a href="/admin/?case=<id>&tab=<tab>">` med aria-label,
+  hover-stil och "Öppna →"-hint. Tab-mappning: risk/prio/delar→overview,
+  betalning→payment, missade samtal/sälj→contact (ingen parts-tab finns).
+  Klick fångas och öppnar kortet in-page (setAdminView cards + filter +
+  cardTabState + scroll + focus-flash) med history.replaceState; ctrl/cmd/
+  mittenklick ger vanlig navigering. Poster utan case-id → oklickbar med
+  "case-id saknas" (ingen krasch). Risktexten visar nu kund · modell · pris ·
+  orsaker · "stått stilla X dagar" · "Nästa: <åtgärd>".
+- **Refaktor:** focusInitialCase använder nya openCaseDeepLink(id,tab) —
+  deep-link efter reload fungerar som förut men byter även till kortvyn.
+- **Filer:** endast `admin/index.html`. Inga writes, inga SMS/mail, kundexport
+  orörd, inga paneler borttagna.
+- **Tester:** inline-JS 0 fel ✅, build ✅, verify:checkout-products ✅,
+  callflow tsc ✅. Manuellt (lokal serve + injicerad testdata): riskklick→
+  overview ✅, betalklick→payment ✅, säljklick→contact ✅, reload på
+  ?case=&tab=contact → rätt kort+flik ✅, nätverkslogg = inga POST mot
+  Nordic-API (endast befintlig GA-pageview) ✅.
+
 ### 2026-07-04 — Claude Code — KLAR (Inlämningstider tis–lör 15–18, mån+sön stängt)
 
 - **Branch:** `fix/dropoff-hours` → PR mot `main` (öppen, ej mergad).
