@@ -32,6 +32,27 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-04 — Claude Code — KLAR (Inlämningstider tis–lör 15–18, mån+sön stängt)
+
+- **Branch:** `fix/dropoff-hours` → PR mot `main` (öppen, ej mergad).
+- **Beslut (Sebastian):** Inlämning endast tisdag–lördag kl 15–18 tills ny
+  tekniker är rekryterad. Rekryteringen kommuniceras POSITIVT ("Vi växer — vi
+  söker en tekniker"), INTE som personalbrist-ursäkt (samma princip som
+  Förtroendepaketet: inga krissignaler i bokningsflödet).
+- **Gjort:** `book-online/index.html`: `fillDayOptions` hoppar över söndag+
+  måndag (28 dagars fönster → 20 valbara dagar), `fillTimeOptions` →
+  15:00–18:00 (7 slots, gamla 09–20-arrayen borta). Hours-boxen visar
+  "Inlämning: Tis–lör 15–18" + rekryteringsrad med kontakt-länk.
+  `index.html`: tidsraden tillagd i högsäsongs-notisen.
+- **Tester:** inline-JS 0 syntaxfel ✅, logiktest (0 sön/mån bland valbara
+  dagar, tider 15:00–18:00) ✅, build ✅, verify:checkout-products (31) ✅.
+- **OBS:** Ingen server-side tidsspärr finns i `booking.mjs` (kalendern kollar
+  bara krockar) — formulärspärren räcker nu, men en direkt-POST kan ange annan
+  tid; admin ser och bekräftar ändå varje bokning manuellt.
+- **Varning till Codex:** Tidsreglerna ligger i `fillDayOptions`/
+  `fillTimeOptions` i book-online — ändra inte utan Sebastians beslut. När ny
+  tekniker är på plats: återställ tider + ta bort rekryteringsraden.
+
 ### 2026-07-04 — Claude Code — KLAR (CRO Förtroendepaketet: startsida + bokningssida)
 
 - **Branch:** `fix/cro-trust-package` → PR mot `main` (öppen, ej mergad).
