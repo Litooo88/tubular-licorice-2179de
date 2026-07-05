@@ -35,16 +35,16 @@ const statusLabel = {
   forbestall: "FÖRBESTÄLL",
   "demo-bara": "DEMO",
   slut: "SLUT",
-  upphord: "UTGATT"
+  upphord: "UTGÅTT"
 };
 
 const statusCopy = {
-  "i-lager": "Kan bestallas nu",
+  "i-lager": "Kan beställas nu",
   "pa-vag": "På väg till sortimentet",
-  forbestall: "Tas hem efter forfragan",
-  "demo-bara": "Demo och radgivning",
-  slut: "Tillfalligt slut",
-  upphord: "Saljs inte langre"
+  forbestall: "Tas hem efter förfrågan",
+  "demo-bara": "Demo och rådgivning",
+  slut: "Tillfälligt slut",
+  upphord: "Säljs inte längre"
 };
 
 const legalityText = {
@@ -58,12 +58,20 @@ const ctaText = (item) => {
   if (item.status === "pa-vag") return "Förbeställ";
   if (item.status === "forbestall") return item.priceSek ? "Begär offert" : "Kontakta oss för pris";
   if (item.status === "demo-bara") return "Boka demo";
-  return "Fraga oss";
+  return "Fråga oss";
 };
 
-const bookingHref = (item) => `/book-online?service=bestallning&modell=${slugModel(item.name)}`;
+const bookingHref = (item) => `/book-online/?service=bestallning&modell=${slugModel(item.name)}`;
 
 const mainImage = (item) => item.images?.[0] || "/assets/workshop/scooter-on-bench.jpg";
+
+// Begär rätt storlek från Shopify-CDN:et i stället för originalet
+// (tumnaglarna är 58px höga, kortbilderna ~210px) — stor bandbreddsbesparing.
+const sizedSrc = (src, width) => {
+  if (!/cdn\.shopify\.com/.test(src)) return src;
+  if (/([?&])width=\d+/.test(src)) return src.replace(/([?&])width=\d+/, `$1width=${width}`);
+  return `${src}${src.includes("?") ? "&" : "?"}width=${width}`;
+};
 
 const galleryAttr = (item) => escapeAttr(JSON.stringify(item.images || []));
 
@@ -85,13 +93,13 @@ function productCard(item, options = {}) {
   const legal = item.legality ? `<p class="product-legal">${escapeHtml(legalityText[item.legality] || item.legality)}</p>` : "";
   const thumbs = images
     .slice(1, 4)
-    .map((src, index) => `<button type="button" data-open-product aria-label="Visa ${escapeAttr(item.name)} bild ${index + 2}"><img loading="lazy" src="${escapeAttr(src)}" alt="${escapeAttr(item.name)} extra bild ${index + 2}"></button>`)
+    .map((src, index) => `<button type="button" data-open-product aria-label="Visa ${escapeAttr(item.name)} bild ${index + 2}"><img loading="lazy" decoding="async" width="200" height="200" src="${escapeAttr(sizedSrc(src, 200))}" alt="${escapeAttr(item.name)} extra bild ${index + 2}"></button>`)
     .join("");
   return `
         <article class="card product-card" data-brand="${escapeAttr(item.brand)}" data-status="${escapeAttr(item.status)}" data-gallery="${galleryAttr(item)}">
           <a class="product-media" href="${escapeAttr(bookingHref(item))}" data-open-product aria-label="Visa bilder och information om ${escapeAttr(item.name)}">
             <span class="tag ${item.brand === "KuKirin" ? "orange" : ""}">${escapeHtml(item.badge || statusLabel[item.status] || "Modell")}</span>
-            <img loading="lazy" src="${escapeAttr(mainImage(item))}" alt="${escapeAttr(item.name)}">
+            <img loading="lazy" decoding="async" width="500" height="500" src="${escapeAttr(sizedSrc(mainImage(item), 800))}" alt="${escapeAttr(item.name)}" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
           </a>
           ${thumbs ? `<div class="product-thumbs">${thumbs}</div>` : `<div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>`}
           <div class="card-body">
@@ -154,7 +162,7 @@ function refurbCard(item) {
             <div class="price">${escapeHtml(item.priceNote || "Pris efter specifikation")}</div>
             <p class="stock-copy">${escapeHtml(item.statusText || "")} • Riktiga produktbilder publiceras när bygget är klart.</p>
             <div class="card-actions">
-              <a class="btn ghost" href="/book-online?service=bestallning&modell=${slugModel(item.name)}">${escapeHtml(item.cta || "Anmäl intresse")}</a>
+              <a class="btn ghost" href="/book-online/?service=bestallning&modell=${slugModel(item.name)}">${escapeHtml(item.cta || "Anmäl intresse")}</a>
             </div>
           </div>
         </article>`;
@@ -500,20 +508,73 @@ function updateFile(filePath, updater) {
   return true;
 }
 
+// Product+Offer-schema för alla prissatta produkter — genereras från samma
+// datakälla som korten så pris/lagerstatus i rich results aldrig divergerar.
+const schemaAvailability = {
+  "i-lager": "https://schema.org/InStock",
+  "pa-vag": "https://schema.org/PreOrder",
+  forbestall: "https://schema.org/PreOrder",
+  "demo-bara": "https://schema.org/InStoreOnly",
+  slut: "https://schema.org/OutOfStock",
+  upphord: "https://schema.org/Discontinued"
+};
+
+const productSchemaJson = () => {
+  const itemList = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Elscootrar hos Nordic E-Mobility i Örebro",
+    itemListElement: products
+      .filter((item) => Number(item.priceSek) > 0)
+      .map((item, index) => ({
+        "@type": "ListItem",
+        position: index + 1,
+        item: {
+          "@type": "Product",
+          name: item.name,
+          brand: { "@type": "Brand", name: item.brand },
+          image: item.images?.[0],
+          description: item.short,
+          offers: {
+            "@type": "Offer",
+            price: item.priceSek,
+            priceCurrency: "SEK",
+            availability: schemaAvailability[item.status] || "https://schema.org/InStock",
+            url: `https://www.nordicemobility.se${bookingHref(item)}`,
+            seller: { "@type": "LocalBusiness", name: "Nordic E-Mobility" }
+          }
+        }
+      }))
+  };
+  return `<script type="application/ld+json" id="product-catalog-schema">\n${JSON.stringify(itemList)}\n</script>`;
+};
+
 const changed = [];
 
 if (
   updateFile("nya-elscootrar/index.html", (html) => {
     let next = html
-      .replace(/<title>[\s\S]*?<\/title>/, "<title>Premium elscootrar, reservdelar och uppgraderingar i Örebro | Nordic E-Mobility</title>")
+      .replace(/<title>[\s\S]*?<\/title>/, "<title>Köp elscooter i Örebro – NAVEE, Teverun, KuKirin | Nordic E-Mobility</title>")
       .replace(
         /<meta name="description" content="[^"]*">/,
-        '<meta name="description" content="Hela utbudet från NAVEE, Teverun och KuKirin hos Nordic E-Mobility i Örebro. Köp elscooter, jämför modeller, reservdelar, Monorim-uppgraderingar och service med lokal verkstadsstöd.">'
+        '<meta name="description" content="Köp elscooter från NAVEE, Teverun och KuKirin hos specialistverkstaden i Örebro. Prisgaranti på utvalda modeller, leveranskontroll och service efter köpet.">'
+      )
+      .replace(
+        /<meta name="keywords" content="[^"]*">/,
+        '<meta name="keywords" content="köp elscooter Örebro, elscooter butik Örebro, NAVEE Sverige, Teverun Sverige, KuKirin Sverige, elscooter pris">'
       )
       .replace(
         /<span class="eyebrow">[\s\S]*?<\/span>\s*<h1>[\s\S]*?<\/h1>\s*<p class="lead">[\s\S]*?<\/p>/,
-        '<span class="eyebrow">PREMIUM I ÖREBRO</span>\n        <h1>Premium elscootrar för svensk vardag.</h1>\n        <p class="lead">Hela sortimentet från NAVEE, Teverun och KuKirin - med lokal service, garanti och provkörning i Örebro. Vi hjälper kunden att köpa rätt modell, förstå reglerna och få verkstadsstöd efter köpet.</p>'
+        '<span class="eyebrow">NAVEE · TEVERUN · KUKIRIN</span>\n        <h1>Köp elscooter i Örebro – direkt av verkstaden.</h1>\n        <p class="lead">Hela sortimentet från NAVEE, Teverun och KuKirin - med lokal service, garanti och provkörning i Örebro. Vi hjälper kunden att köpa rätt modell, förstå reglerna och få verkstadsstöd efter köpet.</p>'
       );
+    if (!next.includes('property="og:title"')) {
+      next = next.replace(
+        '<link rel="canonical" href="https://www.nordicemobility.se/nya-elscootrar/">',
+        '<link rel="canonical" href="https://www.nordicemobility.se/nya-elscootrar/">\n<meta property="og:type" content="website">\n<meta property="og:title" content="Köp elscooter i Örebro – NAVEE, Teverun, KuKirin">\n<meta property="og:description" content="Hela sortimentet med service, garanti och leveranskontroll hos verkstaden i Örebro.">\n<meta property="og:url" content="https://www.nordicemobility.se/nya-elscootrar/">\n<meta property="og:image" content="https://www.nordicemobility.se/assets/showroom/showroom-group-wide.jpg">'
+      );
+    }
+    next = next.replace(/<script type="application\/ld\+json" id="product-catalog-schema">[\s\S]*?<\/script>\n?/, "");
+    next = next.replace("</head>", `${productSchemaJson()}\n</head>`);
     next = next.replace(
       /  <section class="section" id="nya-elscootrar">[\s\S]*?\n  <section class="section alt" id="dack-punktering">/,
       `${generatedBlock(nyaElscootrarSection())}\n\n  <section class="section alt" id="dack-punktering">`

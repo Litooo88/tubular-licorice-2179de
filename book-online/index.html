@@ -336,7 +336,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div class="form-grid">
           <div class="form-group"><label for="name">Namn</label><input id="name" name="name" required autocomplete="name" placeholder="Ditt namn"></div>
           <div class="form-group"><label for="phone">Telefon</label><input id="phone" name="phone" required autocomplete="tel" inputmode="tel" placeholder="070-123 45 67"></div>
-          <div class="form-group"><label for="email">E-post f&ouml;r bekr&auml;ftelse</label><input id="email" name="email" type="email" autocomplete="email" required placeholder="din@email.se"></div>
+          <div class="form-group"><label for="email">E-post <span style="text-transform:none;font-weight:400;color:#8d9a91">(valfritt om vi ska ringa)</span></label><input id="email" name="email" type="email" autocomplete="email" placeholder="din@email.se"></div>
           <div class="form-group"><label for="contactMethod">Kontakt</label><select id="contactMethod" name="contactMethod">
             <option value="phone">Ring mig</option>
             <option value="sms">SMS f&ouml;rst</option>
@@ -351,7 +351,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <option value="urgent">Beh&ouml;ver snabb hj&auml;lp</option>
             <option value="quote">Vill ha offert f&ouml;rst</option>
           </select></div>
-          <div class="form-group"><label for="discountCode">Rabattkod</label><input id="discountCode" name="discountCode" autocomplete="off" placeholder="T.ex. NORDIC10"></div>
+          <div class="form-group"><details><summary style="cursor:pointer;font-size:12px;font-weight:900;color:#b8c2ba;text-transform:uppercase;letter-spacing:.08em">Har du rabattkod?</summary><input id="discountCode" name="discountCode" autocomplete="off" placeholder="T.ex. NORDIC10" style="margin-top:8px"></details></div>
           <div class="form-group"><label for="logistics">Inl&auml;mning / upph&auml;mtning</label><select id="logistics" name="logistics">
             <option value="dropoff">Jag l&auml;mnar in p&aring; Pistolv&auml;gen 6</option>
             <option value="pickup-ready">Jag h&auml;mtar en f&auml;rdig scooter</option>
@@ -366,10 +366,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <div class="block-head"><b>3</b><h3>Kort om problemet</h3></div>
         <div class="form-group full"><label for="message">Vad h&auml;nde?</label><textarea id="message" name="message" placeholder="Ex. bakd&auml;cket &auml;r platt, bromsen tar d&aring;ligt, laddar inte, startar inte eller vill ha snabb prisbed&ouml;mning."></textarea></div>
         <input type="hidden" id="smsConsent" name="smsConsent" value="yes">
-        <label class="check-row legal"><input type="checkbox" id="ownershipConfirm" name="ownershipConfirm" value="yes" required><span><strong>Jag intygar att fordonet inte &auml;r st&ouml;ldgods.</strong><br>Jag kan visa kvitto, &auml;garuppgifter eller legitimation vid inl&auml;mning om verkstaden ber om det.</span></label>
+        <label class="check-row legal"><input type="checkbox" id="ownershipConfirm" name="ownershipConfirm" value="yes" required><span><strong>F&ouml;r allas trygghet: jag intygar att fordonet &auml;r mitt eller att jag har &auml;garens tillst&aring;nd.</strong><br>Jag kan visa kvitto, &auml;garuppgifter eller legitimation vid inl&auml;mning om verkstaden ber om det.</span></label>
         <label class="check-row legal"><input type="checkbox" id="termsConfirm" name="termsConfirm" value="yes" required><span><strong>Jag har l&auml;st och godk&auml;nner villkoren.</strong><br>Jag godk&auml;nner <a href="/villkor/" target="_blank" rel="noopener">bokningsvillkor</a>, no-show-policy och <a href="/garanti/" target="_blank" rel="noopener">garantipolicy</a> innan bokningen slutf&ouml;rs.</span></label>
       </div>
 
+      <p style="margin:0 0 10px;font-size:13px;color:#aeb8b0">Fast pris bekr&auml;ftas alltid innan arbete p&aring;b&ouml;rjas &middot; Fr&aring;gor? <a href="tel:+46101385498" style="font-weight:700">010-138 54 98</a></p>
       <button type="submit" class="submit">Boka inl&auml;mning</button>
       <div class="status" id="bookingStatus" aria-live="polite"></div>
       <p class="note">Genom att skicka formul&auml;ret godk&auml;nner du att vi behandlar uppgifterna f&ouml;r att hantera &auml;rendet och kontakta dig om bokningen. Se <a href="/integritet/">integritetspolicy</a> och <a href="/villkor/">villkor</a>.</p>
@@ -599,6 +600,14 @@ if(bookingForm){
     if(!preferredDate){
       bookingStatus.className='status err';
       bookingStatus.textContent='V\u00e4lj inl\u00e4mningsdag och klockslag.';
+      return;
+    }
+    const emailInput=document.getElementById('email');
+    const contactMethodSelect=document.getElementById('contactMethod');
+    if(contactMethodSelect&&contactMethodSelect.value==='email'&&emailInput&&!emailInput.value.trim()){
+      bookingStatus.className='status err';
+      bookingStatus.textContent='Fyll i din e-post om du vill bli kontaktad via e-post \u2014 eller v\u00e4lj "Ring mig".';
+      emailInput.focus();
       return;
     }
 
