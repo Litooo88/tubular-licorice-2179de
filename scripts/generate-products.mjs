@@ -73,7 +73,18 @@ const sizedSrc = (src, width) => {
   return `${src}${src.includes("?") ? "&" : "?"}width=${width}`;
 };
 
-const galleryAttr = (item) => escapeAttr(JSON.stringify(item.images || []));
+// Lokal bildspegel (scripts/mirror-product-images.mjs): servera lokala kopior
+// först, med leverantörens URL som onerror-fallback. Saknas spegeln används
+// leverantörs-URL:en direkt precis som innan — inget går sönder.
+let imageMirror = {};
+try {
+  imageMirror = JSON.parse(fs.readFileSync(path.join(root, "data", "product-image-mirror.json"), "utf8"));
+} catch {}
+const displaySrc = (src, width) => imageMirror[src] || sizedSrc(src, width);
+const fallbackSrc = (src, width) =>
+  imageMirror[src] ? sizedSrc(src, width) : "/assets/workshop/scooter-on-bench.jpg";
+
+const galleryAttr = (item) => escapeAttr(JSON.stringify((item.images || []).map((src) => imageMirror[src] || src)));
 
 const buyAttrs = (item) => item.checkout ? ` data-product="${escapeAttr(item.id)}"` : "";
 
@@ -93,13 +104,13 @@ function productCard(item, options = {}) {
   const legal = item.legality ? `<p class="product-legal">${escapeHtml(legalityText[item.legality] || item.legality)}</p>` : "";
   const thumbs = images
     .slice(1, 4)
-    .map((src, index) => `<button type="button" data-open-product aria-label="Visa ${escapeAttr(item.name)} bild ${index + 2}"><img loading="lazy" decoding="async" width="200" height="200" src="${escapeAttr(sizedSrc(src, 200))}" alt="${escapeAttr(item.name)} extra bild ${index + 2}"></button>`)
+    .map((src, index) => `<button type="button" data-open-product aria-label="Visa ${escapeAttr(item.name)} bild ${index + 2}"><img loading="lazy" decoding="async" width="200" height="200" src="${escapeAttr(displaySrc(src, 200))}" alt="${escapeAttr(item.name)} extra bild ${index + 2}" onerror="this.onerror=null;this.src='${escapeAttr(fallbackSrc(src, 200))}'"></button>`)
     .join("");
   return `
         <article class="card product-card" data-brand="${escapeAttr(item.brand)}" data-status="${escapeAttr(item.status)}" data-gallery="${galleryAttr(item)}">
           <a class="product-media" href="${escapeAttr(bookingHref(item))}" data-open-product aria-label="Visa bilder och information om ${escapeAttr(item.name)}">
             <span class="tag ${item.brand === "KuKirin" ? "orange" : ""}">${escapeHtml(item.badge || statusLabel[item.status] || "Modell")}</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="${escapeAttr(sizedSrc(mainImage(item), 800))}" alt="${escapeAttr(item.name)}" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="${escapeAttr(displaySrc(mainImage(item), 800))}" alt="${escapeAttr(item.name)}" onerror="this.onerror=null;this.src='${escapeAttr(fallbackSrc(mainImage(item), 800))}'">
           </a>
           ${thumbs ? `<div class="product-thumbs">${thumbs}</div>` : `<div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>`}
           <div class="card-body">
@@ -125,7 +136,7 @@ function accessoryCard(item) {
         <article class="card product-card accessory-card" data-brand="${escapeAttr(item.brand)}" data-gallery="${galleryAttr(item)}">
           <div class="product-media">
             <span class="tag">${escapeHtml(item.badge || item.brand)}</span>
-            <img loading="lazy" src="${escapeAttr(mainImage(item))}" alt="${escapeAttr(item.name)}">
+            <img loading="lazy" decoding="async" width="500" height="500" src="${escapeAttr(displaySrc(mainImage(item), 800))}" alt="${escapeAttr(item.name)}" onerror="this.onerror=null;this.src='${escapeAttr(fallbackSrc(mainImage(item), 800))}'">
           </div>
           <div class="card-body">
             <div class="product-meta"><span>${escapeHtml(item.brand)}</span><span>${escapeHtml(statusLabel[item.status] || "OFFERT")}</span></div>
@@ -144,7 +155,7 @@ function refurbCard(item) {
     .join("");
   const legal = item.legalNote ? `<p class="product-legal">${escapeHtml(item.legalNote)}</p>` : "";
   const image = item.images?.length
-    ? `<img loading="lazy" src="${escapeAttr(item.images[0])}" alt="${escapeAttr(item.name)}">`
+    ? `<img loading="lazy" decoding="async" src="${escapeAttr(displaySrc(item.images[0], 800))}" alt="${escapeAttr(item.name)}" onerror="this.onerror=null;this.src='${escapeAttr(fallbackSrc(item.images[0], 800))}'">`
     : `<img loading="lazy" src="/assets/workshop/scooter-on-bench.jpg" alt="Renovering pågår i verkstaden – riktiga bilder på ${escapeAttr(item.name)} publiceras när bygget är klart">`;
   return `
         <article class="card product-card refurb-card" data-brand="${escapeAttr(item.brand)}">
@@ -218,6 +229,13 @@ function nyaElscootrarSection() {
         .catalog-note{border:1px solid rgba(0,200,83,.22);background:rgba(0,200,83,.08);border-radius:8px;padding:18px;color:#dce8df}
         .catalog-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
         .catalog-actions a{border:1px solid var(--line-strong);background:#101410;border-radius:999px;padding:9px 12px;text-decoration:none;font-size:13px;font-weight:900}
+        .catalog-filter{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 22px;padding:14px;border:1px solid var(--line);border-radius:8px;background:#0b100c}
+        .catalog-filter .cf-btn{border:1px solid #2f3a32;background:#111712;color:#cfd8d2;border-radius:8px;padding:10px 16px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+        .catalog-filter .cf-btn.is-active{background:#00c853;border-color:#00c853;color:#031006}
+        .catalog-filter .cf-toggle{display:inline-flex;align-items:center;gap:8px;color:#cfd8d2;font-size:14px;font-weight:700;cursor:pointer;margin-left:auto}
+        .catalog-filter .cf-toggle input{width:auto}
+        .catalog-filter .cf-count{color:#8d9a91;font-size:13px}
+        @media(max-width:620px){.catalog-filter .cf-toggle{margin-left:0}}
         .product-card{position:relative}
         .product-media{height:210px;display:flex;align-items:center;justify-content:center;background:#111712;position:relative;text-decoration:none;cursor:zoom-in}
         .product-media::after{content:"Visa bilder";position:absolute;right:10px;bottom:10px;border:1px solid rgba(255,255,255,.24);background:rgba(0,0,0,.7);color:#fff;border-radius:999px;padding:6px 9px;font-size:11px;font-weight:900;opacity:0;transform:translateY(4px);transition:.18s}
@@ -301,6 +319,14 @@ function nyaElscootrarSection() {
           ${paymentStrip()}
         </div>
       </div>
+      <div class="catalog-filter" role="group" aria-label="Filtrera sortimentet">
+        <button type="button" class="cf-btn is-active" data-filter-brand="alla">Alla märken</button>
+        <button type="button" class="cf-btn" data-filter-brand="NAVEE">NAVEE</button>
+        <button type="button" class="cf-btn" data-filter-brand="Teverun">Teverun</button>
+        <button type="button" class="cf-btn" data-filter-brand="KuKirin">KuKirin</button>
+        <label class="cf-toggle"><input type="checkbox" id="filterInStock"> Endast i lager</label>
+        <span class="cf-count" id="filterCount" aria-live="polite"></span>
+      </div>
       <div class="grid three catalog-grid">
 ${featured.map((item) => productCard(item, { primary: item.id === "teverun-fighter-eleven-plus" })).join("\n")}
       </div>
@@ -378,6 +404,34 @@ ${orderable
       </div>
       <script>
       (()=>{const modal=document.getElementById('catalogProductModal');if(!modal)return;const title=document.getElementById('catalogModalTitle'),price=document.getElementById('catalogModalPrice'),image=document.getElementById('catalogModalImage'),summary=document.getElementById('catalogModalSummary'),details=document.getElementById('catalogModalDetails'),thumbs=document.getElementById('catalogModalThumbs'),buy=document.getElementById('catalogModalBuy');let gallery=[],galleryIndex=0;function render(){if(!gallery.length)return;image.src=gallery[galleryIndex];thumbs.innerHTML=gallery.map((src,index)=>\`<button type="button" class="\${index===galleryIndex?'is-active':''}" aria-label="Visa bild \${index+1}"><img src="\${src}" alt=""></button>\`).join('');thumbs.querySelectorAll('button').forEach((button,index)=>button.addEventListener('click',()=>{galleryIndex=index;render()}))}function info(card){const name=card.querySelector('h3')?.textContent.trim()||'Produkt';const priceText=card.querySelector('.price')?.textContent.trim()||'Kontakta oss';const spec=card.querySelector('.spec')?.textContent.trim()||'Specifikation saknas.';const copy=card.querySelector('.copy')?.textContent.trim()||'Kontakta verkstaden om du vill veta om modellen passar din körning och lokala regler.';const stock=card.querySelector('.stock-copy')?.textContent.trim()||card.querySelector('.product-meta span:last-child')?.textContent.trim()||'';const img=card.querySelector('.product-media img');const link=card.querySelector('.card-actions a[data-product], .card-actions a');let images=[];try{if(card.dataset.gallery)images=JSON.parse(card.dataset.gallery)}catch{}if(!images.length&&img?.src)images=[img.getAttribute('src')];return {name,priceText,spec,copy,stock,imgAlt:img?.alt||name,href:link?.href||'/book-online/',productId:link?.dataset.product||'',cta:link?.textContent.trim()||'Köp nu',images}}function open(card){const item=info(card);title.textContent=item.name;price.textContent=item.priceText;summary.textContent=item.copy;gallery=item.images;galleryIndex=0;image.alt=item.imgAlt;render();details.innerHTML=[\`<li><strong>Specifikation</strong>\${item.spec}</li>\`,\`<li><strong>Status / leverans</strong>\${item.stock}</li>\`,\`<li><strong>Nästa steg</strong>Köp direkt i checkout eller skicka fråga om du vill kontrollera modell, regler, inbyte eller leverans först.</li>\`].join('');buy.href=item.href;buy.textContent=item.cta;if(item.productId){buy.dataset.product=item.productId}else{delete buy.dataset.product}modal.classList.add('is-open');modal.setAttribute('aria-hidden','false');modal.querySelector('.catalog-modal-close').focus()}function close(){modal.classList.remove('is-open');modal.setAttribute('aria-hidden','true')}document.querySelectorAll('.product-card').forEach((card)=>{card.querySelectorAll('[data-open-product]').forEach((trigger)=>trigger.addEventListener('click',(event)=>{event.preventDefault();open(card)}));});modal.querySelector('.catalog-modal-close').addEventListener('click',close);modal.querySelector('.catalog-modal-prev').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex-1+gallery.length)%gallery.length;render()});modal.querySelector('.catalog-modal-next').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex+1)%gallery.length;render()});modal.addEventListener('click',(event)=>{if(event.target===modal)close()});document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&modal.classList.contains('is-open'))close()})})();
+      (()=>{const bar=document.querySelector('.catalog-filter');if(!bar)return;
+      const countEl=document.getElementById('filterCount');
+      const stockToggle=document.getElementById('filterInStock');
+      let brand='alla';
+      function cards(){return document.querySelectorAll('.product-card:not(.accessory-card):not(.refurb-card)')}
+      function apply(){
+        const onlyStock=stockToggle&&stockToggle.checked;
+        let visible=0;const seen=new Set();
+        cards().forEach((card)=>{
+          const okBrand=brand==='alla'||card.dataset.brand===brand;
+          const okStock=!onlyStock||card.dataset.status==='i-lager';
+          const show=okBrand&&okStock;
+          card.style.display=show?'':'none';
+          if(show){const key=card.querySelector('h3')?.textContent||'';if(!seen.has(key)){seen.add(key);visible++;}}
+        });
+        document.querySelectorAll('.fighter-push,.catalog-brand:not(#tillbehor-reservdelar):not(#begagnat-renoverat)').forEach((section)=>{
+          const any=[...section.querySelectorAll('.product-card:not(.accessory-card):not(.refurb-card)')].some((card)=>card.style.display!=='none');
+          section.style.display=any?'':'none';
+        });
+        if(countEl)countEl.textContent='Visar '+visible+(visible===1?' modell':' modeller');
+      }
+      bar.querySelectorAll('.cf-btn').forEach((button)=>button.addEventListener('click',()=>{
+        brand=button.dataset.filterBrand;
+        bar.querySelectorAll('.cf-btn').forEach((other)=>other.classList.toggle('is-active',other===button));
+        apply();
+      }));
+      if(stockToggle)stockToggle.addEventListener('change',apply);
+      apply();})();
       </script>
     </div>
   </section>`;
@@ -392,7 +446,7 @@ function homeProductCard(item) {
       <div class="prod-img" style="background:linear-gradient(135deg,#0a1a0f,#111);position:relative;display:flex;align-items:center;justify-content:center;overflow:hidden">
         <div class="pop-badge" style="background:${item.brand === "KuKirin" ? "#ff6d00" : "#00C853"}">${escapeHtml(item.badge || statusLabel[item.status])}</div>
         <div style="position:absolute;top:10px;right:10px;background:#fff;color:#000;font-size:10px;font-weight:800;padding:3px 8px;border-radius:3px;z-index:1">${escapeHtml(statusLabel[item.status])}</div>
-        <img width="500" height="500" loading="lazy" decoding="async" src="${escapeAttr(mainImage(item))}" alt="${escapeAttr(item.name)}" style="max-height:100%;max-width:100%;object-fit:contain;filter:brightness(.95)" onerror="this.outerHTML='&#9889;'">
+        <img width="500" height="500" loading="lazy" decoding="async" src="${escapeAttr(displaySrc(mainImage(item), 800))}" alt="${escapeAttr(item.name)}" style="max-height:100%;max-width:100%;object-fit:contain;filter:brightness(.95)" onerror="this.onerror=null;this.src='${escapeAttr(fallbackSrc(mainImage(item), 800))}'">
       </div>
       <div class="prod-body">
         <div class="prod-name">${escapeHtml(item.name.replace(/^NAVEE |^KuKirin |^Teverun /, ""))}</div>
