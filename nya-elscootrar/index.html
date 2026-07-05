@@ -265,6 +265,13 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         .catalog-note{border:1px solid rgba(0,200,83,.22);background:rgba(0,200,83,.08);border-radius:8px;padding:18px;color:#dce8df}
         .catalog-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
         .catalog-actions a{border:1px solid var(--line-strong);background:#101410;border-radius:999px;padding:9px 12px;text-decoration:none;font-size:13px;font-weight:900}
+        .catalog-filter{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin:0 0 22px;padding:14px;border:1px solid var(--line);border-radius:8px;background:#0b100c}
+        .catalog-filter .cf-btn{border:1px solid #2f3a32;background:#111712;color:#cfd8d2;border-radius:8px;padding:10px 16px;font:inherit;font-weight:700;font-size:14px;cursor:pointer}
+        .catalog-filter .cf-btn.is-active{background:#00c853;border-color:#00c853;color:#031006}
+        .catalog-filter .cf-toggle{display:inline-flex;align-items:center;gap:8px;color:#cfd8d2;font-size:14px;font-weight:700;cursor:pointer;margin-left:auto}
+        .catalog-filter .cf-toggle input{width:auto}
+        .catalog-filter .cf-count{color:#8d9a91;font-size:13px}
+        @media(max-width:620px){.catalog-filter .cf-toggle{margin-left:0}}
         .product-card{position:relative}
         .product-media{height:210px;display:flex;align-items:center;justify-content:center;background:#111712;position:relative;text-decoration:none;cursor:zoom-in}
         .product-media::after{content:"Visa bilder";position:absolute;right:10px;bottom:10px;border:1px solid rgba(255,255,255,.24);background:rgba(0,0,0,.7);color:#fff;border-radius:999px;padding:6px 9px;font-size:11px;font-weight:900;opacity:0;transform:translateY(4px);transition:.18s}
@@ -355,14 +362,22 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             </div>
         </div>
       </div>
+      <div class="catalog-filter" role="group" aria-label="Filtrera sortimentet">
+        <button type="button" class="cf-btn is-active" data-filter-brand="alla">Alla märken</button>
+        <button type="button" class="cf-btn" data-filter-brand="NAVEE">NAVEE</button>
+        <button type="button" class="cf-btn" data-filter-brand="Teverun">Teverun</button>
+        <button type="button" class="cf-btn" data-filter-brand="KuKirin">KuKirin</button>
+        <label class="cf-toggle"><input type="checkbox" id="filterInStock"> Endast i lager</label>
+        <span class="cf-count" id="filterCount" aria-live="polite"></span>
+      </div>
       <div class="grid three catalog-grid">
 
-        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/xt5-ultra-drive.jpg&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png&quot;]">
+        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/xt5-ultra-drive.jpg&quot;,&quot;/assets/products/mirror/07a6471cf77c.png&quot;,&quot;/assets/products/mirror/0c87b2da2daf.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=NAVEE-XT5-Ultra" data-open-product aria-label="Visa bilder och information om NAVEE XT5 Ultra">
             <span class="tag ">NAVEE rek.</span>
             <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/navee/xt5-ultra-drive.jpg" alt="NAVEE XT5 Ultra" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
           </a>
-          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE XT5 Ultra bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png" alt="NAVEE XT5 Ultra extra bild 2"></button><button type="button" data-open-product aria-label="Visa NAVEE XT5 Ultra bild 3"><img loading="lazy" decoding="async" width="200" height="200" src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png" alt="NAVEE XT5 Ultra extra bild 3"></button></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE XT5 Ultra bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/07a6471cf77c.png" alt="NAVEE XT5 Ultra extra bild 2" onerror="this.onerror=null;this.src='https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png'"></button><button type="button" data-open-product aria-label="Visa NAVEE XT5 Ultra bild 3"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/0c87b2da2daf.png" alt="NAVEE XT5 Ultra extra bild 3" onerror="this.onerror=null;this.src='https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png'"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>NAVEE</span><span>I LAGER</span></div>
             <h3>NAVEE XT5 Ultra</h3>
@@ -386,12 +401,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/n65i-drive.jpg&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/07/N65i-500x500.png&quot;]">
+        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/n65i-drive.jpg&quot;,&quot;/assets/products/mirror/08c5aa28685c.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=NAVEE-N65i" data-open-product aria-label="Visa bilder och information om NAVEE N65i">
             <span class="tag ">Mellansegment</span>
             <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/navee/n65i-drive.jpg" alt="NAVEE N65i" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
           </a>
-          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE N65i bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="https://www.naveetech.com/wp-content/uploads/2025/07/N65i-500x500.png" alt="NAVEE N65i extra bild 2"></button></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE N65i bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/08c5aa28685c.png" alt="NAVEE N65i extra bild 2" onerror="this.onerror=null;this.src='https://www.naveetech.com/wp-content/uploads/2025/07/N65i-500x500.png'"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>NAVEE</span><span>I LAGER</span></div>
             <h3>NAVEE N65i</h3>
@@ -415,12 +430,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/v50i-pro-drive.jpg&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/07/4-V50i-Pro.png&quot;]">
+        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/v50i-pro-drive.jpg&quot;,&quot;/assets/products/mirror/3acf97234b11.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=NAVEE-V50i-Pro" data-open-product aria-label="Visa bilder och information om NAVEE V50i Pro">
             <span class="tag ">Pendling</span>
             <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/navee/v50i-pro-drive.jpg" alt="NAVEE V50i Pro" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
           </a>
-          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE V50i Pro bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="https://www.naveetech.com/wp-content/uploads/2025/07/4-V50i-Pro.png" alt="NAVEE V50i Pro extra bild 2"></button></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE V50i Pro bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/3acf97234b11.png" alt="NAVEE V50i Pro extra bild 2" onerror="this.onerror=null;this.src='https://www.naveetech.com/wp-content/uploads/2025/07/4-V50i-Pro.png'"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>NAVEE</span><span>I LAGER</span></div>
             <h3>NAVEE V50i Pro</h3>
@@ -444,12 +459,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png&quot;,&quot;https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/0b135a375893.png&quot;,&quot;/assets/products/mirror/29401ceafafb.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Fighter-Eleven" data-open-product aria-label="Visa bilder och information om Teverun Fighter Eleven+">
             <span class="tag ">I LAGER</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png" alt="Teverun Fighter Eleven+" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/0b135a375893.png" alt="Teverun Fighter Eleven+" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png'">
           </a>
-          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Eleven+ bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg" alt="Teverun Fighter Eleven+ extra bild 2"></button></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Eleven+ bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/29401ceafafb.jpg" alt="Teverun Fighter Eleven+ extra bild 2" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg'"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>Teverun</span><span>I LAGER</span></div>
             <h3>Teverun Fighter Eleven+</h3>
@@ -473,10 +488,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2-1104.jpg?v=1741748721&quot;]">
+        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/c622c0292440.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=KuKirin-G2" data-open-product aria-label="Visa bilder och information om KuKirin G2">
             <span class="tag orange">Budget</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2-1104.jpg?v=1741748721&amp;width=800" alt="KuKirin G2" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/c622c0292440.jpg" alt="KuKirin G2" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2-1104.jpg?v=1741748721&amp;width=800'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -502,12 +517,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp&quot;]">
+        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/75ff34061eca.jpg&quot;,&quot;/assets/products/mirror/c17b069ab6ef.webp&quot;,&quot;/assets/products/mirror/7544cb50431f.webp&quot;,&quot;/assets/products/mirror/9036067c76f4.webp&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=KuKirin-G4-Special-Edition" data-open-product aria-label="Visa bilder och information om KuKirin G4 Special Edition">
             <span class="tag orange">Kundfavorit</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272&amp;width=800" alt="KuKirin G4 Special Edition" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/75ff34061eca.jpg" alt="KuKirin G4 Special Edition" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272&amp;width=800'">
           </a>
-          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp" alt="KuKirin G4 Special Edition extra bild 2"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 3"><img loading="lazy" decoding="async" width="200" height="200" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp" alt="KuKirin G4 Special Edition extra bild 3"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 4"><img loading="lazy" decoding="async" width="200" height="200" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp" alt="KuKirin G4 Special Edition extra bild 4"></button></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/c17b069ab6ef.webp" alt="KuKirin G4 Special Edition extra bild 2" onerror="this.onerror=null;this.src='https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp'"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 3"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/7544cb50431f.webp" alt="KuKirin G4 Special Edition extra bild 3" onerror="this.onerror=null;this.src='https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp'"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 4"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/9036067c76f4.webp" alt="KuKirin G4 Special Edition extra bild 4" onerror="this.onerror=null;this.src='https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp'"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>KuKirin</span><span>I LAGER</span></div>
             <h3>KuKirin G4 Special Edition</h3>
@@ -541,12 +556,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </div>
         <div class="grid three catalog-grid">
 
-        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Fighter_mini_pro_08209532-0091-46c1-bc73-ec7a5507dd4f.png?v=1760331427&amp;width=2048&quot;,&quot;https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&amp;width=2048&quot;,&quot;https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&amp;width=2048&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/59e9507e328c.png&quot;,&quot;/assets/products/mirror/ee61ce3c4343.jpg&quot;,&quot;/assets/products/mirror/eedde4890cac.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Fighter-Mini-Pro-eKFV" data-open-product aria-label="Visa bilder och information om Teverun Fighter Mini Pro eKFV">
             <span class="tag ">Fighter</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Fighter_mini_pro_08209532-0091-46c1-bc73-ec7a5507dd4f.png?v=1760331427&amp;width=800" alt="Teverun Fighter Mini Pro eKFV" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/59e9507e328c.png" alt="Teverun Fighter Mini Pro eKFV" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Fighter_mini_pro_08209532-0091-46c1-bc73-ec7a5507dd4f.png?v=1760331427&amp;width=800'">
           </a>
-          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Mini Pro eKFV bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&amp;width=200" alt="Teverun Fighter Mini Pro eKFV extra bild 2"></button><button type="button" data-open-product aria-label="Visa Teverun Fighter Mini Pro eKFV bild 3"><img loading="lazy" decoding="async" width="200" height="200" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&amp;width=200" alt="Teverun Fighter Mini Pro eKFV extra bild 3"></button></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Mini Pro eKFV bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/ee61ce3c4343.jpg" alt="Teverun Fighter Mini Pro eKFV extra bild 2" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&amp;width=200'"></button><button type="button" data-open-product aria-label="Visa Teverun Fighter Mini Pro eKFV bild 3"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/eedde4890cac.jpg" alt="Teverun Fighter Mini Pro eKFV extra bild 3" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&amp;width=200'"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>Teverun</span><span>I LAGER</span></div>
             <h3>Teverun Fighter Mini Pro eKFV</h3>
@@ -570,10 +585,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/6643ca9ac1214019731faf555c6b9e6e.jpg&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/96baf0074197.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Fighter-Mini" data-open-product aria-label="Visa bilder och information om Teverun Fighter Mini">
             <span class="tag ">Fighter</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2026/04/6643ca9ac1214019731faf555c6b9e6e.jpg" alt="Teverun Fighter Mini" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/96baf0074197.jpg" alt="Teverun Fighter Mini" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/04/6643ca9ac1214019731faf555c6b9e6e.jpg'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -599,10 +614,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/6643ca9ac1214019731faf555c6b9e6e.jpg&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;/assets/products/mirror/96baf0074197.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Fighter-Mini-Pro" data-open-product aria-label="Visa bilder och information om Teverun Fighter Mini Pro">
             <span class="tag ">Fighter</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2026/04/6643ca9ac1214019731faf555c6b9e6e.jpg" alt="Teverun Fighter Mini Pro" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/96baf0074197.jpg" alt="Teverun Fighter Mini Pro" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/04/6643ca9ac1214019731faf555c6b9e6e.jpg'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -628,10 +643,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2025/10/d2cb5435d93e0a342653e7233dd1b356.jpg&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;/assets/products/mirror/c72bf1f5878b.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Fighter-Supreme-Ultra" data-open-product aria-label="Visa bilder och information om Teverun Fighter Supreme Ultra">
             <span class="tag ">Supreme</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2025/10/d2cb5435d93e0a342653e7233dd1b356.jpg" alt="Teverun Fighter Supreme Ultra" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/c72bf1f5878b.jpg" alt="Teverun Fighter Supreme Ultra" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2025/10/d2cb5435d93e0a342653e7233dd1b356.jpg'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -657,12 +672,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png&quot;,&quot;https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/0b135a375893.png&quot;,&quot;/assets/products/mirror/29401ceafafb.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Fighter-Eleven" data-open-product aria-label="Visa bilder och information om Teverun Fighter Eleven+">
             <span class="tag ">I LAGER</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png" alt="Teverun Fighter Eleven+" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/0b135a375893.png" alt="Teverun Fighter Eleven+" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png'">
           </a>
-          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Eleven+ bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg" alt="Teverun Fighter Eleven+ extra bild 2"></button></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Eleven+ bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/29401ceafafb.jpg" alt="Teverun Fighter Eleven+ extra bild 2" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg'"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>Teverun</span><span>I LAGER</span></div>
             <h3>Teverun Fighter Eleven+</h3>
@@ -698,10 +713,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </div>
         <div class="grid three catalog-grid">
 
-        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png&quot;]">
+        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/0a1094730afa.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=NAVEE-UT5-Ultra-X" data-open-product aria-label="Visa bilder och information om NAVEE UT5 Ultra X">
             <span class="tag ">Premium</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png" alt="NAVEE UT5 Ultra X" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/0a1094730afa.png" alt="NAVEE UT5 Ultra X" onerror="this.onerror=null;this.src='https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -727,12 +742,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/xt5-ultra-drive.jpg&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png&quot;]">
+        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/xt5-ultra-drive.jpg&quot;,&quot;/assets/products/mirror/07a6471cf77c.png&quot;,&quot;/assets/products/mirror/0c87b2da2daf.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=NAVEE-XT5-Ultra" data-open-product aria-label="Visa bilder och information om NAVEE XT5 Ultra">
             <span class="tag ">NAVEE rek.</span>
             <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/navee/xt5-ultra-drive.jpg" alt="NAVEE XT5 Ultra" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
           </a>
-          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE XT5 Ultra bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png" alt="NAVEE XT5 Ultra extra bild 2"></button><button type="button" data-open-product aria-label="Visa NAVEE XT5 Ultra bild 3"><img loading="lazy" decoding="async" width="200" height="200" src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png" alt="NAVEE XT5 Ultra extra bild 3"></button></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE XT5 Ultra bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/07a6471cf77c.png" alt="NAVEE XT5 Ultra extra bild 2" onerror="this.onerror=null;this.src='https://www.naveetech.com/wp-content/uploads/2025/11/XT5-ultra-500x500.png'"></button><button type="button" data-open-product aria-label="Visa NAVEE XT5 Ultra bild 3"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/0c87b2da2daf.png" alt="NAVEE XT5 Ultra extra bild 3" onerror="this.onerror=null;this.src='https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png'"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>NAVEE</span><span>I LAGER</span></div>
             <h3>NAVEE XT5 Ultra</h3>
@@ -756,10 +771,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png&quot;]">
+        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/0a1094730afa.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=NAVEE-NT5-Ultra-X" data-open-product aria-label="Visa bilder och information om NAVEE NT5 Ultra X">
             <span class="tag ">Nyhet</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png" alt="NAVEE NT5 Ultra X" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/0a1094730afa.png" alt="NAVEE NT5 Ultra X" onerror="this.onerror=null;this.src='https://www.naveetech.com/wp-content/uploads/2026/03/NT5-ultra-12.31.1.png'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -785,10 +800,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="NAVEE" data-status="pa-vag" data-gallery="[&quot;https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png&quot;]">
+        <article class="card product-card" data-brand="NAVEE" data-status="pa-vag" data-gallery="[&quot;/assets/products/mirror/0c87b2da2daf.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=NAVEE-XT5-Pro" data-open-product aria-label="Visa bilder och information om NAVEE XT5 Pro">
             <span class="tag ">På väg</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png" alt="NAVEE XT5 Pro" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/0c87b2da2daf.png" alt="NAVEE XT5 Pro" onerror="this.onerror=null;this.src='https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -814,10 +829,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="NAVEE" data-status="pa-vag" data-gallery="[&quot;https://www.naveetech.com/wp-content/uploads/2026/03/NT5-max-12.31.1.png&quot;]">
+        <article class="card product-card" data-brand="NAVEE" data-status="pa-vag" data-gallery="[&quot;/assets/products/mirror/8ce16311c84a.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=NAVEE-NT5-Max" data-open-product aria-label="Visa bilder och information om NAVEE NT5 Max">
             <span class="tag ">På väg</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://www.naveetech.com/wp-content/uploads/2026/03/NT5-max-12.31.1.png" alt="NAVEE NT5 Max" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/8ce16311c84a.png" alt="NAVEE NT5 Max" onerror="this.onerror=null;this.src='https://www.naveetech.com/wp-content/uploads/2026/03/NT5-max-12.31.1.png'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -843,12 +858,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/n65i-drive.jpg&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/07/N65i-500x500.png&quot;]">
+        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/n65i-drive.jpg&quot;,&quot;/assets/products/mirror/08c5aa28685c.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=NAVEE-N65i" data-open-product aria-label="Visa bilder och information om NAVEE N65i">
             <span class="tag ">Mellansegment</span>
             <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/navee/n65i-drive.jpg" alt="NAVEE N65i" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
           </a>
-          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE N65i bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="https://www.naveetech.com/wp-content/uploads/2025/07/N65i-500x500.png" alt="NAVEE N65i extra bild 2"></button></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE N65i bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/08c5aa28685c.png" alt="NAVEE N65i extra bild 2" onerror="this.onerror=null;this.src='https://www.naveetech.com/wp-content/uploads/2025/07/N65i-500x500.png'"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>NAVEE</span><span>I LAGER</span></div>
             <h3>NAVEE N65i</h3>
@@ -872,12 +887,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/v50i-pro-drive.jpg&quot;,&quot;https://www.naveetech.com/wp-content/uploads/2025/07/4-V50i-Pro.png&quot;]">
+        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/navee/v50i-pro-drive.jpg&quot;,&quot;/assets/products/mirror/3acf97234b11.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=NAVEE-V50i-Pro" data-open-product aria-label="Visa bilder och information om NAVEE V50i Pro">
             <span class="tag ">Pendling</span>
             <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/navee/v50i-pro-drive.jpg" alt="NAVEE V50i Pro" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
           </a>
-          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE V50i Pro bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="https://www.naveetech.com/wp-content/uploads/2025/07/4-V50i-Pro.png" alt="NAVEE V50i Pro extra bild 2"></button></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa NAVEE V50i Pro bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/3acf97234b11.png" alt="NAVEE V50i Pro extra bild 2" onerror="this.onerror=null;this.src='https://www.naveetech.com/wp-content/uploads/2025/07/4-V50i-Pro.png'"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>NAVEE</span><span>I LAGER</span></div>
             <h3>NAVEE V50i Pro</h3>
@@ -930,10 +945,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;https://www.naveetech.com/wp-content/uploads/2025/07/v25i-II-1-500x500.png&quot;]">
+        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/6af5fd090ca7.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=NAVEE-V25i-Pro-II" data-open-product aria-label="Visa bilder och information om NAVEE V25i Pro II">
             <span class="tag ">Insteg</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://www.naveetech.com/wp-content/uploads/2025/07/v25i-II-1-500x500.png" alt="NAVEE V25i Pro II" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/6af5fd090ca7.png" alt="NAVEE V25i Pro II" onerror="this.onerror=null;this.src='https://www.naveetech.com/wp-content/uploads/2025/07/v25i-II-1-500x500.png'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -959,10 +974,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;https://www.naveetech.com/wp-content/uploads/2025/09/k100-com1.png&quot;]">
+        <article class="card product-card" data-brand="NAVEE" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/26bda9b3dd1e.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=NAVEE-K100-Max" data-open-product aria-label="Visa bilder och information om NAVEE K100 Max">
             <span class="tag ">Insteg</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://www.naveetech.com/wp-content/uploads/2025/09/k100-com1.png" alt="NAVEE K100 Max" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/26bda9b3dd1e.png" alt="NAVEE K100 Max" onerror="this.onerror=null;this.src='https://www.naveetech.com/wp-content/uploads/2025/09/k100-com1.png'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1044,10 +1059,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </div>
         <div class="grid three catalog-grid">
 
-        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Space_Lite_1.png?v=1773208465&amp;width=1024&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;/assets/products/mirror/e5b3005c661d.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Space-Lite" data-open-product aria-label="Visa bilder och information om Teverun Space Lite">
             <span class="tag ">Teverun</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Space_Lite_1.png?v=1773208465&amp;width=800" alt="Teverun Space Lite" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/e5b3005c661d.png" alt="Teverun Space Lite" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Space_Lite_1.png?v=1773208465&amp;width=800'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1073,10 +1088,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/8a399348fe32e1fcd0cc81ecccf01512-uai-750x1000.jpg&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;/assets/products/mirror/d7372f67e0d7.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Blade-Mini-Pro" data-open-product aria-label="Visa bilder och information om Teverun Blade Mini Pro">
             <span class="tag ">Blade</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2026/04/8a399348fe32e1fcd0cc81ecccf01512-uai-750x1000.jpg" alt="Teverun Blade Mini Pro" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/d7372f67e0d7.jpg" alt="Teverun Blade Mini Pro" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/04/8a399348fe32e1fcd0cc81ecccf01512-uai-750x1000.jpg'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1102,10 +1117,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/02/BLADE-MINI-PRO-EKFV-BILA-uai-750x1000.jpg&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/5675fdfe16fe.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Blade-Mini-Pro-eKFV" data-open-product aria-label="Visa bilder och information om Teverun Blade Mini Pro eKFV">
             <span class="tag ">Blade</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2026/02/BLADE-MINI-PRO-EKFV-BILA-uai-750x1000.jpg" alt="Teverun Blade Mini Pro eKFV" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/5675fdfe16fe.jpg" alt="Teverun Blade Mini Pro eKFV" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/02/BLADE-MINI-PRO-EKFV-BILA-uai-750x1000.jpg'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1131,10 +1146,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/02/Blade-Mini-Ultra-Yellow-1.png&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/d1d7916cdfec.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Blade-Mini-Ultra" data-open-product aria-label="Visa bilder och information om Teverun Blade Mini Ultra">
             <span class="tag ">Prisgaranti</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2026/02/Blade-Mini-Ultra-Yellow-1.png" alt="Teverun Blade Mini Ultra" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/d1d7916cdfec.png" alt="Teverun Blade Mini Ultra" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/02/Blade-Mini-Ultra-Yellow-1.png'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1160,10 +1175,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/02/BLADE-MINI-ULTRA-EKFV-BILA-uai-750x1000.jpg&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;/assets/products/mirror/4651a6ee6ba9.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Blade-Mini-Ultra-eKFV" data-open-product aria-label="Visa bilder och information om Teverun Blade Mini Ultra eKFV">
             <span class="tag ">Blade</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2026/02/BLADE-MINI-ULTRA-EKFV-BILA-uai-750x1000.jpg" alt="Teverun Blade Mini Ultra eKFV" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/4651a6ee6ba9.jpg" alt="Teverun Blade Mini Ultra eKFV" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/02/BLADE-MINI-ULTRA-EKFV-BILA-uai-750x1000.jpg'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1189,10 +1204,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/d105d84cfc45a3e1c40bed8ee5077350.png&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/8e90383f461b.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Blade-GT-II" data-open-product aria-label="Visa bilder och information om Teverun Blade GT II">
             <span class="tag ">Premiumval</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2026/04/d105d84cfc45a3e1c40bed8ee5077350.png" alt="Teverun Blade GT II" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/8e90383f461b.png" alt="Teverun Blade GT II" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/04/d105d84cfc45a3e1c40bed8ee5077350.png'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1218,10 +1233,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2025/09/FIGHTER-GT-II_3-1.jpg&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;/assets/products/mirror/598e15b5be19.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Blade-GT-II" data-open-product aria-label="Visa bilder och information om Teverun Blade GT+ II">
             <span class="tag ">Blade</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2025/09/FIGHTER-GT-II_3-1.jpg" alt="Teverun Blade GT+ II" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/598e15b5be19.jpg" alt="Teverun Blade GT+ II" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2025/09/FIGHTER-GT-II_3-1.jpg'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1247,12 +1262,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Fighter_mini_pro_08209532-0091-46c1-bc73-ec7a5507dd4f.png?v=1760331427&amp;width=2048&quot;,&quot;https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&amp;width=2048&quot;,&quot;https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&amp;width=2048&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/59e9507e328c.png&quot;,&quot;/assets/products/mirror/ee61ce3c4343.jpg&quot;,&quot;/assets/products/mirror/eedde4890cac.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Fighter-Mini-Pro-eKFV" data-open-product aria-label="Visa bilder och information om Teverun Fighter Mini Pro eKFV">
             <span class="tag ">Fighter</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Fighter_mini_pro_08209532-0091-46c1-bc73-ec7a5507dd4f.png?v=1760331427&amp;width=800" alt="Teverun Fighter Mini Pro eKFV" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/59e9507e328c.png" alt="Teverun Fighter Mini Pro eKFV" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0684/3190/4923/files/Fighter_mini_pro_08209532-0091-46c1-bc73-ec7a5507dd4f.png?v=1760331427&amp;width=800'">
           </a>
-          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Mini Pro eKFV bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&amp;width=200" alt="Teverun Fighter Mini Pro eKFV extra bild 2"></button><button type="button" data-open-product aria-label="Visa Teverun Fighter Mini Pro eKFV bild 3"><img loading="lazy" decoding="async" width="200" height="200" src="https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&amp;width=200" alt="Teverun Fighter Mini Pro eKFV extra bild 3"></button></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Mini Pro eKFV bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/ee61ce3c4343.jpg" alt="Teverun Fighter Mini Pro eKFV extra bild 2" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-fighter-mini-pro-product-detail-kke-adjustable-suspension-01.jpg?v=1760320256&amp;width=200'"></button><button type="button" data-open-product aria-label="Visa Teverun Fighter Mini Pro eKFV bild 3"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/eedde4890cac.jpg" alt="Teverun Fighter Mini Pro eKFV extra bild 3" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0684/3190/4923/files/teverun-electric-scooter-3inch-tft-display-01.jpg?v=1760320389&amp;width=200'"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>Teverun</span><span>I LAGER</span></div>
             <h3>Teverun Fighter Mini Pro eKFV</h3>
@@ -1276,10 +1291,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/6643ca9ac1214019731faf555c6b9e6e.jpg&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/96baf0074197.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Fighter-Mini" data-open-product aria-label="Visa bilder och information om Teverun Fighter Mini">
             <span class="tag ">Fighter</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2026/04/6643ca9ac1214019731faf555c6b9e6e.jpg" alt="Teverun Fighter Mini" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/96baf0074197.jpg" alt="Teverun Fighter Mini" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/04/6643ca9ac1214019731faf555c6b9e6e.jpg'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1305,10 +1320,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/6643ca9ac1214019731faf555c6b9e6e.jpg&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;/assets/products/mirror/96baf0074197.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Fighter-Mini-Pro" data-open-product aria-label="Visa bilder och information om Teverun Fighter Mini Pro">
             <span class="tag ">Fighter</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2026/04/6643ca9ac1214019731faf555c6b9e6e.jpg" alt="Teverun Fighter Mini Pro" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/96baf0074197.jpg" alt="Teverun Fighter Mini Pro" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/04/6643ca9ac1214019731faf555c6b9e6e.jpg'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1334,10 +1349,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2025/10/d2cb5435d93e0a342653e7233dd1b356.jpg&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="pa-vag" data-gallery="[&quot;/assets/products/mirror/c72bf1f5878b.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Fighter-Supreme-Ultra" data-open-product aria-label="Visa bilder och information om Teverun Fighter Supreme Ultra">
             <span class="tag ">Supreme</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2025/10/d2cb5435d93e0a342653e7233dd1b356.jpg" alt="Teverun Fighter Supreme Ultra" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/c72bf1f5878b.jpg" alt="Teverun Fighter Supreme Ultra" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2025/10/d2cb5435d93e0a342653e7233dd1b356.jpg'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1363,12 +1378,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png&quot;,&quot;https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/0b135a375893.png&quot;,&quot;/assets/products/mirror/29401ceafafb.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Fighter-Eleven" data-open-product aria-label="Visa bilder och information om Teverun Fighter Eleven+">
             <span class="tag ">I LAGER</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png" alt="Teverun Fighter Eleven+" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/0b135a375893.png" alt="Teverun Fighter Eleven+" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/04/a15e2365736e617869226c1b256093b8.png'">
           </a>
-          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Eleven+ bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg" alt="Teverun Fighter Eleven+ extra bild 2"></button></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa Teverun Fighter Eleven+ bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/29401ceafafb.jpg" alt="Teverun Fighter Eleven+ extra bild 2" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/04/9355a0fcb299385dbd027f2212dbffa3.jpg'"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>Teverun</span><span>I LAGER</span></div>
             <h3>Teverun Fighter Eleven+</h3>
@@ -1392,10 +1407,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;https://teverun-europe.com/wp-content/uploads/2026/04/69f3d979970581fa511f0ed688750892.png&quot;]">
+        <article class="card product-card" data-brand="Teverun" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/481eddcd5ca2.png&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=Teverun-Supreme-7260R" data-open-product aria-label="Visa bilder och information om Teverun Supreme 7260R">
             <span class="tag ">Supreme</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://teverun-europe.com/wp-content/uploads/2026/04/69f3d979970581fa511f0ed688750892.png" alt="Teverun Supreme 7260R" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/481eddcd5ca2.png" alt="Teverun Supreme 7260R" onerror="this.onerror=null;this.src='https://teverun-europe.com/wp-content/uploads/2026/04/69f3d979970581fa511f0ed688750892.png'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1433,10 +1448,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         </div>
         <div class="grid three catalog-grid">
 
-        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/S1_Max-1.jpg?v=1740030144&quot;]">
+        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/672fb553a9b6.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=KuKirin-S1-Max" data-open-product aria-label="Visa bilder och information om KuKirin S1 Max">
             <span class="tag orange">Insteg</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/S1_Max-1.jpg?v=1740030144&amp;width=800" alt="KuKirin S1 Max" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/672fb553a9b6.jpg" alt="KuKirin S1 Max" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0625/8704/4046/files/S1_Max-1.jpg?v=1740030144&amp;width=800'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1462,10 +1477,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2-1104.jpg?v=1741748721&quot;]">
+        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/c622c0292440.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=KuKirin-G2" data-open-product aria-label="Visa bilder och information om KuKirin G2">
             <span class="tag orange">Budget</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2-1104.jpg?v=1741748721&amp;width=800" alt="KuKirin G2" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/c622c0292440.jpg" alt="KuKirin G2" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2-1104.jpg?v=1741748721&amp;width=800'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1491,10 +1506,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/M4_Max-A1.jpg?v=1749530336&quot;]">
+        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/359222e8902d.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=KuKirin-M4-Max" data-open-product aria-label="Visa bilder och information om KuKirin M4 Max">
             <span class="tag orange">Varde</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/M4_Max-A1.jpg?v=1749530336&amp;width=800" alt="KuKirin M4 Max" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/359222e8902d.jpg" alt="KuKirin M4 Max" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0625/8704/4046/files/M4_Max-A1.jpg?v=1749530336&amp;width=800'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1520,12 +1535,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp&quot;,&quot;https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp&quot;]">
+        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/75ff34061eca.jpg&quot;,&quot;/assets/products/mirror/c17b069ab6ef.webp&quot;,&quot;/assets/products/mirror/7544cb50431f.webp&quot;,&quot;/assets/products/mirror/9036067c76f4.webp&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=KuKirin-G4-Special-Edition" data-open-product aria-label="Visa bilder och information om KuKirin G4 Special Edition">
             <span class="tag orange">Kundfavorit</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272&amp;width=800" alt="KuKirin G4 Special Edition" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/75ff34061eca.jpg" alt="KuKirin G4 Special Edition" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272&amp;width=800'">
           </a>
-          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp" alt="KuKirin G4 Special Edition extra bild 2"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 3"><img loading="lazy" decoding="async" width="200" height="200" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp" alt="KuKirin G4 Special Edition extra bild 3"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 4"><img loading="lazy" decoding="async" width="200" height="200" src="https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp" alt="KuKirin G4 Special Edition extra bild 4"></button></div>
+          <div class="product-thumbs"><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 2"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/c17b069ab6ef.webp" alt="KuKirin G4 Special Edition extra bild 2" onerror="this.onerror=null;this.src='https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp'"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 3"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/7544cb50431f.webp" alt="KuKirin G4 Special Edition extra bild 3" onerror="this.onerror=null;this.src='https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp'"></button><button type="button" data-open-product aria-label="Visa KuKirin G4 Special Edition bild 4"><img loading="lazy" decoding="async" width="200" height="200" src="/assets/products/mirror/9036067c76f4.webp" alt="KuKirin G4 Special Edition extra bild 4" onerror="this.onerror=null;this.src='https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp'"></button></div>
           <div class="card-body">
             <div class="product-meta"><span>KuKirin</span><span>I LAGER</span></div>
             <h3>KuKirin G4 Special Edition</h3>
@@ -1549,10 +1564,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/1_7da8cb39-a62d-45ec-ba6c-326fde3ce614.jpg?v=1718356445&quot;]">
+        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/d35c52492a9f.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=KuKirin-G3" data-open-product aria-label="Visa bilder och information om KuKirin G3">
             <span class="tag orange">Kraft</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/1_7da8cb39-a62d-45ec-ba6c-326fde3ce614.jpg?v=1718356445&amp;width=800" alt="KuKirin G3" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/d35c52492a9f.jpg" alt="KuKirin G3" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0625/8704/4046/files/1_7da8cb39-a62d-45ec-ba6c-326fde3ce614.jpg?v=1718356445&amp;width=800'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1578,10 +1593,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2_Max_29.jpg?v=1774526365&quot;]">
+        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/bf722958c6b4.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=KuKirin-G2-Max" data-open-product aria-label="Visa bilder och information om KuKirin G2 Max">
             <span class="tag orange">Bäst för pendling</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2_Max_29.jpg?v=1774526365&amp;width=800" alt="KuKirin G2 Max" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/bf722958c6b4.jpg" alt="KuKirin G2 Max" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0625/8704/4046/files/G2_Max_29.jpg?v=1774526365&amp;width=800'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1607,10 +1622,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/KuKirin_G3_Pro_36.jpg?v=1774524745&quot;]">
+        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/cbe0899ca94c.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=KuKirin-G3-Pro" data-open-product aria-label="Visa bilder och information om KuKirin G3 Pro">
             <span class="tag orange">Premiumval</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/KuKirin_G3_Pro_36.jpg?v=1774524745&amp;width=800" alt="KuKirin G3 Pro" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/cbe0899ca94c.jpg" alt="KuKirin G3 Pro" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0625/8704/4046/files/KuKirin_G3_Pro_36.jpg?v=1774524745&amp;width=800'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1636,10 +1651,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           </div>
         </article>
 
-        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;https://cdn.shopify.com/s/files/1/0625/8704/4046/files/74b96dbb2d19db9758ba306fc55ad040.jpg?v=1708069782&quot;]">
+        <article class="card product-card" data-brand="KuKirin" data-status="i-lager" data-gallery="[&quot;/assets/products/mirror/6e1691b0f543.jpg&quot;]">
           <a class="product-media" href="/book-online/?service=bestallning&amp;modell=KuKirin-G4-Max" data-open-product aria-label="Visa bilder och information om KuKirin G4 Max">
             <span class="tag orange">NEMOB rekommenderar</span>
-            <img loading="lazy" decoding="async" width="500" height="500" src="https://cdn.shopify.com/s/files/1/0625/8704/4046/files/74b96dbb2d19db9758ba306fc55ad040.jpg?v=1708069782&amp;width=800" alt="KuKirin G4 Max" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/products/mirror/6e1691b0f543.jpg" alt="KuKirin G4 Max" onerror="this.onerror=null;this.src='https://cdn.shopify.com/s/files/1/0625/8704/4046/files/74b96dbb2d19db9758ba306fc55ad040.jpg?v=1708069782&amp;width=800'">
           </a>
           <div class="product-thumbs product-thumbs-empty"><span>Fler bilder läggs till när leverantörsmaterial finns.</span></div>
           <div class="card-body">
@@ -1803,7 +1818,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <article class="card product-card accessory-card" data-brand="Monorim" data-gallery="[&quot;/assets/showroom/showroom-custom-full.jpg&quot;,&quot;/assets/showroom/showroom-custom-cockpit.jpg&quot;,&quot;/assets/showroom/showroom-custom-rear-detail.jpg&quot;]">
           <div class="product-media">
             <span class="tag">Uppgradering</span>
-            <img loading="lazy" src="/assets/showroom/showroom-custom-full.jpg" alt="Monorim/Nemob Special för Xiaomi">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/showroom/showroom-custom-full.jpg" alt="Monorim/Nemob Special för Xiaomi" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
           </div>
           <div class="card-body">
             <div class="product-meta"><span>Monorim</span><span>FÖRBESTÄLL</span></div>
@@ -1818,7 +1833,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <article class="card product-card accessory-card" data-brand="Monorim" data-gallery="[&quot;/assets/pricing/prislista-poster-a.png&quot;]">
           <div class="product-media">
             <span class="tag">Premium</span>
-            <img loading="lazy" src="/assets/pricing/prislista-poster-a.png" alt="Steering damper premiumkit">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/pricing/prislista-poster-a.png" alt="Steering damper premiumkit" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
           </div>
           <div class="card-body">
             <div class="product-meta"><span>Monorim</span><span>FÖRBESTÄLL</span></div>
@@ -1833,7 +1848,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <article class="card product-card accessory-card" data-brand="KuKirin" data-gallery="[&quot;/assets/workshop/tools-bench.jpg&quot;]">
           <div class="product-media">
             <span class="tag">Reservdelar</span>
-            <img loading="lazy" src="/assets/workshop/tools-bench.jpg" alt="KuKirin reservdelar">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/workshop/tools-bench.jpg" alt="KuKirin reservdelar" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
           </div>
           <div class="card-body">
             <div class="product-meta"><span>KuKirin</span><span>FÖRBESTÄLL</span></div>
@@ -1848,7 +1863,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
         <article class="card product-card accessory-card" data-brand="Nemob" data-gallery="[&quot;/assets/pricing/prislista-poster-b.png&quot;]">
           <div class="product-media">
             <span class="tag">Finish</span>
-            <img loading="lazy" src="/assets/pricing/prislista-poster-b.png" alt="Premiumbultar / titanbultar">
+            <img loading="lazy" decoding="async" width="500" height="500" src="/assets/pricing/prislista-poster-b.png" alt="Premiumbultar / titanbultar" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
           </div>
           <div class="card-body">
             <div class="product-meta"><span>Nemob</span><span>FÖRBESTÄLL</span></div>
@@ -1940,6 +1955,34 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       </div>
       <script>
       (()=>{const modal=document.getElementById('catalogProductModal');if(!modal)return;const title=document.getElementById('catalogModalTitle'),price=document.getElementById('catalogModalPrice'),image=document.getElementById('catalogModalImage'),summary=document.getElementById('catalogModalSummary'),details=document.getElementById('catalogModalDetails'),thumbs=document.getElementById('catalogModalThumbs'),buy=document.getElementById('catalogModalBuy');let gallery=[],galleryIndex=0;function render(){if(!gallery.length)return;image.src=gallery[galleryIndex];thumbs.innerHTML=gallery.map((src,index)=>`<button type="button" class="${index===galleryIndex?'is-active':''}" aria-label="Visa bild ${index+1}"><img src="${src}" alt=""></button>`).join('');thumbs.querySelectorAll('button').forEach((button,index)=>button.addEventListener('click',()=>{galleryIndex=index;render()}))}function info(card){const name=card.querySelector('h3')?.textContent.trim()||'Produkt';const priceText=card.querySelector('.price')?.textContent.trim()||'Kontakta oss';const spec=card.querySelector('.spec')?.textContent.trim()||'Specifikation saknas.';const copy=card.querySelector('.copy')?.textContent.trim()||'Kontakta verkstaden om du vill veta om modellen passar din körning och lokala regler.';const stock=card.querySelector('.stock-copy')?.textContent.trim()||card.querySelector('.product-meta span:last-child')?.textContent.trim()||'';const img=card.querySelector('.product-media img');const link=card.querySelector('.card-actions a[data-product], .card-actions a');let images=[];try{if(card.dataset.gallery)images=JSON.parse(card.dataset.gallery)}catch{}if(!images.length&&img?.src)images=[img.getAttribute('src')];return {name,priceText,spec,copy,stock,imgAlt:img?.alt||name,href:link?.href||'/book-online/',productId:link?.dataset.product||'',cta:link?.textContent.trim()||'Köp nu',images}}function open(card){const item=info(card);title.textContent=item.name;price.textContent=item.priceText;summary.textContent=item.copy;gallery=item.images;galleryIndex=0;image.alt=item.imgAlt;render();details.innerHTML=[`<li><strong>Specifikation</strong>${item.spec}</li>`,`<li><strong>Status / leverans</strong>${item.stock}</li>`,`<li><strong>Nästa steg</strong>Köp direkt i checkout eller skicka fråga om du vill kontrollera modell, regler, inbyte eller leverans först.</li>`].join('');buy.href=item.href;buy.textContent=item.cta;if(item.productId){buy.dataset.product=item.productId}else{delete buy.dataset.product}modal.classList.add('is-open');modal.setAttribute('aria-hidden','false');modal.querySelector('.catalog-modal-close').focus()}function close(){modal.classList.remove('is-open');modal.setAttribute('aria-hidden','true')}document.querySelectorAll('.product-card').forEach((card)=>{card.querySelectorAll('[data-open-product]').forEach((trigger)=>trigger.addEventListener('click',(event)=>{event.preventDefault();open(card)}));});modal.querySelector('.catalog-modal-close').addEventListener('click',close);modal.querySelector('.catalog-modal-prev').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex-1+gallery.length)%gallery.length;render()});modal.querySelector('.catalog-modal-next').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex+1)%gallery.length;render()});modal.addEventListener('click',(event)=>{if(event.target===modal)close()});document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&modal.classList.contains('is-open'))close()})})();
+      (()=>{const bar=document.querySelector('.catalog-filter');if(!bar)return;
+      const countEl=document.getElementById('filterCount');
+      const stockToggle=document.getElementById('filterInStock');
+      let brand='alla';
+      function cards(){return document.querySelectorAll('.product-card:not(.accessory-card):not(.refurb-card)')}
+      function apply(){
+        const onlyStock=stockToggle&&stockToggle.checked;
+        let visible=0;const seen=new Set();
+        cards().forEach((card)=>{
+          const okBrand=brand==='alla'||card.dataset.brand===brand;
+          const okStock=!onlyStock||card.dataset.status==='i-lager';
+          const show=okBrand&&okStock;
+          card.style.display=show?'':'none';
+          if(show){const key=card.querySelector('h3')?.textContent||'';if(!seen.has(key)){seen.add(key);visible++;}}
+        });
+        document.querySelectorAll('.fighter-push,.catalog-brand:not(#tillbehor-reservdelar):not(#begagnat-renoverat)').forEach((section)=>{
+          const any=[...section.querySelectorAll('.product-card:not(.accessory-card):not(.refurb-card)')].some((card)=>card.style.display!=='none');
+          section.style.display=any?'':'none';
+        });
+        if(countEl)countEl.textContent='Visar '+visible+(visible===1?' modell':' modeller');
+      }
+      bar.querySelectorAll('.cf-btn').forEach((button)=>button.addEventListener('click',()=>{
+        brand=button.dataset.filterBrand;
+        bar.querySelectorAll('.cf-btn').forEach((other)=>other.classList.toggle('is-active',other===button));
+        apply();
+      }));
+      if(stockToggle)stockToggle.addEventListener('change',apply);
+      apply();})();
       </script>
     </div>
   </section>

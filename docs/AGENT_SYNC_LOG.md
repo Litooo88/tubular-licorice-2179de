@@ -32,6 +32,39 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-05 — Claude Code — KLAR (CRO våg 3: katalogfilter, batterisida, bildspegel)
+
+- **Branch:** `feat/wave3-filter-battery-images` → PR mot `main` (öppen, ej mergad).
+- **A. Katalogfilter (generatorn):** märkesknappar (Alla/NAVEE/Teverun/KuKirin)
+  + "Endast i lager"-toggle + live-räknare ("Visar X modeller"). Döljer även
+  tomma sektioner (fighter-push/brand-sektioner). Räknaren dedupliceras på
+  modellnamn (korten dubbleras över sektioner). **Prissortering medvetet
+  utelämnad** — kräver avdubblad katalog (eget projekt).
+  **Browserverifierat:** 37 → Teverun 13 → +i lager 7 → reset 37; NAVEE-
+  sektionen göms korrekt; inga trasiga bilder.
+- **B. Batterisidan (295→600 ord):** stale "Batteridiagnos 349 kr" i hero →
+  745 kr (prislistans pris); +3 sektioner (Så går diagnosen till 4 steg,
+  Priser 745/945/offert, Vanliga frågor 4 st); FAQPage-schema (5 frågor,
+  validerad JSON); adress tillagd i Service-schemats provider. Allt innehåll
+  grundat i befintliga tjänster/claims — inget påhittat.
+- **C. Bildspegel:** NY `scripts/mirror-product-images.mjs` laddar ner alla
+  34 unika leverantörsbilder → `assets/products/mirror/` (4,8 MB; Shopify
+  hämtas i 800px från CDN). Karta i `data/product-image-mirror.json`.
+  Generatorn serverar lokala kopior med leverantörs-URL som onerror-fallback
+  — **0 hotlinkade src kvar** (89 lokala refs i katalogen, 12 på startsidan).
+  Saknas spegelfil används hotlink som förut = inget kan gå sönder.
+  Vid nya produktbilder: kör `node scripts/mirror-product-images.mjs` +
+  `npm run generate:products` (idempotent, misslyckade nedladdningar = hotlink).
+- **EJ gjort (medvetet):** riktig bokningskalender — stort separat bygge som
+  kräver Sebastians aktiva beslut (booking.mjs + Google Calendar-tillgänglighet).
+- **Tester:** generator OK + idempotent ✅, inline-JS 0 fel ✅, FAQ-schema
+  giltig ✅, verify:checkout-products (31) ✅, build ✅, callflow ✅,
+  browsersmoke av filter + bilder ✅.
+- **Varning till Codex:** `assets/products/mirror/` + mirror-kartan ägs av
+  mirror-scriptet — redigera inte för hand. Katalogens filter-JS ligger i
+  generatorns inline-script (använd \` -escapning eller konkatenering, backticks
+  bryter template-literalen).
+
 ### 2026-07-05 — Claude Code — KLAR (CRO våg 2: bokningsfriktion, Product-schema, bildhygien, logga)
 
 - **Branch:** `feat/wave2-seo-perf-friction` → PR mot `main` (öppen, ej mergad).
