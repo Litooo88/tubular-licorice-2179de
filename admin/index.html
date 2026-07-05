@@ -68,6 +68,12 @@ button.live-send-action:hover{filter:brightness(1.04)}
 .ai-control-list{display:grid;gap:6px}
 .ai-control-item{border-left:3px solid #00c853;background:#0f1610;padding:8px 9px;font-size:12px;line-height:1.45}
 .ai-control-item.risk{border-left-color:#ff5a5f}
+a.ai-control-item{display:block;color:inherit;text-decoration:none;cursor:pointer;transition:background .15s,transform .15s}
+a.ai-control-item:hover,a.ai-control-item:focus-visible{background:#16221a;transform:translateX(2px);outline:1px solid rgba(0,200,83,.45)}
+a.ai-control-item.risk:hover,a.ai-control-item.risk:focus-visible{background:#221416;outline-color:rgba(255,90,95,.5)}
+.ai-control-item .open-hint{float:right;color:#7ee2a8;font-size:11px;font-weight:700}
+.ai-control-item.risk .open-hint{color:#ffb3b6}
+.ai-control-item .no-case-id{color:#8d9a91;font-size:11px;font-style:italic}
 .ai-social-post{white-space:pre-wrap;color:#e8fff0;font-size:13px;line-height:1.5}
 .ai-test-results{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 .ai-test-result{display:none;border:1px solid #29362d;border-radius:8px;background:#080d09;padding:12px;font-size:13px;line-height:1.5;white-space:pre-wrap}
@@ -742,6 +748,19 @@ document.getElementById('smsApplyTemplate').addEventListener('click',()=>{smsMes
 document.getElementById('smsCopyDraft').addEventListener('click',async()=>{try{await copyText(smsMessageText.value);showSmsDeskStatus('SMS-utkast kopierat.',false)}catch(error){showSmsDeskStatus(error.message,true)}});
 document.getElementById('smsSendButton').addEventListener('click',sendDeskSms);
 if(!tokenInput.value.trim())showAiStatus('Admin-token saknas','warn');
+document.addEventListener('click',(event)=>{
+  const link=event.target&&event.target.closest&&event.target.closest('[data-open-case-link]');
+  if(!link)return;
+  if(event.metaKey||event.ctrlKey||event.shiftKey||event.button===1)return;
+  const caseId=link.dataset.openCaseLink;
+  const tab=link.dataset.openCaseTab||'overview';
+  if(openCaseDeepLink(caseId,tab)){
+    event.preventDefault();
+    if(window.history&&window.history.replaceState){
+      window.history.replaceState(null,'',caseDeepLink(caseId,tab));
+    }
+  }
+});
 activeOverviewEl.addEventListener('click',(event)=>{
   const button=event.target&&event.target.closest&&event.target.closest('.open-case');
   if(!button)return;
@@ -1744,11 +1763,30 @@ function render(){
   hydrateProtectedMediaImages(boardEl).catch((error)=>console.warn('media hydration failed',error));
 }
 
-function aiListHtml(rows=[],risk=false){
+function caseDeepLink(id,tab='overview'){
+  return `/admin/?case=${encodeURIComponent(id)}&tab=${encodeURIComponent(tab)}`;
+}
+function aiListHtml(rows=[],risk=false,tab='overview'){
   if(!rows.length)return '<div class="muted">Inget att visa.</div>';
   return rows.map((item)=>{
     const title=item.customer&&typeof item.customer==='object'?item.customer.name:item.customer;
-    return `<div class="ai-control-item ${risk?'risk':''}"><strong>${html(title||item.partName||item.name||item.phone||item.id||'Post')}</strong><br>${html(item.model||item.status||item.reason||item.note||item.partNumber||'')}${item.value?` &middot; ${html(money(item.value))}`:''}${item.risk&&item.risk.reasons&&item.risk.reasons.length?`<br>${html(item.risk.reasons.join(', '))}`:''}</div>`;
+    const caseId=String(item.id||item.caseId||'');
+    const reasons=item.risk&&Array.isArray(item.risk.reasons)&&item.risk.reasons.length?item.risk.reasons:(item.reason?[item.reason]:[]);
+    const staleDays=Number.isFinite(item.staleDays)?item.staleDays:null;
+    const nextAction=nextActionForReasons(reasons);
+    const detailParts=[
+      item.model||item.status||item.note||item.partNumber||'',
+      item.value?money(item.value):'',
+      reasons.length?reasons.join(', '):'',
+      staleDays!==null&&staleDays>=2?`stått stilla ${staleDays} dagar`:'',
+      risk&&nextAction?`Nästa: ${nextAction}`:''
+    ].filter(Boolean);
+    const body=`<strong>${html(title||item.partName||item.name||item.phone||caseId||'Post')}</strong><br>${detailParts.map((part)=>html(part)).join(' &middot; ')}`;
+    if(!caseId){
+      return `<div class="ai-control-item ${risk?'risk':''}">${body}<br><span class="no-case-id">case-id saknas</span></div>`;
+    }
+    const label=`Öppna ärende för ${title||caseId}`;
+    return `<a class="ai-control-item ${risk?'risk':''}" href="${caseDeepLink(caseId,tab)}" data-open-case-link="${html(caseId)}" data-open-case-tab="${html(tab)}" aria-label="${html(label)}"><span class="open-hint">&Ouml;ppna &rarr;</span>${body}</a>`;
   }).join('');
 }
 function showAiStatus(message,state=''){
@@ -1779,6 +1817,24 @@ async function aiFunctionFetch(path,{method='GET',body}={}){
   }
   return data;
 }
+function caseStaleDays(item){
+  const updated=new Date(item&&(item.updatedAt||item.createdAt)||0).getTime();
+  if(!Number.isFinite(updated)||updated<=0)return null;
+  return Math.floor((Date.now()-updated)/(24*60*60*1000));
+}
+function nextActionForReasons(reasons=[]){
+  const first=String(reasons[0]||'');
+  if(/kund ej notifierad/i.test(first))return'Notifiera kund';
+  if(/fakturera|betala/i.test(first))return'Skicka betalning/faktura';
+  if(/utan bekr\u00e4ftelse|utan bekr/i.test(first))return'Skicka bokningsbekr\u00e4ftelse';
+  if(/v\u00e4ntar kund|vantar kund/i.test(first))return'P\u00e5minn kunden';
+  if(/v\u00e4ntar del|vantar del/i.test(first))return'Kolla delleverans';
+  if(/missat samtal/i.test(first))return'Ring upp kunden';
+  if(/saknar modell/i.test(first))return'Komplettera modell';
+  if(/st\u00e5tt stilla|statt stilla/i.test(first))return'Ta n\u00e4sta steg i \u00e4rendet';
+  if(/risk/i.test(first))return'Bed\u00f6m risk och kontakta kund';
+  return'';
+}
 function aiCaseSummaryFromCase(item){
   const payment=paymentData(item);
   const completion=completionData(item);
@@ -1788,7 +1844,8 @@ function aiCaseSummaryFromCase(item){
     model:item.vehicle&&item.vehicle.model||'Modell saknas',
     status:statusLabels[item.status]||item.status||'ok\u00e4nd',
     reason:operationalReasons(item).join(', '),
-    value:Number(payment.amount||completion.totalCost||item.estimatedValue||0)
+    value:Number(payment.amount||completion.totalCost||item.estimatedValue||0),
+    staleDays:caseStaleDays(item)
   };
 }
 function localAiBriefFromLoadedCases(error){
@@ -1860,12 +1917,12 @@ function renderAiControlData(data){
   document.getElementById('aiReadyInvoice').textContent=readyForPayment.length;
   document.getElementById('aiRiskCases').textContent=riskCases.length;
   document.getElementById('aiRevenueToday').textContent=money(metrics.possibleRevenueToday??data.cashToday??0);
-  aiPriorityListEl.innerHTML=aiListHtml(priorities);
-  aiRiskListEl.innerHTML=aiListHtml(riskCases,true);
-  aiMissedCallsListEl.innerHTML=aiListHtml(missedCalls);
-  aiPartsListEl.innerHTML=aiListHtml(partsToOrder);
-  aiReadyPaymentListEl.innerHTML=aiListHtml(readyForPayment);
-  aiSalesListEl.innerHTML=aiListHtml(salesOpportunities);
+  aiPriorityListEl.innerHTML=aiListHtml(priorities,false,'overview');
+  aiRiskListEl.innerHTML=aiListHtml(riskCases,true,'overview');
+  aiMissedCallsListEl.innerHTML=aiListHtml(missedCalls,false,'contact');
+  aiPartsListEl.innerHTML=aiListHtml(partsToOrder,false,'overview');
+  aiReadyPaymentListEl.innerHTML=aiListHtml(readyForPayment,false,'payment');
+  aiSalesListEl.innerHTML=aiListHtml(salesOpportunities,false,'contact');
   aiSocialPostEl.textContent=data.socialMediaSuggestion||brief.suggestedSocialPost||'Inget f\u00f6rslag tillg\u00e4ngligt.';
 }
 const CASE_EVENT_LABELS={
@@ -2729,23 +2786,33 @@ async function ignoreCallLead(row,button){
   }
 }
 
-function focusInitialCase(){
-  if(initialCaseFocused||!initialCaseId)return;
-  const target=cases.find((item)=>item.id===initialCaseId);
-  if(!target)return;
-  initialCaseFocused=true;
+function openCaseDeepLink(caseId,tab='overview'){
+  const target=cases.find((item)=>item.id===caseId);
+  if(!target)return false;
+  setAdminView('cards');
   ownerFilter.value='';
   statusFilter.value='';
-  searchFilter.value=initialCaseId;
-  cardTabState[initialCaseId]=initialCaseTab;
+  searchFilter.value=caseId;
+  cardTabState[caseId]=tab;
   render();
   setTimeout(()=>{
-    const form=boardEl.querySelector(`form[data-id="${initialCaseId}"]`);
+    const form=boardEl.querySelector(`form[data-id="${caseId}"]`);
     const card=form&&form.closest('.case');
-    if(card)card.scrollIntoView({behavior:'smooth',block:'start'});
-    const reply=card&&card.querySelector('.chat-reply textarea');
-    if(reply)reply.focus({preventScroll:true});
+    if(card){
+      card.scrollIntoView({behavior:'smooth',block:'start'});
+      card.classList.add('focus-flash');
+      setTimeout(()=>card.classList.remove('focus-flash'),1200);
+    }
+    if(tab==='contact'){
+      const reply=card&&card.querySelector('.chat-reply textarea');
+      if(reply)reply.focus({preventScroll:true});
+    }
   },50);
+  return true;
+}
+function focusInitialCase(){
+  if(initialCaseFocused||!initialCaseId)return;
+  if(openCaseDeepLink(initialCaseId,initialCaseTab))initialCaseFocused=true;
 }
 
 function caseCard(item){
