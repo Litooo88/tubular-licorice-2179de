@@ -20,6 +20,41 @@ Läs följande innan kodändringar:
 Äldre dokument under `docs/` innehåller viktig historik, men kan vara delvis
 inaktuella. Kontrollera alltid påståenden mot koden.
 
+## North Star
+
+Nordic E-Mobility ska byggas som Sveriges smartaste AI-drivna scooterverkstad.
+Varje reparation ska göra verkstaden snabbare, smartare och mer lönsam.
+
+Den viktigaste loopen är:
+
+```text
+Reparation
+→ strukturerad ärendedata
+→ intern kunskap
+→ kundrapport
+→ reservdelsdata
+→ SEO/socialt innehåll från verkliga jobb
+→ bättre diagnostik vid nästa liknande fall
+```
+
+Prioritera därför alltid arbete som stärker Repair Intelligence Loop:
+
+1. verkstadsdatabas / repair cases
+2. AI-diagnostik baserad på tidigare fall
+3. automatisk dokumentation
+4. kunskapsbank
+5. reservdelsdatabas
+6. videodatabas kopplad till ärenden
+7. SEO och socialt innehåll från verkliga reparationer
+
+Nedprioritera tillfälligt:
+
+- kosmetiska designändringar utan tydlig konverterings- eller verkstadseffekt
+- dashboards utan verklig datainsamling
+- generiska AI-agenter utan koppling till repair cases
+- produktkatalogarbete som inte stärker verkstadsdata, reservdelsdata eller bokning
+- stora refactors utan direkt ROI och tydlig riskplan
+
 ## Faktisk arkitektur
 
 - Rotprojektet är en statisk HTML/JavaScript-sajt på Netlify, inte en
@@ -51,6 +86,36 @@ inaktuella. Kontrollera alltid påståenden mot koden.
 - Bevara befintliga routes och externa kontrakt om uppgiften inte uttryckligen
   kräver en migrering.
 
+## Repair Intelligence-regler
+
+När en uppgift rör verkstadsärenden ska implementationen som standard stärka
+strukturerad datainsamling och framtida återanvändning.
+
+Fält och begrepp som bör behandlas som centrala:
+
+- symptom
+- normaliserat märke / brand
+- modell
+- jobType
+- serviceActions
+- rootCause
+- rootCauseNote
+- partsUsed
+- laborMinutes
+- totalCost
+- position
+- testRunDone / safetyCheckDone
+- datum
+- intern lärdom / AI-summary
+
+Första versioner ska hellre vara enkla och bakåtkompatibla än avancerade:
+
+- använd enum + fritextnot där det räcker
+- använd filtrering/frekvenstabeller före embeddings eller LLM-anrop
+- lägg inte till AI-anrop om samma nytta kan uppnås deterministiskt
+- nya fält ska initialt vara optional eller ha säkra fallbacks
+- befintliga ärenden utan nya fält ska fortsätta fungera
+
 ## Arbetssätt
 
 - Bygg små, testbara steg.
@@ -60,6 +125,8 @@ inaktuella. Kontrollera alltid påståenden mot koden.
 - Arbeta med befintliga lokala ändringar; återställ dem inte.
 - Uppdatera relevant dokumentation när API, datamodell, workflow, säkerhet eller
   integrationer ändras.
+- När flera lösningar finns: välj lägsta risk som mest direkt stärker
+  reparation → data → kunskap → snabbare nästa reparation.
 
 ## Minsta verifiering
 
