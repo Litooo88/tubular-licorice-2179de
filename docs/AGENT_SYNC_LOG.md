@@ -32,6 +32,40 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-05 — Claude Code — KLAR (CRO våg 2: bokningsfriktion, Product-schema, bildhygien, logga)
+
+- **Branch:** `feat/wave2-seo-perf-friction` → PR mot `main` (öppen, ej mergad).
+- **Bokningsfriktion (book-online):** e-post inte längre required — server-
+  verifierat att `booking.mjs` bara kräver namn+telefon (mejl blir
+  `not_requested` utan adress); JS kräver e-post ENDAST om kunden valt "E-post
+  först". Rabattkod bakom "Har du rabattkod?"-details (ingen kupongjakt).
+  Stöldgods-texten mjukad ("För allas trygghet… mitt eller ägarens tillstånd").
+  Trygghetsrad ovanför submit: "Fast pris bekräftas alltid innan arbete ·
+  Ring 010-138 54 98".
+- **Generator (`generate-products.mjs`):** (1) Product+Offer JSON-LD för alla
+  31 prissatta produkter (id `product-catalog-schema`, samma datakälla som
+  korten — pris/lager kan aldrig divergera; idempotent remove+insert).
+  (2) Katalog-head: title "Köp elscooter i Örebro – NAVEE, Teverun, KuKirin"
+  (62 tkn, transaktionellt först), ny description/keywords, og:-taggar
+  (saknades helt), H1 "Köp elscooter i Örebro – direkt av verkstaden."
+  (3) Bildhygien: width/height + decoding=async + onerror-fallback på alla
+  kort-/tumnagelbilder; `sizedSrc()` begär width=200 (thumbs)/800 (kort) från
+  Shopify-CDN i stället för originalen. (4) `bookingHref` + refurb-länk →
+  trailing slash (dödar 301 på varje köpklick). (5) Mojibake i statusCopy/
+  ctaText fixad (beställas/förfrågan/rådgivning/UTGÅTT/Fråga oss).
+- **Logga:** 512px/345 KB → 256px/86 KB via System.Drawing, båda filnamnen
+  överskrivna (logo.png + nordic_logo_transparent.png = inga HTML-ändringar;
+  visas max 150px → 86 KB räcker för 1,7x retina). ~520 KB mindre per sidvisning.
+- **EJ gjort (medvetet):** global prisgaranti-badge — Sebastian beslutade
+  "endast Mini Blade Ultra"; auditens förslag ändrar inte det. Kundcitat för
+  5.0-betyget väntar på riktiga recensioner från Sebastian.
+- **Tester:** schema = giltig JSON (31 produkter, availability-mappning) ✅,
+  0 kvarvarande `/book-online?` ✅, inline-JS 0 fel ✅, generator idempotent ✅,
+  build/verify (31)/callflow ✅.
+- **Varning till Codex:** `docs/NEMOB_OS_V1_PLAN.md` (otrackad) är INTE min —
+  rör den inte, någon annans pågående arbete. Katalogens head/schema ägs nu av
+  generatorn — redigera aldrig nya-elscootrar-head direkt i HTML.
+
 ### 2026-07-05 — Claude Code — KLAR (klickbara ärendekort i AI Kontrolltorn/brief)
 
 - **Branch:** `fix/clickable-operational-brief-cards` → PR mot `main`.
