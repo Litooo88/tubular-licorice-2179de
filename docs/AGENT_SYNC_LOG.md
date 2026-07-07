@@ -32,6 +32,23 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-05 — Claude Code — KLAR (express-inlämning + server-side tidsspärr)
+
+- **Branch:** `fix/dropoff-express-window` → PR mot `main`.
+- **Beslut (Sebastian):** bokning utanför tis–lör 15–18 ska INTE gå; i stället
+  visas akut/express-erbjudande: ring 010-138 54 98, tillägg 395 kr.
+- **Gjort:** 1) `booking.mjs`: `dropoffWindowError()` avvisar direkt-POST med
+  preferredDate utanför fönstret (400 + express-text). Datum utan klockslag/
+  tomt passerar som förut (bryter inget befintligt flöde). Bokningsflödet är
+  fortsatt AUTONOMT — giltiga bokningar bekräftas automatiskt som förut.
+  2) Copy: bokningssidans hours-box + startsidans notis säger nu att
+  verkstaden arbetar hela veckan (bara inlämning/upphämtning är tidsstyrd)
+  + express-rad med pris och telefon.
+- **Tester:** node --check ✅, 10/10 logiktester (veckodagar, gränser 15:00/
+  18:00 inkl, båda datumformaten, fritext passerar) ✅, build/verify ✅.
+- **Varning till Codex:** tidsfönstret finns nu på TVÅ ställen (fillDay/
+  TimeOptions i book-online + DROPOFF_* i booking.mjs) — ändra alltid båda.
+
 ### 2026-07-05 — Claude Code — KLAR (CRO våg 3: katalogfilter, batterisida, bildspegel)
 
 - **Branch:** `feat/wave3-filter-battery-images` → PR mot `main` (öppen, ej mergad).

@@ -963,6 +963,20 @@ const isRateLimited = (key, { limit = 4, windowMs = 10 * 60 * 1000 } = {}) => {
 const hasHoneypotValue = (body = {}) =>
   Boolean(clean(body["bot-field"] || body.botField || body.website || body.company, 240));
 
+// Inlämning endast tisdag–lördag kl 15–18 — samma regler som formuläret.
+// Formuläret kan inte välja andra tider, så detta fångar bara direkt-POST
+// (bot, gammal cachad sida). Datum utan klockslag/fritext hanteras som förut.
+const DROPOFF_CLOSED_WEEKDAYS = new Set([0, 1]);
+const DROPOFF_WINDOW = { fromMinutes: 15 * 60, toMinutes: 18 * 60 };
+const dropoffWindowError = (preferredDate) => {
+  const match = String(preferredDate || "").match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/);
+  if (!match) return null;
+  const weekday = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3])).getDay();
+  const minutes = Number(match[4]) * 60 + Number(match[5]);
+  if (!DROPOFF_CLOSED_WEEKDAYS.has(weekday) && minutes >= DROPOFF_WINDOW.fromMinutes && minutes <= DROPOFF_WINDOW.toMinutes) return null;
+  return "Vald tid ligger utanför ordinarie inlämningstider (tisdag–lördag kl 15–18). För akut express-inlämning utanför ordinarie tider, ring 010-138 54 98 (tillägg 395 kr).";
+};
+
 const bookingIdempotencyKey = (request, body = {}) => {
   const provided = clean(request.headers.get("idempotency-key") || request.headers.get("x-idempotency-key"), 180);
   if (provided) return `booking_header_${createHash("sha256").update(provided).digest("hex").slice(0, 48)}`;
@@ -997,6 +1011,11 @@ export default async (request, context) => {
     if (isRateLimited(rateLimitKey(request, body))) {
       console.warn("booking_rate_limited", { ip: requestIp(request) });
       return json({ error: "For manga bokningsforsok just nu. Ring verkstaden pa 010-138 54 98 om det ar akut." }, 429);
+    }
+    const windowError = dropoffWindowError(clean(body.preferredDate, 80));
+    if (windowError) {
+      console.warn("booking_outside_dropoff_window", { ip: requestIp(request), preferredDate: clean(body.preferredDate, 80) });
+      return json({ error: windowError }, 400);
     }
     const now = new Date().toISOString();
     const id = `case_${now.replace(/[:.]/g, "-")}_${Math.random().toString(36).slice(2, 8)}`;
