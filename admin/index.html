@@ -1766,6 +1766,20 @@ function render(){
 function caseDeepLink(id,tab='overview'){
   return `/admin/?case=${encodeURIComponent(id)}&tab=${encodeURIComponent(tab)}`;
 }
+function thankYouAlreadyHandled(item){
+  const status=item&&item.notifications&&item.notifications.thankYou&&item.notifications.thankYou.status;
+  return status==='sent'||status==='suppressed';
+}
+// Returnerar 'send' | 'silent' | 'cancel'. Status "done" och betalstatus "paid"
+// triggar automatiskt tackmail i backend — operatören måste få välja.
+function confirmThankYouChoice(item,trigger){
+  if(thankYouAlreadyHandled(item))return 'send';
+  const name=item&&item.customer&&item.customer.name||'kunden';
+  const send=confirm(`${trigger} skickar automatiskt tackmail med recensionslänk och rabattkod till ${name}.\n\nOK = spara och skicka tackmailet\nAvbryt = visa fler val`);
+  if(send)return 'send';
+  const silent=confirm('Spara UTAN att skicka tackmail?\n\nOK = spara tyst (inget mail skickas, nu eller senare för detta ärende)\nAvbryt = ångra hela ändringen');
+  return silent?'silent':'cancel';
+}
 function aiListHtml(rows=[],risk=false,tab='overview'){
   if(!rows.length)return '<div class="muted">Inget att visa.</div>';
   return rows.map((item)=>{
@@ -2928,7 +2942,7 @@ function caseCard(item){
             <div><label>Modell</label><input name="vehicleModel" value="${html(item.vehicle&&item.vehicle.model||'')}"></div>
           </div>
           <div class="row">
-            <div><label>Status</label><select name="status">${Object.entries(statusLabels).map(([value,label])=>`<option value="${value}" ${item.status===value?'selected':''}>${label}</option>`).join('')}</select></div>
+            <div><label>Status</label><select name="status">${Object.entries(statusLabels).map(([value,label])=>`<option value="${value}" ${item.status===value?'selected':''}>${label}</option>`).join('')}</select><span class="muted-small">"Avslutad" skickar tackmail till kunden &mdash; du f&aring;r bekr&auml;fta f&ouml;rst. "Arkiverad" skickar inget.</span></div>
             <div><label>Ansvarig</label><select name="assignedTo"><option value="workshop" ${owner.key!=='sebastian'?'selected':''}>Verkstaden</option><option value="sebastian" ${owner.key==='sebastian'?'selected':''}>Sebastian</option></select></div>
           </div>
           <div class="row">
@@ -3133,6 +3147,7 @@ function caseCard(item){
                 <option value="invoiced" ${payment.status==='invoiced'?'selected':''}>Fakturerad</option>
                 <option value="paid" ${payment.status==='paid'?'selected':''}>Betald</option>
               </select>
+              <span class="muted-small">"Betald" skickar tackmail till kunden &mdash; du f&aring;r bekr&auml;fta f&ouml;rst.</span>
             </div>
             <div>
               <label>Betalsätt</label>
@@ -3390,6 +3405,11 @@ function caseCard(item){
     button.textContent='Sparar...';
     try{
       const formData=Object.fromEntries(new FormData(form).entries());
+      if(formData.status==='done'&&item.status!=='done'&&!thankYouAlreadyHandled(item)){
+        const choice=confirmThankYouChoice(item,'Status "Avslutad"');
+        if(choice==='cancel')return;
+        if(choice==='silent')formData.suppressThankYou=true;
+      }
       await api('/api/cases/'+encodeURIComponent(form.dataset.id),{method:'PATCH',body:JSON.stringify(formData)});
       try{await logStatusChangeEvent(item,formData.status)}
       catch(timelineError){showError(`Arendet sparades, men timeline kunde inte uppdateras: ${timelineError.message}`)}
@@ -3676,7 +3696,15 @@ function caseCard(item){
   }
   async function savePayment(markPaid=false){
     const values=paymentValues();
+    const nextPaymentStatus=markPaid?'paid':values.paymentStatus;
+    let suppressThankYou;
+    if(nextPaymentStatus==='paid'&&(item.payment&&item.payment.status)!=='paid'&&!thankYouAlreadyHandled(item)){
+      const choice=confirmThankYouChoice(item,'Betalstatus "Betald"');
+      if(choice==='cancel')return;
+      if(choice==='silent')suppressThankYou=true;
+    }
     const payload={
+      suppressThankYou,
       paymentStatus:markPaid?'paid':values.paymentStatus,
       paymentMethod:values.paymentMethod,
       paymentAmount:values.paymentAmount,

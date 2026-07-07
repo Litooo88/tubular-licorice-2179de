@@ -32,6 +32,30 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-05 — Claude Code — KLAR (tackmail-bekräftelse + tyst stängning + nya KuKirin-priser)
+
+- **Branch:** `fix/thankyou-confirm-and-new-prices` → PR mot `main`.
+- **Backend (`workshop-cases.mjs`):** (1) Tackmail triggas nu ENDAST vid
+  övergången till done/paid — tidigare kunde varje senare PATCH (t.ex. en
+  anteckning) på ett obetackat done/paid-ärende skicka mailet i efterhand.
+  (2) NY flagga `suppressThankYou: true` i PATCH-body → tyst stängning;
+  sätter `notifications.thankYou.status="suppressed"` PERMANENT (annars
+  skulle nästa PATCH trigga) + timeline-notis. Failed-status beter sig som
+  förut (kan skickas om vid ny övergång).
+- **Admin:** bekräftelsedialog när status→Avslutad eller betalstatus→Betald
+  (endast vid faktisk övergång och om tackmail inte redan skickats/tystats):
+  OK=skicka, Avbryt→andra rutan: OK=spara tyst (suppressThankYou),
+  Avbryt=ångra. Synliga hints vid status-/betalvalen ("Avslutad skickar
+  tackmail — du får bekräfta först. Arkiverad skickar inget.").
+- **Priser (Sebastians beslut):** A1 5 995 kampanj (marginal ~540 kr),
+  G2 Pro 7 990 (~1 990), G2 Master 11 990 (~1 650), C1 Pro 26Ah 6 995 (~520)
+  — alla i-lager + checkout:true (create-checkout läser priceSek direkt;
+  verify räknar nu 35). costEur satt internt på alla fyra.
+- **Tester:** node --check workshop-cases ✅, admin inline-JS 0 fel ✅,
+  products.json giltig ✅, build + verify (35) ✅, callflow tsc ✅.
+- **Varning till Codex:** suppressThankYou/suppressed-semantiken är medveten —
+  återinför inte state-baserad trigger (spamfällan).
+
 ### 2026-07-05 — Claude Code — KLAR (CRO våg 3: katalogfilter, batterisida, bildspegel)
 
 - **Branch:** `feat/wave3-filter-battery-images` → PR mot `main` (öppen, ej mergad).
