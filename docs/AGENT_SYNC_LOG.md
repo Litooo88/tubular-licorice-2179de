@@ -32,6 +32,34 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-05 — Claude Code — KLAR (Riktiga Google-citat + betygsrättelse 5.0→4,7)
+
+- **Branch:** `feat/google-reviews-quotes` → PR mot `main` (öppen, ej mergad).
+- **Källa:** Google Maps-profilen läst via Sebastians Chrome (tillägget) —
+  riktiga recensioner, ordagrant citerade med publika profilnamn.
+- **VIKTIG RÄTTELSE:** Faktiskt betyg är **4,7 (12 recensioner)** — INTE 5.0
+  som sajten påstod i text + `aggregateRating`-schema. Rättat på ALLA 4 sidor
+  med schemat: `index.html`, `book-online`, `elscooter-reparation-orebro`,
+  `kontakt`. Text: "4,7 av 5 på Google (12 recensioner)".
+- **Citat tillagda (verbatim-utdrag):** startsidan 3 citatkort vid
+  betygsblocket (Adam Salih batteriräddning samma dag · Gabriel D punktering/
+  service · Tommie Irvhage elfel+kommunikation); bokningssidan 1 citat
+  (Tommie) direkt ovanför Boka-knappen. Responsiv CSS (.review-quotes,
+  1 kolumn ≤900px).
+- **BIFYND till Sebastian:** Google-profilen är INTE claimad ("Gör anspråk på
+  företaget" visas publikt) — claima den omgående (Google Business Profile).
+  Det är gratis, tar 10 min och är den enskilt största off-page-SEO-åtgärden
+  (svara på recensioner, öppettider, bilder). Profilen visar även öppet till
+  kl 20 — stämmer inte med inlämning tis–lör 15–18; uppdatera tiderna där
+  efter claim.
+- **Tester:** 0 kvarvarande "5.0"-claims (escapad grep) ✅, alla JSON-LD-block
+  parsar ✅, build/verify (31) ✅, browserverifierat: 3 kort + rätt namn +
+  rätt betygstext ✅.
+- **Varning till Codex:** Citaten är ordagranna utdrag ur publika Google-
+  recensioner — ändra inte formuleringarna (autenticitet). Betyget uppdateras
+  manuellt vid förändring; överväg att hämta det dynamiskt först när profilen
+  är claimad.
+
 ### 2026-07-05 — Claude Code — KLAR (CRO våg 3: katalogfilter, batterisida, bildspegel)
 
 - **Branch:** `feat/wave3-filter-battery-images` → PR mot `main` (öppen, ej mergad).
