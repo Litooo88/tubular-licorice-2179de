@@ -776,7 +776,23 @@ export default async (request, context) => {
 
     next.timeline = timeline;
 
-    if ((next.status === "done" || next.payment?.status === "paid") && next.notifications?.thankYou?.status !== "sent") {
+    // Endast vid ÖVERGÅNGEN till done/paid — tidigare skickade varje PATCH på
+    // ett redan avslutat/betalt ärende (utan skickat tackmail) om utskicket,
+    // t.ex. när en anteckning lades till månader senare.
+    const becameDone = next.status === "done" && current.status !== "done";
+    const becamePaid = next.payment?.status === "paid" && currentPayment.status !== "paid";
+    const thankYouTriggered = (becameDone || becamePaid) &&
+      !["sent", "suppressed"].includes(next.notifications?.thankYou?.status);
+    if (thankYouTriggered && body.suppressThankYou === true) {
+      // Tyst stängning (bekräftelserutan i admin / städning av gamla ärenden).
+      // "suppressed" är avsiktligt permanent: annars skulle nästa orelaterade
+      // PATCH på ärendet trigga utskicket i efterhand.
+      next.notifications = {
+        ...(next.notifications || {}),
+        thankYou: { status: "suppressed", at: now },
+      };
+      next.timeline.push({ at: now, event: "Avslutad/betald utan tackmail (manuellt val i admin)." });
+    } else if (thankYouTriggered) {
       // A provider failure (Resend timeout/network) must not lose the whole
       // PATCH — the status/payment change still has to be persisted below.
       try {
