@@ -824,6 +824,48 @@
         "pendling"
       ],
       "images": []
+    },
+    {
+      "id": "navee-st5-max",
+      "brand": "NAVEE",
+      "name": "NAVEE ST5 Max",
+      "priceSek": 11990,
+      "costEur": 611,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "NAVEE rek.",
+      "spec": "ST5-serien • toppmodellen i ST-serien",
+      "short": "En av NAVEE:s egna rekommendationer — ST-seriens toppmodell för pendlaren som vill ha mer av allt.",
+      "positioning": "Premiumpendling",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "pendling",
+        "premium"
+      ],
+      "images": []
+    },
+    {
+      "id": "navee-st3",
+      "brand": "NAVEE",
+      "name": "NAVEE ST3",
+      "priceSek": 8990,
+      "costEur": 452,
+      "status": "i-lager",
+      "delivery": "Leverans 1-2 veckor efter beställning",
+      "badge": "Prisvärd",
+      "spec": "ST3-serien • prisvärd instegsmodell i serien",
+      "short": "Instegsmodellen i ST-serien — samma plattform som ST3 Pro till lägre pris.",
+      "positioning": "Prisvärd mellanklass",
+      "legality": "check-rules",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "pendling",
+        "vardag"
+      ],
+      "images": []
     }
   ],
   "refurbished": [

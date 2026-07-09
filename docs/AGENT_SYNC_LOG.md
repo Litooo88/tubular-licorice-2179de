@@ -32,6 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-05 — Claude Code — KLAR (NAVEE ST5 Max + ST3 tillagda)
+
+- **Branch:** `feat/navee-st5-max-st3` → PR mot `main`.
+- **Sebastians beslut:** lägg till båda från NAVEE-listan. ST5 Max 11 990 kr /
+  611 € (NAVEE rek., marginal ~2 811 kr 29 %), ST3 8 990 kr / 452 €
+  (~2 130 kr 30 %). Båda i-lager + checkout → 38 köpbara. Inga påhittade
+  specs (serie-beskrivning tills NAVEE-material finns), inga bilder ännu —
+  kör mirror-scriptet när bilder läggs in.
+- **Tester:** products.json giltig ✅, build ✅, verify (38) ✅.
+
 ### 2026-07-05 — Claude Code — KLAR (NAVEE-inköpspriser + ST3 Pro säljbar + ny push-uppställning)
 
 - **Branch:** `feat/navee-costs-and-push` (stackad på
