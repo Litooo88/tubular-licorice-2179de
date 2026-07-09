@@ -477,16 +477,19 @@ function homeComingSoonCard(item, options = {}) {
 }
 
 function homeProductsSection() {
+  // Ordningen styrs av marginal + leverantörens rekommendationer (NAVEE
+  // 2026-07: XT5 Pro, NT5 Max, ST5 Max, ST3 Pro). G4 SE behålls som
+  // trafikdrivare trots tunn marginal.
   const popularOrder = [
     "kukirin-g4-special",
-    "kukirin-g2-max",
+    "navee-xt5-ultra",
     "kukirin-g3-pro",
     "teverun-blade-mini-ultra",
-    "teverun-blade-gt-ii",
-    "kukirin-g4-max"
+    "navee-st3-pro",
+    "teverun-blade-gt-ii"
   ];
   const popular = popularOrder.map((id) => products.find((item) => item.id === id)).filter(Boolean);
-  const comingSoon = ["navee-gt3-max", "navee-st3-pro"]
+  const comingSoon = ["navee-gt3-max"]
     .map((id) => products.find((item) => item.id === id))
     .filter(Boolean);
   const eaglePro = refurbished.find((item) => item.id === "dualtron-eagle-pro-nemob");

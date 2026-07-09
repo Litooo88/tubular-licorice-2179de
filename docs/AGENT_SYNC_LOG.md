@@ -32,6 +32,28 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-05 — Claude Code — KLAR (NAVEE-inköpspriser + ST3 Pro säljbar + ny push-uppställning)
+
+- **Branch:** `feat/navee-costs-and-push` (stackad på
+  `fix/thankyou-confirm-and-new-prices` — merga den PR:en först/samtidigt).
+- **Källa:** NAVEE:s officiella prislista (sell-in DDP) via Sebastian.
+  Våra priser låg redan på MSRP — inga kundpriser ändrade.
+- **Gjort:** 1) `costEur` på alla 9 NAVEE-modeller från listan (XT5 Ultra 915,
+  NT5 Ultra X 727, XT5 Pro 646, NT5 Max 592, N65i 458, V50i Pro 340, G5 312,
+  V25i Pro II 255, K100 Max 206). UT5 Ultra X saknas på listan — fråga NAVEE.
+  2) ST3 Pro: 10 990 kr / 553 € → i-lager + checkout (36 köpbara), badge
+  "NAVEE rek.". 3) XT5 Pro + NT5 Max: pa-vag → i-lager (nya produkter,
+  leveransklara). 4) Startsidans "Populärast just nu": G2 Max + G4 Max ut,
+  XT5 Ultra (+3 344 kr marg) + ST3 Pro (+2 598, 30 %) in. G4 SE kvar som
+  trafikdrivare (medvetet, tunn marginal).
+- **Ej gjort:** ST5 Max + ST3 (finns på listan, ej i katalogen) — väntar
+  Sebastians besked; GT3 Max finns INTE på NAVEE-listan (fråga leverantören).
+- **Tester:** products.json giltig ✅, build ✅, verify (36) ✅, costEur
+  läcker inte till HTML ✅.
+- **Varning till Codex:** popularOrder i generatorn är marginalstyrd nu —
+  stäm av här innan ändring. Waves 2/3-brancherna rör samma generator →
+  konflikter förväntas vid merge, lös mot denna ordning.
+
 ### 2026-07-05 — Claude Code — KLAR (tackmail-bekräftelse + tyst stängning + nya KuKirin-priser)
 
 - **Branch:** `fix/thankyou-confirm-and-new-prices` → PR mot `main`.
