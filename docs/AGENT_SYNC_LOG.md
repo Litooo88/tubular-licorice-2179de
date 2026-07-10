@@ -32,6 +32,20 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-10 — Claude Code — KLAR (bulk-städning av gamla ärenden i produktion — DATA, ingen kod)
+
+- **Vad:** 57 ärenden med status new/contacted äldre än 30 dagar arkiverades
+  (status `archived` + `suppressThankYou` + timeline-notis "Bulk-städning
+  2026-07-10 (godkänd av Sebastian)"). Kördes via Sebastians inloggade
+  admin-session (Chrome), 29+28 i två omgångar, **57/57 OK, 0 fel**.
+  Öppna ärenden: 157 → 100. Inga mail/SMS skickades (archived triggar aldrig
+  utskick + suppress-flaggan som bälte), inget raderades.
+- **MEDVETET EJ arkiverade:** de 21 "ready"-ärendena äldre än 30 dgr —
+  Sebastian vill gå igenom dem själv innan de stängs (sannolikt hämtade &
+  betalda men aldrig stängda). Lista finns i drift-trådens transkript.
+- **Varning till Codex:** rör inte de arkiverade ärendena tillbaka till
+  aktiva statusar utan Sebastians ord; suppressed-tackmail är permanent.
+
 ### 2026-07-10 — Claude Code — KLAR (live missade samtal i Kontrolltornet + snabbare call-dashboard)
 
 - **Branch:** `fix/live-missed-calls-and-dashboard-speed` → PR mot `main`.
