@@ -32,6 +32,27 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-10 — Claude Code — KLAR (live missade samtal i Kontrolltornet + snabbare call-dashboard)
+
+- **Branch:** `fix/live-missed-calls-and-dashboard-speed` → PR mot `main`.
+- **Problem (Sebastian):** "vi får inte live data eller missade samtal från
+  46elks". Rotorsak 1: Kontrolltornets "Missade samtal" läste ALDRIG live-
+  källan — bara manuella konsolen/tomma call_logs-storen; 46elks-datan fanns
+  enbart i separata Samtal-vyn. Rotorsak 2: call-dashboard läste 150+ case-
+  blobbar SEKVENTIELLT → 17–21 s per anrop (Netlify-loggen, 4 anrop/7 dgr).
+- **Fix:** 1) `call-dashboard.mjs`: readBlobsParallel (chunk 25) för cases +
+  blob-maps → förväntat ~2–3 s. 2) `admin/index.html`: Kontrolltorn-refresh
+  anropar nu även loadCallDashboard och renderar missade/röstmeddelanden
+  (senaste 7 dgr, live 46elks) i aiMissedCallsList — klickbara mot kundkort
+  (contact-tab) när numret matchar case, annars "case-id saknas". Räknaren
+  uppdateras från live-datan.
+- **Tester:** node --check ✅, admin inline-JS 0 fel ✅, build/verify (38) ✅.
+  Live-test kräver admin-token (fanns inte i tillgänglig Chrome-profil) —
+  Sebastian verifierar efter merge: Uppdatera AI-brief → missade samtal ska
+  fyllas + Samtal-vyn uppdateras på sekunder i stället för ~20 s.
+- **OBS kvarstår:** admin-token ej sparad i Claude-styrda Chrome-profilen →
+  bulk-städningen av 78 gamla ärenden väntar fortfarande på det.
+
 ### 2026-07-05 — Claude Code — KLAR (NAVEE ST5 Max + ST3 tillagda)
 
 - **Branch:** `feat/navee-st5-max-st3` → PR mot `main`.

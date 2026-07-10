@@ -119,24 +119,32 @@ const fetchCalls = async () => {
   return Array.isArray(body.data) ? body.data : [];
 };
 
+// Blob-läsningar parallelliseras i chunkar — sekventiell läsning av 150+
+// case-blobbar tog 17–21 s per dashboard-anrop (nära funktions-timeout).
+const readBlobsParallel = async (store, keys, concurrency = 25) => {
+  const results = [];
+  for (let i = 0; i < keys.length; i += concurrency) {
+    const chunk = keys.slice(i, i + concurrency);
+    const items = await Promise.all(chunk.map((key) => store.get(key, { type: "json" }).catch(() => null)));
+    chunk.forEach((key, index) => results.push({ key, item: items[index] }));
+  }
+  return results;
+};
+
 const loadCases = async () => {
   const store = getStore({ name: "workshop-cases", consistency: "strong" });
   const { blobs } = await store.list();
-  const cases = [];
-  for (const blob of blobs) {
-    const item = await store.get(blob.key, { type: "json" }).catch(() => null);
-    if (item) cases.push(item);
-  }
-  return cases;
+  const results = await readBlobsParallel(store, (blobs || []).map((blob) => blob.key));
+  return results.map(({ item }) => item).filter(Boolean);
 };
 
 const loadBlobMap = async (storeName) => {
   const store = getStore({ name: storeName, consistency: "strong" });
   const { blobs } = await store.list().catch(() => ({ blobs: [] }));
+  const results = await readBlobsParallel(store, (blobs || []).map((blob) => blob.key));
   const items = new Map();
-  for (const blob of blobs || []) {
-    const item = await store.get(blob.key, { type: "json" }).catch(() => null);
-    if (item) items.set(blob.key, item);
+  for (const { key, item } of results) {
+    if (item) items.set(key, item);
   }
   return { store, items };
 };
