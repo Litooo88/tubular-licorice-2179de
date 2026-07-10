@@ -2521,12 +2521,36 @@ async function loadAiControlTower(){
     const sourceWarning=aiSourceWarningText(data);
     const mode=data.localFallback?'lokal /api/cases-fallback':data.dryRun?'mock/dry-run-l\u00e4ge':data.brief&&data.brief.aiMode||'AI-l\u00e4ge';
     showAiStatus(`Senast uppdaterad ${new Date().toLocaleTimeString('sv-SE')} - ${mode}.${sourceWarning}`,data.dryRun||sourceWarning?'warn':'');
+    // Missade samtal i Kontrolltornet kommer fr\u00e5n LIVE 46elks-k\u00e4llan
+    // (call-dashboard) \u2014 briefens call_logs-store \u00e4r bara den manuella
+    // fallbacken och \u00e4r normalt tom.
+    refreshLiveMissedCalls().catch(()=>{});
   }catch(error){
     const message=String(error.message||'Okänt fel');
     showAiStatus(message==='Ej behörig'?'Ej behörig':`Fel: ${message}`,'bad');
   }finally{
     button.disabled=false;
   }
+}
+async function refreshLiveMissedCalls(){
+  await loadCallDashboard();
+  renderLiveMissedCalls(callDashboardRows);
+}
+function renderLiveMissedCalls(rows){
+  if(!Array.isArray(rows)||!rows.length)return;
+  const cutoff=Date.now()-7*24*60*60*1000;
+  const missed=rows.filter((row)=>['missed','voicemail'].includes(row.answeredBy)&&new Date(row.timestamp).getTime()>=cutoff);
+  const items=missed.map((row)=>{
+    const matched=Array.isArray(row.cases)&&row.cases.length?row.cases[0]:null;
+    return {
+      id:matched?matched.id:'',
+      customer:matched?matched.customerName:(row.phone||'Okänt nummer'),
+      model:matched?matched.model:'',
+      reason:[`${row.answeredByLabel||'Missad'} ${row.date} ${row.time}`,row.leadStatus?`lead: ${row.leadStatus}`:''].filter(Boolean).join(' · ')
+    };
+  });
+  document.getElementById('aiMissedCalls').textContent=items.length;
+  aiMissedCallsListEl.innerHTML=items.length?aiListHtml(items,false,'contact'):'<div class="muted">Inga missade samtal senaste 7 dagarna (live från 46elks).</div>';
 }
 async function testAiQuote(){
   const button=document.getElementById('testAiQuote');
