@@ -5,6 +5,8 @@
   "scripts": {
     "generate:products": "node scripts/generate-products.mjs",
     "verify:checkout-products": "node scripts/verify-checkout-products.mjs",
+    "nemob-os": "node nemob-os/server.mjs",
+    "test:nemob-os": "node --test \"nemob-os/test/*.test.mjs\"",
     "build": "npm run generate:products && echo Static site ready"
   },
   "dependencies": {

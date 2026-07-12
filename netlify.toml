@@ -10,6 +10,14 @@
   node_bundler = "esbuild"
   external_node_modules = ["@netlify/blobs", "stripe"]
 
+# nemob-os/ är ett lokalt internverktyg (personlig data) och får aldrig
+# serveras publikt. publish är "." så mappen måste blockeras uttryckligen.
+[[redirects]]
+  from = "/nemob-os/*"
+  to = "/404"
+  status = 404
+  force = true
+
 [[redirects]]
 from = "https://nordicemobility.com/*"
 to = "https://www.nordicemobility.se/:splat"
