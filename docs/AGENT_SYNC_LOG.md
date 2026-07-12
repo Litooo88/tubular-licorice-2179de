@@ -32,6 +32,20 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-12 — Claude Code — PÅGÅR (NEMOB OS V1 — personlig ops-dashboard i ny mapp `nemob-os/`)
+
+- **Branch:** `feat/nemob-os-v1`.
+- **Omfattning:** HELT ny, fristående mapp `nemob-os/` (lokal Node-server +
+  statisk dashboard). Rör INTE befintliga funktioner eller sidor. Enda
+  ändringar utanför mappen: `.gitignore` (nemob-os/data + .env) och
+  `netlify.toml` (404-blockering av `/nemob-os/*` så mappen aldrig serveras
+  publikt — publish är ".").
+- **Nordic-integration:** endast read-only GET mot befintliga
+  claude-brief-endpointen via privat env `NORDIC_BRIEF_URL`. Inga writes,
+  inga SMS/mail, ingen slug i kod/logg/docs.
+- **Till andra agenter:** ta inte `nemob-os/`-namnrymden, rör inte
+  branchen. Stashes stash@{0,1} lämnade orörda.
+
 ### 2026-07-10 — Claude Code — KLAR (bulk-städning av gamla ärenden i produktion — DATA, ingen kod)
 
 - **Vad:** 57 ärenden med status new/contacted äldre än 30 dagar arkiverades
