@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>NEMOB OS</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <h1>NEMOB <span>OS</span></h1>
+    <div id="clock">--:--:--</div>
+    <div id="today">–</div>
+    <div class="spacer"></div>
+    <span id="nordic-badge" class="badge">Nordic: hämtar…</span>
+    <button id="btn-urgent" class="danger">+ Akut uppgift</button>
+    <button id="btn-regenerate" class="primary">Generera om dagsplan</button>
+  </header>
+
+  <div class="layout">
+    <div class="col-main">
+      <section class="card" id="sec-morning">
+        <h2>Morgonbrief</h2>
+        <div id="morning-brief" class="muted">Ingen plan genererad ännu — tryck ”Generera om dagsplan”.</div>
+      </section>
+
+      <section class="card" id="sec-top5">
+        <h2>Dagens topp 5 <span id="top5-generated" class="small-text"></span></h2>
+        <div id="top5"></div>
+      </section>
+
+      <section class="card" id="sec-blocks">
+        <h2>Dagens block</h2>
+        <div id="blocks"></div>
+      </section>
+
+      <section class="card" id="sec-midday">
+        <h2>Kontroll mitt på dagen</h2>
+        <div id="midday-computed"></div>
+        <form id="midday-form" class="grid">
+          <label class="field full">Vad blev klart?<textarea name="done" rows="2"></textarea></label>
+          <label class="field full">Vad har tillkommit?<textarea name="added" rows="2"></textarea></label>
+          <label class="field full">Vad är blockerat?<textarea name="blocked" rows="2"></textarea></label>
+          <label class="field full">Vad behöver planeras om?<textarea name="replan" rows="2"></textarea></label>
+          <div class="full"><button type="submit" class="primary">Spara mittdagskontroll</button> <span id="midday-saved" class="saved-note"></span></div>
+        </form>
+      </section>
+
+      <section class="card" id="sec-evening">
+        <h2>Kvällssammanfattning</h2>
+        <div id="evening-computed"></div>
+        <form id="evening-form" class="grid">
+          <label class="field full">Varför blev vissa saker inte gjorda?<textarea name="why" rows="2"></textarea></label>
+          <label class="field full">Vad flyttas?<textarea name="moved" rows="2"></textarea></label>
+          <label class="field full">Vad måste börja först nästa dag?<textarea name="firstTomorrow" rows="2"></textarea></label>
+          <div class="full"><button type="submit" class="primary">Spara kvällssammanfattning</button> <span id="evening-saved" class="saved-note"></span></div>
+        </form>
+      </section>
+    </div>
+
+    <div class="col-side">
+      <section class="card" id="sec-nordic">
+        <h2>Nordic E-Mobility (read-only)
+          <span class="h-actions"><button id="btn-nordic-refresh" class="small">Uppdatera</button></span>
+        </h2>
+        <div id="nordic-banner"></div>
+        <div class="metric-grid" id="nordic-metrics"></div>
+        <div class="block" id="nordic-bookings"></div>
+        <div class="block" id="nordic-oldest"></div>
+        <div class="small-text" style="margin-top:8px">
+          Källan är strikt read-only. NEMOB OS kan inte ändra status, skicka SMS/mail eller boka om kunder.
+          <label class="check" style="margin-top:4px"><input type="checkbox" id="simulate-down"> Simulera att källan är nere (test)</label>
+        </div>
+      </section>
+
+      <section class="card" id="sec-new-task">
+        <h2 id="task-form-heading">Ny uppgift</h2>
+        <form id="task-form" class="grid">
+          <label class="field full">Titel *<input name="title" required maxlength="200"></label>
+          <label class="field">Område<select name="area"></select></label>
+          <label class="field">Status<select name="status"></select></label>
+          <label class="field">Deadline<input type="datetime-local" name="deadline"></label>
+          <label class="field">Uppskattad tid (min)<input type="number" name="estimatedMinutes" min="5" step="5"></label>
+          <label class="field">Risk om den missas — nivå<select name="riskLevel"></select></label>
+          <label class="field">Intäkt idag (kr)<input type="number" name="revenueSek" min="0" step="50"></label>
+          <label class="field full">Risk om den missas — beskrivning<input name="riskNote" maxlength="500"></label>
+          <label class="field full">Intäkt/framdrift<input name="impact" maxlength="500"></label>
+          <label class="field full">Nästa konkreta steg<input name="nextStep" maxlength="500"></label>
+          <label class="check"><input type="checkbox" name="customerWaiting"> Kund väntar</label>
+          <label class="field">Kund väntar sedan<input type="date" name="customerWaitingSince"></label>
+          <label class="check full"><input type="checkbox" name="blocksOthers"> Blockerar andra uppgifter</label>
+          <div class="full">
+            <button type="submit" class="primary" id="task-form-submit">Skapa uppgift</button>
+            <button type="button" id="task-form-cancel" style="display:none">Avbryt redigering</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="card" id="sec-tasks">
+        <h2>Alla uppgifter</h2>
+        <div id="task-list"></div>
+      </section>
+    </div>
+  </div>
+
+  <div id="modal-backdrop">
+    <div id="modal">
+      <h3 id="modal-title"></h3>
+      <div id="modal-body"></div>
+      <div class="m-actions">
+        <button id="modal-cancel">Avbryt</button>
+        <button id="modal-ok" class="primary">OK</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/app.js"></script>
+</body>
+</html>

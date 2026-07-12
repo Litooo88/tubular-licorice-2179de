@@ -8,3 +8,5 @@ tmp-*
 *.tmp
 .DS_Store
 Thumbs.db
+nemob-os/data/
+nemob-os/.env
