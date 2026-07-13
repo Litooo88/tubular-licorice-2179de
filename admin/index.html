@@ -528,6 +528,25 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div id="callDashboardTable">Laddar samtal...</div>
   </section>
 
+  <section class="panel campaign-panel">
+    <h2>Kampanjutskick &mdash; ring-tillbaka-rabatt</h2>
+    <p>Bygger mottagarlista fr&aring;n samtalen de <strong>senaste 30 dagarna</strong> (unika nummer, live fr&aring;n 46elks). Nummer som redan f&aring;tt uppf&ouml;ljnings-SMS filtreras bort automatiskt, s&aring; ingen f&aring;r dubbelt. Varje utskick loggas per nummer. <strong>Inget skickas f&ouml;rr&auml;n du bekr&auml;ftar.</strong></p>
+    <div class="call-actions">
+      <button type="button" class="secondary" id="buildCampaignList">Bygg mottagarlista (30 dagar)</button>
+      <label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#aeb8b0"><input type="checkbox" id="campaignIncludeActive"> Inkludera &auml;ven nummer med aktivt &auml;rende</label>
+    </div>
+    <div class="call-status" id="campaignStatus"></div>
+    <div style="margin:12px 0">
+      <label for="campaignMessage">SMS-text (koden l&auml;ses ur texten, redigera fritt)</label>
+      <textarea id="campaignMessage" rows="5"></textarea>
+    </div>
+    <div id="campaignPreview" class="muted">Klicka p&aring; "Bygg mottagarlista" f&ouml;r att se exakt vilka som f&aring;r utskicket.</div>
+    <div class="call-actions" style="margin-top:12px">
+      <button type="button" id="sendCampaign" disabled>Skicka 0 SMS (livesändning)</button>
+    </div>
+    <span class="live-send-warning">Varning: knappen skickar RIKTIGA SMS via 46elks till hela listan. Svar hanteras i din vanliga SMS-inkorg &mdash; respektera STOPP-svar.</span>
+  </section>
+
   <section class="panel sms-panel live-send-panel">
     <h2>SMS till kund – live-s&auml;ndning</h2>
     <p>V&auml;lj ett aktivt &auml;rende, skriv eller bygg en mall. Kopiera-knappen &auml;r s&auml;ker; liveknappen skickar ett riktigt SMS via 46elks.</p>
@@ -742,6 +761,9 @@ document.querySelectorAll('[data-admin-tab]').forEach((button)=>button.addEventL
 document.getElementById('saveToken').addEventListener('click',()=>{localStorage.setItem('nordicAdminToken',tokenInput.value.trim());showAiStatus(tokenInput.value.trim()?'Admin-token sparad. Klicka på Uppdatera AI-brief.':'Admin-token saknas',tokenInput.value.trim()?'':'warn');loadCases();});
 document.getElementById('refresh').addEventListener('click',loadCases);
 document.getElementById('refreshCalls').addEventListener('click',loadCallDashboard);
+document.getElementById('buildCampaignList').addEventListener('click',buildCampaignList);
+document.getElementById('sendCampaign').addEventListener('click',sendCampaign);
+document.getElementById('campaignMessage').value=campaignDefaultMessage();
 document.getElementById('refreshAiControl').addEventListener('click',loadAiControlTower);
 document.getElementById('testAiQuote').addEventListener('click',testAiQuote);
 document.getElementById('testAiSmsDraft').addEventListener('click',testAiSmsDraft);
@@ -2854,6 +2876,80 @@ async function copyCallFollowupDraft(row,button){
     button.disabled=false;
     button.textContent=original;
   }
+}
+let campaignRecipients=[];
+function campaignDefaultMessage(){
+  const until=new Date(Date.now()+14*24*60*60*1000).toLocaleDateString('sv-SE');
+  return `Hej! Du sökte Nordic E-Mobility nyligen – ursäkta att vi inte kunde svara. Som tack för att du hörde av dig får du 20 % rabatt på valfri service med koden RING20, giltig t.o.m. ${until}. Boka på nordicemobility.se/book-online eller ring 010-138 54 98. Svara STOPP om du inte vill ha fler sms. /Nordic E-Mobility`;
+}
+function showCampaignStatus(message,bad=false){
+  const el=document.getElementById('campaignStatus');
+  el.className=`call-status ${message?(bad?'bad':'ok'):''}`;
+  el.textContent=message;
+  el.style.display=message?'block':'none';
+}
+async function buildCampaignList(){
+  const button=document.getElementById('buildCampaignList');
+  button.disabled=true;
+  try{
+    showCampaignStatus('Hämtar samtal från 46elks (30 dagar)...');
+    await loadCallDashboard();
+    if(!callDashboardRows.length){showCampaignStatus('Inga samtal hittades – kontrollera samtalskällan ovan.',true);return;}
+    const includeActive=document.getElementById('campaignIncludeActive').checked;
+    const groups=new Map();
+    callDashboardRows.forEach((row)=>{
+      if(!row.phone||!String(row.phone).startsWith('+'))return;
+      const group=groups.get(row.phone)||{phone:row.phone,count:0,latest:row,activeCase:false,hasCase:false,followedUp:false};
+      group.count+=1;
+      if(String(row.timestamp)>String(group.latest.timestamp))group.latest=row;
+      if(row.hasCase)group.hasCase=true;
+      if(Array.isArray(row.cases)&&row.cases.some((c)=>!['done','archived'].includes(String(c.status||''))))group.activeCase=true;
+      if(row.followup||['followed_up','converted','ignored'].includes(String(row.leadStatus||'')))group.followedUp=true;
+      groups.set(row.phone,group);
+    });
+    const all=[...groups.values()];
+    campaignRecipients=all.filter((g)=>!g.followedUp&&(includeActive||!g.activeCase));
+    const skippedFollowed=all.filter((g)=>g.followedUp).length;
+    const skippedActive=includeActive?0:all.filter((g)=>!g.followedUp&&g.activeCase).length;
+    const rowsHtml=campaignRecipients.map((g)=>`<tr><td>${html(g.phone)}</td><td>${g.count}</td><td>${html(g.latest.date+' '+g.latest.time)}</td><td>${g.hasCase?'Har ärende':'Ny kontakt'}</td></tr>`).join('');
+    document.getElementById('campaignPreview').innerHTML=campaignRecipients.length
+      ?`<div class="muted" style="margin-bottom:8px">${campaignRecipients.length} unika mottagare · ${skippedFollowed} bortfiltrerade (redan kontaktade) · ${skippedActive} bortfiltrerade (aktivt ärende)</div><table class="active-table"><thead><tr><th>Nummer</th><th>Samtal</th><th>Senast</th><th>Status</th></tr></thead><tbody>${rowsHtml}</tbody></table>`
+      :'<div class="muted">Inga mottagare kvar efter filtrering.</div>';
+    const sendButton=document.getElementById('sendCampaign');
+    sendButton.textContent=`Skicka ${campaignRecipients.length} SMS (livesändning)`;
+    sendButton.disabled=!campaignRecipients.length;
+    showCampaignStatus(`Lista klar ${new Date().toLocaleTimeString('sv-SE')} — granska innan du skickar.`);
+  }catch(error){
+    showCampaignStatus(error.message,true);
+  }finally{
+    button.disabled=false;
+  }
+}
+async function sendCampaign(){
+  const button=document.getElementById('sendCampaign');
+  const message=String(document.getElementById('campaignMessage').value||'').trim();
+  if(!message){showCampaignStatus('Skriv ett SMS-meddelande först.',true);return;}
+  if(!campaignRecipients.length){showCampaignStatus('Bygg mottagarlistan först.',true);return;}
+  if(!confirm(`Skicka RIKTIGT kampanj-SMS via 46elks till ${campaignRecipients.length} unika nummer?\n\nDetta kan inte ångras. Varje utskick loggas per nummer.`))return;
+  const code=(message.match(/koden\s+([A-ZÅÄÖ0-9-]+)/i)||[])[1]||'RING20';
+  button.disabled=true;
+  let ok=0;const failed=[];
+  for(let i=0;i<campaignRecipients.length;i+=1){
+    const recipient=campaignRecipients[i];
+    button.textContent=`Skickar ${i+1}/${campaignRecipients.length}...`;
+    try{
+      const result=await api('/api/call-dashboard',{
+        method:'POST',
+        body:JSON.stringify({action:'send_discount',callId:recipient.latest.id,phone:recipient.phone,code,message,confirmLiveSms:true})
+      });
+      if(result.ok)ok+=1;else failed.push(recipient.phone);
+    }catch(error){failed.push(recipient.phone);}
+  }
+  button.textContent=`Skicka 0 SMS (livesändning)`;
+  campaignRecipients=[];
+  document.getElementById('campaignPreview').innerHTML='<div class="muted">Utskick klart. Bygg en ny lista för att se aktuell status.</div>';
+  showCampaignStatus(`Kampanj klar: ${ok} skickade${failed.length?`, ${failed.length} misslyckades (${failed.slice(0,5).join(', ')}${failed.length>5?'…':''})`:''}.`,Boolean(failed.length));
+  await loadCallDashboard();
 }
 async function sendLostLeadDiscount(row,button){
   if(!confirm(`Skicka RIKTIGT rabatt-SMS via 46elks till ${row.phone}? Rabatt kräver manuell kontroll.`))return;

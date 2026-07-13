@@ -32,6 +32,31 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-13 — Claude Code — KLAR (kampanjutskick ring-tillbaka-rabatt + 46elks-paginering 30 dgr)
+
+- **Branch:** `feat/callback-campaign` → PR mot `main`.
+- **Sebastians beslut:** massutskick till alla unika nummer som ringt senaste
+  30 dagarna — 20 % rabatt, kod RING20, giltig 14 dagar.
+- **Backend (`call-dashboard.mjs`):** fetchCalls paginerar nu 46elks (100/
+  sida, följer `next`, max 12 sidor) med 30-dagarsfönster — tidigare hämtades
+  BARA senaste 100 samtalen oavsett datum (därav "100" i räknaren).
+- **Admin: ny panel "Kampanjutskick"** under Live samtalsdashboard:
+  1) "Bygg mottagarlista" → unika nummer 30 dgr med antal samtal/senaste/
+  status; filtrerar automatiskt bort redan kontaktade (followup/lead
+  followed_up/converted/ignored) och nummer med AKTIVT ärende (checkbox för
+  att inkludera). 2) Redigerbart SMS (förifyllt med RING20 + dynamiskt
+  t.o.m.-datum + STOPP-rad); koden läses ur texten. 3) Skicka-knapp med
+  antal + confirm; sekventiell sändning via befintliga send_discount-action
+  → loggas per nummer i call-followups + lead followed_up (= dubblettskydd
+  vid nästa kampanj). Progress + felrapport per nummer.
+- **Tester:** node --check ✅, inline-JS 0 fel ✅, build/verify (38) ✅,
+  browsertest med fixtures: dedup (2 samtal → 1 mottagare "2 samtal"),
+  redan-kontaktad + aktivt ärende bortfiltrerade, avslutat ärende med,
+  knapp/preview korrekta ✅. Ingen liveskickning testad (kräver Sebastian).
+- **Varning till Codex:** send_discount-actionen är kampanjens motor — ändra
+  inte utan att uppdatera kampanjpanelen; followed_up-statusen är
+  dubblettskyddet mellan utskick.
+
 ### 2026-07-13 — Claude Code — KLAR (ärliga adminsiffror: fakturera/stale-logik, klickbara KPI:er, unika missade samtal, Arkivera-snabbknapp)
 
 - **Branch:** `fix/honest-admin-metrics` → PR mot `main`.

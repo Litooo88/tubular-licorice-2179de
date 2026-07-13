@@ -106,17 +106,34 @@ const postSms = async ({ to, message }) => {
   return { status: "sent", to: normalizedTo, id: clean(body.id, 120), sentAt: new Date().toISOString() };
 };
 
+// Paginerar 46elks (max 100 samtal/sida) tills fönstret (30 dagar) är täckt.
+// Tidigare hämtades bara första sidan → "senaste 100 samtalen" oavsett datum.
+const CALL_WINDOW_DAYS = 30;
 const fetchCalls = async () => {
   const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
   const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
   if (!username || !password) throw new Error("46elks API saknas.");
-  const response = await fetch("https://api.46elks.com/a1/calls", {
-    headers: { Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}` },
-    signal: AbortSignal.timeout(12000),
+  const auth = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
+  const cutoff = Date.now() - CALL_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+  const calls = [];
+  let url = "https://api.46elks.com/a1/calls?limit=100";
+  for (let page = 0; page < 12 && url; page += 1) {
+    const response = await fetch(url, {
+      headers: { Authorization: auth },
+      signal: AbortSignal.timeout(12000),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(clean(body.error || response.statusText, 180));
+    const batch = Array.isArray(body.data) ? body.data : [];
+    calls.push(...batch);
+    const oldest = batch.length ? new Date(batch[batch.length - 1].created || batch[batch.length - 1].start || 0).getTime() : 0;
+    if (!batch.length || (Number.isFinite(oldest) && oldest > 0 && oldest < cutoff)) break;
+    url = body.next ? `https://api.46elks.com${body.next}` : "";
+  }
+  return calls.filter((call) => {
+    const created = new Date(call.created || call.start || 0).getTime();
+    return Number.isFinite(created) && created >= cutoff;
   });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok) throw new Error(clean(body.error || response.statusText, 180));
-  return Array.isArray(body.data) ? body.data : [];
 };
 
 // Blob-läsningar parallelliseras i chunkar — sekventiell läsning av 150+
