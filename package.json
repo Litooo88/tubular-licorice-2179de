@@ -5,10 +5,11 @@
   "scripts": {
     "generate:products": "node scripts/generate-products.mjs",
     "verify:checkout-products": "node scripts/verify-checkout-products.mjs",
+    "test:status": "node --test tests/service-number.test.mjs",
     "test:voice": "node --test tests/voice-simple.test.mjs",
     "nemob-os": "node nemob-os/server.mjs",
     "test:nemob-os": "node --test \"nemob-os/test/*.test.mjs\"",
-    "build": "npm run test:voice && npm run generate:products && echo Static site ready"
+    "build": "npm run test:voice && npm run test:status && npm run generate:products && echo Static site ready"
   },
   "dependencies": {
     "@netlify/blobs": "^8.1.0",

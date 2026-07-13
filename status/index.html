@@ -39,6 +39,17 @@ button:disabled{opacity:.55;cursor:default}
 .help{margin-top:22px;color:#8d9a91;font-size:13px;line-height:1.6}
 .help a{color:#7ee2a8}
 .skeleton{color:#8d9a91}
+.lookup-form{margin-top:18px}
+.lookup-form label{display:block;color:#dce5df;font-size:13px;font-weight:900;margin-bottom:8px}
+.lookup-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px}
+.lookup-row input{min-width:0;border:1px solid #354139;background:#080b09;color:#fff;border-radius:8px;padding:14px 15px;font:inherit;text-transform:uppercase}
+.lookup-row input:focus{outline:none;border-color:#00c853;box-shadow:0 0 0 3px rgba(0,200,83,.12)}
+.lookup-row button{width:auto;min-width:126px;margin:0;background:#00c853;color:#031005;border-color:#00c853}
+.lookup-hint{margin-top:8px;color:#8d9a91;font-size:12px;line-height:1.45}
+.lookup-feedback{display:none;margin-top:10px;color:#ffb3b7;font-size:13px;line-height:1.45}
+.lookup-feedback.show{display:block}
+#content:empty{display:none}
+@media(max-width:520px){.lookup-row{grid-template-columns:1fr}.lookup-row button{width:100%}}
 </style>
 </head>
 <body>
@@ -46,24 +57,60 @@ button:disabled{opacity:.55;cursor:default}
   <header><img src="/nordic_logo_transparent.png" alt="Nordic E-Mobility"><strong>Nordic E-Mobility</strong></header>
   <div class="card" id="card">
     <h1>Följ din reparation</h1>
-    <p class="sub" id="intro">Hämtar status…</p>
-    <div id="content" class="skeleton"></div>
+    <p class="sub" id="intro">Ange servicenumret från ditt SMS eller mail.</p>
+    <form class="lookup-form" id="lookupForm" novalidate>
+      <label for="serviceNumber">Servicenummer</label>
+      <div class="lookup-row">
+        <input id="serviceNumber" name="serviceNumber" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" maxlength="24" placeholder="NEM-A1B2-C3D4-E5F6" aria-describedby="lookupHint lookupFeedback" required>
+        <button type="submit" id="lookupButton">Visa status</button>
+      </div>
+      <p class="lookup-hint" id="lookupHint">Skriv hela numret. Mellanslag och bindestreck spelar ingen roll.</p>
+      <p class="lookup-feedback" id="lookupFeedback" role="alert"></p>
+    </form>
+    <div id="content"></div>
   </div>
   <p class="help">Telefonen (<a href="tel:+46101385498">010-138 54 98</a>) använder vi i första hand för <strong>bokningar och nya ärenden</strong> — din reparationsstatus ser du alltid färskast här. Behöver du ändra något i din bokning? Ring eller mejla <a href="mailto:info@nordicemobility.se">info@nordicemobility.se</a>.</p>
 </div>
 <script>
 (async()=>{
   const params=new URLSearchParams(location.search);
-  const id=params.get('id')||'';
+  const directId=params.get('id')||'';
+  const service=params.get('service')||'';
   const intro=document.getElementById('intro');
   const content=document.getElementById('content');
+  const form=document.getElementById('lookupForm');
+  const input=document.getElementById('serviceNumber');
+  const lookupButton=document.getElementById('lookupButton');
+  const lookupFeedback=document.getElementById('lookupFeedback');
   const esc=(s)=>String(s||'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-  if(!id){intro.textContent='Ingen servicelänk angiven. Använd länken från din bokningsbekräftelse (SMS eller mail).';content.textContent='';return;}
-  async function load(){
+  const normalizeServiceNumber=(value)=>{
+    const compact=String(value||'').toUpperCase().replace(/[^0-9A-Z]/g,'');
+    const match=compact.match(/^NEM([0-9A-F]{12})$/);
+    if(!match)return'';
+    const token=match[1];
+    return `NEM-${token.slice(0,4)}-${token.slice(4,8)}-${token.slice(8,12)}`;
+  };
+  let currentKey='';
+  const setLookupError=(message)=>{
+    lookupFeedback.textContent=message||'';
+    lookupFeedback.classList.toggle('show',Boolean(message));
+  };
+  async function load(key){
+    currentKey=key;
+    setLookupError('');
+    lookupButton.disabled=true;
+    lookupButton.textContent='Hämtar…';
+    intro.textContent='Hämtar aktuell verkstadsstatus…';
+    content.textContent='';
     try{
-      const response=await fetch('/api/case-status/'+encodeURIComponent(id));
+      const response=await fetch('/api/case-status/'+encodeURIComponent(key));
       const data=await response.json();
-      if(!response.ok){intro.textContent=data.error||'Kunde inte hämta status.';content.textContent='';return;}
+      if(!response.ok){
+        intro.textContent='Vi kunde inte öppna ärendet.';
+        setLookupError(data.error||'Servicenumret hittades inte. Kontrollera numret och försök igen.');
+        return;
+      }
+      if(data.serviceNumber)input.value=data.serviceNumber;
       intro.textContent=(data.firstName?`Hej ${data.firstName}! `:'')+`Här följer du ${data.model} genom verkstaden.`;
       const steps=data.steps.map((label,index)=>{
         const cls=index<data.stepIndex?'done':index===data.stepIndex?'current':'';
@@ -83,7 +130,7 @@ button:disabled{opacity:.55;cursor:default}
         button.addEventListener('click',async()=>{
           button.disabled=true;button.textContent='Skickar…';
           try{
-            const r=await fetch('/api/case-status/'+encodeURIComponent(id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'request_update'})});
+            const r=await fetch('/api/case-status/'+encodeURIComponent(currentKey),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'request_update'})});
             const res=await r.json();
             feedback.textContent=res.message||res.error||'Klart.';
             feedback.classList.add('show');
@@ -96,10 +143,34 @@ button:disabled{opacity:.55;cursor:default}
         });
       }
     }catch(e){
-      intro.textContent='Kunde inte hämta status just nu. Prova att ladda om sidan.';
+      intro.textContent='Vi kunde inte hämta status just nu.';
+      setLookupError('Kontrollera anslutningen och försök igen om en stund.');
+    }finally{
+      lookupButton.disabled=false;
+      lookupButton.textContent='Visa status';
     }
   }
-  await load();
+  form.addEventListener('submit',async(event)=>{
+    event.preventDefault();
+    const normalized=normalizeServiceNumber(input.value);
+    if(!normalized){
+      setLookupError('Kontrollera servicenumret. Det ska börja med NEM och innehålla tolv tecken.');
+      input.focus();
+      return;
+    }
+    input.value=normalized;
+    history.replaceState(null,'',`/status/?service=${encodeURIComponent(normalized)}`);
+    await load(normalized);
+  });
+
+  if(service){
+    const normalized=normalizeServiceNumber(service);
+    input.value=normalized||service;
+    if(normalized)await load(normalized);
+    else setLookupError('Kontrollera servicenumret och försök igen.');
+  }else if(directId){
+    await load(directId);
+  }
 })();
 </script>
 </body>

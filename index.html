@@ -391,6 +391,12 @@ nav a:hover{color:#fff}
 /* CAMPAIGN */
 .campaign{background:linear-gradient(90deg,#00C853 0%,#00E676 100%);padding:16px 0;text-align:center}
 .campaign p{color:#000;font-weight:700;font-size:15px}
+.repair-tracking{padding:34px 0;background:#07110a;border-bottom:1px solid rgba(0,200,83,.24)}
+.repair-tracking-inner{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:32px;align-items:center}
+.repair-tracking-label{display:block;color:#7ee2a8;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.12em;margin-bottom:8px}
+.repair-tracking h2{font-size:28px;line-height:1.15;margin-bottom:9px}
+.repair-tracking p{max-width:720px;color:#b9c5bd;font-size:15px;line-height:1.55}
+.repair-tracking .btn-primary{font-size:15px;padding:14px 20px;white-space:nowrap}
 .service-status{padding:22px 0;background:#080704;border-top:1px solid rgba(255,194,71,.22);border-bottom:1px solid rgba(255,194,71,.18)}
 .service-status-card{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:22px;align-items:center;background:rgba(255,194,71,.09);border:1px solid rgba(255,194,71,.35);border-radius:12px;padding:22px;color:#fff7df}
 .service-status-card h2{font-size:20px;margin-bottom:8px;color:#fff}
@@ -482,6 +488,8 @@ nav a:hover{color:#fff}
 .calc-form{background:#111;border:1px solid #222;border-radius:16px;padding:36px}
 .calc-grp{margin-bottom:24px}
 .calc-lbl{display:block;font-size:13px;font-weight:600;color:#aaa;margin-bottom:8px}
+.calc-va-row{display:flex;gap:8px;align-items:center}
+.calc-va-row input{min-width:0}
 .calc-slider{-webkit-appearance:none;appearance:none;width:100%;height:5px;background:#333;border-radius:3px;outline:none}
 .calc-slider::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;background:#00C853;cursor:pointer}
 .calc-val{text-align:right;font-size:14px;font-weight:700;color:#00C853;margin-top:6px}
@@ -607,7 +615,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 @media(max-width:900px){
   .hero h1{font-size:32px}
   .hero{padding:110px 0 60px}
-  .service-status-card{grid-template-columns:1fr}
+  .service-status-card,.repair-tracking-inner{grid-template-columns:1fr}
   .pricing-grid,.problems-grid{grid-template-columns:1fr}
   .trust-grid{grid-template-columns:1fr}
   .calc-wrap{grid-template-columns:1fr}
@@ -626,6 +634,8 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   .steps-grid{grid-template-columns:1fr 1fr}
   .usp-grid{grid-template-columns:1fr}
   .sustain-grid{grid-template-columns:1fr}
+  .sustain-grid>*,.calc-wrap>*{min-width:0}
+  .sustain-points,.sustain-point,.sustain-visual,.calc-form{width:100%;max-width:100%}
   .calc-compare{grid-template-columns:1fr auto 1fr}
   .calc-col-num{font-size:40px}
   .hero-proof{flex-direction:column;gap:10px}
@@ -636,6 +646,7 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
   .section-title{font-size:28px}
 }
 @media(max-width:640px){
+  .calc-form{padding:24px 18px}
   .navee-lookbook{grid-template-columns:1fr}
   .navee-shot,.navee-shot--feature{min-height:260px}
   .navee-shot-title{font-size:22px}
@@ -691,7 +702,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   <nav>
     <a href="/elscooter-reparation-orebro/">Service</a>
     <a href="/priser/">Prislista</a>
-    <a href="#hallbarhet">H&#229;llbarhet</a>
+    <a href="/status/">F&ouml;lj reparation</a>
     <a href="#batteri">Batteri</a>
     <a href="/nya-elscootrar/">Nya elscootrar</a>
     <a href="/regler-elscooter/">Regler</a>
@@ -707,6 +718,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 </header>
 <div class="mobile-nav" id="mobileNav">
   <a href="/elscooter-reparation-orebro/" onclick="closeMobileNav()">Service</a>
+  <a href="/status/" onclick="closeMobileNav()">F&ouml;lj reparation</a>
   <a href="/priser/" onclick="closeMobileNav()">Prislista</a>
   <a href="#hallbarhet" onclick="closeMobileNav()">H&#229;llbarhet</a>
   <a href="#batteri" onclick="closeMobileNav()">Batteri</a>
@@ -747,6 +759,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div class="hero-proof-item"><span class="chk">&#10003;</span> Vi kan köpa in din gamla scooter</div>
     <div class="hero-proof-item"><span class="chk">&#10003;</span> Rabatt på ny scooter vid inbyte</div>
     <div class="hero-proof-item"><span class="chk">&#10003;</span> Service och delar efter köpet</div>
+    <div class="hero-proof-item"><span class="chk">&#10003;</span> Följ din reparation live</div>
   </div>
 </div>
 </section>
@@ -754,6 +767,18 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 <!-- KAMPANJ -->
 <section class="campaign">
     <div class="container"><p><strong>Boka tid online p&aring; 30 sekunder.</strong> Vi h&auml;mtar och l&auml;mnar i &Ouml;rebro med omnejd fr&aring;n 199 kr, eller hj&auml;lper dig skicka in via post.</p><p style="margin-top:8px"><a href="/book-online/" style="color:#000;text-decoration:underline;font-weight:900">Boka tid &#8594;</a></p></div>
+</section>
+
+<!-- FÖLJ REPARATION -->
+<section class="repair-tracking" id="folj-reparation" aria-labelledby="repairTrackingTitle">
+<div class="container repair-tracking-inner">
+  <div>
+    <span class="repair-tracking-label">Personlig servicestatus</span>
+    <h2 id="repairTrackingTitle">Följ din reparation live, steg för steg</h2>
+    <p>Har du ett fordon inne hos oss? Ange servicenumret från ditt SMS eller mail och se aktuell status, nästa steg och när scootern är klar för hämtning.</p>
+  </div>
+  <a href="/status/" class="btn-primary">Öppna min servicestatus &#8594;</a>
+</div>
 </section>
 
 <!-- SERVICE STATUS -->
@@ -1079,7 +1104,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       </div>
       <div class="calc-grp">
         <label class="calc-lbl">Eller ange Volt &#215; Ah:</label>
-        <div style="display:flex;gap:8px;align-items:center">
+        <div class="calc-va-row">
           <input type="number" id="vIn" placeholder="48" value="48" style="flex:1;padding:10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#fff;font-size:14px;font-family:inherit" oninput="vaTowh()">
           <span style="color:#555;font-size:16px">&#215;</span>
           <input type="number" id="aIn" placeholder="15" value="15" style="flex:1;padding:10px;background:#1a1a1a;border:1px solid #333;border-radius:6px;color:#fff;font-size:14px;font-family:inherit" oninput="vaTowh()">
@@ -1464,7 +1489,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     </div>
     <div>
       <div class="f-hd">Information</div>
-<ul class="f-links"><li><a href="/guider/">Guider</a></li><li><a href="/nya-elscootrar/">Nya elscootrar</a></li><li><a href="/regler-elscooter/">Regler</a></li><li><a href="/foretag-serviceavtal/">Företag</a></li><li><a href="/om-oss/">Om oss</a></li><li><a href="/villkor/">Villkor</a></li><li><a href="/foretag/">F&ouml;r f&ouml;retag</a></li><li><a href="/garanti/">Garanti</a></li><li><a href="/integritet/">Integritet</a></li></ul>
+<ul class="f-links"><li><a href="/status/">Följ reparation</a></li><li><a href="/guider/">Guider</a></li><li><a href="/nya-elscootrar/">Nya elscootrar</a></li><li><a href="/regler-elscooter/">Regler</a></li><li><a href="/foretag-serviceavtal/">Företag</a></li><li><a href="/om-oss/">Om oss</a></li><li><a href="/villkor/">Villkor</a></li><li><a href="/foretag/">F&ouml;r f&ouml;retag</a></li><li><a href="/garanti/">Garanti</a></li><li><a href="/integritet/">Integritet</a></li></ul>
     </div>
     <div>
       <div class="f-hd">Kontakt</div>

@@ -1,7 +1,13 @@
 import { getStore } from "@netlify/blobs";
+import {
+  findCaseByServiceNumber,
+  normalizeServiceNumber,
+  serviceNumberForCase,
+} from "./_shared/service-number.mjs";
 
-// Publik statusportal för kunder. Ärende-ID:t (servicenumret) fungerar som
-// kapabilitetsnyckel — det delas endast med kunden via bekräftelse-SMS/mail.
+// Publik statusportal för kunder. Ett separat slumpat servicenummer fungerar
+// som kapabilitetsnyckel och delas endast med kunden via bekräftelse-SMS/mail.
+// Äldre fullständiga ärendelänkar fortsätter fungera för bakåtkompatibilitet.
 // Svaret innehåller ALDRIG efternamn, telefonnummer, e-post eller interna
 // noteringar. GET = läs status. POST {action:"request_update"} = kunden ber
 // om statusuppdatering → SMS till verkstansansvarig (max 1 per 12h/ärende).
@@ -84,14 +90,55 @@ const rateLimited = () => {
   return false;
 };
 
+const lookupHits = globalThis.__nordicStatusLookupHits || new Map();
+globalThis.__nordicStatusLookupHits = lookupHits;
+const requestIp = (request) => clean(
+  request.headers.get("x-nf-client-connection-ip") ||
+    request.headers.get("x-forwarded-for")?.split(",")[0] ||
+    "unknown",
+  100,
+);
+const serviceLookupRateLimited = (request) => {
+  const key = requestIp(request);
+  const now = Date.now();
+  const recent = (lookupHits.get(key) || []).filter((timestamp) => now - timestamp < 15 * 60 * 1000);
+  if (recent.length >= 20) return true;
+  recent.push(now);
+  lookupHits.set(key, recent);
+  if (lookupHits.size > 2000) {
+    for (const [candidate, timestamps] of lookupHits) {
+      if (!timestamps.some((timestamp) => now - timestamp < 15 * 60 * 1000)) lookupHits.delete(candidate);
+    }
+  }
+  return false;
+};
+
 export default async (request, context) => {
   if (rateLimited()) return json({ error: "För många förfrågningar. Försök igen senare." }, 429);
-  const id = clean(context.params?.id, 160);
-  if (!id || !id.startsWith("case_")) return json({ error: "Ogiltigt servicenummer." }, 404);
+  const suppliedId = clean(context.params?.id, 160);
+  const directCaseId = suppliedId.startsWith("case_") ? suppliedId : "";
+  const suppliedServiceNumber = directCaseId ? "" : normalizeServiceNumber(suppliedId);
+  if (!directCaseId && !suppliedServiceNumber) {
+    return json({ error: "Servicenumret hittades inte. Kontrollera numret och försök igen." }, 404);
+  }
 
   const store = getStore({ name: "workshop-cases", consistency: "strong" });
-  const item = await store.get(id, { type: "json" }).catch(() => null);
-  if (!item) return json({ error: "Servicenumret hittades inte. Kontrollera länken från din bokningsbekräftelse." }, 404);
+  const indexStore = getStore({ name: "service-number-index", consistency: "strong" });
+  let item;
+  if (directCaseId) {
+    item = await store.get(directCaseId, { type: "json" }).catch(() => null);
+  } else {
+    if (serviceLookupRateLimited(request)) {
+      return json({ error: "För många sökförsök. Vänta en stund och försök igen." }, 429);
+    }
+    item = await findCaseByServiceNumber({
+      caseStore: store,
+      indexStore,
+      serviceNumber: suppliedServiceNumber,
+    }).catch(() => null);
+  }
+  if (!item) return json({ error: "Servicenumret hittades inte. Kontrollera numret och försök igen." }, 404);
+  const id = item.id;
 
   const status = clean(item.status, 60) || "new";
   const stepIndex = Math.max(0, STEPS.findIndex((step) => step.statuses.includes(status)));
@@ -110,6 +157,7 @@ export default async (request, context) => {
       note: NOTES[status] || "",
       updatedAt: clean(item.updatedAt || item.createdAt, 10),
       canRequestUpdate,
+      serviceNumber: serviceNumberForCase(item),
     });
   }
 

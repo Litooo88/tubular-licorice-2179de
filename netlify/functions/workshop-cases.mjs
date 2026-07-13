@@ -1,5 +1,9 @@
 import { getStore } from "@netlify/blobs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
+import {
+  reserveServiceNumber,
+  serviceNumberForCase,
+} from "./_shared/service-number.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -283,6 +287,7 @@ export default async (request, context) => {
   if (!auth.ok) return auth.response;
 
   const store = getStore({ name: "workshop-cases", consistency: "strong" });
+  const serviceNumberIndex = getStore({ name: "service-number-index", consistency: "strong" });
   const id = context.params?.id;
 
   if (request.method === "GET") {
@@ -316,6 +321,7 @@ export default async (request, context) => {
     const body = await request.json().catch(() => ({}));
     const now = new Date().toISOString();
     const caseId = `case_${now.replace(/[:.]/g, "-")}_${Math.random().toString(36).slice(2, 8)}`;
+    const serviceNumber = await reserveServiceNumber(serviceNumberIndex, caseId);
     const priceRows = normalizePriceRows(body.priceRows);
     const totalCost = body.totalCost === undefined ? priceRowsTotal(priceRows) : numberOrNull(body.totalCost) ?? priceRowsTotal(priceRows);
     const customerName = clean(body.customerName || body.name, 140) || "Drop-in kund";
@@ -327,6 +333,7 @@ export default async (request, context) => {
 
     const next = {
       id: caseId,
+      serviceNumber,
       createdAt: now,
       updatedAt: now,
       createdBy: { name: operatorName, source: "admin" },
@@ -439,11 +446,13 @@ export default async (request, context) => {
     if (body.action === "send_status_link") {
       // Utrullning av statusportalen: skickar kundens servicelänk via SMS +
       // mail. Idempotent per ärende (notifications.statusLink) om inte force.
-      if (current.notifications?.statusLink?.status === "sent" && body.force !== true) {
+      const existingServiceNumber = serviceNumberForCase(current);
+      if (current.notifications?.statusLink?.status === "sent" && existingServiceNumber && body.force !== true) {
+        await reserveServiceNumber(serviceNumberIndex, current.id, existingServiceNumber);
         return json({ ok: true, alreadySent: true, case: current });
       }
-      const link = `${SITE_URL}/status/?id=${encodeURIComponent(current.id)}`;
-      const serviceNumber = shortCaseId(current.id);
+      const serviceNumber = await reserveServiceNumber(serviceNumberIndex, current.id, existingServiceNumber);
+      const link = `${SITE_URL}/status/?service=${encodeURIComponent(serviceNumber)}`;
       const customerFirst = firstName(current.customer?.name);
       const smsText = `Hej ${customerFirst}! Nyhet från Nordic E-Mobility: ditt servicenummer är ${serviceNumber}. Följ din reparation live och se exakt var i processen ditt fordon är: ${link}\nTelefonen använder vi i första hand för bokningar - statusen ser du alltid färskast via länken. /Nordic E-Mobility`;
       const smsResult = await postSms({ to: current.customer?.phone, message: smsText });
@@ -465,6 +474,7 @@ export default async (request, context) => {
       const anySent = smsResult.status === "sent" || emailResult.status === "sent";
       const next = {
         ...current,
+        serviceNumber,
         updatedAt: now,
         notifications: {
           ...(current.notifications || {}),
