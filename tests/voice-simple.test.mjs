@@ -54,13 +54,13 @@ test("requires the configured shared secret", async () => {
   );
 });
 
-test("rejects the call if no forwarding number is configured", async () => {
+test("uses the emergency forwarding number if Netlify has no number configured", async () => {
   await withEnv({}, async () => {
     const response = await voiceSimple(request());
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), {
-      hangup: "reject",
-      reason: "voice_primary_not_configured",
+      connect: "+46700243319",
+      timeout: 25,
     });
   });
 });

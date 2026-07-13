@@ -11,6 +11,7 @@ const env = (name) => {
 };
 
 const clean = (value, max = 1000) => String(value || "").trim().slice(0, max);
+const EMERGENCY_PRIMARY_NUMBER = "+46700243319";
 
 const authorizeVoiceWebhook = (request) => {
   const secret = clean(env("VOICE_WEBHOOK_SECRET"), 240);
@@ -44,7 +45,10 @@ export default async (request) => {
   const auth = authorizeVoiceWebhook(request);
   if (!auth.ok) return json(auth.body || { error: "Unauthorized" }, auth.status || 401);
 
-  const sebastian = clean(env("VOICE_PRIMARY_NUMBER") || env("VOICE_SEBASTIAN_PHONE"), 40);
+  const sebastian = clean(
+    env("VOICE_PRIMARY_NUMBER") || env("VOICE_SEBASTIAN_PHONE") || EMERGENCY_PRIMARY_NUMBER,
+    40,
+  );
   const origin = new URL(request.url).origin;
   if (!sebastian) {
     return json({ hangup: "reject", reason: "voice_primary_not_configured" });
