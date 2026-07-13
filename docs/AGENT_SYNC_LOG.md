@@ -32,6 +32,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-13 — Claude Code — PÅGÅR (ringstatistik 30 dgr + bugg-transparent massutskick)
+
+- **Branch:** `feat/call-stats-bug-notice`.
+- **Gör:** (1) Ringstatistik i `call-dashboard.mjs` (30-dagarssiffror: totalt/
+  besvarade/missade/svarsgrad/per dag) + rendering i admin. (2) Skriver om
+  utskickstexterna i `send_status_link` (workshop-cases.mjs) enligt Sebastians
+  order: adresserar telefonbuggen (600+ stoppade samtal), ber om ursäkt och
+  förklarar statusportalen. (3) Uppdaterar adminpanelen "Servicelänk-
+  utrullning" så Sebastian ser exakt vad som skickas.
+- **Respekterar Codex handoff:** `reserveServiceNumber(...)`, `serviceNumber`
+  och `?service=`-länken behålls orörda — endast texterna runt dem ändras.
+  Inga gamla `shortCaseId`-nummer skickas till kund.
+- **Rör INTE:** `case-status.mjs`, `status/index.html`, startsida,
+  `book-online/` (Codex område), `voice-simple.mjs`.
+
 ### 2026-07-13 08:34 CEST — Codex — KLAR (publik servicestatus-sökning + skyltning)
 
 - **Branch/commit:** `feat/status-lookup-entry`, feature-commit `978b31f`.
