@@ -32,6 +32,23 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-13 08:34 CEST — Codex — PÅGÅR (publik servicestatus-sökning + skyltning)
+
+- **Branch:** `feat/status-lookup-entry`.
+- **Gör:** Bygger en säker publik ingång där kunden anger servicenumret och
+  kommer till befintlig statusvy. Skyltar "Följ din reparation" på startsidan
+  och bokningssidan. Behåller befintlig minimering av kunddata.
+- **Filer/områden:** `status/index.html`, `netlify/functions/case-status.mjs`,
+  startsidans `index.html`, `book-online/index.html`, fokuserade tester och
+  denna logg.
+- **Avgränsning:** Rör INTE `call-dashboard.mjs`, `workshop-cases.mjs`,
+  kampanjutskick, ringstatistik eller adminens utskickspaneler. Den andra
+  agenten kan arbeta där parallellt.
+- **Verifiering:** API-/säkerhetstester, syntax/build samt browserkontroll på
+  mobil och desktop före deploy. Inga SMS eller mail skickas i tester.
+- **Varning:** Servicenumrets format måste granskas för enumereringsrisk innan
+  publik uppslagning aktiveras.
+
 ### 2026-07-13 — Claude Code — KLAR (statusportal för kunder + servicelänk-utrullning)
 
 - **Branch:** `feat/status-portal` → PR mot `main`.
