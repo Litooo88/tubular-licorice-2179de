@@ -86,11 +86,11 @@ const STAFF = {
   sebastian: { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "010-138 54 98" },
 };
 
-const postSms = async ({ to, message }) => {
+const postSms = async ({ to, message, from: fromOverride }) => {
   const normalizedTo = normalizePhone(to);
   const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
   const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
-  const from = (env("SMS_FROM") || "NordicEMob").slice(0, 11);
+  const from = clean(fromOverride, 20) || (env("SMS_FROM") || "NordicEMob").slice(0, 11);
   if (!normalizedTo) return { status: "invalid_phone", to: "" };
   if (!username || !password) return { status: "not_configured", to: normalizedTo };
   const response = await fetch("https://api.46elks.com/a1/sms", {
@@ -446,7 +446,19 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     newLeadsToday: todayRows.filter((row) => row.lead?.status === "new").length,
   };
 
-  return { rows, todayRows, activeLeadRows, totals, stats, readOnly: !syncLeads };
+  // Svars-inkorg: inkommande SMS (RING-svar m.m.) senaste 7 dagarna + optouts.
+  const inboundCutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const [{ items: inboundMap }, { items: optoutMap }] = await Promise.all([
+    loadBlobMap("sms-inbound"),
+    loadBlobMap("sms-optout"),
+  ]);
+  const inboundSms = [...inboundMap.entries()]
+    .map(([key, item]) => ({ key, ...item }))
+    .filter((item) => new Date(item.at || 0).getTime() >= inboundCutoff)
+    .sort((a, b) => String(b.at).localeCompare(String(a.at)));
+  const optoutPhones = [...optoutMap.keys()];
+
+  return { rows, todayRows, activeLeadRows, totals, stats, inboundSms, optoutPhones, readOnly: !syncLeads };
 };
 
 export default async (request) => {
@@ -512,6 +524,48 @@ export default async (request) => {
       return json({ ok: true, lead, case: caseItem });
     }
 
+    if (action === "configure_sms_webhook") {
+      // Engångskonfiguration: pekar 010-numrets sms_url på vår inbound-webhook
+      // via 46elks API. Credentials lämnar aldrig servern.
+      const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
+      const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
+      if (!username || !password) return json({ error: "46elks API saknas i Netlify env." }, 503);
+      const authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
+      const ourNumber = normalizePhone(env("ELKS_NUMBER") || "+46101385498");
+      const listResponse = await fetch("https://api.46elks.com/a1/numbers", {
+        headers: { Authorization: authHeader },
+        signal: AbortSignal.timeout(10000),
+      });
+      const listBody = await listResponse.json().catch(() => ({}));
+      if (!listResponse.ok) return json({ error: clean(listBody.error || listResponse.statusText, 200) }, 502);
+      const numberEntry = (Array.isArray(listBody.data) ? listBody.data : []).find(
+        (item) => normalizePhone(item.number) === ourNumber && item.active !== "no",
+      );
+      if (!numberEntry) return json({ error: `Numret ${ourNumber} hittades inte på 46elks-kontot.` }, 404);
+      const siteUrl = (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
+      const secret = clean(env("SMS_INBOUND_SECRET"), 240);
+      const smsUrl = `${siteUrl}/api/sms-inbound${secret ? `?secret=${encodeURIComponent(secret)}` : ""}`;
+      const updateResponse = await fetch(`https://api.46elks.com/a1/numbers/${encodeURIComponent(numberEntry.id)}`, {
+        method: "POST",
+        headers: { Authorization: authHeader, "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ sms_url: smsUrl }),
+        signal: AbortSignal.timeout(10000),
+      });
+      const updateBody = await updateResponse.json().catch(() => ({}));
+      if (!updateResponse.ok) return json({ error: clean(updateBody.error || updateResponse.statusText, 200) }, 502);
+      return json({ ok: true, number: ourNumber, smsUrl: smsUrl.replace(/secret=[^&]+/, "secret=***"), voiceStartUnchanged: true });
+    }
+
+    if (action === "mark_inbound_handled") {
+      const key = clean(body.key, 200);
+      if (!key) return json({ error: "Nyckel saknas." }, 400);
+      const inboundStore = getStore({ name: "sms-inbound", consistency: "strong" });
+      const entry = await inboundStore.get(key, { type: "json" }).catch(() => null);
+      if (!entry) return json({ error: "Posten hittades inte." }, 404);
+      await inboundStore.setJSON(key, { ...entry, handled: true, handledAt: new Date().toISOString(), handledBy: operatorName });
+      return json({ ok: true });
+    }
+
     if (!["send_discount", "discount"].includes(action)) return json({ error: "Okand action." }, 400);
     if (body.confirmLiveSms !== true) {
       return json({ error: "Live-SMS kraver explicit confirmLiveSms=true." }, 409);
@@ -519,6 +573,10 @@ export default async (request) => {
     const code = clean(body.code, 30) || "RING10";
     if (!phone || phone === "+46") return json({ error: "Telefonnummer saknas." }, 400);
     if (!callId) return json({ error: "Call ID saknas." }, 400);
+    // Optout gäller alltid — även om numret råkat komma med i en lista.
+    const optout = await getStore({ name: "sms-optout", consistency: "strong" })
+      .get(phone, { type: "json" }).catch(() => null);
+    if (optout) return json({ ok: false, skipped: "optout", followup: { callId, phone, result: { status: "optout" } } });
     const message =
       clean(body.message, 918) ||
       `Hej! Vi såg att du ringt Nordic E-Mobility. Boka service via nordicemobility.se och ange koden ${code} så får du 10% rabatt på verkstadsarbetet. Gäller ny bokning inom 7 dagar. /Nordic E-Mobility`;
@@ -533,7 +591,10 @@ export default async (request) => {
     }
     const leadStore = getStore({ name: "call-leads", consistency: "strong" });
     const currentLead = callId ? await leadStore.get(callId, { type: "json" }).catch(() => null) : null;
-    const result = await postSms({ to: phone, message });
+    // replyable=true skickar från 010-numret så kunden kan svara (RING/STOPP
+    // landar i sms-inbound-webhooken). Annars alfanumerisk avsändare.
+    const replyFrom = body.replyable === true ? normalizePhone(env("ELKS_NUMBER") || "+46101385498") : "";
+    const result = await postSms({ to: phone, message, from: replyFrom || undefined });
     const entry = {
       callId,
       phone,
