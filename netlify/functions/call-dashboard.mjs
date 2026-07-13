@@ -76,6 +76,7 @@ const emptyCallDashboard = (error) => {
       activeLeads: 0,
       newLeadsToday: 0,
     },
+    stats: null,
   };
 };
 
@@ -391,6 +392,42 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     row.eligibleLostLead = shouldCreateLead(row) && !["ignored", "converted"].includes(row.leadStatus);
   });
 
+  // Ringstatistik över hela 30-dagarsfönstret. "answered" = en människa
+  // svarade; voicemail räknas separat eftersom kunden inte nådde fram.
+  const isAnswered = (row) => ["workshop", "sebastian"].includes(row.answeredBy);
+  const byDayMap = new Map();
+  const phoneAgg = new Map();
+  for (const row of rows) {
+    if (!byDayMap.has(row.date)) byDayMap.set(row.date, { date: row.date, total: 0, answered: 0, voicemail: 0, missed: 0 });
+    const day = byDayMap.get(row.date);
+    day.total += 1;
+    if (isAnswered(row)) day.answered += 1;
+    else if (row.answeredBy === "voicemail") day.voicemail += 1;
+    else day.missed += 1;
+    if (row.phone && row.phone !== "okänt/skyddat") {
+      if (!phoneAgg.has(row.phone)) phoneAgg.set(row.phone, { calls: 0, reached: false, hasCase: false });
+      const agg = phoneAgg.get(row.phone);
+      agg.calls += 1;
+      if (isAnswered(row)) agg.reached = true;
+      if (row.hasCase) agg.hasCase = true;
+    }
+  }
+  const answeredTotal = rows.filter(isAnswered).length;
+  const voicemailTotal = rows.filter((row) => row.answeredBy === "voicemail").length;
+  const neverReached = [...phoneAgg.values()].filter((agg) => !agg.reached);
+  const stats = {
+    windowDays: CALL_WINDOW_DAYS,
+    total: rows.length,
+    answered: answeredTotal,
+    voicemail: voicemailTotal,
+    missed: rows.length - answeredTotal - voicemailTotal,
+    answerRate: rows.length ? answeredTotal / rows.length : 0,
+    uniqueCallers: phoneAgg.size,
+    uniqueNeverReached: neverReached.length,
+    uniqueNeverReachedNoCase: neverReached.filter((agg) => !agg.hasCase).length,
+    byDay: [...byDayMap.values()].sort((a, b) => b.date.localeCompare(a.date)),
+  };
+
   const todayRows = rows.filter((row) => row.date === today);
   const activeLeadRows = rows.filter((row) => row.lead && !["ignored", "converted"].includes(row.lead.status));
   const totals = {
@@ -407,7 +444,7 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     newLeadsToday: todayRows.filter((row) => row.lead?.status === "new").length,
   };
 
-  return { rows, todayRows, activeLeadRows, totals, readOnly: !syncLeads };
+  return { rows, todayRows, activeLeadRows, totals, stats, readOnly: !syncLeads };
 };
 
 export default async (request) => {

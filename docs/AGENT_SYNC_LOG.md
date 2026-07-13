@@ -32,20 +32,33 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-07-13 — Claude Code — PÅGÅR (ringstatistik 30 dgr + bugg-transparent massutskick)
+### 2026-07-13 — Claude Code — KLAR (ringstatistik 30 dgr + bugg-transparent massutskick)
 
-- **Branch:** `feat/call-stats-bug-notice`.
-- **Gör:** (1) Ringstatistik i `call-dashboard.mjs` (30-dagarssiffror: totalt/
-  besvarade/missade/svarsgrad/per dag) + rendering i admin. (2) Skriver om
-  utskickstexterna i `send_status_link` (workshop-cases.mjs) enligt Sebastians
-  order: adresserar telefonbuggen (600+ stoppade samtal), ber om ursäkt och
-  förklarar statusportalen. (3) Uppdaterar adminpanelen "Servicelänk-
-  utrullning" så Sebastian ser exakt vad som skickas.
-- **Respekterar Codex handoff:** `reserveServiceNumber(...)`, `serviceNumber`
-  och `?service=`-länken behålls orörda — endast texterna runt dem ändras.
-  Inga gamla `shortCaseId`-nummer skickas till kund.
-- **Rör INTE:** `case-status.mjs`, `status/index.html`, startsida,
-  `book-online/` (Codex område), `voice-simple.mjs`.
+- **Branch:** `feat/call-stats-bug-notice` → PR mot `main`.
+- **Ringstatistik (`call-dashboard.mjs` + admin):** GET-svaret har nytt
+  `stats`-objekt över HELA 30-dagarsfönstret: totalt/besvarade/röstbrevlåda/
+  missade/svarsgrad, unika nummer, "aldrig nådda" och "aldrig nådda utan
+  kundkort" + per-dag-serie. Admin renderar 8 statkort + dagtabell (14 dgr,
+  röda rader när missade > besvarade) under Live samtalsdashboard.
+  Viktigt: röstbrevlåda räknas INTE som besvarat — kunden nådde inte fram.
+  `emptyCallDashboard` returnerar `stats: null`; admin hanterar det.
+- **Utskickstexterna (`send_status_link`):** omskrivna enligt Sebastians
+  order — SMS + mail ber om ursäkt för telefonbuggen (600+ stoppade samtal
+  senaste månaden, "felet låg hos tekniken, inte hos dig"), ger kundens
+  servicenummer (Codex NEM-format, stor ruta i mailet), grön CTA till
+  statussidan, förklarar Begär statusuppdatering-knappen + telefonpolicyn.
+  **Codex mekanik orörd:** `reserveServiceNumber(...)`, `serviceNumber`,
+  `?service=`-länk och idempotens exakt som i 978b31f.
+- **Adminpanelen "Servicelänk-utrullning":** ny rubrik + beskrivning av de
+  3 budskapen, och en `<details>` som visar exakt SMS-text + mailinnehåll så
+  Sebastian läser innan han klickar Skicka.
+- **Tester:** node --check ×2 ✅, admin inline-JS 0 fel ✅, build + checkout
+  (38) ✅, `node --test` 7/7 ✅ (service-number + voice-simple), callflow
+  tsc ✅, browsertest: statkorten/dagtabellen/röda rader/tom-läge renderar
+  korrekt med fixturdata ✅. Inga SMS/mail skickade — utrullningen är
+  Sebastians knapptryck i admin.
+- **Rörde INTE:** `case-status.mjs`, `status/index.html`, startsida,
+  `book-online/`, `voice-simple.mjs` (Codex områden).
 
 ### 2026-07-13 08:34 CEST — Codex — KLAR (publik servicestatus-sökning + skyltning)
 
