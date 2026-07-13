@@ -532,13 +532,25 @@ export default async (request) => {
       if (!username || !password) return json({ error: "46elks API saknas i Netlify env." }, 503);
       const authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
       const ourNumber = normalizePhone(env("ELKS_NUMBER") || "+46101385498");
+      // 46elks svarar ofta med ren text vid fel (t.ex. "Forbidden") — läs som
+      // text och försök JSON-tolka, så felorsaken inte tappas bort.
+      const readBody = async (response) => {
+        const text = clean(await response.text().catch(() => ""), 400);
+        try { return { text, json: JSON.parse(text) }; } catch { return { text, json: null }; }
+      };
       const listResponse = await fetch("https://api.46elks.com/a1/numbers", {
         headers: { Authorization: authHeader },
         signal: AbortSignal.timeout(10000),
       });
-      const listBody = await listResponse.json().catch(() => ({}));
-      if (!listResponse.ok) return json({ error: clean(listBody.error || listResponse.statusText, 200) }, 502);
-      const numberEntry = (Array.isArray(listBody.data) ? listBody.data : []).find(
+      const listBody = await readBody(listResponse);
+      if (!listResponse.ok) {
+        return json({
+          error: `Steg 1 (lista nummer) nekades av 46elks: HTTP ${listResponse.status} ${clean(listBody.json?.error || listBody.text || listResponse.statusText, 200)}. API-nyckeln i Netlify kan sakna rättigheter för nummerhantering — sätt då SMS-URL manuellt i 46elks dashboard: Numbers → ${ourNumber} → SMS URL.`,
+          step: "list_numbers",
+          httpStatus: listResponse.status,
+        }, 502);
+      }
+      const numberEntry = (Array.isArray(listBody.json?.data) ? listBody.json.data : []).find(
         (item) => normalizePhone(item.number) === ourNumber && item.active !== "no",
       );
       if (!numberEntry) return json({ error: `Numret ${ourNumber} hittades inte på 46elks-kontot.` }, 404);
@@ -551,8 +563,14 @@ export default async (request) => {
         body: new URLSearchParams({ sms_url: smsUrl }),
         signal: AbortSignal.timeout(10000),
       });
-      const updateBody = await updateResponse.json().catch(() => ({}));
-      if (!updateResponse.ok) return json({ error: clean(updateBody.error || updateResponse.statusText, 200) }, 502);
+      const updateBody = await readBody(updateResponse);
+      if (!updateResponse.ok) {
+        return json({
+          error: `Steg 2 (uppdatera sms_url) nekades av 46elks: HTTP ${updateResponse.status} ${clean(updateBody.json?.error || updateBody.text || updateResponse.statusText, 200)}. Sätt då SMS-URL manuellt i 46elks dashboard: Numbers → ${ourNumber} → SMS URL → ${smsUrl.replace(/secret=[^&]+/, "secret=<SMS_INBOUND_SECRET>")}`,
+          step: "update_sms_url",
+          httpStatus: updateResponse.status,
+        }, 502);
+      }
       return json({ ok: true, number: ourNumber, smsUrl: smsUrl.replace(/secret=[^&]+/, "secret=***"), voiceStartUnchanged: true });
     }
 

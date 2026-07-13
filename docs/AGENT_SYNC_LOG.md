@@ -32,6 +32,23 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-13 — Claude Code — KLAR (felsökning: configure_sms_webhook gav "Forbidden")
+
+- **Branch:** `fix/sms-webhook-diagnostics` → PR mot `main`.
+- **Sebastian körde "Aktivera SMS-mottagning" → "Forbidden"** från 46elks.
+  Gamla koden tappade felorsaken (46elks svarar ren text vid fel, koden
+  json-parsade → tom) och sa inte vilket steg som nekades.
+- **Fix:** configure_sms_webhook läser nu svaret som text+JSON och returnerar
+  steg (list_numbers/update_sms_url), HTTP-status och 46elks feltext, plus
+  manuell fallback-instruktion i felmeddelandet.
+- **Trolig rotorsak:** API-nyckeln i Netlify env saknar rättighet för
+  nummerhantering (t.ex. subkonto — SMS/samtal funkar, /a1/numbers nekas).
+  **Manuell väg som alltid funkar:** 46elks dashboard → Numbers →
+  +46101385498 → SMS URL → `https://www.nordicemobility.se/api/sms-inbound`
+  (+ `?secret=...` om SMS_INBOUND_SECRET sätts i Netlify). Webhooken i sig
+  är deployad och redo — det är bara pekaren i 46elks som saknas.
+- **Tester:** node --check ✅, 7/7 ✅.
+
 ### 2026-07-13 — Claude Code — KLAR (svara-RING-kanal + optout + rollout-filter)
 
 - **Branch:** `feat/sms-reply-channel` → PR mot `main`.
