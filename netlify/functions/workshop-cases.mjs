@@ -454,21 +454,24 @@ export default async (request, context) => {
       const serviceNumber = await reserveServiceNumber(serviceNumberIndex, current.id, existingServiceNumber);
       const link = `${SITE_URL}/status/?service=${encodeURIComponent(serviceNumber)}`;
       const customerFirst = firstName(current.customer?.name);
-      const smsText = `Hej ${customerFirst}! Nyhet från Nordic E-Mobility: ditt servicenummer är ${serviceNumber}. Följ din reparation live och se exakt var i processen ditt fordon är: ${link}\nTelefonen använder vi i första hand för bokningar - statusen ser du alltid färskast via länken. /Nordic E-Mobility`;
+      const smsText = `Hej ${customerFirst}! Viktigt besked från Nordic E-Mobility: ett tekniskt fel i vår telefonväxel har den senaste månaden stoppat många inkommande samtal. Har du försökt ringa utan att komma fram ber vi verkligen om ursäkt - felet låg hos tekniken och är nu åtgärdat.\nDitt ärende har servicenummer ${serviceNumber}. Följ reparationen live, steg för steg: ${link}\n/Nordic E-Mobility`;
       const smsResult = await postSms({ to: current.customer?.phone, message: smsText });
       const emailResult = await resendEmail({
         to: current.customer?.email ? [current.customer.email] : [],
-        subject: `Ditt servicenummer hos Nordic E-Mobility: ${serviceNumber}`,
+        subject: `Vi ber om ursäkt - och ger dig full koll. Servicenummer: ${serviceNumber}`,
         html: shellHtml(
-          "Nu kan du följa din reparation live",
+          "Ett fel vi hittat, fixat &mdash; och l&auml;rt oss av",
           `<p>Hej ${htmlEscape(customerFirst)},</p>
-           <p>Vi har uppgraderat v&aring;r kundservice! Ditt &auml;rende har f&aring;tt ett <strong>servicenummer: ${htmlEscape(serviceNumber)}</strong>.</p>
-           <p>Via din personliga statussida ser du exakt var i processen ditt fordon &auml;r &mdash; fr&aring;n inl&auml;mning, genom fels&ouml;kning och reparation, till klar f&ouml;r h&auml;mtning. Sidan uppdateras direkt n&auml;r n&aring;got h&auml;nder i verkstaden.</p>
+           <p><strong>F&ouml;rst det viktiga:</strong> vi har uppt&auml;ckt ett tekniskt fel i v&aring;r telefonv&auml;xel som under den senaste m&aring;naden stoppat &ouml;ver 600 inkommande samtal till verkstaden. Om du &auml;r en av alla som f&ouml;rs&ouml;kt ringa utan att komma fram &mdash; det berodde inte p&aring; att vi valde bort ditt samtal, utan p&aring; ett fel i tekniken. Vi &auml;r uppriktigt ledsna, och felet &auml;r nu &aring;tg&auml;rdat.</p>
+           <p>F&ouml;r att du aldrig ska beh&ouml;va jaga oss f&ouml;r ett statusbesked igen har vi byggt n&aring;got nytt: <strong>en personlig statussida f&ouml;r ditt &auml;rende</strong>. Ditt servicenummer &auml;r:</p>
+           <p style="font-size:22px;font-weight:800;letter-spacing:.04em;background:#f0f7f1;border:1px solid #cfe5d4;border-radius:8px;padding:14px 16px;text-align:center">${htmlEscape(serviceNumber)}</p>
+           <p>P&aring; statussidan ser du exakt var i processen ditt fordon &auml;r &mdash; fr&aring;n inl&auml;mning, genom fels&ouml;kning och reparation, till klar f&ouml;r h&auml;mtning. Sidan uppdateras direkt n&auml;r n&aring;got h&auml;nder i verkstaden.</p>
            <p style="margin:18px 0"><a href="${htmlEscape(link)}" style="display:inline-block;background:#00c853;color:#021307;text-decoration:none;border-radius:8px;padding:13px 18px;font-weight:700">F&ouml;lj din reparation</a></p>
-           <p>Har det inte h&auml;nt n&aring;got p&aring; ett tag? P&aring; statussidan finns en knapp f&ouml;r att beg&auml;ra en statusuppdatering &mdash; d&aring; f&aring;r verkstan en direkt-notis om just ditt &auml;rende.</p>
-           <p style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:12px 14px;font-size:14px"><strong>Bra att veta:</strong> telefonen (010-138 54 98) anv&auml;nder vi i f&ouml;rsta hand f&ouml;r bokningar och nya &auml;renden &mdash; din status ser du alltid snabbast och f&auml;rskast via l&auml;nken ovan.</p>`
+           <p>Undrar du varf&ouml;r det inte h&auml;nt n&aring;got p&aring; ett tag? P&aring; statussidan finns knappen <strong>Beg&auml;r statusuppdatering</strong> &mdash; d&aring; f&aring;r verkstaden en direkt-notis om just ditt &auml;rende, utan att du beh&ouml;ver ringa och v&auml;nta.</p>
+           <p style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:12px 14px;font-size:14px"><strong>Bra att veta:</strong> telefonen (010-138 54 98) anv&auml;nder vi i f&ouml;rsta hand f&ouml;r bokningar och nya &auml;renden. Din reparationsstatus ser du alltid snabbast och f&auml;rskast via l&auml;nken ovan &mdash; s&aring; kan vi l&auml;gga full tid p&aring; att laga fordon i st&auml;llet f&ouml;r att svara p&aring; statusfr&aring;gor.</p>
+           <p>Tack f&ouml;r ditt t&aring;lamod och f&ouml;rtroende.</p>`
         ),
-        text: `Hej ${customerFirst},\n\nDitt servicenummer hos Nordic E-Mobility: ${serviceNumber}.\nFölj din reparation live: ${link}\n\nHar det inte hänt något på ett tag? På statussidan kan du begära en statusuppdatering med ett knapptryck.\n\nTelefonen (010-138 54 98) använder vi i första hand för bokningar - statusen ser du alltid färskast via länken.\n\n/Nordic E-Mobility`,
+        text: `Hej ${customerFirst},\n\nFörst det viktiga: vi har upptäckt ett tekniskt fel i vår telefonväxel som under den senaste månaden stoppat över 600 inkommande samtal till verkstaden. Har du försökt ringa utan att komma fram berodde det på tekniken - inte på att vi valde bort ditt samtal. Vi är uppriktigt ledsna, och felet är nu åtgärdat.\n\nFör att du aldrig ska behöva jaga oss för ett statusbesked igen har vi byggt en personlig statussida för ditt ärende.\n\nDitt servicenummer: ${serviceNumber}\nFölj din reparation live: ${link}\n\nHar det inte hänt något på ett tag? På statussidan finns knappen "Begär statusuppdatering" - då får verkstaden en direkt-notis om just ditt ärende.\n\nBra att veta: telefonen (010-138 54 98) använder vi i första hand för bokningar och nya ärenden - din status ser du alltid färskast via länken.\n\nTack för ditt tålamod och förtroende.\n/Nordic E-Mobility`,
         idempotencyKey: `${current.id}-status-link`,
       });
       const anySent = smsResult.status === "sent" || emailResult.status === "sent";

@@ -526,6 +526,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div class="call-status" id="callDashboardStatus"></div>
     <div class="call-leads" id="callLeadsTable"></div>
     <div id="callDashboardTable">Laddar samtal...</div>
+    <h3 style="margin-top:18px">Ringstatistik &mdash; senaste 30 dagarna</h3>
+    <p class="call-dashboard-note">Hela 30-dagarsf&ouml;nstret fr&aring;n 46elks live. "Besvarade" = en m&auml;nniska svarade. R&ouml;stbrevl&aring;da r&auml;knas inte som besvarat &mdash; kunden n&aring;dde inte fram.</p>
+    <div class="call-dashboard-grid" id="callStats30"></div>
+    <div id="callStats30Days" class="muted">Laddar statistik...</div>
   </section>
 
   <section class="panel campaign-panel">
@@ -541,15 +545,28 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <textarea id="campaignMessage" rows="5"></textarea>
     </div>
     <div id="campaignPreview" class="muted">Klicka p&aring; "Bygg mottagarlista" f&ouml;r att se exakt vilka som f&aring;r utskicket.</div>
-    <div class="call-actions" style="margin-top:12px">
+    <div class="call-actions" style="margin-top:12px;align-items:center">
+      <label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#aeb8b0">Max antal denna s&auml;ndning
+        <input type="number" id="campaignWaveSize" min="1" step="1" value="25" style="width:80px">
+      </label>
       <button type="button" id="sendCampaign" disabled>Skicka 0 SMS (livesändning)</button>
     </div>
+    <p class="muted" style="font-size:12px;margin-top:6px">Portionera utskicket: s&auml;tt max-antalet (t.ex. en tredjedel av listan) och skicka en v&aring;g per dag. Redan kontaktade nummer filtreras bort automatiskt n&auml;sta g&aring;ng du bygger listan, s&aring; det &auml;r bara att bygga om och skicka n&auml;sta v&aring;g dagen efter &mdash; ingen f&aring;r dubbelt.</p>
     <span class="live-send-warning">Varning: knappen skickar RIKTIGA SMS via 46elks till hela listan. Svar hanteras i din vanliga SMS-inkorg &mdash; respektera STOPP-svar.</span>
   </section>
 
   <section class="panel campaign-panel">
-    <h2>Servicel&auml;nk-utrullning &mdash; statusportalen</h2>
-    <p>Skickar varje kund med <strong>aktivt &auml;rende</strong> (inl&auml;mnad/fels&ouml;kning/reparation/v&auml;ntar/klar) sitt servicenummer + statusl&auml;nk via SMS och mail. Kunder som redan f&aring;tt l&auml;nken hoppas &ouml;ver automatiskt. Nya bokningar f&aring;r l&auml;nken automatiskt i bekr&auml;ftelsen.</p>
+    <h2>Servicel&auml;nk-utrullning &mdash; telefonbuggen + statusportalen</h2>
+    <p>Skickar varje kund med <strong>aktivt &auml;rende</strong> (inl&auml;mnad/fels&ouml;kning/reparation/v&auml;ntar/klar) ett SMS + mail som: <strong>1)</strong> ber om urs&auml;kt f&ouml;r telefonbuggen som stoppat &ouml;ver 600 samtal senaste m&aring;naden, <strong>2)</strong> ger kunden sitt s&auml;kra servicenummer (NEM-XXXX-XXXX-XXXX), <strong>3)</strong> f&ouml;rklarar statussidan och "Beg&auml;r statusuppdatering"-knappen. Kunder som redan f&aring;tt l&auml;nken hoppas &ouml;ver automatiskt. Nya bokningar f&aring;r l&auml;nken automatiskt i bekr&auml;ftelsen.</p>
+    <details style="margin:10px 0">
+      <summary style="cursor:pointer">Visa exakt vad kunden f&aring;r (SMS + mail)</summary>
+      <div style="background:#0d120e;border:1px solid #2a352c;border-radius:8px;padding:12px 14px;margin-top:8px;font-size:13px;line-height:1.6">
+        <strong>SMS:</strong><br>
+        <em>"Hej &lt;namn&gt;! Viktigt besked fr&aring;n Nordic E-Mobility: ett tekniskt fel i v&aring;r telefonv&auml;xel har den senaste m&aring;naden stoppat m&aring;nga inkommande samtal. Har du f&ouml;rs&ouml;kt ringa utan att komma fram ber vi verkligen om urs&auml;kt - felet l&aring;g hos tekniken och &auml;r nu &aring;tg&auml;rdat. Ditt &auml;rende har servicenummer NEM-XXXX-XXXX-XXXX. F&ouml;lj reparationen live, steg f&ouml;r steg: [l&auml;nk] /Nordic E-Mobility"</em><br><br>
+        <strong>Mail (&auml;mne):</strong> <em>"Vi ber om urs&auml;kt - och ger dig full koll. Servicenummer: NEM-..."</em><br>
+        <strong>Mail (inneh&aring;ll):</strong> samma urs&auml;kt med f&ouml;rklaringen att &ouml;ver 600 samtal stoppats av felet, kundens servicenummer i stor ruta, gr&ouml;n "F&ouml;lj din reparation"-knapp, f&ouml;rklaring av "Beg&auml;r statusuppdatering"-knappen samt att telefonen anv&auml;nds i f&ouml;rsta hand f&ouml;r bokningar.
+      </div>
+    </details>
     <div class="call-actions">
       <button type="button" class="secondary" id="buildStatusRollout">Bygg utskickslista (aktiva &auml;renden)</button>
     </div>
@@ -2801,6 +2818,7 @@ function renderCallDashboard(data){
     ['Leads att göra',totals.activeLeads||0],
   ];
   callStatsEl.innerHTML=statItems.map(([label,value])=>`<div class="panel stat"><span>${html(label)}</span><b>${html(value)}</b></div>`).join('');
+  renderCallStats30(data.stats||null);
   renderCallLeads(data.activeLeadRows||[]);
   const rows=data.todayRows||[];
   if(!rows.length){
@@ -2830,8 +2848,49 @@ function renderCallDashboard(data){
       }).join('')}</tbody>
     </table>`;
 }
+function renderCallStats30(stats){
+  const grid=document.getElementById('callStats30');
+  const daysEl=document.getElementById('callStats30Days');
+  if(!grid||!daysEl)return;
+  if(!stats||!stats.total){
+    grid.innerHTML='';
+    daysEl.innerHTML='<div class="muted">Ingen samtalsdata i 30-dagarsfönstret.</div>';
+    return;
+  }
+  const pct=Math.round((stats.answerRate||0)*100);
+  const items=[
+    ['Samtal totalt',stats.total],
+    ['Besvarade',stats.answered],
+    ['Röstbrevlåda',stats.voicemail],
+    ['Missade',stats.missed],
+    ['Svarsgrad',`${pct}%`],
+    ['Unika nummer',stats.uniqueCallers],
+    ['Aldrig nådda',stats.uniqueNeverReached],
+    ['Aldrig nådda utan kundkort',stats.uniqueNeverReachedNoCase],
+  ];
+  grid.innerHTML=items.map(([label,value])=>`<div class="panel stat"><span>${html(label)}</span><b>${html(value)}</b></div>`).join('');
+  const days=(stats.byDay||[]).slice(0,14);
+  daysEl.innerHTML=days.length?`
+    <table class="call-table">
+      <thead><tr><th>Datum</th><th>Samtal</th><th>Besvarade</th><th>R&ouml;stbrevl&aring;da</th><th>Missade</th><th>Svarsgrad</th></tr></thead>
+      <tbody>${days.map((day)=>{
+        const rate=day.total?Math.round((day.answered/day.total)*100):0;
+        return `<tr class="${day.missed>day.answered?'call-row-lost':''}">
+          <td>${html(day.date)}</td>
+          <td>${html(day.total)}</td>
+          <td>${html(day.answered)}</td>
+          <td>${html(day.voicemail)}</td>
+          <td>${html(day.missed)}</td>
+          <td>${html(`${rate}%`)}</td>
+        </tr>`;
+      }).join('')}</tbody>
+    </table>
+    <div class="muted" style="margin-top:6px;font-size:12px">Visar senaste 14 dagarna av ${html(stats.byDay.length)} dagar med samtal. Röda rader = fler missade än besvarade den dagen.</div>`
+    :'<div class="muted">Inga dagar med samtal i fönstret.</div>';
+}
 function renderCallDashboardUnavailable(message,warnings=[]){
   callDashboardRows=[];
+  renderCallStats30(null);
   const statItems=[
     ['Samtalsimport','Ej kopplad'],
     ['Samtal idag','Ok\u00e4nt'],
@@ -2945,13 +3004,19 @@ async function sendCampaign(){
   const message=String(document.getElementById('campaignMessage').value||'').trim();
   if(!message){showCampaignStatus('Skriv ett SMS-meddelande först.',true);return;}
   if(!campaignRecipients.length){showCampaignStatus('Bygg mottagarlistan först.',true);return;}
-  if(!confirm(`Skicka RIKTIGT kampanj-SMS via 46elks till ${campaignRecipients.length} unika nummer?\n\nDetta kan inte ångras. Varje utskick loggas per nummer.`))return;
+  // Portionering: skicka max N i denna våg. Resten ligger kvar och skickas
+  // nästa dag — dubblettskyddet (followed_up) filtrerar redan skickade vid
+  // nästa listbygge.
+  const waveSize=Math.max(1,Math.floor(Number(document.getElementById('campaignWaveSize').value)||campaignRecipients.length));
+  const wave=campaignRecipients.slice(0,waveSize);
+  const remaining=campaignRecipients.length-wave.length;
+  if(!confirm(`Skicka RIKTIGT kampanj-SMS via 46elks till ${wave.length} av ${campaignRecipients.length} unika nummer?${remaining?`\n\n${remaining} nummer sparas till nästa våg (bygg om listan i morgon).`:''}\n\nDetta kan inte ångras. Varje utskick loggas per nummer.`))return;
   const code=(message.match(/koden\s+([A-ZÅÄÖ0-9-]+)/i)||[])[1]||'RING20';
   button.disabled=true;
   let ok=0;const failed=[];
-  for(let i=0;i<campaignRecipients.length;i+=1){
-    const recipient=campaignRecipients[i];
-    button.textContent=`Skickar ${i+1}/${campaignRecipients.length}...`;
+  for(let i=0;i<wave.length;i+=1){
+    const recipient=wave[i];
+    button.textContent=`Skickar ${i+1}/${wave.length}...`;
     try{
       const result=await api('/api/call-dashboard',{
         method:'POST',
@@ -2962,8 +3027,8 @@ async function sendCampaign(){
   }
   button.textContent=`Skicka 0 SMS (livesändning)`;
   campaignRecipients=[];
-  document.getElementById('campaignPreview').innerHTML='<div class="muted">Utskick klart. Bygg en ny lista för att se aktuell status.</div>';
-  showCampaignStatus(`Kampanj klar: ${ok} skickade${failed.length?`, ${failed.length} misslyckades (${failed.slice(0,5).join(', ')}${failed.length>5?'…':''})`:''}.`,Boolean(failed.length));
+  document.getElementById('campaignPreview').innerHTML='<div class="muted">Våg klar. Bygg en ny lista för att se vilka som är kvar.</div>';
+  showCampaignStatus(`Våg klar: ${ok} skickade${failed.length?`, ${failed.length} misslyckades (${failed.slice(0,5).join(', ')}${failed.length>5?'…':''})`:''}${remaining?` · ${remaining} nummer kvar till nästa våg`:' · hela listan är nu kontaktad'}.`,Boolean(failed.length));
   await loadCallDashboard();
 }
 const STATUS_ROLLOUT_STATUSES=['checked_in','diagnosing','repairing','waiting_parts','waiting_customer','ready'];
