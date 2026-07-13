@@ -538,6 +538,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div class="call-actions">
       <button type="button" class="secondary" id="buildCampaignList">Bygg mottagarlista (30 dagar)</button>
       <label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#aeb8b0"><input type="checkbox" id="campaignIncludeActive"> Inkludera &auml;ven nummer med aktivt &auml;rende</label>
+      <label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#aeb8b0"><input type="checkbox" id="campaignReplyable" checked> Skicka fr&aring;n 010-numret s&aring; kunden kan svara RING/STOPP</label>
     </div>
     <div class="call-status" id="campaignStatus"></div>
     <div style="margin:12px 0">
@@ -551,7 +552,13 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       </label>
       <button type="button" id="sendCampaign" disabled>Skicka 0 SMS (livesändning)</button>
     </div>
-    <p class="muted" style="font-size:12px;margin-top:6px">Portionera utskicket: s&auml;tt max-antalet (t.ex. en tredjedel av listan) och skicka en v&aring;g per dag. Redan kontaktade nummer filtreras bort automatiskt n&auml;sta g&aring;ng du bygger listan, s&aring; det &auml;r bara att bygga om och skicka n&auml;sta v&aring;g dagen efter &mdash; ingen f&aring;r dubbelt.</p>
+    <p class="muted" style="font-size:12px;margin-top:6px">Portionera utskicket: s&auml;tt max-antalet (t.ex. en tredjedel av listan) och skicka en v&aring;g per dag. Redan kontaktade nummer filtreras bort automatiskt n&auml;sta g&aring;ng du bygger listan, s&aring; det &auml;r bara att bygga om och skicka n&auml;sta v&aring;g dagen efter &mdash; ingen f&aring;r dubbelt. Nummer som svarat STOPP sp&auml;rras automatiskt p&aring; serversidan.</p>
+    <h3 style="margin-top:18px">Svars-inkorg &mdash; RING-svar och andra SMS-svar</h3>
+    <p class="call-dashboard-note">Kunder som svarar <strong>RING</strong> f&aring;r automatiskt "Vi ringer upp dig inom 24 timmar" och du f&aring;r ett direkt-SMS. Listan nedan visar senaste 7 dagarna &mdash; bocka av n&auml;r du ringt.</p>
+    <div class="call-actions">
+      <button type="button" class="secondary" id="activateSmsInbound">Aktivera SMS-mottagning p&aring; 010-numret (eng&aring;ngs)</button>
+    </div>
+    <div id="smsInboxList" class="muted">Uppdatera samtalen ovan f&ouml;r att ladda inkorgen.</div>
     <span class="live-send-warning">Varning: knappen skickar RIKTIGA SMS via 46elks till hela listan. Svar hanteras i din vanliga SMS-inkorg &mdash; respektera STOPP-svar.</span>
   </section>
 
@@ -793,6 +800,11 @@ document.getElementById('refresh').addEventListener('click',loadCases);
 document.getElementById('refreshCalls').addEventListener('click',loadCallDashboard);
 document.getElementById('buildCampaignList').addEventListener('click',buildCampaignList);
 document.getElementById('sendCampaign').addEventListener('click',sendCampaign);
+document.getElementById('activateSmsInbound').addEventListener('click',activateSmsInbound);
+document.getElementById('smsInboxList').addEventListener('click',(event)=>{
+  const button=event.target.closest('[data-inbound-handled]');
+  if(button)markInboundHandled(button.dataset.inboundHandled,button);
+});
 document.getElementById('campaignMessage').value=campaignDefaultMessage();
 document.getElementById('buildStatusRollout').addEventListener('click',buildStatusRollout);
 document.getElementById('sendStatusRollout').addEventListener('click',sendStatusRollout);
@@ -2799,6 +2811,7 @@ async function loadCallDashboard(){
     }
     callDashboardRows=data.rows||data.todayRows||[];
     renderCallDashboard(data);
+    renderSmsInbox(data.inboundSms||[]);
     showCallStatus(`Samtal uppdaterade ${new Date().toLocaleTimeString('sv-SE')}.`);
   }catch(error){
     showCallStatus(error.message,true);
@@ -2954,7 +2967,7 @@ async function copyCallFollowupDraft(row,button){
 let campaignRecipients=[];
 function campaignDefaultMessage(){
   const until=new Date(Date.now()+14*24*60*60*1000).toLocaleDateString('sv-SE');
-  return `Hej! Du sökte Nordic E-Mobility nyligen – ursäkta att vi inte kunde svara. Som tack för att du hörde av dig får du 20 % rabatt på valfri service med koden RING20, giltig t.o.m. ${until}. Boka på nordicemobility.se/book-online eller ring 010-138 54 98. Svara STOPP om du inte vill ha fler sms. /Nordic E-Mobility`;
+  return `Hej! Du sökte Nordic E-Mobility nyligen – ursäkta att vi inte kunde svara, ett tekniskt fel stoppade många samtal och är nu åtgärdat. Som tack får du 20 % rabatt på valfri service med koden RING20, giltig t.o.m. ${until}. Svara RING på detta sms så ringer vi upp dig inom 24 timmar, boka på nordicemobility.se/book-online eller ring 010-138 54 98. Svara STOPP om du inte vill ha fler sms. /Nordic E-Mobility`;
 }
 function showCampaignStatus(message,bad=false){
   const el=document.getElementById('campaignStatus');
@@ -3020,9 +3033,9 @@ async function sendCampaign(){
     try{
       const result=await api('/api/call-dashboard',{
         method:'POST',
-        body:JSON.stringify({action:'send_discount',callId:recipient.latest.id,phone:recipient.phone,code,message,confirmLiveSms:true})
+        body:JSON.stringify({action:'send_discount',callId:recipient.latest.id,phone:recipient.phone,code,message,confirmLiveSms:true,replyable:document.getElementById('campaignReplyable').checked})
       });
-      if(result.ok)ok+=1;else failed.push(recipient.phone);
+      if(result.ok)ok+=1;else if(result.skipped!=='optout')failed.push(recipient.phone);
     }catch(error){failed.push(recipient.phone);}
   }
   button.textContent=`Skicka 0 SMS (livesändning)`;
@@ -3030,6 +3043,41 @@ async function sendCampaign(){
   document.getElementById('campaignPreview').innerHTML='<div class="muted">Våg klar. Bygg en ny lista för att se vilka som är kvar.</div>';
   showCampaignStatus(`Våg klar: ${ok} skickade${failed.length?`, ${failed.length} misslyckades (${failed.slice(0,5).join(', ')}${failed.length>5?'…':''})`:''}${remaining?` · ${remaining} nummer kvar till nästa våg`:' · hela listan är nu kontaktad'}.`,Boolean(failed.length));
   await loadCallDashboard();
+}
+function renderSmsInbox(items){
+  const el=document.getElementById('smsInboxList');
+  if(!el)return;
+  if(!items.length){el.innerHTML='<div class="muted">Inga SMS-svar senaste 7 dagarna.</div>';return;}
+  const typeLabel={ring:'RING – vill bli uppringd',stopp:'STOPP (avregistrerad)',other:'Övrigt svar'};
+  el.innerHTML=`
+    <table class="call-table">
+      <thead><tr><th>Tid</th><th>Nummer</th><th>Typ</th><th>Meddelande</th><th>Status</th></tr></thead>
+      <tbody>${items.map((item)=>`
+        <tr class="${item.type==='ring'&&!item.handled?'call-row-lost':''}">
+          <td>${html(String(item.at||'').slice(0,16).replace('T',' '))}</td>
+          <td>${html(item.phone)}</td>
+          <td>${html(typeLabel[item.type]||item.type)}</td>
+          <td>${html(item.message||'')}</td>
+          <td>${item.handled?'<span class="muted-small">Hanterad</span>':`<button type="button" class="secondary" data-inbound-handled="${html(item.key)}">Markera uppringd</button>`}</td>
+        </tr>`).join('')}</tbody>
+    </table>`;
+}
+async function markInboundHandled(key,button){
+  button.disabled=true;
+  try{
+    await api('/api/call-dashboard',{method:'POST',body:JSON.stringify({action:'mark_inbound_handled',key})});
+    await loadCallDashboard();
+  }catch(error){showCampaignStatus(`Kunde inte markera: ${error.message}`,true);button.disabled=false;}
+}
+async function activateSmsInbound(){
+  const button=document.getElementById('activateSmsInbound');
+  button.disabled=true;
+  try{
+    const result=await api('/api/call-dashboard',{method:'POST',body:JSON.stringify({action:'configure_sms_webhook'})});
+    showCampaignStatus(`SMS-mottagning aktiverad på ${result.number}. Röstrouting påverkas inte.`);
+  }catch(error){
+    showCampaignStatus(`Aktivering misslyckades: ${error.message}`,true);
+  }finally{button.disabled=false;}
 }
 const STATUS_ROLLOUT_STATUSES=['checked_in','diagnosing','repairing','waiting_parts','waiting_customer','ready'];
 let statusRolloutList=[];
@@ -3044,7 +3092,10 @@ function buildStatusRollout(){
   statusRolloutList=eligible.filter((item)=>{
     const alreadySent=item.notifications&&item.notifications.statusLink&&item.notifications.statusLink.status==='sent';
     const hasChannel=(item.customer&&(item.customer.phone||item.customer.email));
-    return !alreadySent&&hasChannel;
+    // Klar + betald = kunden har i praktiken hämtat scootern (gamla ärenden
+    // som aldrig stängts) — de ska inte få "följ din reparation".
+    const pickedUp=String(item.status)==='ready'&&item.payment&&item.payment.status==='paid';
+    return !alreadySent&&hasChannel&&!pickedUp;
   });
   const skipped=eligible.length-statusRolloutList.length;
   const rowsHtml=statusRolloutList.map((item)=>{

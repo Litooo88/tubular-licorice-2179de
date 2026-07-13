@@ -32,18 +32,40 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-07-13 — Claude Code — PÅGÅR (svara-RING-kanal + optout + rollout-filter)
+### 2026-07-13 — Claude Code — KLAR (svara-RING-kanal + optout + rollout-filter)
 
-- **Branch:** `feat/sms-reply-channel`.
-- **Gör:** (1) NY webhook `sms-inbound.mjs` för inkommande SMS på 010-numret
-  (RING → notis till Sebastian + autosvar; STOPP → optout-store + bekräftelse).
-  (2) `call-dashboard.mjs`: kampanj-SMS kan skickas FRÅN 010-numret (svarbart),
-  optout respekteras server-side, ny action för att sätta sms_url på numret
-  via 46elks API (credentials stannar i env), svars-inkorg i GET-svaret.
-  (3) Admin: RING-rad i kampanjtexten, svarbart-checkbox, svars-inkorg,
-  aktivera-knapp. (4) Utrullningslistan exkluderar Klar+betalda (= i praktiken
-  uthämtade). Sebastian har provringt numret — routingen funkar live.
-- **Rör INTE:** case-status/status/startsida/book-online, voice-simple.
+- **Branch:** `feat/sms-reply-channel` → PR mot `main`.
+- **NY webhook `sms-inbound.mjs`** (`/api/sms-inbound`, POST, form-encoded från
+  46elks): validerar mottagarnummer (env `ELKS_NUMBER`, fallback 010-numret),
+  riktning incoming samt valfri `?secret=` (env `SMS_INBOUND_SECRET`, timing-
+  safe). RING/1 → blob `sms-inbound` + direkt-SMS till Sebastian (10 min
+  cooldown per nummer) + autosvar "Vi ringer upp dig inom 24 timmar". STOPP →
+  blob `sms-optout` (nyckel = telefonnummer) + bekräftelsesvar. Övriga svar
+  loggas + notis, inget autosvar. Svarstexten i response-body blir SMS-reply.
+- **`call-dashboard.mjs`:** `postSms` tar from-override; `send_discount` med
+  `replyable:true` skickar från 010-numret (svarbart) i stället för
+  NordicEMob; optout kollas ALLTID server-side före sändning (skip, ej fel).
+  NYA actions: `configure_sms_webhook` (listar /a1/numbers, sätter sms_url på
+  vårt nummer via 46elks API — credentials stannar i env; voice_start rörs
+  inte) och `mark_inbound_handled`. GET-svaret har `inboundSms` (7 dgr) +
+  `optoutPhones`.
+- **Admin:** kampanjtexten har nu bugg-förklaring + "Svara RING ... inom 24
+  timmar"; checkbox "Skicka från 010-numret" (default PÅ); Svars-inkorg med
+  röda ohanterade RING-rader + "Markera uppringd"; engångsknapp "Aktivera
+  SMS-mottagning" (kör configure_sms_webhook). Optout-skippade räknas inte
+  som fel i vågsammanfattningen.
+- **Utrullningslistan:** exkluderar nu Klar+betald (= i praktiken uthämtad,
+  gamla ärenden som aldrig stängts) per Sebastians feedback.
+- **Tester:** node --check ×2 ✅, inline-JS 0 fel ✅, build ✅, 7/7 Node-
+  tester ✅, browsertest: inkorg (röd RING, hanterad STOPP, tom-läge),
+  rollout-filtret (Klar+betald bort, Klar+obetald kvar), kampanjtext + 
+  checkbox ✅. Inga SMS skickade.
+- **Driftsteg för Sebastian:** 1) merga, 2) klicka "Aktivera SMS-mottagning"
+  i admin (engångs), 3) TESTA: SMS:a RING till 010-numret från egen mobil och
+  verifiera autosvar + notis + inkorg, 4) kör första kampanjvågen.
+- **Not till Codex:** sms_url sätts via API på numret — rör inte voice_start.
+  Optout-storen `sms-optout` MÅSTE respekteras av alla framtida SMS-flöden.
+- **Rörde INTE:** case-status/status/startsida/book-online, voice-simple.
 
 ### 2026-07-13 — Claude Code — KLAR (ringstatistik 30 dgr + bugg-transparent massutskick)
 
