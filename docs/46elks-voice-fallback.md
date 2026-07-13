@@ -17,13 +17,32 @@ Current 46elks fixed voice number:
 
 - `+46101385498`
 
-## 46elks dashboard setup
+## Current production route
+
+The live 46elks number currently uses the single-destination emergency route:
+
+- `voice_start`: `https://www.nordicemobility.se/.netlify/functions/voice-simple`
+
+`voice-simple` prefers `VOICE_PRIMARY_NUMBER`, then `VOICE_SEBASTIAN_PHONE`,
+and finally the emergency number stored in the function. Do not remove the
+emergency fallback until the production environment and a real test call have
+both been verified.
+
+If `VOICE_WEBHOOK_SECRET` is not configured, this initial route intentionally
+remains available. A missing optional secret must never return `503` and take
+the workshop phone offline.
+
+## Two-destination fallback rollout
+
+The richer Sebastian-to-Verkstaden flow is available at:
 
 Open the number in 46elks and set:
 
 - `voice_start`: `https://www.nordicemobility.se/api/voice-start?secret=<VOICE_WEBHOOK_SECRET>`
 - Name/label: `Nordic voice fallback`
 
+Do not switch 46elks to this URL until `VOICE_WEBHOOK_SECRET`,
+`VOICE_SEBASTIAN_PHONE`, and `VOICE_WORKSHOP_PHONE` are configured in Netlify.
 Save changes, then test with real calls.
 
 ## Netlify environment variables
@@ -33,10 +52,9 @@ until `VOICE_WEBHOOK_SECRET` is configured. These env vars control the live
 flow:
 
 - `VOICE_CALLER_ID` - 46elks number shown to Sebastian/Verkstaden. Default: `+46101385498`.
-- `VOICE_WEBHOOK_SECRET` - required shared callback secret. The same value must
-  be included in the 46elks `voice_start` URL as `?secret=...`. Without this
-  env var the Netlify voice webhooks return `503 not_configured` and do not
-  route calls or send missed-call SMS.
+- `VOICE_WEBHOOK_SECRET` - required for `/api/voice-start` and signed callback
+  URLs. The same value must be included in the 46elks URL as `?secret=...`.
+  It is optional for the current `voice-simple` emergency route.
 - `VOICE_SEBASTIAN_PHONE` - Sebastian mobile, configured in Netlify env. No private mobile fallback is stored in the repo.
 - `VOICE_WORKSHOP_PHONE` - Verkstaden mobile, configured in Netlify env. No private mobile fallback is stored in the repo.
 - `VOICE_TIMEOUT_SECONDS` - seconds per person. Default: `18`.
@@ -51,14 +69,26 @@ Missed-call SMS uses existing 46elks SMS env vars:
 
 ## Test script
 
-1. Save the `voice_start` URL in 46elks.
-2. Call `+46101385498` from a non-workshop phone.
-3. Let Sebastian answer and confirm the call connects.
-4. Call again and let Sebastian ignore it.
-5. Confirm Verkstaden's phone rings and shows the workshop number.
-6. Call again and let both ignore it.
-7. Confirm the missed-call entry appears in 46elks call history.
-8. If SMS env vars are configured, confirm Sebastian receives a missed-call SMS.
+1. POST to the selected production endpoint and require HTTP `200` plus a
+   non-empty `connect` action. HTTP `200` with `hangup` is not a passing test.
+2. Save the selected `voice_start` URL in 46elks.
+3. Call `+46101385498` from a non-workshop phone.
+4. Let Sebastian answer and confirm the call connects.
+5. For `/api/voice-start`, call again and let Sebastian ignore it.
+6. Confirm Verkstaden's phone rings and shows the workshop number.
+7. Call again and let both ignore it.
+8. Confirm the missed-call entry appears in 46elks call history.
+9. If SMS env vars are configured, confirm Sebastian receives a missed-call SMS.
+
+## Incident note: 2026-06-28
+
+`VOICE_WEBHOOK_SECRET` was made mandatory in code before it was configured in
+Netlify and before the 46elks URL included the secret. The production endpoint
+therefore returned `503 VOICE_WEBHOOK_SECRET_MISSING`, which 46elks recorded as
+`badsource / Failed to load source URL`. The forwarding number was also absent
+from Netlify, so merely changing the response to HTTP `200` produced
+`hangup: reject` instead of a call. The automated voice test now covers both
+conditions and runs as part of every Netlify build.
 
 ## Important operational note
 
