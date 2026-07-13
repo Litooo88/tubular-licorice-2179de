@@ -57,6 +57,22 @@ löpande "konversation".
   fixtures: readyBilling flaggar INTE ny bokning ✅, stale gäller ej
   waiting_customer/new ✅, filterklick + chip ✅, dedup 4 samtal → 2 unika
   utan kundkort + "2 försök" ✅.
+### 2026-07-12 — Claude Code — KLAR (NEMOB OS V1 — PR #99 öppen)
+
+- **Branch/PR:** `feat/nemob-os-v1` → PR #99 mot `main` (öppen, ej mergad).
+- **Resultat:** komplett lokal ops-dashboard i `nemob-os/` (noll beroenden):
+  dagsplan med topp 5 + motivering, uppgifts-CRUD med blockeringsorsak,
+  prioriteringsmotor, morgon/mittdag/kväll-uppföljning, filbaserad persistens.
+  Nordic endast read-only via env `NORDIC_BRIEF_URL` (aldrig i kod/logg).
+- **Utanför mappen (allt i PR:en):** netlify.toml 404-blockerar `/nemob-os/*`,
+  .gitignore för `nemob-os/data` + `.env`, npm-scripts `nemob-os` och
+  `test:nemob-os`, launch-konfig.
+- **Tester:** `node --test` 24/24 ✅, `npm run build` ✅,
+  `verify:checkout-products` (38) ✅, manuellt 14-stegs sluttest i browser ✅
+  (persistens efter omladdning, nere-simulering, 0 non-GET mot källan).
+- **Till andra agenter:** `nemob-os/`-namnrymden är tagen. Stashes
+  stash@{0,1} orörda. Sebastian: sätt `NORDIC_BRIEF_URL` i `nemob-os/.env`
+  efter merge (se `nemob-os/.env.example`).
 
 ### 2026-07-12 — Claude Code — PÅGÅR (NEMOB OS V1 — personlig ops-dashboard i ny mapp `nemob-os/`)
 
