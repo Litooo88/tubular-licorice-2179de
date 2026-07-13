@@ -436,6 +436,49 @@ export default async (request, context) => {
       return json({ ok: result.status === "sent", result, case: next });
     }
 
+    if (body.action === "send_status_link") {
+      // Utrullning av statusportalen: skickar kundens servicelänk via SMS +
+      // mail. Idempotent per ärende (notifications.statusLink) om inte force.
+      if (current.notifications?.statusLink?.status === "sent" && body.force !== true) {
+        return json({ ok: true, alreadySent: true, case: current });
+      }
+      const link = `${SITE_URL}/status/?id=${encodeURIComponent(current.id)}`;
+      const serviceNumber = shortCaseId(current.id);
+      const customerFirst = firstName(current.customer?.name);
+      const smsText = `Hej ${customerFirst}! Nyhet från Nordic E-Mobility: ditt servicenummer är ${serviceNumber}. Följ din reparation live och se exakt var i processen ditt fordon är: ${link}\nTelefonen använder vi i första hand för bokningar - statusen ser du alltid färskast via länken. /Nordic E-Mobility`;
+      const smsResult = await postSms({ to: current.customer?.phone, message: smsText });
+      const emailResult = await resendEmail({
+        to: current.customer?.email ? [current.customer.email] : [],
+        subject: `Ditt servicenummer hos Nordic E-Mobility: ${serviceNumber}`,
+        html: shellHtml(
+          "Nu kan du följa din reparation live",
+          `<p>Hej ${htmlEscape(customerFirst)},</p>
+           <p>Vi har uppgraderat v&aring;r kundservice! Ditt &auml;rende har f&aring;tt ett <strong>servicenummer: ${htmlEscape(serviceNumber)}</strong>.</p>
+           <p>Via din personliga statussida ser du exakt var i processen ditt fordon &auml;r &mdash; fr&aring;n inl&auml;mning, genom fels&ouml;kning och reparation, till klar f&ouml;r h&auml;mtning. Sidan uppdateras direkt n&auml;r n&aring;got h&auml;nder i verkstaden.</p>
+           <p style="margin:18px 0"><a href="${htmlEscape(link)}" style="display:inline-block;background:#00c853;color:#021307;text-decoration:none;border-radius:8px;padding:13px 18px;font-weight:700">F&ouml;lj din reparation</a></p>
+           <p>Har det inte h&auml;nt n&aring;got p&aring; ett tag? P&aring; statussidan finns en knapp f&ouml;r att beg&auml;ra en statusuppdatering &mdash; d&aring; f&aring;r verkstan en direkt-notis om just ditt &auml;rende.</p>
+           <p style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:12px 14px;font-size:14px"><strong>Bra att veta:</strong> telefonen (010-138 54 98) anv&auml;nder vi i f&ouml;rsta hand f&ouml;r bokningar och nya &auml;renden &mdash; din status ser du alltid snabbast och f&auml;rskast via l&auml;nken ovan.</p>`
+        ),
+        text: `Hej ${customerFirst},\n\nDitt servicenummer hos Nordic E-Mobility: ${serviceNumber}.\nFölj din reparation live: ${link}\n\nHar det inte hänt något på ett tag? På statussidan kan du begära en statusuppdatering med ett knapptryck.\n\nTelefonen (010-138 54 98) använder vi i första hand för bokningar - statusen ser du alltid färskast via länken.\n\n/Nordic E-Mobility`,
+        idempotencyKey: `${current.id}-status-link`,
+      });
+      const anySent = smsResult.status === "sent" || emailResult.status === "sent";
+      const next = {
+        ...current,
+        updatedAt: now,
+        notifications: {
+          ...(current.notifications || {}),
+          statusLink: { status: anySent ? "sent" : "failed", sms: smsResult.status, email: emailResult.status, at: now },
+        },
+        timeline: [
+          ...(Array.isArray(current.timeline) ? current.timeline : []),
+          { at: now, event: `Servicelänk skickad till kund (SMS: ${smsResult.status}, mail: ${emailResult.status}).` },
+        ],
+      };
+      await store.setJSON(id, next);
+      return json({ ok: anySent, sms: smsResult, email: emailResult, case: next });
+    }
+
     if (body.action === "send_quote_sms") {
       const amount = numberOrNull(body.amount);
       const summary = clean(body.summary, 500);

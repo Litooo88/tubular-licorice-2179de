@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Följ din reparation | Nordic E-Mobility</title>
+<meta name="robots" content="noindex, nofollow">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:Inter,Arial,sans-serif;background:#050605;color:#fff;min-height:100vh}
+.wrap{max-width:640px;margin:0 auto;padding:24px}
+header{display:flex;align-items:center;gap:12px;padding:18px 0;border-bottom:1px solid rgba(255,255,255,.09)}
+header img{height:44px}
+header strong{font-size:17px}
+.card{border:1px solid #28322a;background:#101410;border-radius:10px;padding:22px;margin-top:22px}
+h1{font-size:24px;line-height:1.2;margin-bottom:6px}
+.sub{color:#aeb8b0;font-size:14px;line-height:1.5}
+.status-now{margin:18px 0;border:1px solid rgba(0,200,83,.4);background:rgba(0,200,83,.1);border-radius:8px;padding:14px 16px}
+.status-now small{display:block;color:#a7f3be;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.status-now b{font-size:20px}
+.note{margin:0 0 14px;border:1px solid rgba(255,189,74,.35);background:rgba(255,189,74,.09);color:#ffe0a2;border-radius:8px;padding:11px 13px;font-size:13px;line-height:1.5}
+.steps{list-style:none;margin:16px 0}
+.steps li{position:relative;padding:0 0 22px 34px;color:#8d9a91;font-size:14px}
+.steps li::before{content:"";position:absolute;left:9px;top:20px;bottom:0;width:2px;background:#28322a}
+.steps li:last-child::before{display:none}
+.steps li::after{content:"";position:absolute;left:2px;top:2px;width:16px;height:16px;border-radius:50%;border:2px solid #38443b;background:#101410}
+.steps li.done{color:#cfd8d2}
+.steps li.done::after{background:#00c853;border-color:#00c853}
+.steps li.current{color:#fff;font-weight:900}
+.steps li.current::after{border-color:#00c853;box-shadow:0 0 0 4px rgba(0,200,83,.2)}
+.updated{color:#8d9a91;font-size:12px}
+button{width:100%;margin-top:16px;padding:14px;border:1px solid rgba(0,200,83,.45);background:rgba(0,200,83,.12);color:#dfffea;border-radius:8px;font:inherit;font-weight:900;cursor:pointer}
+button:disabled{opacity:.55;cursor:default}
+.feedback{margin-top:10px;font-size:13px;line-height:1.5;color:#a7f3be;display:none}
+.feedback.show{display:block}
+.error-box{border-color:rgba(255,90,95,.4);background:rgba(255,90,95,.08)}
+.help{margin-top:22px;color:#8d9a91;font-size:13px;line-height:1.6}
+.help a{color:#7ee2a8}
+.skeleton{color:#8d9a91}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><img src="/nordic_logo_transparent.png" alt="Nordic E-Mobility"><strong>Nordic E-Mobility</strong></header>
+  <div class="card" id="card">
+    <h1>Följ din reparation</h1>
+    <p class="sub" id="intro">Hämtar status…</p>
+    <div id="content" class="skeleton"></div>
+  </div>
+  <p class="help">Telefonen (<a href="tel:+46101385498">010-138 54 98</a>) använder vi i första hand för <strong>bokningar och nya ärenden</strong> — din reparationsstatus ser du alltid färskast här. Behöver du ändra något i din bokning? Ring eller mejla <a href="mailto:info@nordicemobility.se">info@nordicemobility.se</a>.</p>
+</div>
+<script>
+(async()=>{
+  const params=new URLSearchParams(location.search);
+  const id=params.get('id')||'';
+  const intro=document.getElementById('intro');
+  const content=document.getElementById('content');
+  const esc=(s)=>String(s||'').replace(/[&<>"']/g,(c)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  if(!id){intro.textContent='Ingen servicelänk angiven. Använd länken från din bokningsbekräftelse (SMS eller mail).';content.textContent='';return;}
+  async function load(){
+    try{
+      const response=await fetch('/api/case-status/'+encodeURIComponent(id));
+      const data=await response.json();
+      if(!response.ok){intro.textContent=data.error||'Kunde inte hämta status.';content.textContent='';return;}
+      intro.textContent=(data.firstName?`Hej ${data.firstName}! `:'')+`Här följer du ${data.model} genom verkstaden.`;
+      const steps=data.steps.map((label,index)=>{
+        const cls=index<data.stepIndex?'done':index===data.stepIndex?'current':'';
+        return `<li class="${cls}">${esc(label)}</li>`;
+      }).join('');
+      content.className='';
+      content.innerHTML=`
+        <div class="status-now"><small>Status just nu</small><b>${esc(data.statusLabel)}</b></div>
+        ${data.note?`<div class="note">${esc(data.note)}</div>`:''}
+        <ul class="steps">${steps}</ul>
+        <div class="updated">Senast uppdaterad: ${esc(data.updatedAt)}</div>
+        <button id="requestUpdate" ${data.canRequestUpdate?'':'disabled'}>${data.canRequestUpdate?'Begär statusuppdatering':'Statusförfrågan redan skickad — vi återkommer'}</button>
+        <div class="feedback" id="feedback"></div>`;
+      const button=document.getElementById('requestUpdate');
+      const feedback=document.getElementById('feedback');
+      if(button&&data.canRequestUpdate){
+        button.addEventListener('click',async()=>{
+          button.disabled=true;button.textContent='Skickar…';
+          try{
+            const r=await fetch('/api/case-status/'+encodeURIComponent(id),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({action:'request_update'})});
+            const res=await r.json();
+            feedback.textContent=res.message||res.error||'Klart.';
+            feedback.classList.add('show');
+            button.textContent='Statusförfrågan skickad ✓';
+          }catch(e){
+            feedback.textContent='Kunde inte skicka just nu — ring oss så hjälper vi dig.';
+            feedback.classList.add('show');
+            button.disabled=false;button.textContent='Begär statusuppdatering';
+          }
+        });
+      }
+    }catch(e){
+      intro.textContent='Kunde inte hämta status just nu. Prova att ladda om sidan.';
+    }
+  }
+  await load();
+})();
+</script>
+</body>
+</html>
