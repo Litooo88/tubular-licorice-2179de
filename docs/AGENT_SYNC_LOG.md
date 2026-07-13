@@ -32,27 +32,31 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-07-13 08:34 CEST — Codex — PÅGÅR (publik servicestatus-sökning + skyltning)
+### 2026-07-13 08:34 CEST — Codex — KLAR (publik servicestatus-sökning + skyltning)
 
-- **Branch:** `feat/status-lookup-entry`.
-- **Gör:** Bygger en säker publik ingång där kunden anger servicenumret och
-  kommer till befintlig statusvy. Skyltar "Följ din reparation" på startsidan
-  och bokningssidan. Behåller befintlig minimering av kunddata.
-- **Filer/områden:** `status/index.html`, `netlify/functions/case-status.mjs`,
-  startsidans `index.html`, `book-online/index.html`, fokuserade tester och
-  denna logg.
-- **Avgränsning:** Rör INTE `call-dashboard.mjs`, `workshop-cases.mjs`,
-  kampanjutskick, ringstatistik eller adminens utskickspaneler. Den andra
-  agenten kan arbeta där parallellt.
-- **Verifiering:** API-/säkerhetstester, syntax/build samt browserkontroll på
-  mobil och desktop före deploy. Inga SMS eller mail skickas i tester.
-- **Varning:** Servicenumrets format måste granskas för enumereringsrisk innan
-  publik uppslagning aktiveras.
-- **KRITISKT FYND 08:41:** befintlig `shortCaseId(...).slice(0, 18)` består i
-  praktiken bara av datum/timme/minut och utelämnar ID:ts slumpdel. Det kan ge
-  samma visade servicenumrer för flera ärenden och är förutsägbart. Skicka INTE
-  aktiv-kund-utskicket med nuvarande servicenumrer. Codex inför en gemensam,
-  slumpbaserad servicekod; utskicksagenten ska konsumera samma helper.
+- **Branch/commit:** `feat/status-lookup-entry`, feature-commit `978b31f`.
+- **Gjorde:** Ersatte det förutsägbara datum/minut-baserade servicenumret med
+  kryptografiskt slumpade 48-bitars koder i formatet
+  `NEM-A1B2-C3D4-E5F6`. Koderna lagras på ärendet och i separat Blob-index.
+  `/api/case-status/:id` kan nu slå upp säker servicekod med IP-baserad
+  sökbegränsning; äldre fullständiga länkar fortsätter fungera.
+- **Kundflöde:** `/status/` har sökformulär, normalisering och generiska
+  felmeddelanden. Nya bokningar och `send_status_link` använder samma kod och
+  länkar via `?service=`. Gamla aktiva ärenden får koden atomiskt när
+  servicelänken skickas.
+- **Skyltning:** "Följ reparation" finns i startsidans nav, första vy,
+  egen sektion och footer samt på bokningssidans header, hero och bekräftelselöfte.
+- **Filer/områden:** `_shared/service-number.mjs`, `case-status.mjs`,
+  `booking.mjs`, minimal nödvändig ändring i `workshop-cases.mjs`,
+  `status/index.html`, startsida, bokningssida och tester. Rörde INTE
+  `call-dashboard.mjs`, ringstatistik eller kampanjutskickets adminmotor.
+- **Tester:** 7/7 kritiska Node-tester, `npm run build`, checkout-verifiering,
+  callflow TypeScript-check och inline-JS-syntax gröna. Browser-QA 1440x900 och
+  390x844 för status/start/bokning; sidledsöverflöd korrigerat. Inga SMS/mail.
+- **Överlämning till utskicksagent:** rebase på denna ändring innan aktiv-
+  kund-utskicket. Behåll `reserveServiceNumber(...)`, `serviceNumber` och
+  länken `?service=` i `send_status_link`; kampanjtexten kan ändras runt dem.
+  Skicka inte gamla `shortCaseId(...).slice(0, 18)` som kundnummer.
 
 ### 2026-07-13 — Claude Code — KLAR (statusportal för kunder + servicelänk-utrullning)
 
