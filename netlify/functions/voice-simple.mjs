@@ -14,14 +14,9 @@ const clean = (value, max = 1000) => String(value || "").trim().slice(0, max);
 
 const authorizeVoiceWebhook = (request) => {
   const secret = clean(env("VOICE_WEBHOOK_SECRET"), 240);
-  if (!secret) {
-    return {
-      ok: false,
-      configured: false,
-      status: 503,
-      body: { error: "VOICE_WEBHOOK_SECRET saknas i Netlify.", code: "VOICE_WEBHOOK_SECRET_MISSING" },
-    };
-  }
+  // Keep the production call route available while the optional shared secret
+  // is being rolled out in both Netlify and the 46elks number configuration.
+  if (!secret) return { ok: true, configured: false };
   const url = new URL(request.url);
   const provided = clean(
     request.headers.get("x-nordic-webhook-secret") ||
@@ -55,9 +50,15 @@ export default async (request) => {
     return json({ hangup: "reject", reason: "voice_primary_not_configured" });
   }
 
-  return json({
+  const action = {
     connect: sebastian,
     timeout: 25,
-    whenhangup: callbackUrl(origin),
-  });
+  };
+  if (auth.configured) action.whenhangup = callbackUrl(origin);
+
+  if (!auth.configured) {
+    console.warn("voice_simple_secret_not_configured", { route: "public_fallback" });
+  }
+
+  return json(action);
 };
