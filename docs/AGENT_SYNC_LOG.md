@@ -59,6 +59,27 @@ löpande "konversation".
   Sebastians knapptryck i admin.
 - **Rörde INTE:** `case-status.mjs`, `status/index.html`, startsida,
   `book-online/`, `voice-simple.mjs` (Codex områden).
+- **TILLÄGG (samma dag, samma branch):**
+  1. **Verifierad samtalsdata (30 dgr, live via /api/call-dashboard i
+     Sebastians session):** 394 samtal, endast 11 besvarade (2,8 %).
+     **Sista besvarade samtal: 2026-06-27 20:00** — matchar exakt
+     incidentdatumet 06-28 i `docs/46elks-voice-fallback.md`
+     (VOICE_WEBHOOK_SECRET-503:an). Därefter 0 besvarade av ~215.
+     82 unika nummer, 73 aldrig nådda (51 utan kundkort, 22 med).
+     46elks egna dashboard kräver inloggning som saknas i Claude-profilen —
+     siffrorna ovan är samma API-källa som deras dashboard.
+  2. **Statistik-bugg fixad i egna PR:n:** `isAnswered` räknade bara
+     workshop/sebastian — men VOICE_*-env är inte satta i Netlify så ALLA
+     besvarade samtal klassas "other". Nu räknas other som besvarat.
+     OBS till Codex: sätt VOICE_WORKSHOP_PHONE/VOICE_SEBASTIAN_PHONE i
+     Netlify så attribution per person fungerar igen.
+  3. **Kampanjpanelen har vågutskick:** nytt fält "Max antal denna sändning"
+     (default 25) — skickar N, resten kvar till nästa dag; followed_up-
+     dubblettskyddet gör att ombyggd lista automatiskt exkluderar redan
+     skickade. Browsertestat (2 av 5 + avbryt rör inget).
+  4. **VIKTIGT OTESTAT:** inga besvarade samtal syns i datan efter
+     voice-fixen (senaste datarad 07-12). Sebastian MÅSTE provringa numret
+     innan massutskicken — de kommer generera återuppringningar.
 
 ### 2026-07-13 08:34 CEST — Codex — KLAR (publik servicestatus-sökning + skyltning)
 

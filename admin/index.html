@@ -545,9 +545,13 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <textarea id="campaignMessage" rows="5"></textarea>
     </div>
     <div id="campaignPreview" class="muted">Klicka p&aring; "Bygg mottagarlista" f&ouml;r att se exakt vilka som f&aring;r utskicket.</div>
-    <div class="call-actions" style="margin-top:12px">
+    <div class="call-actions" style="margin-top:12px;align-items:center">
+      <label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#aeb8b0">Max antal denna s&auml;ndning
+        <input type="number" id="campaignWaveSize" min="1" step="1" value="25" style="width:80px">
+      </label>
       <button type="button" id="sendCampaign" disabled>Skicka 0 SMS (livesändning)</button>
     </div>
+    <p class="muted" style="font-size:12px;margin-top:6px">Portionera utskicket: s&auml;tt max-antalet (t.ex. en tredjedel av listan) och skicka en v&aring;g per dag. Redan kontaktade nummer filtreras bort automatiskt n&auml;sta g&aring;ng du bygger listan, s&aring; det &auml;r bara att bygga om och skicka n&auml;sta v&aring;g dagen efter &mdash; ingen f&aring;r dubbelt.</p>
     <span class="live-send-warning">Varning: knappen skickar RIKTIGA SMS via 46elks till hela listan. Svar hanteras i din vanliga SMS-inkorg &mdash; respektera STOPP-svar.</span>
   </section>
 
@@ -3000,13 +3004,19 @@ async function sendCampaign(){
   const message=String(document.getElementById('campaignMessage').value||'').trim();
   if(!message){showCampaignStatus('Skriv ett SMS-meddelande först.',true);return;}
   if(!campaignRecipients.length){showCampaignStatus('Bygg mottagarlistan först.',true);return;}
-  if(!confirm(`Skicka RIKTIGT kampanj-SMS via 46elks till ${campaignRecipients.length} unika nummer?\n\nDetta kan inte ångras. Varje utskick loggas per nummer.`))return;
+  // Portionering: skicka max N i denna våg. Resten ligger kvar och skickas
+  // nästa dag — dubblettskyddet (followed_up) filtrerar redan skickade vid
+  // nästa listbygge.
+  const waveSize=Math.max(1,Math.floor(Number(document.getElementById('campaignWaveSize').value)||campaignRecipients.length));
+  const wave=campaignRecipients.slice(0,waveSize);
+  const remaining=campaignRecipients.length-wave.length;
+  if(!confirm(`Skicka RIKTIGT kampanj-SMS via 46elks till ${wave.length} av ${campaignRecipients.length} unika nummer?${remaining?`\n\n${remaining} nummer sparas till nästa våg (bygg om listan i morgon).`:''}\n\nDetta kan inte ångras. Varje utskick loggas per nummer.`))return;
   const code=(message.match(/koden\s+([A-ZÅÄÖ0-9-]+)/i)||[])[1]||'RING20';
   button.disabled=true;
   let ok=0;const failed=[];
-  for(let i=0;i<campaignRecipients.length;i+=1){
-    const recipient=campaignRecipients[i];
-    button.textContent=`Skickar ${i+1}/${campaignRecipients.length}...`;
+  for(let i=0;i<wave.length;i+=1){
+    const recipient=wave[i];
+    button.textContent=`Skickar ${i+1}/${wave.length}...`;
     try{
       const result=await api('/api/call-dashboard',{
         method:'POST',
@@ -3017,8 +3027,8 @@ async function sendCampaign(){
   }
   button.textContent=`Skicka 0 SMS (livesändning)`;
   campaignRecipients=[];
-  document.getElementById('campaignPreview').innerHTML='<div class="muted">Utskick klart. Bygg en ny lista för att se aktuell status.</div>';
-  showCampaignStatus(`Kampanj klar: ${ok} skickade${failed.length?`, ${failed.length} misslyckades (${failed.slice(0,5).join(', ')}${failed.length>5?'…':''})`:''}.`,Boolean(failed.length));
+  document.getElementById('campaignPreview').innerHTML='<div class="muted">Våg klar. Bygg en ny lista för att se vilka som är kvar.</div>';
+  showCampaignStatus(`Våg klar: ${ok} skickade${failed.length?`, ${failed.length} misslyckades (${failed.slice(0,5).join(', ')}${failed.length>5?'…':''})`:''}${remaining?` · ${remaining} nummer kvar till nästa våg`:' · hela listan är nu kontaktad'}.`,Boolean(failed.length));
   await loadCallDashboard();
 }
 const STATUS_ROLLOUT_STATUSES=['checked_in','diagnosing','repairing','waiting_parts','waiting_customer','ready'];

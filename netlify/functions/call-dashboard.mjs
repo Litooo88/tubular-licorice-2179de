@@ -394,7 +394,9 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
 
   // Ringstatistik över hela 30-dagarsfönstret. "answered" = en människa
   // svarade; voicemail räknas separat eftersom kunden inte nådde fram.
-  const isAnswered = (row) => ["workshop", "sebastian"].includes(row.answeredBy);
+  // "other" räknas som besvarat: success-benet gick till ett nummer som inte
+  // matchar VOICE_*-env (t.ex. ej konfigurerad) — men någon svarade bevisligen.
+  const isAnswered = (row) => ["workshop", "sebastian", "other"].includes(row.answeredBy);
   const byDayMap = new Map();
   const phoneAgg = new Map();
   for (const row of rows) {
