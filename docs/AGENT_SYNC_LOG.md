@@ -48,6 +48,11 @@ löpande "konversation".
   mobil och desktop före deploy. Inga SMS eller mail skickas i tester.
 - **Varning:** Servicenumrets format måste granskas för enumereringsrisk innan
   publik uppslagning aktiveras.
+- **KRITISKT FYND 08:41:** befintlig `shortCaseId(...).slice(0, 18)` består i
+  praktiken bara av datum/timme/minut och utelämnar ID:ts slumpdel. Det kan ge
+  samma visade servicenumrer för flera ärenden och är förutsägbart. Skicka INTE
+  aktiv-kund-utskicket med nuvarande servicenumrer. Codex inför en gemensam,
+  slumpbaserad servicekod; utskicksagenten ska konsumera samma helper.
 
 ### 2026-07-13 — Claude Code — KLAR (statusportal för kunder + servicelänk-utrullning)
 
