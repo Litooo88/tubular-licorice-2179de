@@ -128,7 +128,9 @@ const fetchCalls = async () => {
     calls.push(...batch);
     const oldest = batch.length ? new Date(batch[batch.length - 1].created || batch[batch.length - 1].start || 0).getTime() : 0;
     if (!batch.length || (Number.isFinite(oldest) && oldest > 0 && oldest < cutoff)) break;
-    url = body.next ? `https://api.46elks.com${body.next}` : "";
+    // 46elks "next" är en tidsstämpel-cursor (t.ex. "2026-07-07T09:26:14.291000")
+    // som skickas som ?start= — INTE en URL-path.
+    url = body.next ? `https://api.46elks.com/a1/calls?limit=100&start=${encodeURIComponent(body.next)}` : "";
   }
   return calls.filter((call) => {
     const created = new Date(call.created || call.start || 0).getTime();
