@@ -140,6 +140,15 @@ a.ai-control-item.risk:hover,a.ai-control-item.risk:focus-visible{background:#22
 .stat{padding:16px}
 .stat span{display:block;color:#99a39b;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.07em}
 .stat b{font-size:28px;display:block;margin-top:4px}
+button.stat{font:inherit;color:inherit;text-align:left;cursor:pointer;transition:border-color .15s,transform .15s}
+button.stat:hover{border-color:rgba(0,200,83,.5);transform:translateY(-1px)}
+button.stat.is-filtering{border-color:#00c853;outline:1px solid rgba(0,200,83,.5)}
+.ops-legend{padding:12px 16px;margin:0 0 14px;color:#aeb8b0;font-size:13px}
+.ops-legend summary{cursor:pointer;font-weight:800;color:#cfd8d2}
+.ops-legend ul{margin:10px 0 0 18px;line-height:1.6}
+.ops-filter-chip{display:none;margin:0 0 10px;border:1px solid rgba(0,200,83,.4);background:rgba(0,200,83,.1);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:800;color:#c9f5d8;cursor:pointer}
+.ops-filter-chip.is-active{display:inline-block}
+.ai-control-grid .stat[title]{cursor:help}
 .toolbar{display:flex;gap:10px;align-items:end;justify-content:space-between;flex-wrap:wrap;margin:18px 0}
 .filters{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
 .filters .search-filter{min-width:280px}
@@ -376,16 +385,29 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   </nav>
 
   <div class="admin-view" id="overviewView">
-  <section class="stats operational-kpis">
-    <div class="panel stat"><span>G&ouml;r nu</span><b id="doNowTotal">0</b></div>
-    <div class="panel stat"><span>Nya utan bekr&auml;ftelse</span><b id="unconfirmedTotal">0</b></div>
-    <div class="panel stat"><span>V&auml;ntar kund</span><b id="waitingCustomerTotal">0</b></div>
-    <div class="panel stat"><span>V&auml;ntar del</span><b id="waitingPartsTotal">0</b></div>
-    <div class="panel stat"><span>Klara att h&auml;mta</span><b id="readyPickupTotal">0</b></div>
-    <div class="panel stat"><span>Klara att fakturera/betala</span><b id="readyBillingTotal">0</b></div>
-    <div class="panel stat"><span>Risk / st&aring;tt stilla</span><b id="riskStaleTotal">0</b></div>
-    <div class="panel stat"><span>Ej arkiverade</span><b id="notArchivedTotal">0</b></div>
+  <section class="stats operational-kpis" id="operationalKpis">
+    <button type="button" class="panel stat" data-ops-filter="doNow" title="&Ouml;ppna &auml;renden med minst en &aring;tg&auml;rdsflagga. Klicka f&ouml;r att visa exakt dessa i listan nedan."><span>G&ouml;r nu</span><b id="doNowTotal">0</b></button>
+    <button type="button" class="panel stat" data-ops-filter="newUnconfirmed" title="Nya bokningar d&auml;r kundens bekr&auml;ftelse (SMS/mail) inte kunnat verifieras som levererad. Klicka f&ouml;r att visa dem."><span>Nya utan bekr&auml;ftelse</span><b id="unconfirmedTotal">0</b></button>
+    <button type="button" class="panel stat" data-ops-filter="waitingCustomer" title="&Auml;renden med status V&auml;ntar kund. Klicka f&ouml;r att visa dem."><span>V&auml;ntar kund</span><b id="waitingCustomerTotal">0</b></button>
+    <button type="button" class="panel stat" data-ops-filter="waitingParts" title="&Auml;renden med status V&auml;ntar delar. Klicka f&ouml;r att visa dem."><span>V&auml;ntar del</span><b id="waitingPartsTotal">0</b></button>
+    <button type="button" class="panel stat" data-ops-filter="readyPickup" title="Status Klar d&auml;r klarbesked till kunden inte skickats &auml;n. Klicka f&ouml;r att visa dem."><span>Klara att h&auml;mta</span><b id="readyPickupTotal">0</b></button>
+    <button type="button" class="panel stat" data-ops-filter="readyBilling" title="F&auml;rdigt arbete med belopp (&gt;0 kr) eller status Klar/Klar f&ouml;r faktura som inte &auml;r betalt eller fakturerat. Nya obekr&auml;ftade bokningar r&auml;knas INTE hit. Klicka f&ouml;r att visa dem."><span>Klara att fakturera/betala</span><b id="readyBillingTotal">0</b></button>
+    <button type="button" class="panel stat" data-ops-filter="riskStale" title="Riskord i &auml;rendet (batteri, garanti, reklamation, brand...) eller p&aring;g&aring;ende verkstadsarbete utan uppdatering p&aring; 48 timmar. Nya leads r&auml;knas inte som st&aring;tt stilla. Klicka f&ouml;r att visa dem."><span>Risk / st&aring;tt stilla</span><b id="riskStaleTotal">0</b></button>
+    <button type="button" class="panel stat" data-ops-filter="notArchived" title="Alla &auml;renden som inte &auml;r arkiverade (&auml;ven avslutade). Klicka f&ouml;r att visa dem."><span>Ej arkiverade</span><b id="notArchivedTotal">0</b></button>
   </section>
+  <details class="panel ops-legend">
+    <summary>Vad betyder siffrorna?</summary>
+    <ul>
+      <li><strong>G&ouml;r nu</strong> — &ouml;ppna &auml;renden med minst en &aring;tg&auml;rdsflagga (flaggan syns i Prio-kolumnen i listan).</li>
+      <li><strong>Nya utan bekr&auml;ftelse</strong> — nya bokningar d&auml;r bekr&auml;ftelsen till kund inte verifierats levererad; f&ouml;lj upp manuellt.</li>
+      <li><strong>V&auml;ntar kund / V&auml;ntar del</strong> — &auml;renden i respektive status.</li>
+      <li><strong>Klara att h&auml;mta</strong> — status Klar men klarbeskedet till kunden &auml;r inte skickat.</li>
+      <li><strong>Klara att fakturera/betala</strong> — f&auml;rdigt arbete med belopp &ouml;ver 0 kr (eller status Klar/Klar f&ouml;r faktura) som inte betalats/fakturerats. Bokningar som bara ligger nya r&auml;knas inte.</li>
+      <li><strong>Risk / st&aring;tt stilla</strong> — riskord (batteri, garanti, reklamation m.m.) eller p&aring;g&aring;ende arbete utan uppdatering p&aring; 48 h.</li>
+      <li><strong>Ej arkiverade</strong> — totalantal &auml;renden som inte arkiverats.</li>
+      <li>Klicka p&aring; en ruta f&ouml;r att filtrera &auml;rendelistan till exakt de &auml;rendena — klicka igen f&ouml;r att sl&auml;ppa filtret.</li>
+    </ul>
+  </details>
   <section class="panel ai-control-tower">
     <div class="ai-control-head">
       <div>
@@ -400,13 +422,13 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       </div>
     </div>
     <div class="ai-control-grid">
-      <div class="panel stat"><span>G&ouml;r nu</span><b id="aiPriorityToday">0</b></div>
-      <div class="panel stat"><span>Missade samtal</span><b id="aiMissedCalls">0</b></div>
-      <div class="panel stat"><span>V&auml;ntar kund</span><b id="aiWaitingCustomer">0</b></div>
-      <div class="panel stat"><span>V&auml;ntar reservdel</span><b id="aiWaitingParts">0</b></div>
-      <div class="panel stat"><span>Klara att fakturera</span><b id="aiReadyInvoice">0</b></div>
-      <div class="panel stat"><span>Risk&auml;renden</span><b id="aiRiskCases">0</b></div>
-      <div class="panel stat"><span>M&ouml;jlig int&auml;kt idag</span><b id="aiRevenueToday">0 kr</b></div>
+      <div class="panel stat" title="Toppen av &aring;tg&auml;rdslistan — &ouml;ppna &auml;renden med h&ouml;gst prioritet just nu. Detaljer i rutan G&ouml;r nu nedan."><span>G&ouml;r nu</span><b id="aiPriorityToday">0</b></div>
+      <div class="panel stat" title="Unika telefonnummer UTAN kundkort som missats eller l&auml;mnat r&ouml;stmeddelande senaste 7 dagarna. K&auml;lla: 46elks live. Samtal fr&aring;n befintliga kunder r&auml;knas inte h&auml;r men listas nedan."><span>Missade samtal</span><b id="aiMissedCalls">0</b></div>
+      <div class="panel stat" title="&Auml;renden med status V&auml;ntar kund."><span>V&auml;ntar kund</span><b id="aiWaitingCustomer">0</b></div>
+      <div class="panel stat" title="&Auml;renden som v&auml;ntar p&aring; reservdel."><span>V&auml;ntar reservdel</span><b id="aiWaitingParts">0</b></div>
+      <div class="panel stat" title="F&auml;rdigt arbete med belopp som inte betalats/fakturerats. Nya obekr&auml;ftade bokningar r&auml;knas inte."><span>Klara att fakturera</span><b id="aiReadyInvoice">0</b></div>
+      <div class="panel stat" title="&Auml;renden med riskord (batteri, garanti, reklamation, brand...) eller p&aring;g&aring;ende arbete som st&aring;tt stilla &ouml;ver 48 h."><span>Risk&auml;renden</span><b id="aiRiskCases">0</b></div>
+      <div class="panel stat" title="Summan av belopp p&aring; &auml;rendena i G&ouml;r nu-listan — vad som kan faktureras/dras in om de betas av idag."><span>M&ouml;jlig int&auml;kt idag</span><b id="aiRevenueToday">0 kr</b></div>
     </div>
     <div class="ai-control-detail">
       <div class="ai-control-box wide"><h3>Sammanfattning</h3><div class="ai-social-post" id="aiSummary">Ingen brief h&auml;mtad.</div></div>
@@ -541,6 +563,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   <section class="panel active-overview">
     <h2>Operativ &auml;rendelista</h2>
     <p>Prioriterad lista d&auml;r &ldquo;G&ouml;r nu&rdquo; betyder faktisk &aring;tg&auml;rd: bekr&auml;fta, kontakta kund, v&auml;nta in del, ta betalt eller f&aring;nga risk/stillest&aring;nd.</p>
+    <button type="button" class="ops-filter-chip" id="opsFilterChip"></button>
     <div id="activeOverview">Laddar &auml;renden...</div>
   </section>
 
@@ -748,6 +771,17 @@ document.getElementById('smsApplyTemplate').addEventListener('click',()=>{smsMes
 document.getElementById('smsCopyDraft').addEventListener('click',async()=>{try{await copyText(smsMessageText.value);showSmsDeskStatus('SMS-utkast kopierat.',false)}catch(error){showSmsDeskStatus(error.message,true)}});
 document.getElementById('smsSendButton').addEventListener('click',sendDeskSms);
 if(!tokenInput.value.trim())showAiStatus('Admin-token saknas','warn');
+document.getElementById('operationalKpis').addEventListener('click',(event)=>{
+  const button=event.target&&event.target.closest&&event.target.closest('[data-ops-filter]');
+  if(!button)return;
+  opsFilterKey=opsFilterKey===button.dataset.opsFilter?null:button.dataset.opsFilter;
+  render();
+  activeOverviewEl.scrollIntoView({behavior:'smooth',block:'start'});
+});
+document.getElementById('opsFilterChip').addEventListener('click',()=>{
+  opsFilterKey=null;
+  render();
+});
 document.addEventListener('click',(event)=>{
   const link=event.target&&event.target.closest&&event.target.closest('[data-open-case-link]');
   if(!link)return;
@@ -1230,6 +1264,9 @@ function caseHasMissingModel(item){
   return !model||/^ok\u00e4nd|^okand|^test$/i.test(model);
 }
 function isCaseStale(item){
+  // "Stått stilla" gäller pågående verkstadsarbete — inte nya leads (de
+  // fångas av "Ny utan bekräftelse") och inte kunder vi väntar svar från.
+  if(!['checked_in','diagnosing','repairing','waiting_parts','ready'].includes(String(item&&item.status||'')))return false;
   const updated=caseUpdatedTime(item);
   return updated?Date.now()-updated>48*60*60*1000:false;
 }
@@ -1258,10 +1295,14 @@ function isReadyPickupNeedsNotice(item){
 }
 function isReadyForBilling(item){
   if(!item||isCaseClosed(item))return false;
+  // Obekräftade bokningar/leads är inte fakturerbara — tidigare flaggades
+  // VARJE bokning här eftersom payment.amount=0 räknades som "har belopp".
+  if(['new','contacted'].includes(String(item.status||'')))return false;
   const payment=paymentData(item);
   const completion=completionData(item);
   if(PAID_OR_INVOICED_STATUSES.has(payment.status))return false;
-  return item.status==='ready'||payment.status==='invoice_ready'||payment.hasAmount||completion.totalCost>0;
+  const amount=Number(payment.amount||completion.totalCost||0);
+  return item.status==='ready'||payment.status==='invoice_ready'||amount>0;
 }
 function matchedMissedCallCaseIds(){
   const ids=new Set();
@@ -1714,10 +1755,36 @@ async function testCalendar(){
   }
 }
 
+const OPS_FILTER_LABELS={
+  doNow:'Gör nu',
+  newUnconfirmed:'Nya utan bekräftelse',
+  waitingCustomer:'Väntar kund',
+  waitingParts:'Väntar del',
+  readyPickup:'Klara att hämta',
+  readyBilling:'Klara att fakturera/betala',
+  riskStale:'Risk / stått stilla',
+  notArchived:'Ej arkiverade'
+};
+let opsFilterKey=null;
+function updateOpsFilterUi(ops){
+  const chip=document.getElementById('opsFilterChip');
+  document.querySelectorAll('#operationalKpis [data-ops-filter]').forEach((button)=>{
+    button.classList.toggle('is-filtering',button.dataset.opsFilter===opsFilterKey);
+  });
+  if(!chip)return;
+  if(opsFilterKey&&ops[opsFilterKey]){
+    chip.textContent=`Visar: ${OPS_FILTER_LABELS[opsFilterKey]||opsFilterKey} (${ops[opsFilterKey].length} ärenden) — klicka här för att visa allt`;
+    chip.classList.add('is-active');
+  }else{
+    chip.classList.remove('is-active');
+  }
+}
 function render(){
   updateSmsCaseOptions();
   const ops=operationalMetrics(cases);
-  renderActiveOverview(ops.doNow.length?ops.doNow:ops.notClosed);
+  const overviewList=opsFilterKey&&Array.isArray(ops[opsFilterKey])?ops[opsFilterKey]:(ops.doNow.length?ops.doNow:ops.notClosed);
+  renderActiveOverview(overviewList);
+  updateOpsFilterUi(ops);
   document.getElementById('doNowTotal').textContent=ops.doNow.length;
   document.getElementById('unconfirmedTotal').textContent=ops.newUnconfirmed.length;
   document.getElementById('waitingCustomerTotal').textContent=ops.waitingCustomer.length;
@@ -2540,17 +2607,37 @@ function renderLiveMissedCalls(rows){
   if(!Array.isArray(rows)||!rows.length)return;
   const cutoff=Date.now()-7*24*60*60*1000;
   const missed=rows.filter((row)=>['missed','voicemail'].includes(row.answeredBy)&&new Date(row.timestamp).getTime()>=cutoff);
-  const items=missed.map((row)=>{
-    const matched=Array.isArray(row.cases)&&row.cases.length?row.cases[0]:null;
-    return {
-      id:matched?matched.id:'',
-      customer:matched?matched.customerName:(row.phone||'Okänt nummer'),
-      model:matched?matched.model:'',
-      reason:[`${row.answeredByLabel||'Missad'} ${row.date} ${row.time}`,row.leadStatus?`lead: ${row.leadStatus}`:''].filter(Boolean).join(' · ')
-    };
+  // Deduplicera per telefonnummer — 5 missade försök från samma kund är EN
+  // kund att ringa, inte fem. Skyddade/okända nummer kan inte dedupliceras.
+  const groups=new Map();
+  missed.forEach((row)=>{
+    const key=row.phone&&String(row.phone).startsWith('+')?row.phone:`okänt_${row.id}`;
+    const group=groups.get(key)||{row,count:0};
+    group.count+=1;
+    if(String(row.timestamp)>String(group.row.timestamp))group.row=row;
+    groups.set(key,group);
   });
-  document.getElementById('aiMissedCalls').textContent=items.length;
-  aiMissedCallsListEl.innerHTML=items.length?aiListHtml(items,false,'contact'):'<div class="muted">Inga missade samtal senaste 7 dagarna (live från 46elks).</div>';
+  const unique=[...groups.values()];
+  const unmatched=unique.filter((g)=>!(Array.isArray(g.row.cases)&&g.row.cases.length));
+  const matched=unique.filter((g)=>Array.isArray(g.row.cases)&&g.row.cases.length);
+  const toItem=({row,count},hasCase)=>{
+    const matchedCase=hasCase?row.cases[0]:null;
+    return {
+      id:matchedCase?matchedCase.id:'',
+      customer:matchedCase?matchedCase.customerName:(row.phone||'Okänt/skyddat nummer'),
+      model:matchedCase?matchedCase.model:'',
+      reason:[
+        `${row.answeredByLabel||'Missad'} senast ${row.date} ${row.time}`,
+        count>1?`${count} försök`:'',
+        hasCase?'har kundkort':'inget kundkort — ny potentiell kund',
+        row.leadStatus?`lead: ${row.leadStatus}`:''
+      ].filter(Boolean).join(' · ')
+    };
+  };
+  const items=[...unmatched.map((g)=>toItem(g,false)),...matched.map((g)=>toItem(g,true))];
+  document.getElementById('aiMissedCalls').textContent=unmatched.length;
+  const sourceLine=`<div class="muted" style="margin-bottom:8px;font-size:12px">Källa: 46elks live · senaste 7 dagarna · ${unmatched.length} unika nummer utan kundkort (räknaren) · ${matched.length} från befintliga kunder/ärenden</div>`;
+  aiMissedCallsListEl.innerHTML=items.length?sourceLine+aiListHtml(items,false,'contact'):'<div class="muted">Inga missade samtal senaste 7 dagarna (live från 46elks).</div>';
 }
 async function testAiQuote(){
   const button=document.getElementById('testAiQuote');
@@ -2947,6 +3034,7 @@ function caseCard(item){
         <button type="button" class="secondary quick-status ${item.status==='contacted'?'active':''}" data-status="contacted" data-note="Kund kontaktad.">Kontaktad</button>
         <button type="button" class="secondary quick-status ${item.status==='waiting_customer'?'active':''}" data-status="waiting_customer" data-note="Inv&auml;ntar svar fr&aring;n kund.">V&auml;ntar svar</button>
         <button type="button" class="secondary quick-status ${item.status==='checked_in'?'active':''}" data-status="checked_in" data-note="Fordon inl&auml;mnat p&aring; verkstaden.">Inl&auml;mnad</button>
+        <button type="button" class="secondary quick-status ${item.status==='archived'?'active':''}" data-status="archived" data-note="&Auml;rendet st&auml;ngt/arkiverat fr&aring;n snabbknapp." data-confirm="Arkivera &auml;rendet? Det st&auml;ngs tyst (inga mail/SMS) och f&ouml;rsvinner fr&aring;n listorna. Det raderas inte och kan &aring;terst&auml;llas via status-menyn.">Arkivera</button>
       </div>
       <div class="contact tools">
         <a href="${html(mailHref(item))}">Mailmall</a>
@@ -3404,13 +3492,14 @@ function caseCard(item){
   });
   card.querySelectorAll('.quick-status').forEach((button)=>{
     button.addEventListener('click',async()=>{
+      if(button.dataset.confirm&&!confirm(button.dataset.confirm))return;
       const original=button.textContent;
       button.disabled=true;
       button.textContent='Sparar...';
       try{
         await api('/api/cases/'+encodeURIComponent(item.id),{
           method:'PATCH',
-          body:JSON.stringify({status:button.dataset.status,note:button.dataset.note})
+          body:JSON.stringify({status:button.dataset.status,note:button.dataset.note,suppressThankYou:true})
         });
         try{await logStatusChangeEvent(item,button.dataset.status,button.dataset.note)}
         catch(timelineError){showError(`Status sparad, men timeline kunde inte uppdateras: ${timelineError.message}`)}
