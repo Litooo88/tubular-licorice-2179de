@@ -8,6 +8,9 @@ Detta är ett **lokalt internverktyg**. Det deployas inte — mappen är blocker
 från publik servering i `netlify.toml` (404) och all data ligger lokalt i
 `nemob-os/data/` (gitignorerad).
 
+**Dagligt arbetsflöde:** se [MANUAL.md](MANUAL.md) — morgonbrief, lunchkontroll,
+kvällssvar. Tre beröringar per dag.
+
 ## Starta
 
 Kräver endast Node 18+ (inga npm-beroenden).
