@@ -41,12 +41,17 @@ löpande "konversation".
 - **Fix:** configure_sms_webhook läser nu svaret som text+JSON och returnerar
   steg (list_numbers/update_sms_url), HTTP-status och 46elks feltext, plus
   manuell fallback-instruktion i felmeddelandet.
-- **Trolig rotorsak:** API-nyckeln i Netlify env saknar rättighet för
-  nummerhantering (t.ex. subkonto — SMS/samtal funkar, /a1/numbers nekas).
-  **Manuell väg som alltid funkar:** 46elks dashboard → Numbers →
-  +46101385498 → SMS URL → `https://www.nordicemobility.se/api/sms-inbound`
-  (+ `?secret=...` om SMS_INBOUND_SECRET sätts i Netlify). Webhooken i sig
-  är deployad och redo — det är bara pekaren i 46elks som saknas.
+- **BEKRÄFTAD ROTORSAK (Sebastians skärmdump från 46elks):** numret
+  +46101385498 är kategori "Fixed" med ENDAST Voice-kapacitet — inga
+  SMS/MMS-bockar. Fasta nummer kan inte ta emot SMS hos 46elks; därför
+  finns inget sms_url-fält i deras dashboard och därför nekar API:t.
+  **Svara-RING-kanalen kräver ett SMS-kapabelt 46elks-nummer (mobilt 07x).**
+  Plan: Sebastian allokerar mobilnummer i 46elks dashboard → sätter
+  `ELKS_NUMBER=<nya numret>` i Netlify env (webhooken validerar mot den) →
+  klistrar in `https://www.nordicemobility.se/api/sms-inbound` i det nya
+  numrets SMS URL-fält. Voice-routingen på 010-numret rörs INTE.
+  Tills dess: kampanj utan RING-raden och med checkboxen "Skicka från
+  010-numret" AVBOCKAD (010 kan inte ta emot svar).
 - **Tester:** node --check ✅, 7/7 ✅.
 
 ### 2026-07-13 — Claude Code — KLAR (svara-RING-kanal + optout + rollout-filter)
