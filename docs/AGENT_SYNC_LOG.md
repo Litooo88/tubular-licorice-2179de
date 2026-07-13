@@ -32,6 +32,40 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-13 — Claude Code — KLAR (statusportal för kunder + servicelänk-utrullning)
+
+- **Branch:** `feat/status-portal` → PR mot `main`.
+- **NY publik funktion `case-status.mjs`** (`/api/case-status/:id`): GET =
+  kundvänlig status (ENDAST förnamn/modell/steg/datum — aldrig efternamn,
+  telefon, mail, priser); ärende-ID = kapabilitetsnyckel. POST
+  `request_update` = kund begär statusuppdatering → SMS till Sebastian
+  (SEBASTIAN_SMS_TO/WORKSHOP_SMS_TO) + timeline-notis; spärr 1 per 12h/ärende
+  (statusUpdateRequestedAt på caset). Lätt rate limit in-memory.
+- **NY sida `/status/?id=`** — stegvisare (Mottagen→Inlämnad→Felsökning→
+  Repareras→Klar för hämtning→Utlämnad), kontextnoteringar (väntar del/svar/
+  klar+betalning vid hämtning), Begär uppdatering-knapp, noindex,
+  telefonpolicy-text ("telefonen för bokningar").
+- **booking.mjs:** bekräftelse-SMS + kundmail innehåller nu servicelänken +
+  servicenummer + policytext. OBS: fångade egen bugg innan commit —
+  statusLink refererade odefinierad SITE_URL (hade kraschat varje bokning);
+  nu env-baserad.
+- **workshop-cases.mjs:** NY action `send_status_link` — skickar SMS + snyggt
+  mail med länken till ett ärendes kund; idempotent via
+  notifications.statusLink (force-flagga finns), timeline-loggas.
+- **Admin: NY panel "Servicelänk-utrullning"** — bygger lista över aktiva
+  ärenden (checked_in/diagnosing/repairing/waiting_parts/waiting_customer/
+  ready) med kontaktväg, hoppar redan-skickade, förhandsvisning, sekventiell
+  livesändning med progress/felrapport.
+- **Tester:** node --check ×3 ✅, inline-JS 0 fel ✅, build/verify (38) ✅,
+  callflow ✅, browsertest: statussidan renderar stegvisare/notering/knapp
+  korrekt (skärmdump verifierad) ✅, utrullningslistan filtrerar rätt
+  (aktiva med kontakt in; redan skickade/nya leads/utan kontakt ut) ✅.
+- **Nästa (beslutat av Sebastian, EJ byggt än):** winback v2 — unika
+  WIN-koder, vågutskick maxantal/dag, "SMS:a RING till 010-138 54 98"-
+  mottagare (46elks sms_url-webhook), kvällslista i dashboarden.
+- **Varning till Codex:** /api/case-status är PUBLIK by design — lägg ALDRIG
+  till fler fält i GET-svaret utan PII-granskning.
+
 ### 2026-07-13 — Claude Code — KLAR (kampanjutskick ring-tillbaka-rabatt + 46elks-paginering 30 dgr)
 
 - **Branch:** `feat/callback-campaign` → PR mot `main`.

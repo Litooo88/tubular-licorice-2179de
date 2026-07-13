@@ -547,6 +547,19 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <span class="live-send-warning">Varning: knappen skickar RIKTIGA SMS via 46elks till hela listan. Svar hanteras i din vanliga SMS-inkorg &mdash; respektera STOPP-svar.</span>
   </section>
 
+  <section class="panel campaign-panel">
+    <h2>Servicel&auml;nk-utrullning &mdash; statusportalen</h2>
+    <p>Skickar varje kund med <strong>aktivt &auml;rende</strong> (inl&auml;mnad/fels&ouml;kning/reparation/v&auml;ntar/klar) sitt servicenummer + statusl&auml;nk via SMS och mail. Kunder som redan f&aring;tt l&auml;nken hoppas &ouml;ver automatiskt. Nya bokningar f&aring;r l&auml;nken automatiskt i bekr&auml;ftelsen.</p>
+    <div class="call-actions">
+      <button type="button" class="secondary" id="buildStatusRollout">Bygg utskickslista (aktiva &auml;renden)</button>
+    </div>
+    <div class="call-status" id="statusRolloutStatus"></div>
+    <div id="statusRolloutPreview" class="muted">Klicka p&aring; "Bygg utskickslista" f&ouml;r att se exakt vilka kunder som f&aring;r utskicket.</div>
+    <div class="call-actions" style="margin-top:12px">
+      <button type="button" id="sendStatusRollout" disabled>Skicka till 0 kunder (SMS + mail, livesändning)</button>
+    </div>
+  </section>
+
   <section class="panel sms-panel live-send-panel">
     <h2>SMS till kund – live-s&auml;ndning</h2>
     <p>V&auml;lj ett aktivt &auml;rende, skriv eller bygg en mall. Kopiera-knappen &auml;r s&auml;ker; liveknappen skickar ett riktigt SMS via 46elks.</p>
@@ -764,6 +777,8 @@ document.getElementById('refreshCalls').addEventListener('click',loadCallDashboa
 document.getElementById('buildCampaignList').addEventListener('click',buildCampaignList);
 document.getElementById('sendCampaign').addEventListener('click',sendCampaign);
 document.getElementById('campaignMessage').value=campaignDefaultMessage();
+document.getElementById('buildStatusRollout').addEventListener('click',buildStatusRollout);
+document.getElementById('sendStatusRollout').addEventListener('click',sendStatusRollout);
 document.getElementById('refreshAiControl').addEventListener('click',loadAiControlTower);
 document.getElementById('testAiQuote').addEventListener('click',testAiQuote);
 document.getElementById('testAiSmsDraft').addEventListener('click',testAiSmsDraft);
@@ -2950,6 +2965,54 @@ async function sendCampaign(){
   document.getElementById('campaignPreview').innerHTML='<div class="muted">Utskick klart. Bygg en ny lista för att se aktuell status.</div>';
   showCampaignStatus(`Kampanj klar: ${ok} skickade${failed.length?`, ${failed.length} misslyckades (${failed.slice(0,5).join(', ')}${failed.length>5?'…':''})`:''}.`,Boolean(failed.length));
   await loadCallDashboard();
+}
+const STATUS_ROLLOUT_STATUSES=['checked_in','diagnosing','repairing','waiting_parts','waiting_customer','ready'];
+let statusRolloutList=[];
+function showStatusRolloutStatus(message,bad=false){
+  const el=document.getElementById('statusRolloutStatus');
+  el.className=`call-status ${message?(bad?'bad':'ok'):''}`;
+  el.textContent=message;
+  el.style.display=message?'block':'none';
+}
+function buildStatusRollout(){
+  const eligible=cases.filter((item)=>STATUS_ROLLOUT_STATUSES.includes(String(item.status||'')));
+  statusRolloutList=eligible.filter((item)=>{
+    const alreadySent=item.notifications&&item.notifications.statusLink&&item.notifications.statusLink.status==='sent';
+    const hasChannel=(item.customer&&(item.customer.phone||item.customer.email));
+    return !alreadySent&&hasChannel;
+  });
+  const skipped=eligible.length-statusRolloutList.length;
+  const rowsHtml=statusRolloutList.map((item)=>{
+    const channels=[item.customer&&item.customer.phone?'SMS':'',item.customer&&item.customer.email?'mail':''].filter(Boolean).join(' + ');
+    return `<tr><td>${html(item.customer&&item.customer.name||'Okänd')}</td><td>${html(item.vehicle&&item.vehicle.model||'-')}</td><td>${statusLabels[item.status]||html(item.status)}</td><td>${html(channels)}</td></tr>`;
+  }).join('');
+  document.getElementById('statusRolloutPreview').innerHTML=statusRolloutList.length
+    ?`<div class="muted" style="margin-bottom:8px">${statusRolloutList.length} kunder får utskicket · ${skipped} hoppas över (redan skickat eller saknar kontaktväg)</div><table class="active-table"><thead><tr><th>Kund</th><th>Modell</th><th>Status</th><th>Kanal</th></tr></thead><tbody>${rowsHtml}</tbody></table>`
+    :'<div class="muted">Inga kunder kvar att skicka till — alla aktiva ärenden har redan fått länken.</div>';
+  const sendButton=document.getElementById('sendStatusRollout');
+  sendButton.textContent=`Skicka till ${statusRolloutList.length} kunder (SMS + mail, livesändning)`;
+  sendButton.disabled=!statusRolloutList.length;
+  showStatusRolloutStatus(`Lista klar — granska innan du skickar.`);
+}
+async function sendStatusRollout(){
+  const button=document.getElementById('sendStatusRollout');
+  if(!statusRolloutList.length){showStatusRolloutStatus('Bygg utskickslistan först.',true);return;}
+  if(!confirm(`Skicka servicelänken till ${statusRolloutList.length} kunder via SMS + mail?\n\nVarje kund får sitt servicenummer och statuslänken. Redan skickade hoppas över automatiskt.`))return;
+  button.disabled=true;
+  let ok=0;const failed=[];
+  for(let i=0;i<statusRolloutList.length;i+=1){
+    const item=statusRolloutList[i];
+    button.textContent=`Skickar ${i+1}/${statusRolloutList.length}...`;
+    try{
+      const result=await api('/api/cases/'+encodeURIComponent(item.id),{method:'PATCH',body:JSON.stringify({action:'send_status_link',operatorName:operatorInput.value||'Sebastian'})});
+      if(result.ok||result.alreadySent)ok+=1;else failed.push(item.customer&&item.customer.name||item.id);
+    }catch(error){failed.push(item.customer&&item.customer.name||item.id);}
+  }
+  statusRolloutList=[];
+  button.textContent='Skicka till 0 kunder (SMS + mail, livesändning)';
+  document.getElementById('statusRolloutPreview').innerHTML='<div class="muted">Utskick klart. Bygg listan igen för aktuell status.</div>';
+  showStatusRolloutStatus(`Utrullning klar: ${ok} skickade${failed.length?`, ${failed.length} misslyckades (${failed.slice(0,5).join(', ')}${failed.length>5?'…':''})`:''}.`,Boolean(failed.length));
+  await loadCases();
 }
 async function sendLostLeadDiscount(row,button){
   if(!confirm(`Skicka RIKTIGT rabatt-SMS via 46elks till ${row.phone}? Rabatt kräver manuell kontroll.`))return;

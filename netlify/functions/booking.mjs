@@ -298,8 +298,11 @@ const formatPreferredDateForSms = (caseItem) => {
   return `${label}: ${formatPreferredDateOnlyForSms(caseItem)}`;
 };
 
+const statusLink = (caseItem) =>
+  `${(env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "")}/status/?id=${encodeURIComponent(caseItem.id)}`;
+
 const smsMessage = (caseItem) =>
-  `Hej ${firstName(caseItem.customer.name)}! Din bokning hos Nordic E-Mobility \u00e4r registrerad.\nTid: ${formatPreferredDateOnlyForSms(caseItem)}\nPlats: Pistolv\u00e4gen 6, 702 21 \u00d6rebro\nVi h\u00f6r av oss om n\u00e5got beh\u00f6ver \u00e4ndras. - Nordic E-Mobility`;
+  `Hej ${firstName(caseItem.customer.name)}! Din bokning hos Nordic E-Mobility \u00e4r registrerad.\nTid: ${formatPreferredDateOnlyForSms(caseItem)}\nPlats: Pistolv\u00e4gen 6, 702 21 \u00d6rebro\nF\u00f6lj din reparation live: ${statusLink(caseItem)}\nVi h\u00f6r av oss om n\u00e5got beh\u00f6ver \u00e4ndras. - Nordic E-Mobility`;
 
 const workshopSmsMessage = (caseItem) => {
   const description = clean(caseItem.message, 80);
@@ -651,7 +654,8 @@ const customerEmailHtml = (caseItem) => `
           ${addonSummaryHtml(caseItem.addons)}
           <p style="margin:0"><strong>Startansvar:</strong> ${htmlEscape(caseItem.assignedTo.name)}</p>
         </div>
-        <p><a href="${MAPS_LINK}" style="display:inline-block;background:#061007;color:#fff;text-decoration:none;border-radius:8px;padding:12px 16px;font-weight:700">Visa p&aring; Google Maps</a></p>
+        <p><a href="${htmlEscape(statusLink(caseItem))}" style="display:inline-block;background:#00c853;color:#021307;text-decoration:none;border-radius:8px;padding:12px 16px;font-weight:700">F&ouml;lj din reparation live</a>&nbsp;&nbsp;<a href="${MAPS_LINK}" style="display:inline-block;background:#061007;color:#fff;text-decoration:none;border-radius:8px;padding:12px 16px;font-weight:700">Visa p&aring; Google Maps</a></p>
+        <p style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:12px 14px;font-size:14px"><strong>Ditt servicenummer:</strong> ${htmlEscape(shortCaseId(caseItem.id))}<br>Via l&auml;nken ovan ser du exakt var i processen ditt fordon &auml;r &mdash; fr&aring;n inl&auml;mning till klar f&ouml;r h&auml;mtning &mdash; och kan beg&auml;ra en statusuppdatering med ett knapptryck. Telefonen anv&auml;nder vi i f&ouml;rsta hand f&ouml;r bokningar och nya &auml;renden.</p>
         <p><strong>Vad h&auml;nder nu?</strong><br>Vi kontrollerar bokningen och kontaktar dig inom 24 timmar om tiden, prisbed&ouml;mningen eller underlaget beh&ouml;ver justeras. Inget arbete p&aring;b&ouml;rjas utan att du f&aring;tt en prisbed&ouml;mning f&ouml;rst.</p>
         <p>Efter bes&ouml;ket betyder en recension mycket f&ouml;r oss: <a href="${htmlEscape(REVIEW_LINK)}" style="color:#067a35">l&auml;mna en Google-recension</a>.</p>
         ${emailFooterHtml()}
@@ -673,6 +677,7 @@ const sendCustomerEmail = async (caseItem) => {
       `Tid: ${formatPreferredDateOnlyForSms(caseItem)}`,
       `Plats: ${WORKSHOP_ADDRESS}`,
       "Vi kontaktar dig inom 24 timmar om nagot behover andras och gor alltid prisbedomning innan arbete.",
+      `Folj din reparation live: ${statusLink(caseItem)}`,
       `Karta: ${MAPS_LINK}`,
       "",
       "Kalenderfilen \u00e4r prelimin\u00e4r tills tiden \u00e4r bekr\u00e4ftad.",
