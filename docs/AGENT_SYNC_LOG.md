@@ -32,6 +32,19 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-13 — Claude Code — PÅGÅR (svara-RING-kanal + optout + rollout-filter)
+
+- **Branch:** `feat/sms-reply-channel`.
+- **Gör:** (1) NY webhook `sms-inbound.mjs` för inkommande SMS på 010-numret
+  (RING → notis till Sebastian + autosvar; STOPP → optout-store + bekräftelse).
+  (2) `call-dashboard.mjs`: kampanj-SMS kan skickas FRÅN 010-numret (svarbart),
+  optout respekteras server-side, ny action för att sätta sms_url på numret
+  via 46elks API (credentials stannar i env), svars-inkorg i GET-svaret.
+  (3) Admin: RING-rad i kampanjtexten, svarbart-checkbox, svars-inkorg,
+  aktivera-knapp. (4) Utrullningslistan exkluderar Klar+betalda (= i praktiken
+  uthämtade). Sebastian har provringt numret — routingen funkar live.
+- **Rör INTE:** case-status/status/startsida/book-online, voice-simple.
+
 ### 2026-07-13 — Claude Code — KLAR (ringstatistik 30 dgr + bugg-transparent massutskick)
 
 - **Branch:** `feat/call-stats-bug-notice` → PR mot `main`.
