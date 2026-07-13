@@ -32,6 +32,31 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-13 — Claude Code — KLAR (ärliga adminsiffror: fakturera/stale-logik, klickbara KPI:er, unika missade samtal, Arkivera-snabbknapp)
+
+- **Branch:** `fix/honest-admin-metrics` → PR mot `main`.
+- **Bakgrund (Sebastian):** "Gör nu 87 / Risk 73 / Fakturera 42" var brus —
+  omöjligt att tolka, varje bokning flaggades "ska faktureras".
+- **Rotorsaker fixade:** (1) `isReadyForBilling`: `hasAmount` var true även
+  för payment.amount=0 → VARJE bokning/lead flaggades. Nu krävs belopp >0
+  eller status ready/invoice_ready, och new/contacted exkluderas helt.
+  (2) `isCaseStale` gällde alla statusar → varje lead äldre än 48h blev
+  "stått stilla". Nu endast pågående arbete (checked_in/diagnosing/
+  repairing/waiting_parts/ready).
+- **Nytt UI:** alla 8 KPI-rutor i översikten är knappar — klick filtrerar
+  ärendelistan till exakt de ärendena (chip "Visar: X (N)" + klick släpper);
+  title-tooltips på allt + <details>-legend "Vad betyder siffrorna?".
+  Kontrolltornets 7 rutor har definitions-tooltips.
+- **Missade samtal:** dedupliceras per telefonnummer; räknaren = UNIKA nummer
+  UTAN kundkort (7 dgr, 46elks live); kända kunder listas separat; källrad
+  förklarar exakt vad som räknas; "N försök" per nummer.
+- **Arkivera-snabbknapp** på kundkorten (bredvid Kontaktad/Väntar svar/
+  Inlämnad) med confirm — stänger tyst; quick-status skickar numera alltid
+  suppressThankYou som bälte.
+- **Tester:** inline-JS 0 fel ✅, build/verify (38) ✅, browsertest med
+  fixtures: readyBilling flaggar INTE ny bokning ✅, stale gäller ej
+  waiting_customer/new ✅, filterklick + chip ✅, dedup 4 samtal → 2 unika
+  utan kundkort + "2 försök" ✅.
 ### 2026-07-12 — Claude Code — KLAR (NEMOB OS V1 — PR #99 öppen)
 
 - **Branch/PR:** `feat/nemob-os-v1` → PR #99 mot `main` (öppen, ej mergad).
