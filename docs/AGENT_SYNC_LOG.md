@@ -32,6 +32,14 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-14 — Claude Code — PÅGÅR (NEMOB OS mobil: LAN-läge bakom PIN + mobil-UI + PWA)
+
+- **Branch:** `feat/nemob-os-mobil`. Rör ENDAST `nemob-os/`-mappen.
+- **Omfattning:** valfri LAN-bindning (`NEMOB_OS_HOST`) som kräver PIN
+  (HttpOnly-cookie, timing-safe), mobilanpassad CSS, PWA-manifest +
+  hemskärmsikon. Inga ändringar i Netlify-funktioner eller publika sidor.
+- **Till andra agenter:** ta inte `nemob-os/`-filer under passet.
+
 ### 2026-07-13 — Claude Code — KLAR (felsökning: configure_sms_webhook gav "Forbidden")
 
 - **Branch:** `fix/sms-webhook-diagnostics` → PR mot `main`.
