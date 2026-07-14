@@ -32,6 +32,19 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-14 — Claude Code — KLAR (NEMOB OS mobil — PR #107 öppen)
+
+- **Branch/PR:** `feat/nemob-os-mobil` → PR #107 mot `main` (öppen).
+- **Resultat:** LAN-läge bakom PIN (fail-safe: servern startar inte oskyddad
+  utanför loopback; HttpOnly-sessionscookie, timing-safe, 20 försök/h),
+  upplåsningssida, mobil-CSS (sticky topbar, 44px-knappar, ingen h-scroll
+  vid 375px), PWA-manifest + hemskärmsikon. Endast `nemob-os/` berörd.
+- **Tester:** node --test 30/30 ✅ (6 nya auth). Browserverifierat i
+  mobilviewport: 401 utan cookie, fel PIN nekas, rätt PIN → dashboard med
+  live Nordic-data.
+- **Sebastian:** README "Mobilläge" — brandväggsregel (engångs, admin),
+  `ipconfig` för IP, PIN finns i lokala `nemob-os/.env`.
+
 ### 2026-07-14 — Claude Code — PÅGÅR (NEMOB OS mobil: LAN-läge bakom PIN + mobil-UI + PWA)
 
 - **Branch:** `feat/nemob-os-mobil`. Rör ENDAST `nemob-os/`-mappen.
