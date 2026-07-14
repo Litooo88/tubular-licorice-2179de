@@ -1,0 +1,12 @@
+{
+  "name": "NEMOB OS",
+  "short_name": "NEMOB OS",
+  "description": "Personlig ops-dashboard för Nordic E-Mobility",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0d1210",
+  "theme_color": "#0d1210",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}

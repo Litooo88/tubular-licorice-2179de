@@ -196,6 +196,48 @@ label.check input { width: auto; }
 #modal .m-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
 #modal input, #modal textarea { width: 100%; }
 
+/* ---------- Mobil ---------- */
+
+@media (max-width: 700px) {
+  body { padding: 10px 10px 40px; font-size: 15px; }
+
+  header.topbar {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    background: var(--bg);
+    gap: 8px 12px;
+    padding: 8px 0 10px;
+    margin-bottom: 12px;
+  }
+  .topbar h1 { font-size: 16px; }
+  #clock { font-size: 19px; }
+  #today { flex-basis: 100%; order: 5; font-size: 12px; margin-top: -4px; }
+  .topbar .spacer { display: none; }
+  #nordic-badge { margin-left: auto; }
+  #btn-urgent, #btn-regenerate {
+    flex: 1 1 45%;
+    min-height: 44px;
+    font-size: 14px;
+  }
+
+  section.card { padding: 12px; margin-bottom: 12px; border-radius: 8px; }
+
+  /* Tumvänliga knappar överallt */
+  button { min-height: 40px; padding: 8px 12px; }
+  .row-actions button { flex: 1 1 auto; min-height: 40px; font-size: 13px; }
+  .top5-rank { font-size: 17px; min-width: 20px; }
+
+  form.grid { grid-template-columns: 1fr; }
+  input, select, textarea { font-size: 16px; padding: 10px; } /* 16px stoppar iOS-zoom */
+
+  .metric-grid { gap: 6px; }
+  .metric .m-value { font-size: 19px; }
+
+  #modal { padding: 14px; }
+  #modal .m-actions button { flex: 1; min-height: 44px; }
+}
+
 .checkin-answers { margin-top: 8px; }
 .checkin-answers dt { font-size: 12px; color: var(--muted); margin-top: 6px; }
 .checkin-answers dd { font-size: 14px; margin-left: 0; }
