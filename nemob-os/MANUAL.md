@@ -53,6 +53,14 @@ orsaker, flyttat. Fyll i det systemet inte kan veta:
 - Nordic-panelen är avsiktligt read-only: den informerar dina uppgifter,
   men ärenden hanterar du som vanligt i admin/verkstadsvyn.
 
+## I mobilen
+
+Dashboarden är mobilanpassad och nås från telefonen på samma wifi:
+`http://<datorns-ip>:4571` → ange PIN → lägg till på hemskärmen (se README,
+avsnittet "Mobilläge"). Snabbknapparna (Starta/Klar/Blockera/Flytta) och
+checkin-formulären fungerar med tummen — mittdagskontrollen och kvällssvaren
+är gjorda för att göras från soffan eller verkstadsgolvet.
+
 ## Om det känns tungt
 
 Missar du lunchkontrollen gör det inget. Missar du kvällen tappar du

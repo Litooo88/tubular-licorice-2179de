@@ -35,6 +35,24 @@ URL:en hårdkodas aldrig, loggas aldrig, committas aldrig (gitignorerad) och
 visas aldrig i UI, API-svar eller felmeddelanden — alla hämtningsfel mappas
 till generiska koder (`unreachable`, `timeout`, `http_503`, …).
 
+## Mobilläge (telefon på samma wifi)
+
+1. I `nemob-os/.env`: sätt `NEMOB_OS_HOST=0.0.0.0` och `NEMOB_OS_PIN=<minst 6 tecken>`.
+   Utan PIN vägrar servern starta utanför 127.0.0.1 (fail-safe).
+2. Öppna Windows-brandväggen för porten (körs EN gång, som administratör):
+   ```powershell
+   netsh advfirewall firewall add rule name="NEMOB OS" dir=in action=allow protocol=TCP localport=4571 profile=private
+   ```
+3. Hitta datorns IP: `ipconfig` → IPv4-adressen (t.ex. `192.168.1.25`).
+4. På telefonen (samma wifi): öppna `http://<datorns-ip>:4571`, ange PIN.
+   Sessionen sparas 30 dagar i en HttpOnly-cookie — PIN:en lagras aldrig i webbläsaren.
+5. Lägg till på hemskärmen (Dela → "Lägg till på hemskärm") — appen öppnas
+   i fullskärm med egen ikon.
+
+Skyddet: PIN krävs för allt (sidor och API), timing-safe jämförelse, max 20
+felförsök/timme, sessioner dör när servern startas om på riktigt (i minnet).
+Datorn måste vara på och telefonen på samma nätverk — datan lämnar aldrig huset.
+
 ## Vad Nordic-integrationen är — och inte är
 
 - **Endast GET** mot briefing-endpointen. Ingen kod i `nemob-os/` kan ändra
