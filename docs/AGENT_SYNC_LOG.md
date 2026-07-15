@@ -32,6 +32,19 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-14 — Claude Code — KLAR (NEMOB OS "Slå upp ärende" — tillägg i PR #107)
+
+- **Branch/PR:** ny commit på `feat/nemob-os-mobil` → PR #107 (öppen).
+- **Resultat:** read-only ärendesökning i mobilen: GET-only-proxy mot
+  admin-API:t (`NORDIC_ADMIN_TOKEN` server-till-server, aldrig till telefon,
+  60s cache + stale-fallback), sök på namn/telefon/modell/ärendenr med
+  whitelistade fält (max 20 träffar), "Pågående arbeten"-lista äldst först.
+- **Tester:** 38/38 ✅ (8 nya inkl. tokenläckage- och whitelist-skydd).
+  Verifierat i browser mot mock-admin: sök "per", pågående-lista, tel:-länkar.
+- **Tailscale verifierat:** servern svarar på Tailscale-IP:t med PIN-sida;
+  Windows räknar gränssnittet som Private ⇒ befintlig brandväggsregel täcker.
+- **Sebastian:** lägg `NORDIC_ADMIN_TOKEN=` i `nemob-os/.env` för att aktivera.
+
 ### 2026-07-14 — Claude Code — KLAR (NEMOB OS mobil — PR #107 öppen)
 
 - **Branch/PR:** `feat/nemob-os-mobil` → PR #107 mot `main` (öppen).
