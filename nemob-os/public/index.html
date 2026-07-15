@@ -26,6 +26,15 @@
 
   <div class="layout">
     <div class="col-main">
+      <section class="card" id="sec-lookup">
+        <h2>Slå upp ärende
+          <span class="h-actions"><button id="btn-open-cases" class="small">Pågående arbeten</button></span>
+        </h2>
+        <input type="search" id="lookup-input" placeholder="Namn, telefon, modell eller ärendenr…"
+               autocomplete="off" enterkeyhint="search">
+        <div id="lookup-results"></div>
+      </section>
+
       <section class="card" id="sec-morning">
         <h2>Morgonbrief</h2>
         <div id="morning-brief" class="muted">Ingen plan genererad ännu — tryck ”Generera om dagsplan”.</div>

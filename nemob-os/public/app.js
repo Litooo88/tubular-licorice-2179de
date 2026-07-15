@@ -473,6 +473,71 @@ for (const [formId, type] of [["#midday-form", "midday"], ["#evening-form", "eve
   });
 }
 
+/* ---------- Slå upp ärende ---------- */
+
+const STATUS_LABELS = {
+  new: "Ny", contacted: "Kontaktad", waiting_customer: "Väntar kund",
+  checked_in: "Incheckad", in_progress: "Pågår", ready: "Klar för hämtning",
+  done: "Avslutad", archived: "Arkiverad",
+};
+
+const renderLookupResults = (data, mode) => {
+  const container = $("#lookup-results");
+  if (!data || data.status === "not_configured") {
+    container.innerHTML = `<div class="banner not_configured">Ärendesökningen är inte konfigurerad.
+      Lägg till <strong>NORDIC_ADMIN_TOKEN</strong> i <code>nemob-os/.env</code> (samma token som admin) och starta om.</div>`;
+    return;
+  }
+  if (data.status === "down") {
+    container.innerHTML = `<div class="banner down">Kan inte nå ärendedatabasen just nu (${escapeHtml(data.code || "fel")}).</div>`;
+    return;
+  }
+  const stale = data.stale ? `<div class="banner stale">Källan svarar inte — visar senast hämtade listan.</div>` : "";
+  if (!data.results.length) {
+    container.innerHTML = `${stale}<span class="muted">${mode === "open" ? "Inga pågående arbeten." : "Inga träffar."}</span>`;
+    return;
+  }
+  container.innerHTML = stale + `<div class="small-text" style="margin:4px 0">${data.results.length} ${mode === "open" ? "pågående arbeten (äldst först)" : "träff(ar)"}</div>` +
+    data.results.map((c) => `
+    <div class="task-row lookup-hit">
+      <div class="t-title">${escapeHtml(c.name || "Okänd kund")}
+        ${c.phone ? `<a class="tel-link" href="tel:${escapeHtml(c.phone)}">${escapeHtml(c.phone)}</a>` : ""}
+        <span class="chip status-${escapeHtml(c.status || "")}">${escapeHtml(STATUS_LABELS[c.status] || c.status || "?")}</span>
+      </div>
+      <div class="t-meta">
+        ${escapeHtml(c.vehicle || "Okänt fordon")}${c.service ? ` · ${escapeHtml(c.service)}` : ""}
+      </div>
+      <div class="t-meta">
+        ${c.serviceNumber ? `Ärende ${escapeHtml(c.serviceNumber)} · ` : ""}${escapeHtml(String(c.id || "").replace(/^case_/, "").slice(0, 14).toUpperCase())}
+        ${c.daysOpen !== null ? ` · ${c.daysOpen} dagar` : ""}
+        ${c.paymentStatus && c.paymentStatus !== "unpaid" ? ` · betalning: ${escapeHtml(c.paymentStatus)}` : ""}
+      </div>
+    </div>`).join("");
+};
+
+let lookupTimer = null;
+$("#lookup-input").addEventListener("input", (event) => {
+  clearTimeout(lookupTimer);
+  const query = event.target.value.trim();
+  if (query.length < 2) { $("#lookup-results").innerHTML = ""; return; }
+  lookupTimer = setTimeout(async () => {
+    try {
+      renderLookupResults(await api(`/api/lookup?q=${encodeURIComponent(query)}`), "search");
+    } catch (error) {
+      $("#lookup-results").innerHTML = `<div class="banner down">${escapeHtml(error.message)}</div>`;
+    }
+  }, 300);
+});
+
+$("#btn-open-cases").addEventListener("click", async () => {
+  $("#lookup-results").innerHTML = `<span class="muted">Hämtar…</span>`;
+  try {
+    renderLookupResults(await api("/api/lookup/open"), "open");
+  } catch (error) {
+    $("#lookup-results").innerHTML = `<div class="banner down">${escapeHtml(error.message)}</div>`;
+  }
+});
+
 /* ---------- Toppknappar ---------- */
 
 $("#btn-regenerate").addEventListener("click", async () => {
