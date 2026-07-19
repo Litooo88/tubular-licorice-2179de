@@ -32,7 +32,32 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-07-19 — Claude Code — KLAR (saldovakt + auto-SMS till missade uppringare + kampanjfixar)
+### 2026-07-19 — Claude Code — KLAR (vinn-tillbaka-verktyget v2: 60 dgr, rankat, kundkortsfilter; Akut-panelen borttagen)
+
+- **Branch:** `feat/winback-tool-v2` → PR mot `main`. Sebastians omdesign.
+- **Backend:** `CALL_WINDOW_DAYS` 30→60 (paginering 24 sidor). Ringstatistikens
+  rubrik i admin läser nu `stats.windowDays` dynamiskt.
+- **Kampanjpanelen omdöpt "Vinn tillbaka missade samtal — rankad lista,
+  25/dag":** unika nummer 60 dgr som ALDRIG nåtts på telefon och SAKNAR
+  kundkort (checkbox för att inkludera kundkort), ej redan lyckat kontaktade/
+  optout/converted. Rankning: poäng = antal samtal × färskhetsvikt (≤7 dgr ×3,
+  ≤21 ×2, annars ×1) — färsk+envis rankar högst. Tabell med rank/samtal/
+  senast/poäng/status; topp-N (vågstorlek, default 25) grönmarkerad "Dagens
+  våg"; redan kontaktade ligger kvar längst ner med ✓ och datum. Skicka-
+  knappen skickar ENDAST dagens våg.
+- **BORTTAGET: "Akut uppföljning – missade samtal"** (manuella klistra-in-
+  konsolen) — arv från innan live-46elks-kopplingen; HTML, alla lyssnare och
+  ~10 000 tecken JS utrensade. `MISSED_CALL_SMS_UNKNOWN` behållen (används av
+  kopiera-utkast i livevyn). Kontrolltornets missade samtal kommer redan
+  enbart från live-källan.
+- **Schemalagd uppgift uppdaterad:** daglig våg kl 10:00 (var: engångs söndag)
+  med exakt samma filter+rankning; stoppar sig själv-rapporterar när listan
+  är tom. Söndagens 10:00-körning med GAMLA logiken hann pausas innan skott.
+- **Facit på Sebastians fråga:** "25 bortfiltrerade" var nummer med AKTIVT
+  ärende — INTE 13 juli-mottagarna (de fick aldrig något; alla 25 failade på
+  kontospärren och är nåbara igen tack vare followed_up-fixen i #111).
+- **Tester:** node --check, inline-JS 0 fel, build, browsertest av rankning/
+  filter/våg-markering/✓-rader med fixturer ✅.
 
 - **Branch:** `feat/balance-guard-callbacks` → PR mot `main`.
 - **Saldovakt (`call-dashboard.mjs` + admin):** GET hämtar 46elks-saldot
