@@ -32,6 +32,27 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-19 — Claude Code — KLAR (voice-simple v3: telefonsvarare med inspelning)
+
+- **Branch:** `feat/voicemail-recording` → PR mot `main`.
+- **Sebastian live-testade söndag:** stängt-beskedet spelas ✅ men "två pip och
+  klick" efteråt — kedjan saknade inspelningssteget som gamla växeln hade.
+- **Ny kedja:** stängt-besked → inspelning (90 s, som gamla växeln). Dagtid:
+  Sebastian → fallback-nummer (om satt) → voicemail-prompt.mp3 → inspelning.
+  Steg `saved` SMS:ar Sebastian med uppringarens nummer + wav-länk
+  (46elks-inloggning krävs för att lyssna, samma som gamla flödet).
+  Admin-dashboarden klassar samtal med inspelning som "Röstmeddelande"
+  automatiskt (answeredBy kollar recordings).
+- **KRITISK testsanering:** Netlify-bygget kör test:voice med PRODUKTIONS-env
+  — ENV_KEYS-listan i testet rensar nu även ELKS-creds/SITE_URL/
+  VOICE_TIMEOUT_SECONDS, annars hade varje deploy skickat ett riktigt SMS
+  till Sebastian och assertions flakat. Rör inte den listan utan att förstå
+  detta.
+- **Secret-aktiveringen slutförd (tidigare idag):** 46elks voice_start
+  uppdaterad via configure_voice_webhook, verifierad 401 utan / 200 med
+  secret. Netlify-kortet uppdaterat och betalt (Sebastian).
+- **Tester:** 10/10 voice + build ✅.
+
 ### 2026-07-19 — Claude Code — KLAR (voice-simple v2: öppettidsbesked + fallback-nummer — samma branch/PR som secret-actionen)
 
 - **Branch:** `feat/voice-webhook-secret` (samma PR som configure_voice_webhook).
