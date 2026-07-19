@@ -88,6 +88,36 @@ const callbackUrl = (origin, auth) => {
   return url.toString();
 };
 
+const parseForm = async (request) => {
+  try {
+    const text = await request.text();
+    return Object.fromEntries(new URLSearchParams(text));
+  } catch {
+    return {};
+  }
+};
+
+const postSms = async ({ to, message }) => {
+  const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
+  const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
+  const from = (env("SMS_FROM") || "NordicEMob").slice(0, 11);
+  if (!to || !username || !password) return { status: "not_configured" };
+  try {
+    const response = await fetch("https://api.46elks.com/a1/sms", {
+      method: "POST",
+      headers: {
+        Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams({ from, to, message, dontlog: "message" }),
+      signal: AbortSignal.timeout(7000),
+    });
+    return { status: response.ok ? "sent" : "failed" };
+  } catch {
+    return { status: "failed" };
+  }
+};
+
 export default async (request) => {
   const auth = authorizeVoiceWebhook(request);
   if (!auth.ok) return json(auth.body || { error: "Unauthorized" }, auth.status || 401);
@@ -98,6 +128,7 @@ export default async (request) => {
   const timeout = Math.min(Math.max(Number(env("VOICE_TIMEOUT_SECONDS")) || 25, 10), 60);
   const siteUrl = (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
   const closedPrompt = clean(env("VOICE_CLOSED_MP3_URL"), 400) || `${siteUrl}/audio/outside-hours-prompt.mp3`;
+  const voicemailPrompt = clean(env("VOICE_VOICEMAIL_MP3_URL"), 400) || `${siteUrl}/audio/voicemail-prompt.mp3`;
   const testNow = clean(env("VOICE_TEST_NOW"), 60);
   const now = testNow ? new Date(testNow) : new Date();
 
@@ -105,18 +136,43 @@ export default async (request) => {
     console.warn("voice_simple_secret_not_configured", { route: "public_fallback" });
   }
 
-  // Steg 2: Sebastian svarade inte → ring fallback-numret om ett är satt.
+  // Steg 2: Sebastian svarade inte → ring fallback-numret om ett är satt,
+  // annars direkt till telefonsvararen.
   if (step === "fallback") {
     const fallback = clean(env("VOICE_FALLBACK_NUMBER"), 40);
-    if (!fallback) return json({}); // inget fallback-nummer ännu → avsluta (whenhangup-notisen gäller fortfarande)
-    const action = { connect: fallback, timeout };
+    if (!fallback) return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record") });
+    const action = { connect: fallback, timeout, next: selfUrl(origin, auth, "voicemail") };
     if (auth.configured) action.whenhangup = callbackUrl(origin, auth);
     return json(action);
   }
 
-  // Utanför telefontid → gamla televäxelns röstbesked, sedan avslut.
+  // Steg 3: inte heller fallback-numret svarade → telefonsvararens prompt.
+  if (step === "voicemail") {
+    return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record") });
+  }
+
+  // Steg 4: spela in meddelandet (max 90 s, samma gräns som gamla växeln).
+  if (step === "record") {
+    return json({ record: selfUrl(origin, auth, "saved"), timelimit: 90, silencedetection: "no" });
+  }
+
+  // Steg 5: inspelningen klar → SMS till Sebastian med länk till ljudfilen.
+  if (step === "saved") {
+    const payload = await parseForm(request);
+    const caller = clean(payload.from, 40) || "okänt nummer";
+    const wav = clean(payload.wav, 400);
+    const notifyTo = clean(env("VOICE_NOTIFY_TO") || env("VOICE_MISSED_SMS_TO"), 40);
+    const time = new Date().toLocaleTimeString("sv-SE", { timeZone: "Europe/Stockholm", hour: "2-digit", minute: "2-digit" });
+    await postSms({
+      to: notifyTo,
+      message: `[Nordic] ${time} Röstmeddelande från ${caller}.\nLyssna: ${wav || "inspelning saknas"}\n(kräver 46elks-inloggning)`,
+    });
+    return json({});
+  }
+
+  // Utanför telefontid → gamla televäxelns besked, sedan telefonsvararen.
   if (!isOfficeHours(now)) {
-    return json({ play: closedPrompt });
+    return json({ play: closedPrompt, next: selfUrl(origin, auth, "record") });
   }
 
   const sebastian = clean(

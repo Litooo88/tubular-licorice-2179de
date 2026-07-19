@@ -3,6 +3,9 @@ import test from "node:test";
 
 import voiceSimple, { isOfficeHours } from "../netlify/functions/voice-simple.mjs";
 
+// Rensas inför varje test — kritisk lista: Netlify-bygget kör testerna med
+// PRODUKTIONS-env, så utan sanering skulle t.ex. saved-steget skicka riktiga
+// SMS vid varje deploy och satta VOICE_*-värden ge flakiga assertions.
 const ENV_KEYS = [
   "VOICE_WEBHOOK_SECRET",
   "VOICE_PRIMARY_NUMBER",
@@ -10,6 +13,16 @@ const ENV_KEYS = [
   "VOICE_FALLBACK_NUMBER",
   "VOICE_TEST_NOW",
   "VOICE_CLOSED_MP3_URL",
+  "VOICE_VOICEMAIL_MP3_URL",
+  "VOICE_TIMEOUT_SECONDS",
+  "VOICE_NOTIFY_TO",
+  "VOICE_MISSED_SMS_TO",
+  "SITE_URL",
+  "ELKS_USERNAME",
+  "ELKS_PASSWORD",
+  "SMS_API_USERNAME",
+  "SMS_API_PASSWORD",
+  "SMS_FROM",
 ];
 
 // Måndag 2026-07-20 kl 10:00 svensk tid = öppet; lördag 23:00 = stängt.
@@ -75,13 +88,13 @@ test("uses the emergency forwarding number if Netlify has no number configured",
   });
 });
 
-test("plays the outside-hours prompt when the workshop phone is closed", async () => {
+test("plays the outside-hours prompt and then records a voicemail when closed", async () => {
   await withEnv({ VOICE_PRIMARY_NUMBER: "+46700000001", VOICE_TEST_NOW: CLOSED_NOW }, async () => {
     const response = await voiceSimple(request());
     assert.equal(response.status, 200);
-    assert.deepEqual(await response.json(), {
-      play: "https://www.nordicemobility.se/audio/outside-hours-prompt.mp3",
-    });
+    const action = await response.json();
+    assert.equal(action.play, "https://www.nordicemobility.se/audio/outside-hours-prompt.mp3");
+    assert.match(action.next, /voice-simple\?step=record$/);
   });
 });
 
@@ -93,13 +106,42 @@ test("fallback step connects the fallback number when configured", async () => {
       assert.equal(response.status, 200);
       const action = await response.json();
       assert.equal(action.connect, "+46700000002");
+      assert.match(action.next, /voice-simple\?step=voicemail$/);
     },
   );
 });
 
-test("fallback step ends the call quietly when no fallback number is configured", async () => {
+test("fallback step goes straight to voicemail when no fallback number is configured", async () => {
   await withEnv({ VOICE_PRIMARY_NUMBER: "+46700000001", VOICE_TEST_NOW: OPEN_NOW }, async () => {
     const response = await voiceSimple(request("?step=fallback"));
+    assert.equal(response.status, 200);
+    const action = await response.json();
+    assert.equal(action.play, "https://www.nordicemobility.se/audio/voicemail-prompt.mp3");
+    assert.match(action.next, /voice-simple\?step=record$/);
+  });
+});
+
+test("voicemail step plays the prompt and continues to recording", async () => {
+  await withEnv({ VOICE_PRIMARY_NUMBER: "+46700000001", VOICE_TEST_NOW: OPEN_NOW }, async () => {
+    const response = await voiceSimple(request("?step=voicemail"));
+    const action = await response.json();
+    assert.equal(action.play, "https://www.nordicemobility.se/audio/voicemail-prompt.mp3");
+    assert.match(action.next, /voice-simple\?step=record$/);
+  });
+});
+
+test("record step starts a recording that reports back to the saved step", async () => {
+  await withEnv({ VOICE_PRIMARY_NUMBER: "+46700000001", VOICE_TEST_NOW: OPEN_NOW }, async () => {
+    const response = await voiceSimple(request("?step=record"));
+    const action = await response.json();
+    assert.match(action.record, /voice-simple\?step=saved$/);
+    assert.equal(action.timelimit, 90);
+  });
+});
+
+test("saved step acknowledges without exposing errors even when SMS is unconfigured", async () => {
+  await withEnv({ VOICE_PRIMARY_NUMBER: "+46700000001", VOICE_TEST_NOW: OPEN_NOW }, async () => {
+    const response = await voiceSimple(request("?step=saved"));
     assert.equal(response.status, 200);
     assert.deepEqual(await response.json(), {});
   });
