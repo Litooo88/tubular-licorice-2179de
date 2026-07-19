@@ -446,6 +446,40 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     newLeadsToday: todayRows.filter((row) => row.lead?.status === "new").length,
   };
 
+  // Saldovakt: hämtar 46elks-saldot (10000 = 1 SEK). Under tröskeln skickas
+  // varnings-SMS till Sebastian max 1 gång per dygn (blob-throttle) — tomt
+  // saldo var grundorsaken till telefonhaveriet 13-17 juli och får aldrig
+  // hända tyst igen.
+  let account = null;
+  try {
+    const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
+    const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
+    const meResponse = await fetch("https://api.46elks.com/a1/me", {
+      headers: { Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}` },
+      signal: AbortSignal.timeout(8000),
+    });
+    const me = await meResponse.json().catch(() => ({}));
+    if (meResponse.ok && Number.isFinite(Number(me.balance))) {
+      const balanceSek = Math.round(Number(me.balance) / 10000);
+      const warnBelowSek = Number(env("ELKS_BALANCE_WARN_SEK")) || 100;
+      account = { balanceSek, warnBelowSek, low: balanceSek < warnBelowSek };
+      if (account.low) {
+        const warnStore = getStore({ name: "ops-warnings", consistency: "strong" });
+        const lastWarn = await warnStore.get("elks-balance", { type: "json" }).catch(() => null);
+        if (!lastWarn?.at || Date.now() - new Date(lastWarn.at).getTime() > 24 * 60 * 60 * 1000) {
+          const warnTo = env("VOICE_NOTIFY_TO") || env("SEBASTIAN_SMS_TO") || env("WORKSHOP_SMS_TO");
+          const warnResult = await postSms({
+            to: warnTo,
+            message: `[Nordic] VARNING: 46elks-saldot är nere på ${account.balanceSek} kr (gräns ${warnBelowSek} kr). Fyll på nu - vid 0 kr slutar telefon och SMS att fungera, som 13-17 juli.`,
+          });
+          await warnStore.setJSON("elks-balance", { at: new Date().toISOString(), balanceSek, result: warnResult.status }).catch(() => {});
+        }
+      }
+    }
+  } catch {
+    account = null;
+  }
+
   // Svars-inkorg: inkommande SMS (RING-svar m.m.) senaste 7 dagarna + optouts.
   const inboundCutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
   const [{ items: inboundMap }, { items: optoutMap }] = await Promise.all([
@@ -458,7 +492,7 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     .sort((a, b) => String(b.at).localeCompare(String(a.at)));
   const optoutPhones = [...optoutMap.keys()];
 
-  return { rows, todayRows, activeLeadRows, totals, stats, inboundSms, optoutPhones, readOnly: !syncLeads };
+  return { rows, todayRows, activeLeadRows, totals, stats, account, inboundSms, optoutPhones, readOnly: !syncLeads };
 };
 
 export default async (request) => {

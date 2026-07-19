@@ -32,6 +32,28 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-19 — Claude Code — KLAR (saldovakt + auto-SMS till missade uppringare + kampanjfixar)
+
+- **Branch:** `feat/balance-guard-callbacks` → PR mot `main`.
+- **Saldovakt (`call-dashboard.mjs` + admin):** GET hämtar 46elks-saldot
+  (/a1/me, 10000=1 SEK) → `account` i svaret + statkort i admin (rött under
+  tröskeln, env `ELKS_BALANCE_WARN_SEK` default 100). Under tröskeln SMS:as
+  Sebastian max 1 gg/dygn (blob `ops-warnings`). Tomt saldo = grundorsaken
+  till 13-17 juli och får aldrig vara tyst igen.
+- **Auto-SMS till missade uppringare (`voice-notify.mjs`):** vid obesvarat
+  samtal SMS:as uppringaren ("vi såg att du ringde - boka här...") med
+  spärrar: max 1/nummer/dygn (blob `caller-autosms`), aldrig optout-nummer,
+  aldrig kl 21-08, aldrig egna nummer.
+- **Kampanjfixar (admin):** followedUp blockerar nu bara LYCKADE utskick
+  (13 juli-mottagarna åter nåbara); standardtexten utan RING/STOPP-svar
+  (avsändaren kan inte ta emot — återinför när SMS-kapabelt mobilnummer
+  finns); replyable-checkboxen default AV med förklaring.
+- **Exekvering:** servicelänk-omkörning behövdes EJ (alla failade-SMS-fall
+  hade mailtäckning eller inaktivt ärende). Kampanjvåg 1 (25 av 60 unika,
+  korrigerad text utan RING) körs söndag kl 10:00 — kl 05:30 skickar man
+  inte SMS till kunder. Saras fallback-nummer avvaktas (Sebastians besked).
+- **Tester:** node --check ×2, inline-JS 0 fel, build ✅.
+
 ### 2026-07-19 — Claude Code — KLAR (voice-simple v3: telefonsvarare med inspelning)
 
 - **Branch:** `feat/voicemail-recording` → PR mot `main`.

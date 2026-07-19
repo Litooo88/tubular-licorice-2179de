@@ -1,5 +1,8 @@
-// 46elks whenhangup callback - sends an internal missed/answered call SMS when configured.
+// 46elks whenhangup callback - sends an internal missed/answered call SMS when
+// configured, plus an automatic "vi såg att du ringde"-SMS to missed callers
+// (throttled per number, optout-aware, only during decent hours).
 
+import { getStore } from "@netlify/blobs";
 import { tokenMatches } from "./_shared/admin-auth.mjs";
 
 const env = (name) => {
@@ -55,8 +58,8 @@ const smsConfig = () => ({
   to: clean(env("VOICE_NOTIFY_TO") || env("VOICE_MISSED_SMS_TO"), 40),
 });
 
-const sendInternalSms = async (message) => {
-  const { username, password, from, to } = smsConfig();
+const sendSms = async (to, message) => {
+  const { username, password, from } = smsConfig();
   if (!username || !password || !to) return { status: "not_configured" };
   try {
     const response = await fetch("https://api.46elks.com/a1/sms", {
@@ -72,6 +75,54 @@ const sendInternalSms = async (message) => {
   } catch (error) {
     console.error("voice-notify SMS error", { message: clean(error.message, 240) });
     return { status: "failed", error: clean(error.message, 240) };
+  }
+};
+
+const sendInternalSms = (message) => sendSms(smsConfig().to, message);
+
+const normalizePhone = (phone) => {
+  const compact = clean(phone, 80).replace(/[^\d+]/g, "");
+  if (!compact) return "";
+  if (compact.startsWith("+")) return compact;
+  if (compact.startsWith("00")) return `+${compact.slice(2)}`;
+  if (compact.startsWith("46")) return `+${compact}`;
+  if (compact.startsWith("0")) return `+46${compact.slice(1)}`;
+  return compact.length >= 7 ? `+46${compact}` : "";
+};
+
+const stockholmHour = (now = new Date()) =>
+  Number(new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", hour: "2-digit", hour12: false }).format(now));
+
+// Automatiskt SMS till uppringare som inte nådde fram: max 1 per nummer och
+// dygn, aldrig till optout-nummer, aldrig nattetid, aldrig till egna nummer.
+const notifyMissedCaller = async (callerRaw) => {
+  const caller = normalizePhone(callerRaw);
+  if (!caller) return { status: "skipped", reason: "no_number" };
+  const ownNumbers = new Set(
+    [env("VOICE_PRIMARY_NUMBER"), env("VOICE_SEBASTIAN_PHONE"), env("VOICE_WORKSHOP_PHONE"), env("VOICE_FALLBACK_NUMBER"), env("ELKS_NUMBER") || "+46101385498"]
+      .map(normalizePhone)
+      .filter(Boolean),
+  );
+  if (ownNumbers.has(caller)) return { status: "skipped", reason: "own_number" };
+  const hour = stockholmHour();
+  if (hour < 8 || hour >= 21) return { status: "skipped", reason: "night" };
+  try {
+    const optout = await getStore({ name: "sms-optout", consistency: "strong" }).get(caller, { type: "json" }).catch(() => null);
+    if (optout) return { status: "skipped", reason: "optout" };
+    const throttleStore = getStore({ name: "caller-autosms", consistency: "strong" });
+    const last = await throttleStore.get(caller, { type: "json" }).catch(() => null);
+    if (last?.at && Date.now() - new Date(last.at).getTime() < 24 * 60 * 60 * 1000) {
+      return { status: "skipped", reason: "throttled" };
+    }
+    const result = await sendSms(
+      caller,
+      "Hej! Vi såg att du ringde Nordic E-Mobility men vi kunde tyvärr inte svara just då. Boka tid direkt på https://www.nordicemobility.se/book-online så prioriteras du, eller ring igen vardagar 9-18 på 010-138 54 98. /Nordic E-Mobility",
+    );
+    await throttleStore.setJSON(caller, { at: new Date().toISOString(), result: result.status }).catch(() => {});
+    return result;
+  } catch (error) {
+    console.error("voice-notify caller SMS error", { message: clean(error?.message, 240) });
+    return { status: "failed" };
   }
 };
 
@@ -99,8 +150,9 @@ export default async (request) => {
     ? `[Nordic] ${time} Besvarat samtal fran ${callerNo} (${duration}s)`
     : `[Nordic] ${time} MISSAT samtal fran ${callerNo}. Ring upp eller skicka SMS.`;
   const sms = await sendInternalSms(message);
+  const callerSms = answered ? { status: "skipped", reason: "answered" } : await notifyMissedCaller(payload.from);
 
-  return new Response(JSON.stringify({ ok: true, sms, webhookSecretConfigured: auth.configured }), {
+  return new Response(JSON.stringify({ ok: true, sms, callerSms, webhookSecretConfigured: auth.configured }), {
     status: 200,
     headers: { "Content-Type": "application/json; charset=utf-8" },
   });
