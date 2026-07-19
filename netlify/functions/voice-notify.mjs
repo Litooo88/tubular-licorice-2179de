@@ -4,6 +4,7 @@
 
 import { getStore } from "@netlify/blobs";
 import { tokenMatches } from "./_shared/admin-auth.mjs";
+import { serviceNumberForCase } from "./_shared/service-number.mjs";
 
 const env = (name) => {
   try {
@@ -93,6 +94,42 @@ const normalizePhone = (phone) => {
 const stockholmHour = (now = new Date()) =>
   Number(new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", hour: "2-digit", hour12: false }).format(now));
 
+// Har uppringaren ett pågående ärende? Då kan SMS:et peka direkt på kundens
+// egen statussida i stället för en allmän hänvisning.
+const ONGOING_STATUSES = new Set(["new", "contacted", "checked_in", "diagnosing", "repairing", "waiting_parts", "waiting_customer", "ready"]);
+const findOngoingCase = async (caller) => {
+  try {
+    const store = getStore({ name: "workshop-cases", consistency: "strong" });
+    const { blobs } = await store.list();
+    const keys = (blobs || []).map((blob) => blob.key);
+    const matches = [];
+    for (let i = 0; i < keys.length; i += 25) {
+      const chunk = keys.slice(i, i + 25);
+      const items = await Promise.all(chunk.map((key) => store.get(key, { type: "json" }).catch(() => null)));
+      for (const item of items) {
+        if (item && ONGOING_STATUSES.has(String(item.status)) && normalizePhone(item.customer?.phone) === caller) {
+          matches.push(item);
+        }
+      }
+    }
+    matches.sort((a, b) => String(b.updatedAt || b.createdAt || "").localeCompare(String(a.updatedAt || a.createdAt || "")));
+    return matches[0] || null;
+  } catch {
+    return null;
+  }
+};
+
+const firstName = (name) => clean(name, 140).split(/\s+/).filter(Boolean)[0] || "";
+
+const missedCallerMessage = (ongoingCase) => {
+  const serviceNumber = ongoingCase ? serviceNumberForCase(ongoingCase) : "";
+  if (ongoingCase && serviceNumber) {
+    const name = firstName(ongoingCase.customer?.name);
+    return `Hej${name ? ` ${name}` : ""}! Vi såg att du ringde Nordic E-Mobility men kunde tyvärr inte svara just då. Gäller det ditt pågående ärende (servicenummer ${serviceNumber})? Aktuell status ser du alltid direkt här: https://www.nordicemobility.se/status/?service=${encodeURIComponent(serviceNumber)} - där kan du också begära en statusuppdatering med ett knapptryck. Gäller det något annat? Boka på nordicemobility.se/book-online eller ring igen vardagar 9-18. /Nordic E-Mobility`;
+  }
+  return `Hej! Vi såg att du ringde Nordic E-Mobility men kunde tyvärr inte svara just då. Har du ett pågående ärende hos oss? Med ditt servicenummer (står i ditt SMS/mail från oss) följer du statusen själv på www.nordicemobility.se/status - dygnet runt, utan att behöva ringa. Vill du boka service? Boka på nordicemobility.se/book-online så prioriteras du. Ring annars igen vardagar 9-18 på 010-138 54 98. /Nordic E-Mobility`;
+};
+
 // Automatiskt SMS till uppringare som inte nådde fram: max 1 per nummer och
 // dygn, aldrig till optout-nummer, aldrig nattetid, aldrig till egna nummer.
 const notifyMissedCaller = async (callerRaw) => {
@@ -114,12 +151,10 @@ const notifyMissedCaller = async (callerRaw) => {
     if (last?.at && Date.now() - new Date(last.at).getTime() < 24 * 60 * 60 * 1000) {
       return { status: "skipped", reason: "throttled" };
     }
-    const result = await sendSms(
-      caller,
-      "Hej! Vi såg att du ringde Nordic E-Mobility men vi kunde tyvärr inte svara just då. Boka tid direkt på https://www.nordicemobility.se/book-online så prioriteras du, eller ring igen vardagar 9-18 på 010-138 54 98. /Nordic E-Mobility",
-    );
-    await throttleStore.setJSON(caller, { at: new Date().toISOString(), result: result.status }).catch(() => {});
-    return result;
+    const ongoingCase = await findOngoingCase(caller);
+    const result = await sendSms(caller, missedCallerMessage(ongoingCase));
+    await throttleStore.setJSON(caller, { at: new Date().toISOString(), result: result.status, personalized: Boolean(ongoingCase) }).catch(() => {});
+    return { ...result, personalized: Boolean(ongoingCase) };
   } catch (error) {
     console.error("voice-notify caller SMS error", { message: clean(error?.message, 240) });
     return { status: "failed" };

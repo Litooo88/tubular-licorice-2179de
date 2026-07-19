@@ -53,6 +53,14 @@ löpande "konversation".
   korrigerad text utan RING) körs söndag kl 10:00 — kl 05:30 skickar man
   inte SMS till kunder. Saras fallback-nummer avvaktas (Sebastians besked).
 - **Tester:** node --check ×2, inline-JS 0 fel, build ✅.
+- **TILLÄGG (Sebastians önskan, samma branch):** auto-SMS:et till missade
+  uppringare slår nu upp om numret har ett PÅGÅENDE ärende: har ärendet ett
+  servicenummer skickas kundens personliga statuslänk (?service=NEM-...) med
+  namn + uppmaning att följa/begära status själv; annars generisk text som
+  förklarar att status söks med servicenumret på /status. Syfte: avlasta
+  spam-ringandet — statusjagare får självbetjäning direkt i handen.
+  serviceNumberForCase importeras från _shared/service-number.mjs (Codex
+  helper). Inga nya nummer genereras här — bara befintliga används.
 
 ### 2026-07-19 — Claude Code — KLAR (voice-simple v3: telefonsvarare med inspelning)
 
