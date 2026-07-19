@@ -574,6 +574,48 @@ export default async (request) => {
       return json({ ok: true, number: ourNumber, smsUrl: smsUrl.replace(/secret=[^&]+/, "secret=***"), voiceStartUnchanged: true });
     }
 
+    if (action === "configure_voice_webhook") {
+      // Sätter voice_start på 010-numret till voice-simple MED ?secret= så att
+      // VOICE_WEBHOOK_SECRET kan aktiveras utan avbrott: 46elks skickar
+      // secreten redan innan env-varn är live (voice-simple ignorerar den då).
+      const secret = clean(body.secret, 240);
+      if (secret.length < 32) return json({ error: "Secret måste vara minst 32 tecken." }, 400);
+      const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
+      const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
+      if (!username || !password) return json({ error: "46elks API saknas i Netlify env." }, 503);
+      const authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
+      const ourNumber = normalizePhone(env("ELKS_NUMBER") || "+46101385498");
+      const readBody = async (response) => {
+        const text = clean(await response.text().catch(() => ""), 400);
+        try { return { text, json: JSON.parse(text) }; } catch { return { text, json: null }; }
+      };
+      const listResponse = await fetch("https://api.46elks.com/a1/numbers", {
+        headers: { Authorization: authHeader },
+        signal: AbortSignal.timeout(10000),
+      });
+      const listBody = await readBody(listResponse);
+      if (!listResponse.ok) {
+        return json({ error: `Lista nummer nekades: HTTP ${listResponse.status} ${clean(listBody.json?.error || listBody.text, 200)}`, step: "list_numbers" }, 502);
+      }
+      const numberEntry = (Array.isArray(listBody.json?.data) ? listBody.json.data : []).find(
+        (item) => normalizePhone(item.number) === ourNumber && item.active !== "no",
+      );
+      if (!numberEntry) return json({ error: `Numret ${ourNumber} hittades inte på 46elks-kontot.` }, 404);
+      const siteUrl = (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
+      const voiceStartUrl = `${siteUrl}/.netlify/functions/voice-simple?secret=${encodeURIComponent(secret)}`;
+      const updateResponse = await fetch(`https://api.46elks.com/a1/numbers/${encodeURIComponent(numberEntry.id)}`, {
+        method: "POST",
+        headers: { Authorization: authHeader, "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ voice_start: voiceStartUrl }),
+        signal: AbortSignal.timeout(10000),
+      });
+      const updateBody = await readBody(updateResponse);
+      if (!updateResponse.ok) {
+        return json({ error: `Uppdatera voice_start nekades: HTTP ${updateResponse.status} ${clean(updateBody.json?.error || updateBody.text, 200)}`, step: "update_voice_start" }, 502);
+      }
+      return json({ ok: true, number: ourNumber, voiceStart: voiceStartUrl.replace(/secret=[^&]+/, "secret=***") });
+    }
+
     if (action === "mark_inbound_handled") {
       const key = clean(body.key, 200);
       if (!key) return json({ error: "Nyckel saknas." }, 400);

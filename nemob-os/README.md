@@ -53,6 +53,27 @@ Skyddet: PIN krävs för allt (sidor och API), timing-safe jämförelse, max 20
 felförsök/timme, sessioner dör när servern startas om på riktigt (i minnet).
 Datorn måste vara på och telefonen på samma nätverk — datan lämnar aldrig huset.
 
+## Slå upp ärende (sökrutan överst)
+
+Sök på **namn, telefonnummer (valfritt format), modell eller ärendenummer** —
+träffarna visar ägare, klickbart telefonnummer, fordon, status och dagar öppet.
+Knappen **"Pågående arbeten"** ger den prioriterade verkstadslistan (äldst först).
+
+Kräver `NORDIC_ADMIN_TOKEN` i `.env` (samma token som admin). Utan den visas
+ett tydligt `not_configured`-läge. Säkerhetsmodell: token skickas endast
+server-till-server, endast GET (proxyn kan inte skriva), telefonen får aldrig
+hela databasen — bara whitelistade fält för max 20 träffar. Listan cachas 60 s
+och senast hämtade lista visas märkt om källan är nere.
+
+## Utanför hemnätverket: Tailscale
+
+Installera Tailscale på dator + telefon (samma konto). Ingen konfiguration
+behövs — ingen exit node, inga subnet routes. Telefonen når sedan dashboarden
+var som helst via datorns Tailscale-adress: `http://<tailscale-ip>:4571`
+(syns i Tailscale-appen eller `tailscale ip -4`). Trafiken går krypterat
+enhet-till-enhet; ingen port öppnas mot internet. Windows räknar
+Tailscale-gränssnittet som privat nätverk, så brandväggsregeln ovan täcker det.
+
 ## Vad Nordic-integrationen är — och inte är
 
 - **Endast GET** mot briefing-endpointen. Ingen kod i `nemob-os/` kan ändra

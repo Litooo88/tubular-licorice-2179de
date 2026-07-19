@@ -15,6 +15,8 @@ import { Store, defaultStorePath } from "./lib/store.mjs";
 import { newTask, taskPatch } from "./lib/tasks.mjs";
 import { generatePlan, summarizeDay } from "./lib/plan.mjs";
 import { fetchNordicBrief } from "./lib/nordic.mjs";
+import { fetchAdminCases } from "./lib/admin-cases.mjs";
+import { openCasesPrioritized, searchCases } from "./lib/lookup.mjs";
 import { AREAS, RISK_LEVELS, STATUSES, stockholmDate } from "./lib/constants.mjs";
 import {
   SessionStore,
@@ -172,6 +174,30 @@ const handleApi = async (req, res, url) => {
     const body = await readBody(req);
     simulateDown = body.down === true;
     return json(res, { ok: true, simulateDown });
+  }
+
+  // Slå upp ärenden (read-only proxy mot Nordic-admin, endast träffar skickas).
+  if (path === "/api/lookup" && req.method === "GET") {
+    const result = await fetchAdminCases();
+    if (result.status === "not_configured") return json(res, { status: "not_configured" });
+    if (result.status === "down" && !result.cases) return json(res, { status: "down", code: result.code });
+    const query = url.searchParams.get("q") || "";
+    return json(res, {
+      status: "ok",
+      stale: result.status === "down",
+      results: searchCases(result.cases, query),
+    });
+  }
+
+  if (path === "/api/lookup/open" && req.method === "GET") {
+    const result = await fetchAdminCases();
+    if (result.status === "not_configured") return json(res, { status: "not_configured" });
+    if (result.status === "down" && !result.cases) return json(res, { status: "down", code: result.code });
+    return json(res, {
+      status: "ok",
+      stale: result.status === "down",
+      results: openCasesPrioritized(result.cases),
+    });
   }
 
   if (path === "/api/tasks" && req.method === "GET") {
