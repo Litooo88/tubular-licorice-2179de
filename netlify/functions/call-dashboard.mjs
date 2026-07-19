@@ -107,9 +107,9 @@ const postSms = async ({ to, message, from: fromOverride }) => {
   return { status: "sent", to: normalizedTo, id: clean(body.id, 120), sentAt: new Date().toISOString() };
 };
 
-// Paginerar 46elks (max 100 samtal/sida) tills fönstret (30 dagar) är täckt.
+// Paginerar 46elks (max 100 samtal/sida) tills fönstret (60 dagar) är täckt.
 // Tidigare hämtades bara första sidan → "senaste 100 samtalen" oavsett datum.
-const CALL_WINDOW_DAYS = 30;
+const CALL_WINDOW_DAYS = 60;
 const fetchCalls = async () => {
   const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
   const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
@@ -118,7 +118,7 @@ const fetchCalls = async () => {
   const cutoff = Date.now() - CALL_WINDOW_DAYS * 24 * 60 * 60 * 1000;
   const calls = [];
   let url = "https://api.46elks.com/a1/calls?limit=100";
-  for (let page = 0; page < 12 && url; page += 1) {
+  for (let page = 0; page < 24 && url; page += 1) {
     const response = await fetch(url, {
       headers: { Authorization: auth },
       signal: AbortSignal.timeout(12000),
