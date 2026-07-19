@@ -32,6 +32,27 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-19 — Claude Code — KLAR (configure_voice_webhook: aktivera VOICE_WEBHOOK_SECRET utan avbrott)
+
+- **Branch:** `feat/voice-webhook-secret` → PR mot `main`.
+- **Bakgrund:** 46elks-kontot var TOMT (0,36 kr) sedan natten 13 juli — det var
+  därför ALLA SMS gav "Forbidden" och alla röstben failade på 0s trots att
+  webhooken svarade rätt. Sebastian fyllde på 100 kr 17 juli; API:t är
+  verifierat upplåst (nummerlistan svarar igen).
+- **Ny action `configure_voice_webhook` (call-dashboard.mjs):** sätter
+  voice_start på 010-numret till voice-simple MED `?secret=` via 46elks API.
+  Avbrottsfri ordning: (1) merge/deploy actionen, (2) kör actionen så 46elks
+  börjar skicka secreten (voice-simple utan env ignorerar den), (3) sätt
+  VOICE_WEBHOOK_SECRET i Netlify env → nästa deploy aktiverar kravet och
+  whenhangup→voice-notify (missat-samtal-SMS, kräver VOICE_NOTIFY_TO).
+- **Kampanjfacit 13 juli:** ALLA 25 kampanj-SMS failade (kontospärren) —
+  ingen mottagare nåddes. Måste skickas om när telefonkedjan är verifierad.
+- **NYTT LARM:** 46elks loggar NOLL inkommande samtal 18-19 juli trots att
+  Sebastians mobil "ringt som en galning" — misstanke: kunder ringer hans
+  mobil direkt, alternativt når 010-samtal inte ens 46elks längre. Testsamtal
+  till 010-numret + kontroll i 46elks dashboard krävs.
+- **Tester:** node --check ✅, 7/7 ✅.
+
 ### 2026-07-14 — Claude Code — KLAR (NEMOB OS "Slå upp ärende" — tillägg i PR #107)
 
 - **Branch/PR:** ny commit på `feat/nemob-os-mobil` → PR #107 (öppen).
