@@ -32,6 +32,19 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-19 — Claude Code — KLAR (bokningskortet "Startar inte / elfel" prissatt ärligt)
+
+- **Branch:** `fix/elfel-card-pricing` → PR mot `main`.
+- **Sebastians feedback:** "Från 395 kr" på elfel-kortet var missvisande —
+  el/batterifelsökning är avancerad diagnos. Prislistan säger: elsystem
+  395 kr, batteri 745 kr (grund) / 945 kr (avancerad).
+- **Ny text:** "Kvalificerad felsökning av el och batteri — laddning, display,
+  kablage, controller, BMS och celler. Elsystem från 395 kr · batteri från
+  745 kr. Diagnosavgiften dras av vid reparation hos oss." Radiovärdet
+  `serviceChoice=Felsökning` orört — inga flöden påverkas.
+- **Verifiering:** inline-JS 0 riktiga fel (3 träffar var JSON-LD-datablock,
+  identiska i original), build ✅.
+
 ### 2026-07-19 — Claude Code — KLAR (voice-simple v3: telefonsvarare med inspelning)
 
 - **Branch:** `feat/voicemail-recording` → PR mot `main`.
