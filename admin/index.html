@@ -538,7 +538,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div class="call-actions">
       <button type="button" class="secondary" id="buildCampaignList">Bygg mottagarlista (30 dagar)</button>
       <label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#aeb8b0"><input type="checkbox" id="campaignIncludeActive"> Inkludera &auml;ven nummer med aktivt &auml;rende</label>
-      <label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#aeb8b0"><input type="checkbox" id="campaignReplyable" checked> Skicka fr&aring;n 010-numret s&aring; kunden kan svara RING/STOPP</label>
+      <label style="display:inline-flex;align-items:center;gap:7px;font-size:13px;color:#aeb8b0"><input type="checkbox" id="campaignReplyable"> Skicka fr&aring;n eget nummer s&aring; kunden kan svara (kr&auml;ver SMS-kapabelt 46elks-mobilnummer &mdash; ej aktiverat &auml;nnu)</label>
     </div>
     <div class="call-status" id="campaignStatus"></div>
     <div style="margin:12px 0">
@@ -2819,7 +2819,9 @@ async function loadCallDashboard(){
 }
 function renderCallDashboard(data){
   const totals=data.totals||{};
+  const account=data.account||null;
   const statItems=[
+    ...(account?[[account.low?'⚠ 46elks-saldo':'46elks-saldo',`${account.balanceSek} kr`]]:[]),
     ['Samtal idag',totals.callsToday||0],
     ['Hanterade',totals.handledToday||0],
     ['Verkstaden',totals.workshopToday||0],
@@ -2830,7 +2832,11 @@ function renderCallDashboard(data){
     ['Tapp-risk',totals.lostLeadToday||0],
     ['Leads att göra',totals.activeLeads||0],
   ];
-  callStatsEl.innerHTML=statItems.map(([label,value])=>`<div class="panel stat"><span>${html(label)}</span><b>${html(value)}</b></div>`).join('');
+  callStatsEl.innerHTML=statItems.map(([label,value])=>{
+    const low=account&&account.low&&String(label).includes('46elks-saldo');
+    return `<div class="panel stat"${low?' style="border-color:#c0392b;background:rgba(192,57,43,.12)"':''}><span>${html(label)}</span><b${low?' style="color:#ff6b5e"':''}>${html(value)}</b></div>`;
+  }).join('');
+  if(account&&account.low)showCallStatus(`VARNING: 46elks-saldot är ${account.balanceSek} kr (gräns ${account.warnBelowSek} kr). Fyll på nu — vid 0 kr dör telefon och SMS.`,true);
   renderCallStats30(data.stats||null);
   renderCallLeads(data.activeLeadRows||[]);
   const rows=data.todayRows||[];
@@ -2967,7 +2973,10 @@ async function copyCallFollowupDraft(row,button){
 let campaignRecipients=[];
 function campaignDefaultMessage(){
   const until=new Date(Date.now()+14*24*60*60*1000).toLocaleDateString('sv-SE');
-  return `Hej! Du sökte Nordic E-Mobility nyligen – ursäkta att vi inte kunde svara, ett tekniskt fel stoppade många samtal och är nu åtgärdat. Som tack får du 20 % rabatt på valfri service med koden RING20, giltig t.o.m. ${until}. Svara RING på detta sms så ringer vi upp dig inom 24 timmar, boka på nordicemobility.se/book-online eller ring 010-138 54 98. Svara STOPP om du inte vill ha fler sms. /Nordic E-Mobility`;
+  // OBS: ingen "Svara RING/STOPP"-rad — avsändaren NordicEMob och 010-numret
+  // kan inte ta emot SMS. Återinför svarsalternativen när ett SMS-kapabelt
+  // 46elks-mobilnummer är allokerat och ELKS_NUMBER uppdaterad.
+  return `Hej! Du sökte Nordic E-Mobility nyligen – ursäkta att vi inte kunde svara, ett tekniskt fel i vår telefonväxel stoppade många inkommande samtal och är nu åtgärdat. Som tack får du 20 % rabatt på valfri service med koden RING20, giltig t.o.m. ${until}. Boka på nordicemobility.se/book-online eller ring 010-138 54 98 vardagar 9-18. Vill du inte ha fler sms? Mejla info@nordicemobility.se. /Nordic E-Mobility`;
 }
 function showCampaignStatus(message,bad=false){
   const el=document.getElementById('campaignStatus');
@@ -2991,7 +3000,9 @@ async function buildCampaignList(){
       if(String(row.timestamp)>String(group.latest.timestamp))group.latest=row;
       if(row.hasCase)group.hasCase=true;
       if(Array.isArray(row.cases)&&row.cases.some((c)=>!['done','archived'].includes(String(c.status||''))))group.activeCase=true;
-      if(row.followup||['followed_up','converted','ignored'].includes(String(row.leadStatus||'')))group.followedUp=true;
+      // Bara LYCKADE utskick blockerar — 13 juli-kampanjen failade i sin helhet
+      // (kontospärren) och de mottagarna måste kunna nås igen.
+      if((row.followup&&row.followup.result&&row.followup.result.status==='sent')||['converted','ignored'].includes(String(row.leadStatus||'')))group.followedUp=true;
       groups.set(row.phone,group);
     });
     const all=[...groups.values()];
