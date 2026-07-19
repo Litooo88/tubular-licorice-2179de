@@ -32,6 +32,27 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-19 — Claude Code — KLAR (voice-simple v2: öppettidsbesked + fallback-nummer — samma branch/PR som secret-actionen)
+
+- **Branch:** `feat/voice-webhook-secret` (samma PR som configure_voice_webhook).
+- **voice-simple.mjs omskriven:** (1) Utanför telefontid (mån–fre 09–18
+  Sthlm-tid, helger + svenska helgdagar stängt — samma schema som gamla
+  televäxeln) spelas `audio/outside-hours-prompt.mp3` (gamla växelns besked,
+  verifierat live HTTP 200) i stället för att ringa Sebastian. (2) Obesvarat
+  samtal → `next` → `?step=fallback` → ringer `VOICE_FALLBACK_NUMBER` om satt
+  (Sebastian ska ge Saras nummer senare — env är förberedd men TOM), annars
+  tyst avslut. (3) `VOICE_TEST_NOW` env för deterministiska tester (bygget
+  kör test:voice — utan den hade nattliga deploys failat). (4) `isOfficeHours`
+  exporteras och är helgdagsmedveten 2026–2027 — uppdatera listan i december.
+- **Env i Netlify (satta av Claude via Sebastians session, 19 juli):**
+  `VOICE_WEBHOOK_SECRET` (48 tecken), `VOICE_PRIMARY_NUMBER=+46700243319`,
+  `VOICE_NOTIFY_TO=+46700243319`. `VOICE_FALLBACK_NUMBER` läggs till när
+  Sebastian bestämt numret.
+- **Tester:** 11/11 (6 nya: stängt-besked, fallback med/utan nummer,
+  helgdagslogik), npm run build ✅.
+- **OBS Netlify:** rött banner "Payment overdue" på teamet — Sebastian
+  informerad, måste uppdatera kort annars riskerar hela sajten nedstängning.
+
 ### 2026-07-19 — Claude Code — KLAR (configure_voice_webhook: aktivera VOICE_WEBHOOK_SECRET utan avbrott)
 
 - **Branch:** `feat/voice-webhook-secret` → PR mot `main`.
