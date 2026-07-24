@@ -32,6 +32,18 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-24 13:13 CEST — Codex — PÅGÅR (Halo Knight-partnerlansering och dropshippingprodukter)
+
+- **Branch:** `feat/halo-knight-launch`.
+- **Omfattning:** produktkatalog, genererade publika produktsidor, lokala
+  produktbilder samt partner-/kampanjpresentation för Halo Knight.
+- **Fastställda kampanjpriser:** T107 Pro 16 990 kr (ord. 18 990 kr) och
+  T108 Pro 17 490 kr (ord. 19 490 kr). Övriga EU-lagermodeller läggs in med
+  tidigare beslutade introduktionspriser.
+- **Till andra agenter:** rör inte `data/products.json`,
+  `scripts/generate-products.mjs`, `nya-elscootrar/`, produktgenererade delar
+  i `index.html` eller nya `assets/products/halo-knight/` under passet.
+
 ### 2026-07-19 — Claude Code — KLAR (vinn-tillbaka-verktyget v2: 60 dgr, rankat, kundkortsfilter; Akut-panelen borttagen)
 
 - **Branch:** `feat/winback-tool-v2` → PR mot `main`. Sebastians omdesign.
