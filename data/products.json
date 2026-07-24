@@ -100,7 +100,7 @@
         "komfort"
       ],
       "images": [
-        "https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png"
+        "/assets/products/navee/xt5-pro-main.webp"
       ]
     },
     {
@@ -123,7 +123,7 @@
         "komfort"
       ],
       "images": [
-        "https://www.naveetech.com/wp-content/uploads/2026/03/NT5-max-12.31.1.png"
+        "/assets/products/navee/nt5-max-main.webp"
       ]
     },
     {
@@ -239,7 +239,7 @@
         "budget"
       ],
       "images": [
-        "https://www.naveetech.com/wp-content/uploads/2025/09/k100-com1.png"
+        "/assets/products/navee/k100-max-main.webp"
       ]
     },
     {
@@ -674,7 +674,7 @@
         "kompakt"
       ],
       "images": [
-        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/S1_Max-1.jpg?v=1740030144"
+        "/assets/products/kukirin/s1-max-main.webp"
       ]
     },
     {
@@ -743,10 +743,7 @@
         "prestanda"
       ],
       "images": [
-        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272",
-        "https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp",
-        "https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp",
-        "https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp"
+        "/assets/products/kukirin/g4-special-main.webp"
       ]
     },
     {
@@ -768,7 +765,7 @@
         "prestanda"
       ],
       "images": [
-        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/1_7da8cb39-a62d-45ec-ba6c-326fde3ce614.jpg?v=1718356445"
+        "/assets/products/kukirin/g3-main.webp"
       ]
     },
     {
@@ -834,7 +831,7 @@
         "prestanda"
       ],
       "images": [
-        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/74b96dbb2d19db9758ba306fc55ad040.jpg?v=1708069782"
+        "/assets/products/kukirin/g4-max-main.webp"
       ]
     },
     {

@@ -32,7 +32,27 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-07-24 — Claude Code — KLAR (SEO vecka noll: blogglänk, batterisidan nationaliserad, sitemap)
+### 2026-07-24 — Claude Code — KLAR (7 produktbilder från leverantörernas Drive-mappar inkopplade)
+
+- **Branch:** `feat/supplier-product-images` → PR mot `main`.
+- **Källor (officiellt leverantörsmaterial, OK att använda som ÅF):**
+  KuKirins delade Drive-mapp (kugoopatty@gmail.com) och NAVEE:s (aidanhah55
+  @gmail.com). Nedladdade via Sebastians Chrome-session, konverterade med
+  sharp till WebP (max 1600 px, q84, vit bakgrund; 2–38 MB → 21–43 kB).
+- **Inkopplade (`images`-fältet, samma mönster som Halo Knight):**
+  KuKirin G4 Special Edition*, S1 Max, G3, G4 Max + NAVEE NT5 Max, XT5 Pro,
+  K100 Max. *G4 SE använder basmodellens G4-hero — verifiera att SE-varianten
+  inte skiljer visuellt. Alla bilder visuellt granskade (rätt modell, vit
+  bakgrund) utom K100 som verifierats efter konvertering.
+- **Saknas fortfarande (kvar av 35):** KuKirin C1 Pro 26Ah, G2, G2 Pro,
+  G2 Max, G2 Master, G3 Pro, M4 Max (G2- och M4-nedladdningar vägrade —
+  finns delvis i Drive: G2 2026/MAIN, M4 Max-mappen); NAVEE UT5 Ultra X,
+  NT5 Ultra X, V25i Pro II, GT3 Max, ST3, ST3 Pro, ST5 Max (finns EJ i
+  Drive — mejl till Aidan krävs); Teverun ALLA 13 (inget material alls —
+  mejl till Group PZ/Teverun). A1:s Drive-mapp har bara livsstils-/
+  marknadsmaterial, ingen ren hero.
+- **Verifiering:** generate-products 44 produkter, build, verify checkout 43,
+  bilderna renderas i nya-elscootrar (3 träffar/bild = kort+galleri) ✅.
 
 - **Branch:** `feat/seo-week-zero` → PR mot `main`. Grundas på SEO-audit
   2026-07-24 (Perplexity, C:\Users\Sebas\Downloads\nordic_emobility_seo_audit_juli2026.pdf).
