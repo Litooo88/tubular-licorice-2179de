@@ -1,11 +1,12 @@
 {
-  "updated": "2026-07-02",
+  "updated": "2026-07-24",
   "notes": [
     "Two older NAVEE references are intentionally excluded from the sellable catalog.",
     "Use status i-lager för products available from supplier with normal delivery, not necessarily physically in the workshop.",
     "Do not label high-power models as road legal unless registration status is confirmed per model.",
     "costEur är internt inköpspris (leverantörens EU-prislista) och får ALDRIG renderas publikt.",
-    "PRISÖVERSYN 2026-07-02: KuKirin G4 (kukirin-g4-special) inköp höjt till 683 EUR — marginalen vid 9 950 kr är nära noll. Nytt pris behöver beslutas."
+    "PRISÖVERSYN 2026-07-02: KuKirin G4 (kukirin-g4-special) inköp höjt till 683 EUR — marginalen vid 9 950 kr är nära noll. Nytt pris behöver beslutas.",
+    "HALO KNIGHT 2026-07-24: fem dropshippingmodeller från EU-lager. T107 Pro och T108 Pro har av Sebastian godkänd introduktionsrabatt på 2 000 kr."
   ],
   "products": [
     {
@@ -239,6 +240,138 @@
       ],
       "images": [
         "https://www.naveetech.com/wp-content/uploads/2025/09/k100-com1.png"
+      ]
+    },
+    {
+      "id": "halo-knight-t102",
+      "brand": "Halo Knight",
+      "name": "Halo Knight T102",
+      "priceSek": 7990,
+      "costEur": 600,
+      "status": "i-lager",
+      "delivery": "Beställningsvara från Halo Knights EU-lager. Beräknad leveranstid 3–7 arbetsdagar efter orderbekräftelse.",
+      "badge": "Introduktionspris",
+      "spec": "1x1200W • 52V 21Ah • uppgiven toppfart 45–50 km/h",
+      "short": "Prispressad ingång till Halo Knight-sortimentet med stort batteri, kraftfull motor och lokal verkstadsservice efter köpet.",
+      "positioning": "Prisvärd prestanda",
+      "legality": "off-road-only",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "prestanda",
+        "lång-rackvidd"
+      ],
+      "images": [
+        "/assets/products/halo-knight/t102-main.png",
+        "/assets/products/halo-knight/t102-side.webp",
+        "/assets/products/halo-knight/t102-detail.webp"
+      ]
+    },
+    {
+      "id": "halo-knight-t104",
+      "brand": "Halo Knight",
+      "name": "Halo Knight T104",
+      "priceSek": 8990,
+      "costEur": 660,
+      "status": "i-lager",
+      "delivery": "Beställningsvara från Halo Knights EU-lager. Beräknad leveranstid 3–7 arbetsdagar efter orderbekräftelse.",
+      "badge": "Introduktionspris",
+      "spec": "2x1200W • 52V 21Ah • uppgiven toppfart 60–65 km/h",
+      "short": "Dubbla motorer till en aggressiv prispunkt för kunden som prioriterar acceleration och Halo Knight-plattformens råa känsla.",
+      "positioning": "Dubbelmotor till rätt pris",
+      "legality": "off-road-only",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "prestanda",
+        "dubbelmotor"
+      ],
+      "images": [
+        "/assets/products/halo-knight/t104-main.webp",
+        "/assets/products/halo-knight/t104-side.webp",
+        "/assets/products/halo-knight/t104-detail.webp"
+      ]
+    },
+    {
+      "id": "halo-knight-t108",
+      "brand": "Halo Knight",
+      "name": "Halo Knight T108",
+      "priceSek": 10990,
+      "costEur": 800,
+      "status": "i-lager",
+      "delivery": "Beställningsvara från Halo Knights EU-lager. Beräknad leveranstid 3–7 arbetsdagar efter orderbekräftelse.",
+      "badge": "Lång räckvidd",
+      "spec": "2x1200W • 52V 28,8Ah • uppgiven toppfart 60–65 km/h",
+      "short": "T104-konceptets dubbla motorer kombinerat med ett större 28,8 Ah-batteri för kunden som vill köra längre mellan laddningarna.",
+      "positioning": "Dubbelmotor och större batteri",
+      "legality": "off-road-only",
+      "checkout": true,
+      "featured": false,
+      "use": [
+        "prestanda",
+        "dubbelmotor",
+        "lång-rackvidd"
+      ],
+      "images": [
+        "/assets/products/halo-knight/t108-main.webp",
+        "/assets/products/halo-knight/t108-side.webp",
+        "/assets/products/halo-knight/t108-detail.webp"
+      ]
+    },
+    {
+      "id": "halo-knight-t107-pro",
+      "brand": "Halo Knight",
+      "name": "Halo Knight T107 Pro",
+      "priceSek": 16990,
+      "originalPriceSek": 18990,
+      "costEur": 1299,
+      "status": "i-lager",
+      "delivery": "Beställningsvara från Halo Knights EU-lager. Beräknad leveranstid 3–7 arbetsdagar efter orderbekräftelse.",
+      "badge": "Spara 2 000 kr",
+      "campaignLabel": "Introduktionskampanj – 2 000 kr rabatt",
+      "spec": "2x3000W • 60V 38,4Ah • uppgiven toppfart 80–95 km/h",
+      "short": "Halo Knights extrema 60V-plattform för erfaren förare som vill ha dubbla 3000W-motorer, stort batteri och lokal teknisk support.",
+      "positioning": "Extrem prestanda",
+      "legality": "off-road-only",
+      "checkout": true,
+      "featured": true,
+      "use": [
+        "extrem-prestanda",
+        "dubbelmotor",
+        "lång-rackvidd"
+      ],
+      "images": [
+        "/assets/products/halo-knight/t107-pro-main.webp",
+        "/assets/products/halo-knight/t107-pro-side.webp",
+        "/assets/products/halo-knight/t107-pro-detail.webp"
+      ]
+    },
+    {
+      "id": "halo-knight-t108-pro",
+      "brand": "Halo Knight",
+      "name": "Halo Knight T108 Pro",
+      "priceSek": 17490,
+      "originalPriceSek": 19490,
+      "costEur": 1299,
+      "status": "i-lager",
+      "delivery": "Beställningsvara från Halo Knights EU-lager. Beräknad leveranstid 3–7 arbetsdagar efter orderbekräftelse.",
+      "badge": "Spara 2 000 kr",
+      "campaignLabel": "Introduktionskampanj – 2 000 kr rabatt",
+      "spec": "2x3000W • 60V 38,4Ah • uppgiven toppfart 80–95 km/h",
+      "short": "T108 Pro är Halo Knights andra extrema 60V-alternativ med dubbla 3000W-motorer, 38,4 Ah-batteri och verkstadsstöd i Örebro.",
+      "positioning": "Extrem prestanda",
+      "legality": "off-road-only",
+      "checkout": true,
+      "featured": true,
+      "use": [
+        "extrem-prestanda",
+        "dubbelmotor",
+        "lång-rackvidd"
+      ],
+      "images": [
+        "/assets/products/halo-knight/t108-pro-main.webp",
+        "/assets/products/halo-knight/t108-pro-side.webp",
+        "/assets/products/halo-knight/t108-pro-detail.webp"
       ]
     },
     {

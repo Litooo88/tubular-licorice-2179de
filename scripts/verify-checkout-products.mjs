@@ -110,6 +110,40 @@ if (!Array.isArray(secondStripeAttempt?.payment_method_types) || !secondStripeAt
   failures.push("Stripe checkout retry must explicitly include card as a payment method.");
 }
 
+let haloKnightAttempt;
+const haloKnightStripe = {
+  checkout: {
+    sessions: {
+      create: async (params) => {
+        haloKnightAttempt = params;
+        return { url: "https://checkout.stripe.test/halo-knight" };
+      },
+    },
+  },
+};
+
+await _internals.createCheckoutSession({
+  stripe: haloKnightStripe,
+  product: {
+    id: "halo-knight-test",
+    name: "Halo Knight test",
+    brand: "Halo Knight",
+    price: 1699000,
+    delivery: "EU-lager 3–7 arbetsdagar",
+  },
+  origin: "https://www.nordicemobility.se",
+});
+
+const haloKnightShipping = haloKnightAttempt?.shipping_options?.[0]?.shipping_rate_data;
+if (
+  haloKnightShipping?.fixed_amount?.amount !== 0 ||
+  haloKnightShipping?.display_name !== "Leverans från Halo Knights EU-lager" ||
+  haloKnightShipping?.delivery_estimate?.minimum?.value !== 3 ||
+  haloKnightShipping?.delivery_estimate?.maximum?.value !== 7
+) {
+  failures.push("Halo Knight checkout must offer free EU-warehouse delivery in 3–7 business days.");
+}
+
 if (failures.length) {
   console.error(failures.join("\n"));
   process.exit(1);
