@@ -34,9 +34,11 @@ löpande "konversation".
 
 ### 2026-07-24 — Claude Code — KLAR (webbaudit prio 0 + delar av prio 1 åtgärdade)
 
-- **Branch:** `fix/webbaudit-prio0`, 6 commits. GitHub onåbart under passet
-  (`git fetch` timeout) — **EJ pushat**, mappen står kvar på branchen.
-  Nästa agent: pusha + öppna PR när nätet är uppe, eller merga lokalt.
+- **Branch:** `fix/webbaudit-prio0`, pushad till origin (nätet kom tillbaka
+  i slutet av passet). PR öppnas via GitHub-UI (`gh` saknas lokalt):
+  https://github.com/Litooo88/tubular-licorice-2179de/compare/main...fix/webbaudit-prio0
+  Mappen står kvar på branchen. OBS: origin/main (PR #114+115) mergades in
+  i branchen under passet av parallell agent — ingen konflikt, bygget grönt.
 - **Underlag:** Full webbaudit 2026-07-24 (Downloads). Auditens påståenden
   verifierade mot koden (4 verifieringsagenter, 6 stoppades av sessionstak
   och täcktes manuellt): prio 0-fynden stämde i sak.
