@@ -431,32 +431,52 @@ const panelHeading=document.querySelector('.panel-title h2');
 const panelLead=document.querySelector('.panel-title p');
 
 function pad(number){return String(number).padStart(2,'0');}
-function isoDay(date){return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}`;}
+// Dagar och tider räknas alltid i Europe/Stockholm — inte i besökarens lokala
+// tidszon — och passerade tider samma dag erbjuds inte. Servern validerar
+// samma regler i /api/bookings.
+const DROPOFF_TIMES=['15:00','15:30','16:00','16:30','17:00','17:30','18:00'];
+function stockholmNow(){
+  const parts=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
+  const value=Object.fromEntries(parts.filter((part)=>part.type!=='literal').map((part)=>[part.type,part.value]));
+  return {year:Number(value.year),month:Number(value.month),day:Number(value.day),hour:Number(value.hour),minute:Number(value.minute)};
+}
+function stockholmTodayIso(){
+  const now=stockholmNow();
+  return `${now.year}-${pad(now.month)}-${pad(now.day)}`;
+}
 function fillDayOptions(){
   if(!preferredDay)return;
   preferredDay.innerHTML='';
+  const now=stockholmNow();
+  const lastSlot=DROPOFF_TIMES[DROPOFF_TIMES.length-1];
+  const lastSlotMinutes=Number(lastSlot.slice(0,2))*60+Number(lastSlot.slice(3));
   // Inlämning tisdag-lördag: söndag (0) och måndag (1) är stängda för inlämning.
   for(let offset=0;offset<28;offset+=1){
-    const date=new Date();
-    date.setDate(date.getDate()+offset);
-    const weekday=date.getDay();
+    const date=new Date(Date.UTC(now.year,now.month-1,now.day+offset,12,0));
+    const weekday=date.getUTCDay();
     if(weekday===0||weekday===1)continue;
+    if(offset===0&&now.hour*60+now.minute>=lastSlotMinutes)continue;
     const option=document.createElement('option');
-    option.value=isoDay(date);
-    option.textContent=date.toLocaleDateString('sv-SE',{weekday:'short',day:'numeric',month:'short'});
+    option.value=`${date.getUTCFullYear()}-${pad(date.getUTCMonth()+1)}-${pad(date.getUTCDate())}`;
+    option.textContent=new Intl.DateTimeFormat('sv-SE',{timeZone:'UTC',weekday:'short',day:'numeric',month:'short'}).format(date);
     preferredDay.appendChild(option);
   }
 }
 function fillTimeOptions(){
   if(!preferredClock)return;
+  const previous=preferredClock.value;
   preferredClock.innerHTML='';
-  // Inlämningstider 15:00-18:00, tisdag-lördag.
-  ['15:00','15:30','16:00','16:30','17:00','17:30','18:00'].forEach((time)=>{
+  const now=stockholmNow();
+  const isToday=preferredDay&&preferredDay.value===stockholmTodayIso();
+  // Inlämningstider 15:00-18:00, tisdag-lördag. Samma dag: bara framtida tider.
+  DROPOFF_TIMES.forEach((time)=>{
+    if(isToday&&Number(time.slice(0,2))*60+Number(time.slice(3))<=now.hour*60+now.minute)return;
     const option=document.createElement('option');
     option.value=time;
     option.textContent=time;
     preferredClock.appendChild(option);
   });
+  if(previous&&[...preferredClock.options].some((option)=>option.value===previous))preferredClock.value=previous;
 }
 function selectedService(){return serviceSelect?serviceSelect.options[serviceSelect.selectedIndex]:null;}
 function syncServiceChoiceFromSelect(){
@@ -541,8 +561,30 @@ function applyPrefillFromUrl(){
   const message=params.get('message');
   const caseId=params.get('caseId');
   if(logistics) setSelectValue(logisticsSelect,logistics);
-  if(service&&service.toLowerCase()==='bestallning'&&model) setOrderPrefill(model);
+  const isOrder=Boolean(service&&service.toLowerCase()==='bestallning'&&model);
+  if(isOrder) setOrderPrefill(model);
   else if(service) setSelectValue(serviceSelect,service);
+  if(isOrder){
+    // Beställningsläge: produktköpare ska inte mötas av verkstadsfält som
+    // tillval (punktering/bromsar) eller ägarintyg (webbaudit 2026-07-24, p7).
+    if(heroEyebrow) heroEyebrow.textContent='Beställning';
+    if(heroHeading) heroHeading.textContent=`Beställ ${model} med verkstadsstöd.`;
+    if(heroLead) heroLead.textContent='Skicka en beställningsförfrågan så återkommer vi med leveranstid, betalsätt och nästa steg — oftast samma dag. Inget betalas i detta steg.';
+    if(panelHeading) panelHeading.textContent='Beställningsförfrågan';
+    if(panelLead) panelLead.textContent='Fyll i kontaktuppgifter och när vi får kontakta dig. Vi bekräftar pris, leverans och regelstatus innan något köp slutförs.';
+    const addonPanel=document.querySelector('.addon-panel');
+    if(addonPanel) addonPanel.style.display='none';
+    const ownershipRow=document.getElementById('ownershipConfirm');
+    if(ownershipRow){const row=ownershipRow.closest('.check-row');if(row)row.style.display='none';ownershipRow.required=false;}
+    const logisticsRow=logisticsSelect?logisticsSelect.closest('.form-group'):null;
+    if(logisticsRow) logisticsRow.style.display='none';
+    const dayLabel=document.querySelector('label[for="preferredDay"]');
+    if(dayLabel) dayLabel.textContent='Dag vi får kontakta dig';
+    const messageLabel=document.querySelector('label[for="message"]');
+    if(messageLabel) messageLabel.textContent='Meddelande till oss';
+    const submitButton=bookingForm?bookingForm.querySelector('button[type="submit"]'):null;
+    if(submitButton) submitButton.textContent='Skicka beställningsförfrågan';
+  }
   if(scooter){
     const scooterInput=document.getElementById('scooter');
     if(scooterInput) scooterInput.value=scooter;
@@ -567,6 +609,7 @@ applyPrefillFromUrl();
 if(serviceSelect)serviceSelect.addEventListener('change',()=>{syncServiceChoiceFromSelect();updateSummary();});
 serviceChoiceInputs.forEach((input)=>input.addEventListener('change',()=>setServiceFromChoice(input.value)));
 if(logisticsSelect)logisticsSelect.addEventListener('change',syncPickupService);
+if(preferredDay)preferredDay.addEventListener('change',fillTimeOptions);
 addonInputs.forEach((input)=>input.addEventListener('change',updateSummary));
 messageInput.addEventListener('input',updateSummary);
 if(smsConsent) smsConsent.addEventListener('change',updateSummary);
@@ -634,12 +677,14 @@ if(bookingForm){
     bookingStatus.className='status ok';
     bookingStatus.textContent='Skapar verkstads\u00e4rendet...';
 
+    // Backupen skickas ALLTID (\u00e4ven n\u00e4r API-bokningen misslyckas) s\u00e5 att
+    // kundens uppgifter aldrig g\u00e5r f\u00f6rlorade \u2014 de f\u00e5ngas i Netlify Forms.
+    submitNetlifyBackup(data).catch(()=>{});
     try{
       const response=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
       const result=await response.json().catch(()=>({}));
       if(!response.ok) throw new Error(result.error||'Kunde inte skicka f\u00f6rfr\u00e5gan.');
 
-      submitNetlifyBackup(data).catch(()=>{});
       bookingStatus.className='status ok';
       bookingStatus.textContent=customerStatusMessage(result);
       bookingForm.reset();
