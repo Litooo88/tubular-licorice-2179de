@@ -102,6 +102,22 @@ const createCheckoutSession = async ({ stripe, product, origin }) => {
       ];
     }
 
+    if (product.brand === "Halo Knight") {
+      return [
+        {
+          shipping_rate_data: {
+            type: "fixed_amount",
+            fixed_amount: { amount: 0, currency: "sek" },
+            display_name: "Leverans från Halo Knights EU-lager",
+            delivery_estimate: {
+              minimum: { unit: "business_day", value: 3 },
+              maximum: { unit: "business_day", value: 7 },
+            },
+          },
+        },
+      ];
+    }
+
     return undefined;
   })();
 
