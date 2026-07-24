@@ -32,6 +32,32 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-24 — Claude Code — KLAR (SEO vecka noll: blogglänk, batterisidan nationaliserad, sitemap)
+
+- **Branch:** `feat/seo-week-zero` → PR mot `main`. Grundas på SEO-audit
+  2026-07-24 (Perplexity, C:\Users\Sebas\Downloads\nordic_emobility_seo_audit_juli2026.pdf).
+  Strategi: äga service-vertikalen nationellt (Wheelyshop saknar verkstad).
+- **Blogglänken fixad:** startsidans meny (desktop + mobil) pekade på döda
+  ankaret `#blogg` → nu `/guider/`. Auditens "10 minuter, direkt SEO-värde".
+- **Batterisidan (/batterireparation-elscooter/, rankar #10 nationellt):**
+  (1) Title/description AV-Örebro-iserad — "Batterireparation elscooter —
+  pris, diagnos, cellbyte & BMS" (startsidan är det som rankar lokalt, så
+  ingen lokal risk); (2) FAQ utökad 5→7 frågor ("hur lång tid", "utanför
+  Örebro") och synliga kort synkade med FAQPage-schemat 7/7 — Google kräver
+  matchning för rich results. OBS: inga leveranstidslöften eller
+  batterifrakt-löften (farligt gods) — medvetet vag/ärlig text.
+- **Sitemap:** lastmod bumpad för /, /book-online/, /batterireparation-
+  elscooter/. Sitemapen täckte redan alla 20 sidor — indexeringsproblemet
+  ligger hos Google, åtgärdas via GSC-begäran (Claude kör via Sebastians
+  session efter merge).
+- **Kvar i SEO-planen (kommande PR:ar):** LCP-mobiloptimering (4,4s→<2,5s),
+  4 stadssidor (Västerås/Eskilstuna/Karlstad/Linköping), märkes-servicesidor
+  (kukirin/navee/teverun-service), guider ("startar inte", "laddar inte"),
+  individuella produktsidor via generatorn. Sebastian: 37 produktfoton,
+  NA-kontakt, återförsäljarlänkar från NAVEE/KuKirin/Teverun.
+- **Tester:** FAQ-JSON validerad, schema/synligt 7/7, sitemap välformad,
+  build ✅.
+
 ### 2026-07-19 — Claude Code — KLAR (kampanjvåg 1 SKICKAD: 25/25, 0 fel)
 
 - **Utförd manuellt av Claude kl ~11:15 på Sebastians order** ("kör") — den
