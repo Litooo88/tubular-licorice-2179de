@@ -29,8 +29,10 @@ const slugModel = (name) =>
     .replace(/[^a-zA-Z0-9]+/g, "-")
     .replace(/^-|-$/g, "");
 
+// OBS: "i-lager" betyder bekräftat leverantörslager (EU), inte fysiskt i
+// Örebro — etiketten får inte påstå lokal lagerhållning (webbaudit 2026-07-24).
 const statusLabel = {
-  "i-lager": "I LAGER",
+  "i-lager": "EU-LAGER",
   "pa-vag": "PÅ VÄG",
   forbestall: "FÖRBESTÄLL",
   "demo-bara": "DEMO",
@@ -39,7 +41,7 @@ const statusLabel = {
 };
 
 const statusCopy = {
-  "i-lager": "Kan beställas nu",
+  "i-lager": "Beställningsvara från EU-lager",
   "pa-vag": "På väg till sortimentet",
   forbestall: "Tas hem efter förfrågan",
   "demo-bara": "Demo och rådgivning",
@@ -47,8 +49,11 @@ const statusCopy = {
   upphord: "Säljs inte längre"
 };
 
+// Juridisk copy per Transportstyrelsens linje: modeller över cykelgränsen får
+// endast användas inom inhägnat område — "privat mark" räcker inte som
+// tillåtelse och får inte anges som sådan (webbaudit 2026-07-24).
 const legalityText = {
-  "off-road-only": "Prestandamodell: kontrollera regler. Ofta avsedd för privat mark eller inhägnat område.",
+  "off-road-only": "Endast för användning inom inhägnat område. Får inte köras i allmän trafik.",
   "check-rules": "Kontrollera användningsområde och regler innan köp.",
   "confirmed-context-needed": "Regelstatus beror på exakt version och användning. Vi kontrollerar innan affär."
 };
@@ -94,16 +99,11 @@ const tagClass = (item) => {
   return "";
 };
 
-const campaignDetails = (item) => {
-  const original = Number(item.originalPriceSek);
-  const current = Number(item.priceSek);
-  if (!Number.isFinite(original) || !Number.isFinite(current) || original <= current) return null;
-  return {
-    original,
-    saving: original - current,
-    label: item.campaignLabel || `Kampanj – spara ${formatPrice(original - current)}`
-  };
-};
+// Prissänkningsmarknadsföring kräver dokumenterat 30-dagars jämförpris
+// (Konsumentverket). Ingen central prishistorik finns ännu, så överstrukna
+// priser och rabattbudskap renderas inte alls — även om datat skulle
+// innehålla originalPriceSek igen. Återaktivera först när prishistorik finns.
+const campaignDetails = () => null;
 
 const paymentStrip = (compact = false) => `<div class="payment-methods${compact ? " compact" : ""}" aria-label="Tillgängliga betalsätt i checkout">
               <span class="pay-logo klarna">Klarna</span>
@@ -118,7 +118,6 @@ function productCard(item, options = {}) {
   const images = item.images || [];
   const price = formatPrice(item.priceSek) || escapeHtml(item.priceNote || "Pris efter modell");
   const campaign = campaignDetails(item);
-  const monthly = item.priceSek ? Math.ceil(item.priceSek / 24) : null;
   const legal = item.legality ? `<p class="product-legal">${escapeHtml(legalityText[item.legality] || item.legality)}</p>` : "";
   const thumbs = images
     .slice(1, 4)
@@ -139,7 +138,7 @@ function productCard(item, options = {}) {
             ${legal}
             <div class="price-row"><div class="price">${price}</div>${campaign ? `<span class="compare-price">${formatPrice(campaign.original)}</span>` : ""}</div>
             ${campaign ? `<p class="campaign-note">${escapeHtml(campaign.label)}</p>` : ""}
-            ${monthly ? `<p class="klarna">Ca ${formatPrice(monthly)}/mån vid 24 mån. Klarna visas i checkout om ordern kvalificerar.</p>` : ""}
+            ${item.checkout ? `<p class="klarna">Klarna kan erbjudas i checkout.</p>` : ""}
             ${item.checkout ? paymentStrip(true) : ""}
             <p class="stock-copy">${escapeHtml(item.delivery || statusCopy[item.status] || "")}</p>
             <div class="card-actions">
@@ -243,7 +242,7 @@ function haloKnightLaunchSection() {
   return `
       <section class="halo-launch" id="halo-knight-partner">
         <div class="halo-launch-media">
-          <img loading="lazy" decoding="async" width="1400" height="624" src="/assets/products/halo-knight/partner-hero.webp" alt="Halo Knight T107 Pro och T108 Pro körs på privat terräng">
+          <img loading="lazy" decoding="async" width="1400" height="624" src="/assets/products/halo-knight/partner-hero.webp" alt="Halo Knight T107 Pro och T108 Pro körs inom inhägnat område">
         </div>
         <div class="halo-launch-copy">
           <span class="eyebrow">NY PARTNER · HALO KNIGHT × NORDIC E-MOBILITY</span>
@@ -251,10 +250,10 @@ function haloKnightLaunchSection() {
           <h3>Extrem prestanda. Svensk kontakt efter köpet.</h3>
           <p>Halo Knight finns nu att beställa genom Nordic E-Mobility. Du får leverans från EU-lager, teknisk rådgivning och lokal verkstadsservice i Örebro — även efter att kartongen är borta och verkligheten börjar.</p>
           <div class="halo-deals">
-            <span><strong>T107 Pro ${formatPrice(t107Pro.priceSek)}</strong><s>${formatPrice(t107Pro.originalPriceSek)}</s></span>
-            <span><strong>T108 Pro ${formatPrice(t108Pro.priceSek)}</strong><s>${formatPrice(t108Pro.originalPriceSek)}</s></span>
+            <span><strong>T107 Pro</strong>Lanseringspris ${formatPrice(t107Pro.priceSek)}</span>
+            <span><strong>T108 Pro</strong>Lanseringspris ${formatPrice(t108Pro.priceSek)}</span>
           </div>
-          <p class="halo-small">Introduktionskampanj: 2 000 kr rabatt. Beställningsvara från EU-lager, beräknad leveranstid 3–7 arbetsdagar. Prestandamodeller för privat mark eller annat godkänt användningsområde — kontrollera regler före körning.</p>
+          <p class="halo-small">Beställningsvara från EU-lager, beräknad leveranstid 3–7 arbetsdagar. Prestandamodeller: endast för användning inom inhägnat område — får inte köras i allmän trafik.</p>
           <div class="halo-actions">
             <a class="btn primary" href="#brand-halo-knight">Se Halo Knight-modellerna</a>
             <a class="btn ghost" href="/book-online/?service=bestallning&modell=Halo-Knight">Fråga verkstaden</a>
@@ -368,14 +367,14 @@ function nyaElscootrarSection() {
       <div class="catalog-intro">
         <div class="catalog-note">
           <h3>Utvalt sortiment från Halo Knight, NAVEE, Teverun och KuKirin</h3>
-          <p>Vi lyfter modeller vi kan rådge kring och hjälpa kunden med efter köpet. Demo-scootrar från bland annat Teverun och NAVEE beräknas komma i slutet av juni eller början av juli.</p>
+          <p>Vi lyfter modeller vi kan ge råd kring och hjälpa kunden med efter köpet. Vill du provköra eller se en modell på plats? Kontakta verkstaden så berättar vi vad som finns inne just nu.</p>
           <div class="catalog-actions">
             <a href="#brand-halo-knight">Halo Knight</a>
             <a href="#brand-navee">NAVEE</a>
             <a href="#brand-teverun">Teverun</a>
             <a href="#brand-kukirin">KuKirin</a>
             <a href="#begagnat-renoverat">Begagnat &amp; NEMOB Edition</a>
-            <a href="#tillbehor-reservdelar">Tillbehor och reservdelar</a>
+            <a href="#tillbehor-reservdelar">Tillbehör och reservdelar</a>
           </div>
         </div>
         <div class="catalog-note">
@@ -390,7 +389,7 @@ function nyaElscootrarSection() {
         <button type="button" class="cf-btn" data-filter-brand="NAVEE">NAVEE</button>
         <button type="button" class="cf-btn" data-filter-brand="Teverun">Teverun</button>
         <button type="button" class="cf-btn" data-filter-brand="KuKirin">KuKirin</button>
-        <label class="cf-toggle"><input type="checkbox" id="filterInStock"> Endast i lager</label>
+        <label class="cf-toggle"><input type="checkbox" id="filterInStock"> Endast beställningsbara nu</label>
         <span class="cf-count" id="filterCount" aria-live="polite"></span>
       </div>
       <div class="grid three catalog-grid">
@@ -416,7 +415,7 @@ ${teverun.map((item) => productCard(item, { primary: item.id === "teverun-fighte
       <section class="catalog-brand" id="tillbehor-reservdelar">
         <div class="brand-row">
           <div>
-            <span class="eyebrow">TILLBEHOR & RESERVDELAR</span>
+            <span class="eyebrow">TILLBEH&Ouml;R &amp; RESERVDELAR</span>
             <h3>KuKirin-delar och Monorim-uppgraderingar.</h3>
           </div>
           <p>Reservdelar och premiumkit ska visas som egna affärer, men offereras efter exakt modell så kunden inte köper fel del.</p>
@@ -470,7 +469,7 @@ ${orderable
         </div>
       </div>
       <script>
-      (()=>{const modal=document.getElementById('catalogProductModal');if(!modal)return;const title=document.getElementById('catalogModalTitle'),price=document.getElementById('catalogModalPrice'),image=document.getElementById('catalogModalImage'),summary=document.getElementById('catalogModalSummary'),details=document.getElementById('catalogModalDetails'),thumbs=document.getElementById('catalogModalThumbs'),buy=document.getElementById('catalogModalBuy');let gallery=[],galleryIndex=0;function render(){if(!gallery.length)return;image.src=gallery[galleryIndex];thumbs.innerHTML=gallery.map((src,index)=>\`<button type="button" class="\${index===galleryIndex?'is-active':''}" aria-label="Visa bild \${index+1}"><img src="\${src}" alt=""></button>\`).join('');thumbs.querySelectorAll('button').forEach((button,index)=>button.addEventListener('click',()=>{galleryIndex=index;render()}))}function info(card){const name=card.querySelector('h3')?.textContent.trim()||'Produkt';const priceText=card.querySelector('.price')?.textContent.trim()||'Kontakta oss';const spec=card.querySelector('.spec')?.textContent.trim()||'Specifikation saknas.';const copy=card.querySelector('.copy')?.textContent.trim()||'Kontakta verkstaden om du vill veta om modellen passar din körning och lokala regler.';const stock=card.querySelector('.stock-copy')?.textContent.trim()||card.querySelector('.product-meta span:last-child')?.textContent.trim()||'';const img=card.querySelector('.product-media img');const link=card.querySelector('.card-actions a[data-product], .card-actions a');let images=[];try{if(card.dataset.gallery)images=JSON.parse(card.dataset.gallery)}catch{}if(!images.length&&img?.src)images=[img.getAttribute('src')];return {name,priceText,spec,copy,stock,imgAlt:img?.alt||name,href:link?.href||'/book-online/',productId:link?.dataset.product||'',cta:link?.textContent.trim()||'Köp nu',images}}function open(card){const item=info(card);title.textContent=item.name;price.textContent=item.priceText;summary.textContent=item.copy;gallery=item.images;galleryIndex=0;image.alt=item.imgAlt;render();details.innerHTML=[\`<li><strong>Specifikation</strong>\${item.spec}</li>\`,\`<li><strong>Status / leverans</strong>\${item.stock}</li>\`,\`<li><strong>Nästa steg</strong>Köp direkt i checkout eller skicka fråga om du vill kontrollera modell, regler, inbyte eller leverans först.</li>\`].join('');buy.href=item.href;buy.textContent=item.cta;if(item.productId){buy.dataset.product=item.productId}else{delete buy.dataset.product}modal.classList.add('is-open');modal.setAttribute('aria-hidden','false');modal.querySelector('.catalog-modal-close').focus()}function close(){modal.classList.remove('is-open');modal.setAttribute('aria-hidden','true')}document.querySelectorAll('.product-card').forEach((card)=>{card.querySelectorAll('[data-open-product]').forEach((trigger)=>trigger.addEventListener('click',(event)=>{event.preventDefault();open(card)}));});modal.querySelector('.catalog-modal-close').addEventListener('click',close);modal.querySelector('.catalog-modal-prev').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex-1+gallery.length)%gallery.length;render()});modal.querySelector('.catalog-modal-next').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex+1)%gallery.length;render()});modal.addEventListener('click',(event)=>{if(event.target===modal)close()});document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&modal.classList.contains('is-open'))close()})})();
+      (()=>{const modal=document.getElementById('catalogProductModal');if(!modal)return;const title=document.getElementById('catalogModalTitle'),price=document.getElementById('catalogModalPrice'),image=document.getElementById('catalogModalImage'),summary=document.getElementById('catalogModalSummary'),details=document.getElementById('catalogModalDetails'),thumbs=document.getElementById('catalogModalThumbs'),buy=document.getElementById('catalogModalBuy');let gallery=[],galleryIndex=0;function render(){if(!gallery.length)return;image.src=gallery[galleryIndex];thumbs.innerHTML=gallery.map((src,index)=>\`<button type="button" class="\${index===galleryIndex?'is-active':''}" aria-label="Visa bild \${index+1}"><img src="\${src}" alt=""></button>\`).join('');thumbs.querySelectorAll('button').forEach((button,index)=>button.addEventListener('click',()=>{galleryIndex=index;render()}))}function info(card){const name=card.querySelector('h3')?.textContent.trim()||'Produkt';const priceText=card.querySelector('.price')?.textContent.trim()||'Kontakta oss';const spec=card.querySelector('.spec')?.textContent.trim()||'Specifikation saknas.';const copy=card.querySelector('.copy')?.textContent.trim()||'Kontakta verkstaden om du vill veta om modellen passar din körning och lokala regler.';const stock=card.querySelector('.stock-copy')?.textContent.trim()||card.querySelector('.product-meta span:last-child')?.textContent.trim()||'';const legal=card.querySelector('.product-legal')?.textContent.trim()||'';const img=card.querySelector('.product-media img');const link=card.querySelector('.card-actions a[data-product], .card-actions a');let images=[];try{if(card.dataset.gallery)images=JSON.parse(card.dataset.gallery)}catch{}if(!images.length&&img?.src)images=[img.getAttribute('src')];return {name,priceText,spec,copy,stock,legal,imgAlt:img?.alt||name,href:link?.href||'/book-online/',productId:link?.dataset.product||'',cta:link?.textContent.trim()||'Köp nu',images}}function open(card){const item=info(card);title.textContent=item.name;price.textContent=item.priceText;summary.textContent=item.copy;gallery=item.images;galleryIndex=0;image.alt=item.imgAlt;render();details.innerHTML=[\`<li><strong>Specifikation</strong>\${item.spec}</li>\`,\`<li><strong>Status / leverans</strong>\${item.stock}</li>\`,item.legal?\`<li style="border-color:rgba(255,138,28,.5);color:#ffd9b3"><strong>Användning</strong>\${item.legal}</li>\`:'',\`<li><strong>Nästa steg</strong>Köp direkt i checkout eller skicka fråga om du vill kontrollera modell, regler, inbyte eller leverans först.</li>\`].filter(Boolean).join('');buy.href=item.href;buy.textContent=item.cta;if(item.productId){buy.dataset.product=item.productId}else{delete buy.dataset.product}modal.classList.add('is-open');modal.setAttribute('aria-hidden','false');modal.querySelector('.catalog-modal-close').focus()}function close(){modal.classList.remove('is-open');modal.setAttribute('aria-hidden','true')}document.querySelectorAll('.product-card').forEach((card)=>{card.querySelectorAll('[data-open-product]').forEach((trigger)=>trigger.addEventListener('click',(event)=>{event.preventDefault();open(card)}));});modal.querySelector('.catalog-modal-close').addEventListener('click',close);modal.querySelector('.catalog-modal-prev').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex-1+gallery.length)%gallery.length;render()});modal.querySelector('.catalog-modal-next').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex+1)%gallery.length;render()});modal.addEventListener('click',(event)=>{if(event.target===modal)close()});document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&modal.classList.contains('is-open'))close()})})();
       (()=>{const bar=document.querySelector('.catalog-filter');if(!bar)return;
       const countEl=document.getElementById('filterCount');
       const stockToggle=document.getElementById('filterInStock');
@@ -524,6 +523,7 @@ function homeProductCard(item) {
         <div class="prod-name">${escapeHtml(item.name.replace(/^NAVEE |^KuKirin |^Teverun |^Halo Knight /, ""))}</div>
         <div style="font-size:11px;color:#888;margin:4px 0">${escapeHtml(item.spec)}</div>
         <div style="font-size:12px;color:#b8c2bb;line-height:1.5;margin-bottom:10px">${escapeHtml(item.short)}</div>
+        ${item.legality ? `<div style="font-size:11px;color:#ffd9b3;line-height:1.45;margin-bottom:8px">${escapeHtml(legalityText[item.legality] || item.legality)}</div>` : ""}
         <div class="pop-price-row"><div class="prod-price">${price}</div>${campaign ? `<span>${formatPrice(campaign.original)}</span>` : ""}</div>
         ${campaign ? `<div class="pop-campaign">${escapeHtml(campaign.label)}</div>` : ""}
         <div class="pop-trust">Service, garanti &amp; reservdelar i vår verkstad i Örebro</div>
@@ -613,13 +613,13 @@ function homeProductsSection() {
   <div class="legal-note" style="margin-bottom:10px;background:rgba(0,200,83,.08);border-color:rgba(0,200,83,.22);color:#dce8df">Betala tryggt med <strong>Klarna, Apple Pay, Google Pay, kort och andra tillgängliga betalsätt</strong>. Halo Knight skickas från EU-lager med beräknad leverans 3–7 arbetsdagar. KuKirin har gratis leveransval och 5 arbetsdagars leverans efter mottagen betalning. Teverun har fraktavgift 60 EUR och leverans 5–7 arbetsdagar.</div>
   ${paymentStrip()}
   <div class="halo-home-launch">
-    <img loading="lazy" decoding="async" width="1400" height="624" src="/assets/products/halo-knight/partner-hero.webp" alt="Halo Knight T107 Pro och T108 Pro på privat terräng">
+    <img loading="lazy" decoding="async" width="1400" height="624" src="/assets/products/halo-knight/partner-hero.webp" alt="Halo Knight T107 Pro och T108 Pro inom inhägnat område">
     <div class="halo-home-copy">
       <span class="section-label">NY PARTNER</span>
       <div class="halo-home-logo"><img loading="lazy" width="420" height="236" src="/assets/products/halo-knight/logo.png" alt="Halo Knight"></div>
-      <h3>Halo Knight är här — lanseringskampanjen är live.</h3>
+      <h3>Halo Knight är här — beställ till lanseringspris.</h3>
       <p>Beställ från EU-lager och få svensk kontakt, teknisk rådgivning och service genom Nordic E-Mobility i Örebro.</p>
-      <div class="halo-home-prices"><span>T107 Pro ${formatPrice(products.find((item) => item.id === "halo-knight-t107-pro")?.priceSek)}<s>${formatPrice(products.find((item) => item.id === "halo-knight-t107-pro")?.originalPriceSek)}</s></span><span>T108 Pro ${formatPrice(products.find((item) => item.id === "halo-knight-t108-pro")?.priceSek)}<s>${formatPrice(products.find((item) => item.id === "halo-knight-t108-pro")?.originalPriceSek)}</s></span></div>
+      <div class="halo-home-prices"><span>T107 Pro — Lanseringspris ${formatPrice(products.find((item) => item.id === "halo-knight-t107-pro")?.priceSek)}</span><span>T108 Pro — Lanseringspris ${formatPrice(products.find((item) => item.id === "halo-knight-t108-pro")?.priceSek)}</span></div>
       <div class="halo-home-actions"><a class="buy" href="/nya-elscootrar/#brand-halo-knight">Se modellerna</a><a class="ask" href="/book-online/?service=bestallning&modell=Halo-Knight">Fråga verkstaden</a></div>
     </div>
   </div>
@@ -725,12 +725,12 @@ if (
         '<span class="eyebrow">HALO KNIGHT · NAVEE · TEVERUN · KUKIRIN</span>\n        <h1>Köp elscooter i Örebro – direkt av verkstaden.</h1>\n        <p class="lead">Utvalda modeller från Halo Knight, NAVEE, Teverun och KuKirin - med lokal rådgivning och verkstadsservice i Örebro. Vi hjälper kunden att köpa rätt modell, förstå reglerna och få stöd efter köpet.</p>'
       )
       .replace(/<meta property="og:title" content="[^"]*">/, '<meta property="og:title" content="Köp Halo Knight, NAVEE, Teverun &amp; KuKirin i Örebro">')
-      .replace(/<meta property="og:description" content="[^"]*">/, '<meta property="og:description" content="Nya Halo Knight-partnerskapet, introduktionspriser och lokalt verkstadsstöd i Örebro.">')
+      .replace(/<meta property="og:description" content="[^"]*">/, '<meta property="og:description" content="Nya Halo Knight-partnerskapet, lanseringspriser och lokalt verkstadsstöd i Örebro.">')
       .replace(/<meta property="og:image" content="[^"]*">/, '<meta property="og:image" content="https://www.nordicemobility.se/assets/products/halo-knight/partner-hero.webp">');
     if (!next.includes('property="og:title"')) {
       next = next.replace(
         '<link rel="canonical" href="https://www.nordicemobility.se/nya-elscootrar/">',
-        '<link rel="canonical" href="https://www.nordicemobility.se/nya-elscootrar/">\n<meta property="og:type" content="website">\n<meta property="og:title" content="Köp Halo Knight, NAVEE, Teverun &amp; KuKirin i Örebro">\n<meta property="og:description" content="Nya Halo Knight-partnerskapet, introduktionspriser och lokalt verkstadsstöd i Örebro.">\n<meta property="og:url" content="https://www.nordicemobility.se/nya-elscootrar/">\n<meta property="og:image" content="https://www.nordicemobility.se/assets/products/halo-knight/partner-hero.webp">'
+        '<link rel="canonical" href="https://www.nordicemobility.se/nya-elscootrar/">\n<meta property="og:type" content="website">\n<meta property="og:title" content="Köp Halo Knight, NAVEE, Teverun &amp; KuKirin i Örebro">\n<meta property="og:description" content="Nya Halo Knight-partnerskapet, lanseringspriser och lokalt verkstadsstöd i Örebro.">\n<meta property="og:url" content="https://www.nordicemobility.se/nya-elscootrar/">\n<meta property="og:image" content="https://www.nordicemobility.se/assets/products/halo-knight/partner-hero.webp">'
       );
     }
     next = next.replace(/<script type="application\/ld\+json" id="product-catalog-schema">[\s\S]*?<\/script>\n?/, "");
