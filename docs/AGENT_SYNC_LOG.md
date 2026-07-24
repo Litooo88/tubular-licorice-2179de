@@ -32,6 +32,20 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-24 — Claude Code — PÅGÅR (webbaudit prio 0: publicering, priser, legal copy, Klarna, bokningsdatum)
+
+- **Branch:** `fix/webbaudit-prio0` (mappen byter till denna branch under passet —
+  loggat här enligt protokoll §6). GitHub var onåbart vid start
+  (`git fetch` timeout), så pass utgår från lokal `main` @ e5e2fea.
+- **Underlag:** Full webbaudit 2026-07-24
+  (C:\Users\Sebas\Downloads\Nordic_E-Mobility_Webbaudit_2026-07-24.md).
+- **Tar:** netlify.toml (publish → dist), scripts/ (dist-byggsteg, publik
+  produktdata utan costEur), index.html + nya-elscootrar/ (prisjämförelser,
+  Klarna-belopp, legal copy), book-online/ + netlify/functions/booking.mjs
+  (datum i Europe/Stockholm + servervalidering), villkor/-texter.
+- **Rör inte:** docs/NEMOB_OS_V1_PLAN.md (ocommittad, ej min), nemob-callflow/,
+  nemob-os/.
+
 ### 2026-07-24 — Claude Code — KLAR (SEO vecka noll: blogglänk, batterisidan nationaliserad, sitemap)
 
 - **Branch:** `feat/seo-week-zero` → PR mot `main`. Grundas på SEO-audit
