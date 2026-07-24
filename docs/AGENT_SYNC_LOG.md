@@ -49,6 +49,21 @@ löpande "konversation".
   skriftligt som inklusive eller exklusive moms; detta påverkar marginalen men
   användaren har uttryckligen valt att lansera nu.
 
+### 2026-07-19 — Claude Code — KLAR (kampanjvåg 1 SKICKAD: 25/25, 0 fel)
+
+- **Utförd manuellt av Claude kl ~11:15 på Sebastians order** ("kör") — den
+  schemalagda 10:02-körningen fastnade på förstagångsgodkännandet och Chrome
+  startades om; dubblettskyddet gör dubbelskick omöjligt oavsett.
+- **Resultat:** 25 skickade, 0 misslyckade. Kön (60-dagarsfönstret, nya
+  rankade reglerna): 78 berättigade totalt → **53 kvar** till kommande vågor.
+  Högst rankad: nummer med poäng 40 (20 samtal senaste veckan).
+- **Utskicket:** RING20, 20 %, giltigt t.o.m. 2026-08-02, avsändare
+  NordicEMob, avregistrering via mejl. Loggat per nummer i call-followups
+  (= dubblettskyddet för kommande vågor).
+- **Schemalagda dagliga vågen (10:02) tar nästa 25 i morgon** — förutsatt att
+  Sebastian godkänner behörighetsrutan vid nästa körning; annars kör Claude
+  manuellt på "kör".
+
 ### 2026-07-19 — Claude Code — KLAR (vinn-tillbaka-verktyget v2: 60 dgr, rankat, kundkortsfilter; Akut-panelen borttagen)
 
 - **Branch:** `feat/winback-tool-v2` → PR mot `main`. Sebastians omdesign.
