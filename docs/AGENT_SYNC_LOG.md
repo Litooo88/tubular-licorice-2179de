@@ -32,19 +32,52 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-07-24 — Claude Code — PÅGÅR (webbaudit prio 0: publicering, priser, legal copy, Klarna, bokningsdatum)
+### 2026-07-24 — Claude Code — KLAR (webbaudit prio 0 + delar av prio 1 åtgärdade)
 
-- **Branch:** `fix/webbaudit-prio0` (mappen byter till denna branch under passet —
-  loggat här enligt protokoll §6). GitHub var onåbart vid start
-  (`git fetch` timeout), så pass utgår från lokal `main` @ e5e2fea.
-- **Underlag:** Full webbaudit 2026-07-24
-  (C:\Users\Sebas\Downloads\Nordic_E-Mobility_Webbaudit_2026-07-24.md).
-- **Tar:** netlify.toml (publish → dist), scripts/ (dist-byggsteg, publik
-  produktdata utan costEur), index.html + nya-elscootrar/ (prisjämförelser,
-  Klarna-belopp, legal copy), book-online/ + netlify/functions/booking.mjs
-  (datum i Europe/Stockholm + servervalidering), villkor/-texter.
-- **Rör inte:** docs/NEMOB_OS_V1_PLAN.md (ocommittad, ej min), nemob-callflow/,
-  nemob-os/.
+- **Branch:** `fix/webbaudit-prio0`, 6 commits. GitHub onåbart under passet
+  (`git fetch` timeout) — **EJ pushat**, mappen står kvar på branchen.
+  Nästa agent: pusha + öppna PR när nätet är uppe, eller merga lokalt.
+- **Underlag:** Full webbaudit 2026-07-24 (Downloads). Auditens påståenden
+  verifierade mot koden (4 verifieringsagenter, 6 stoppades av sessionstak
+  och täcktes manuellt): prio 0-fynden stämde i sak.
+- **Gjort:** (1) publish="dist" med allowlist-bygge scripts/build-dist.mjs —
+  data/products.json (costEur!), docs/, netlify/-källkod, AGENTS/CLAUDE.md
+  m.m. deployas inte längre; bygget failar om costEur läcker. (2) Halo
+  Knight-jämförpriser/kampanj borttagna → "Lanseringspris" (30-dagarsregeln);
+  originalPriceSek renderas inte ens om fältet återinförs. (3) Klarna-
+  månadsbelopp (pris/24) borttagna. (4) Legal copy: off-road-only →
+  "Endast inom inhägnat område, får inte köras i allmän trafik"; "privat
+  mark"/"gatuanpassad" borttaget; 5 uppenbara prestandamodeller (UT5 Ultra X,
+  Fighter Mini/Mini Pro/Supreme Ultra, Blade GT+ II) omklassade till
+  off-road-only; legal copy nu även på startsidans kort + modal. (5) Bokning:
+  Europe/Stockholm-datum klient+server, servervalidering (dåtid/veckodag/
+  15–18), kalender-not_configured stoppar inte längre bokningar, idempotency-
+  nyckel skrivs efter komplett bokning, Netlify-backup även vid API-fel,
+  beställningsläge utan verkstadsfält. (6) /angra-kop/ digital ångerfunktion
+  (Netlify form "angerratt") + villkor/garanti: 3 års reklamationsrätt,
+  14-dagarskrav borttaget, schablonavdrag → faktisk värdeminskning, ARN.
+  (7) GA4 bakom samtyckesbanner (laddas ej före aktivt ja), popup 35s/50%
+  scroll, checkout-fallback → beställningsförfrågan. (8) EU-LAGER-badge,
+  cachefix (JS/CSS 1h), typos, geo enhetlig.
+- **Tester:** npm run build ✅ (inkl. dist-verifiering), verify:checkout-
+  products ✅ (43 produkter), node --check på ändrade filer ✅, callflow
+  tsc ✅. Browser-verifierat på dist-server: interna paths 404, katalog/
+  bokning/consent/ånger renderar och fungerar, inga konsolfel.
+- **Kvarvarande risker/backlog:** ångerbekräftelse via mejl är manuell rutin
+  (automatisera i stripe-webhook + Resend); orderbekräftelse med ånger-
+  info efter Stripe-köp saknas (lagkrav — bygg i stripe-webhook);
+  admin/checkout/workshop/prices/quick-price deployas fortfarande publikt
+  (flytta till skyddad subdomän); >250W-modeller som fortfarande är
+  "check-rules" behöver per-modell-verifiering (NAVEE XT5/NT5-serien m.fl.);
+  geo-koordinat 59.2741,15.2066 vald som enhetlig — verifiera mot Google
+  Business Profile; Sebastian bör aktivera e-postnotis för formuläret
+  "angerratt" i Netlify.
+
+### 2026-07-24 — Claude Code — PÅGÅR-arkiv (samma pass som KLAR ovan)
+
+- Ursprunglig PÅGÅR-post: tog netlify.toml, scripts/, index.html,
+  nya-elscootrar/, book-online/, booking.mjs, villkor/. Rörde inte
+  docs/NEMOB_OS_V1_PLAN.md (ocommittad, ej min), nemob-callflow/, nemob-os/.
 - **MERGE-NOT (Drift-agenten, samma dag):** origin/main (789c039, PR #114+#115)
   mergades in i denna branch mitt under passet — konflikt endast i denna logg,
   löst genom att behålla båda. Verifierat efter merge: bild-PR:ens 7 lokala
