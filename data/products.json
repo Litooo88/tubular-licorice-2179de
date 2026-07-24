@@ -6,7 +6,7 @@
     "Do not label high-power models as road legal unless registration status is confirmed per model.",
     "costEur är internt inköpspris (leverantörens EU-prislista) och får ALDRIG renderas publikt.",
     "PRISÖVERSYN 2026-07-02: KuKirin G4 (kukirin-g4-special) inköp höjt till 683 EUR — marginalen vid 9 950 kr är nära noll. Nytt pris behöver beslutas.",
-    "HALO KNIGHT 2026-07-24: fem dropshippingmodeller från EU-lager. T107 Pro och T108 Pro har av Sebastian godkänd introduktionsrabatt på 2 000 kr."
+    "HALO KNIGHT 2026-07-24: fem dropshippingmodeller från EU-lager. T107 Pro och T108 Pro lanserades med introduktionspris; överstruket jämförpris borttaget 2026-07-24 (30-dagarsregeln: modellerna har aldrig sålts till högre pris). originalPriceSek får inte återinföras utan dokumenterad 30-dagars prishistorik."
   ],
   "products": [
     {
@@ -18,7 +18,7 @@
       "delivery": "Leverans 1-2 veckor efter beställning",
       "badge": "Premium",
       "spec": "2x1100W • 72V 15.6Ah • 1123 Wh",
-      "short": "NAVEE:s starkaste premiumval för kunden som vill ha komfort, kontroll och rejalt med kraft.",
+      "short": "NAVEE:s starkaste premiumval för kunden som vill ha komfort, kontroll och rejält med kraft.",
       "positioning": "Premium och lång räckvidd",
       "legality": "check-rules",
       "checkout": true,
@@ -67,7 +67,7 @@
       "delivery": "Leverans 1-2 veckor efter beställning",
       "badge": "Nyhet",
       "spec": "2x700W • premiumplattform",
-      "short": "Starkt NAVEE-alternativ för kunden som vill ha mer kraft men inte ga upp till storsta modellen.",
+      "short": "Starkt NAVEE-alternativ för kunden som vill ha mer kraft men inte gå upp till största modellen.",
       "positioning": "Starkt mellansteg",
       "legality": "check-rules",
       "checkout": true,
@@ -100,7 +100,7 @@
         "komfort"
       ],
       "images": [
-        "https://www.naveetech.com/wp-content/uploads/2025/11/XT5-Pro.png"
+        "/assets/products/navee/xt5-pro-main.webp"
       ]
     },
     {
@@ -123,7 +123,7 @@
         "komfort"
       ],
       "images": [
-        "https://www.naveetech.com/wp-content/uploads/2026/03/NT5-max-12.31.1.png"
+        "/assets/products/navee/nt5-max-main.webp"
       ]
     },
     {
@@ -160,7 +160,7 @@
       "delivery": "Leverans 1-2 veckor efter beställning",
       "badge": "Pendling",
       "spec": "350W • upp till 50 km • smidig pendlare",
-      "short": "Smidig pendlare för vardagskunden som vill ha rätt pris, lag troskel och verkstadsstod.",
+      "short": "Smidig pendlare för vardagskunden som vill ha rätt pris, låg tröskel och verkstadsstöd.",
       "positioning": "Pendling",
       "legality": "check-rules",
       "checkout": true,
@@ -207,7 +207,7 @@
       "delivery": "Leverans 1-2 veckor efter beställning",
       "badge": "Insteg",
       "spec": "Instegsmodell • NAVEE-känsla",
-      "short": "Ett enklare NAVEE-val för kortare vardagsresor och lägre inkopstrappa.",
+      "short": "Ett enklare NAVEE-val för kortare vardagsresor och ett enklare insteg.",
       "positioning": "Insteg",
       "legality": "check-rules",
       "checkout": true,
@@ -229,7 +229,7 @@
       "status": "i-lager",
       "delivery": "Leverans 1-2 veckor efter beställning",
       "badge": "Insteg",
-      "spec": "Prisvart insteg • kortare vardag",
+      "spec": "Prisvärt insteg • kortare vardag",
       "short": "Lagsta NAVEE-prispunkten i sortimentet för enklare vardagsbehov.",
       "positioning": "Budget",
       "legality": "check-rules",
@@ -239,7 +239,7 @@
         "budget"
       ],
       "images": [
-        "https://www.naveetech.com/wp-content/uploads/2025/09/k100-com1.png"
+        "/assets/products/navee/k100-max-main.webp"
       ]
     },
     {
@@ -323,12 +323,10 @@
       "brand": "Halo Knight",
       "name": "Halo Knight T107 Pro",
       "priceSek": 16990,
-      "originalPriceSek": 18990,
       "costEur": 1299,
       "status": "i-lager",
       "delivery": "Beställningsvara från Halo Knights EU-lager. Beräknad leveranstid 3–7 arbetsdagar efter orderbekräftelse.",
-      "badge": "Spara 2 000 kr",
-      "campaignLabel": "Introduktionskampanj – 2 000 kr rabatt",
+      "badge": "Lanseringspris",
       "spec": "2x3000W • 60V 38,4Ah • uppgiven toppfart 80–95 km/h",
       "short": "Halo Knights extrema 60V-plattform för erfaren förare som vill ha dubbla 3000W-motorer, stort batteri och lokal teknisk support.",
       "positioning": "Extrem prestanda",
@@ -351,12 +349,10 @@
       "brand": "Halo Knight",
       "name": "Halo Knight T108 Pro",
       "priceSek": 17490,
-      "originalPriceSek": 19490,
       "costEur": 1299,
       "status": "i-lager",
       "delivery": "Beställningsvara från Halo Knights EU-lager. Beräknad leveranstid 3–7 arbetsdagar efter orderbekräftelse.",
-      "badge": "Spara 2 000 kr",
-      "campaignLabel": "Introduktionskampanj – 2 000 kr rabatt",
+      "badge": "Lanseringspris",
       "spec": "2x3000W • 60V 38,4Ah • uppgiven toppfart 80–95 km/h",
       "short": "T108 Pro är Halo Knights andra extrema 60V-alternativ med dubbla 3000W-motorer, 38,4 Ah-batteri och verkstadsstöd i Örebro.",
       "positioning": "Extrem prestanda",
@@ -642,7 +638,7 @@
       "delivery": "Leverans 5-7 arbetsdagar. Teverun-frakt 60 EUR tillkommer.",
       "badge": "Supreme",
       "spec": "72V 60Ah • premiumprestanda",
-      "short": "Toppspår för privat mark, specialanvändning och kunden som uttryckligen vill ha storsta Teverun-klassen.",
+      "short": "Toppmodell för inhägnat område och specialanvändning — för kunden som uttryckligen vill ha största Teverun-klassen.",
       "positioning": "Topprestanda",
       "legality": "off-road-only",
       "checkout": true,
@@ -664,7 +660,7 @@
       "delivery": "Gratis hemleverans från KuKirin eller gratis leverans till vår verkstad. Leverans 5 arbetsdagar efter mottagen betalning.",
       "badge": "Insteg",
       "spec": "Kompakt instegsmodell",
-      "short": "Enklare KuKirin för kortare resor och lag inkopstrappa.",
+      "short": "Enklare KuKirin för kortare resor och ett enklare insteg.",
       "positioning": "Insteg",
       "legality": "check-rules",
       "checkout": true,
@@ -674,7 +670,7 @@
         "kompakt"
       ],
       "images": [
-        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/S1_Max-1.jpg?v=1740030144"
+        "/assets/products/kukirin/s1-max-main.webp"
       ]
     },
     {
@@ -708,7 +704,7 @@
       "delivery": "Gratis hemleverans från KuKirin eller gratis leverans till vår verkstad. Leverans 5 arbetsdagar efter mottagen betalning.",
       "badge": "Varde",
       "spec": "Prisvard KuKirin • vardagskraft",
-      "short": "Prisvart alternativ för kunden som vill ha mer scooter för pengarna.",
+      "short": "Prisvärt alternativ för kunden som vill ha mer scooter för pengarna.",
       "positioning": "Prisvard",
       "legality": "check-rules",
       "checkout": true,
@@ -743,10 +739,7 @@
         "prestanda"
       ],
       "images": [
-        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/Kukirin-G4-A6.jpg?v=1750399272",
-        "https://kukirinscooter.com/wp-content/uploads/2025/03/G4-600x600.webp",
-        "https://kukirinscooter.com/wp-content/uploads/2025/03/G4-02-600x600.webp",
-        "https://kukirinscooter.com/wp-content/uploads/2025/03/G4-03-600x600.webp"
+        "/assets/products/kukirin/g4-special-main.webp"
       ]
     },
     {
@@ -768,7 +761,7 @@
         "prestanda"
       ],
       "images": [
-        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/1_7da8cb39-a62d-45ec-ba6c-326fde3ce614.jpg?v=1718356445"
+        "/assets/products/kukirin/g3-main.webp"
       ]
     },
     {
@@ -834,7 +827,7 @@
         "prestanda"
       ],
       "images": [
-        "https://cdn.shopify.com/s/files/1/0625/8704/4046/files/74b96dbb2d19db9758ba306fc55ad040.jpg?v=1708069782"
+        "/assets/products/kukirin/g4-max-main.webp"
       ]
     },
     {
@@ -886,10 +879,10 @@
       "costEur": 380,
       "status": "i-lager",
       "delivery": "Gratis hemleverans från KuKirin eller gratis leverans till vår verkstad. Leverans 5 arbetsdagar efter mottagen betalning.",
-      "badge": "Kampanj",
+      "badge": "Allround",
       "spec": "800W • 48V 13Ah",
-      "short": "Kampanjpris på kompakt allroundmodell med rejäl motor — mycket scooter för under 6 000 kr.",
-      "positioning": "Kampanj",
+      "short": "Kompakt allroundmodell med rejäl motor — mycket scooter för under 6 000 kr.",
+      "positioning": "Prisvärd allround",
       "legality": "check-rules",
       "checkout": true,
       "featured": false,
@@ -1022,7 +1015,7 @@
         "Under utvärdering: 72 V-konvertering efter teknisk validering",
         "Slutlig specifikation fastställs efter testning"
       ],
-      "legalNote": "Avsedd för privat mark, bana eller inhägnat område beroende på slutlig specifikation.",
+      "legalNote": "Endast för användning inom inhägnat område (t.ex. bana). Får inte köras i allmän trafik. Slutlig klassning beror på specifikation.",
       "cta": "Anmäl intresse",
       "images": []
     }
