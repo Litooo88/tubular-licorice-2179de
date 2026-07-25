@@ -992,6 +992,23 @@
         "vardag"
       ],
       "images": []
+    },
+    {
+      "id": "nemob-testorder-100",
+      "brand": "NEMOB",
+      "name": "NEMOB Testorder (återbetalas)",
+      "priceSek": 100,
+      "status": "i-lager",
+      "delivery": "Intern testprodukt för att verifiera checkout-, orderbekräftelse- och ångerflödet. Beloppet återbetalas via Stripe efter testet.",
+      "badge": "INTERN TEST",
+      "spec": "Testar checkout • orderbekräftelse • ångerflöde",
+      "short": "Intern testprodukt som Nordic E-Mobility använder för att verifiera betalflödet skarpt. Är du kund: köp inte denna — den ger ingen vara och beloppet återbetalas.",
+      "positioning": "Intern test",
+      "checkout": true,
+      "hidden": true,
+      "featured": false,
+      "use": [],
+      "images": []
     }
   ],
   "refurbished": [
