@@ -32,6 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-25 — Claude Code — PÅGÅR (orderbekräftelse med ångerinfo + automatisk ångerbekräftelse)
+
+- **Branch:** `feat/anger-orderbekraftelse` (mappen byter till denna under passet).
+- **Tar:** netlify/functions/stripe-webhook.js (orderbekräftelsemejl med
+  ångerinformation efter checkout.session.completed), ny
+  netlify/functions/anger.mjs (/api/angerratt: lagrar + bekräftar
+  ångermeddelanden via Resend), netlify/functions/_shared/email.js (delad
+  Resend-hjälpare), angra-kop/index.html (postar till funktionen med
+  Netlify Forms som backup).
+
 ### 2026-07-25 — Claude Code — KLAR (webbaudit-branchen mergad till main på Sebastians order)
 
 - `fix/webbaudit-prio0` mergad till `main` (d065837) och pushad — Netlify
