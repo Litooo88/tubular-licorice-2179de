@@ -32,12 +32,20 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-25 — Claude Code — KLAR (webbaudit-branchen mergad till main på Sebastians order)
+
+- `fix/webbaudit-prio0` mergad till `main` (d065837) och pushad — Netlify
+  auto-deployar. Mappen står på `main` igen. Deployverifiering pågår
+  (kriterium: /data/products.json ska ge 404 på livesajten).
+- **Manuellt för Sebastian:** aktivera e-postnotis i Netlify UI för nya
+  formuläret `angerratt` (Forms → notifications) — annars ser ingen
+  inkommande ångermeddelanden.
+
 ### 2026-07-24 — Claude Code — KLAR (webbaudit prio 0 + delar av prio 1 åtgärdade)
 
 - **Branch:** `fix/webbaudit-prio0`, pushad till origin (nätet kom tillbaka
-  i slutet av passet). PR öppnas via GitHub-UI (`gh` saknas lokalt):
-  https://github.com/Litooo88/tubular-licorice-2179de/compare/main...fix/webbaudit-prio0
-  Mappen står kvar på branchen. OBS: origin/main (PR #114+115) mergades in
+  i slutet av passet). Mergad till main 2026-07-25, se post ovan.
+  OBS: origin/main (PR #114+115) mergades in
   i branchen under passet av parallell agent — ingen konflikt, bygget grönt.
 - **Underlag:** Full webbaudit 2026-07-24 (Downloads). Auditens påståenden
   verifierade mot koden (4 verifieringsagenter, 6 stoppades av sessionstak
