@@ -124,7 +124,7 @@ function productCard(item, options = {}) {
     .map((src, index) => `<button type="button" data-open-product aria-label="Visa ${escapeAttr(item.name)} bild ${index + 2}"><img loading="lazy" decoding="async" width="200" height="200" src="${escapeAttr(displaySrc(src, 200))}" alt="${escapeAttr(item.name)} extra bild ${index + 2}" onerror="this.onerror=null;this.src='${escapeAttr(fallbackSrc(src, 200))}'"></button>`)
     .join("");
   return `
-        <article class="card product-card" data-brand="${escapeAttr(item.brand)}" data-status="${escapeAttr(item.status)}" data-gallery="${galleryAttr(item)}">
+        <article class="card product-card" data-brand="${escapeAttr(item.brand)}" data-status="${escapeAttr(item.status)}" data-gallery="${galleryAttr(item)}"${Number(item.priceSek) > 0 ? ` data-url="/produkt/${escapeAttr(item.id)}/"` : ""}>
           <a class="product-media" href="${escapeAttr(bookingHref(item))}" data-open-product aria-label="Visa bilder och information om ${escapeAttr(item.name)}">
             <span class="tag ${tagClass(item)}">${escapeHtml(item.badge || statusLabel[item.status] || "Modell")}</span>
             <img loading="lazy" decoding="async" width="500" height="500" src="${escapeAttr(displaySrc(mainImage(item), 800))}" alt="${escapeAttr(item.name)}" onerror="this.onerror=null;this.src='${escapeAttr(fallbackSrc(mainImage(item), 800))}'">
@@ -144,6 +144,7 @@ function productCard(item, options = {}) {
             <div class="card-actions">
               <a class="btn ${options.primary ? "primary" : "ghost"}" href="${escapeAttr(bookingHref(item))}"${buyAttrs(item)}>${escapeHtml(ctaText(item))}</a>
             </div>
+            ${Number(item.priceSek) > 0 ? `<p class="card-more"><a href="/produkt/${escapeAttr(item.id)}/">Alla detaljer om ${escapeHtml(item.name)} &#8594;</a></p>` : ""}
           </div>
         </article>`;
 }
@@ -298,6 +299,9 @@ function nyaElscootrarSection() {
         .price-row .price{margin:0}
         .compare-price{text-decoration:line-through;color:#8b9690;font-size:14px;font-weight:800}
         .campaign-note{margin:10px 0 8px;border:1px solid rgba(255,109,0,.42);background:rgba(255,109,0,.13);color:#ffd0a6;border-radius:8px;padding:9px 10px;font-size:12px;line-height:1.45;font-weight:800}
+        .card-more{margin:8px 0 0;font-size:12px}
+        .card-more a{color:#7ee2a8;text-decoration:none;font-weight:800}
+        .card-more a:hover{text-decoration:underline}
         .klarna,.stock-copy{font-size:12px;color:#9eaaa2;margin-top:-6px;margin-bottom:10px}
         .payment-methods{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 12px}
         .payment-methods.compact{gap:5px;margin:8px 0 10px}
@@ -461,6 +465,7 @@ ${orderable
               <p style="color:#9aa59e;font-size:13px;line-height:1.55;margin-top:12px">Checkout visar Klarna, kort, Apple Pay, Google Pay och andra betalsätt när de är aktiverade och ordern kvalificerar.</p>
               <div class="catalog-modal-actions">
                 <a class="buy" id="catalogModalBuy" href="/book-online">Köp nu</a>
+                <a class="ask" id="catalogModalMore" href="/nya-elscootrar/" style="display:none">Alla detaljer</a>
                 <a class="ask" href="/book-online/">Fråga verkstaden</a>
                 <a class="ask" href="/regler-elscooter/">Läs regelguiden</a>
               </div>
@@ -469,7 +474,7 @@ ${orderable
         </div>
       </div>
       <script>
-      (()=>{const modal=document.getElementById('catalogProductModal');if(!modal)return;const title=document.getElementById('catalogModalTitle'),price=document.getElementById('catalogModalPrice'),image=document.getElementById('catalogModalImage'),summary=document.getElementById('catalogModalSummary'),details=document.getElementById('catalogModalDetails'),thumbs=document.getElementById('catalogModalThumbs'),buy=document.getElementById('catalogModalBuy');let gallery=[],galleryIndex=0;function render(){if(!gallery.length)return;image.src=gallery[galleryIndex];thumbs.innerHTML=gallery.map((src,index)=>\`<button type="button" class="\${index===galleryIndex?'is-active':''}" aria-label="Visa bild \${index+1}"><img src="\${src}" alt=""></button>\`).join('');thumbs.querySelectorAll('button').forEach((button,index)=>button.addEventListener('click',()=>{galleryIndex=index;render()}))}function info(card){const name=card.querySelector('h3')?.textContent.trim()||'Produkt';const priceText=card.querySelector('.price')?.textContent.trim()||'Kontakta oss';const spec=card.querySelector('.spec')?.textContent.trim()||'Specifikation saknas.';const copy=card.querySelector('.copy')?.textContent.trim()||'Kontakta verkstaden om du vill veta om modellen passar din körning och lokala regler.';const stock=card.querySelector('.stock-copy')?.textContent.trim()||card.querySelector('.product-meta span:last-child')?.textContent.trim()||'';const legal=card.querySelector('.product-legal')?.textContent.trim()||'';const img=card.querySelector('.product-media img');const link=card.querySelector('.card-actions a[data-product], .card-actions a');let images=[];try{if(card.dataset.gallery)images=JSON.parse(card.dataset.gallery)}catch{}if(!images.length&&img?.src)images=[img.getAttribute('src')];return {name,priceText,spec,copy,stock,legal,imgAlt:img?.alt||name,href:link?.href||'/book-online/',productId:link?.dataset.product||'',cta:link?.textContent.trim()||'Köp nu',images}}function open(card){const item=info(card);title.textContent=item.name;price.textContent=item.priceText;summary.textContent=item.copy;gallery=item.images;galleryIndex=0;image.alt=item.imgAlt;render();details.innerHTML=[\`<li><strong>Specifikation</strong>\${item.spec}</li>\`,\`<li><strong>Status / leverans</strong>\${item.stock}</li>\`,item.legal?\`<li style="border-color:rgba(255,138,28,.5);color:#ffd9b3"><strong>Användning</strong>\${item.legal}</li>\`:'',\`<li><strong>Nästa steg</strong>Köp direkt i checkout eller skicka fråga om du vill kontrollera modell, regler, inbyte eller leverans först.</li>\`].filter(Boolean).join('');buy.href=item.href;buy.textContent=item.cta;if(item.productId){buy.dataset.product=item.productId}else{delete buy.dataset.product}modal.classList.add('is-open');modal.setAttribute('aria-hidden','false');modal.querySelector('.catalog-modal-close').focus()}function close(){modal.classList.remove('is-open');modal.setAttribute('aria-hidden','true')}document.querySelectorAll('.product-card').forEach((card)=>{card.querySelectorAll('[data-open-product]').forEach((trigger)=>trigger.addEventListener('click',(event)=>{event.preventDefault();open(card)}));});modal.querySelector('.catalog-modal-close').addEventListener('click',close);modal.querySelector('.catalog-modal-prev').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex-1+gallery.length)%gallery.length;render()});modal.querySelector('.catalog-modal-next').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex+1)%gallery.length;render()});modal.addEventListener('click',(event)=>{if(event.target===modal)close()});document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&modal.classList.contains('is-open'))close()})})();
+      (()=>{const modal=document.getElementById('catalogProductModal');if(!modal)return;const title=document.getElementById('catalogModalTitle'),price=document.getElementById('catalogModalPrice'),image=document.getElementById('catalogModalImage'),summary=document.getElementById('catalogModalSummary'),details=document.getElementById('catalogModalDetails'),thumbs=document.getElementById('catalogModalThumbs'),buy=document.getElementById('catalogModalBuy');let gallery=[],galleryIndex=0;function render(){if(!gallery.length)return;image.src=gallery[galleryIndex];thumbs.innerHTML=gallery.map((src,index)=>\`<button type="button" class="\${index===galleryIndex?'is-active':''}" aria-label="Visa bild \${index+1}"><img src="\${src}" alt=""></button>\`).join('');thumbs.querySelectorAll('button').forEach((button,index)=>button.addEventListener('click',()=>{galleryIndex=index;render()}))}function info(card){const name=card.querySelector('h3')?.textContent.trim()||'Produkt';const priceText=card.querySelector('.price')?.textContent.trim()||'Kontakta oss';const spec=card.querySelector('.spec')?.textContent.trim()||'Specifikation saknas.';const copy=card.querySelector('.copy')?.textContent.trim()||'Kontakta verkstaden om du vill veta om modellen passar din körning och lokala regler.';const stock=card.querySelector('.stock-copy')?.textContent.trim()||card.querySelector('.product-meta span:last-child')?.textContent.trim()||'';const legal=card.querySelector('.product-legal')?.textContent.trim()||'';const img=card.querySelector('.product-media img');const link=card.querySelector('.card-actions a[data-product], .card-actions a');let images=[];try{if(card.dataset.gallery)images=JSON.parse(card.dataset.gallery)}catch{}if(!images.length&&img?.src)images=[img.getAttribute('src')];return {name,priceText,spec,copy,stock,legal,imgAlt:img?.alt||name,href:link?.href||'/book-online/',productId:link?.dataset.product||'',cta:link?.textContent.trim()||'Köp nu',images}}function open(card){const item=info(card);title.textContent=item.name;price.textContent=item.priceText;summary.textContent=item.copy;gallery=item.images;galleryIndex=0;image.alt=item.imgAlt;render();details.innerHTML=[\`<li><strong>Specifikation</strong>\${item.spec}</li>\`,\`<li><strong>Status / leverans</strong>\${item.stock}</li>\`,item.legal?\`<li style="border-color:rgba(255,138,28,.5);color:#ffd9b3"><strong>Användning</strong>\${item.legal}</li>\`:'',\`<li><strong>Nästa steg</strong>Köp direkt i checkout eller skicka fråga om du vill kontrollera modell, regler, inbyte eller leverans först.</li>\`].filter(Boolean).join('');buy.href=item.href;buy.textContent=item.cta;if(item.productId){buy.dataset.product=item.productId}else{delete buy.dataset.product}const more=document.getElementById('catalogModalMore');if(more){if(card.dataset.url){more.href=card.dataset.url;more.style.display=''}else{more.style.display='none'}}modal.classList.add('is-open');modal.setAttribute('aria-hidden','false');modal.querySelector('.catalog-modal-close').focus()}function close(){modal.classList.remove('is-open');modal.setAttribute('aria-hidden','true')}document.querySelectorAll('.product-card').forEach((card)=>{card.querySelectorAll('[data-open-product]').forEach((trigger)=>trigger.addEventListener('click',(event)=>{event.preventDefault();open(card)}));});modal.querySelector('.catalog-modal-close').addEventListener('click',close);modal.querySelector('.catalog-modal-prev').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex-1+gallery.length)%gallery.length;render()});modal.querySelector('.catalog-modal-next').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex+1)%gallery.length;render()});modal.addEventListener('click',(event)=>{if(event.target===modal)close()});document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&modal.classList.contains('is-open'))close()})})();
       (()=>{const bar=document.querySelector('.catalog-filter');if(!bar)return;
       const countEl=document.getElementById('filterCount');
       const stockToggle=document.getElementById('filterInStock');
@@ -529,6 +534,7 @@ function homeProductCard(item) {
         <div class="pop-trust">Service, garanti &amp; reservdelar i vår verkstad i Örebro</div>
         ${paymentStrip(true)}
         <a href="${escapeAttr(bookingHref(item))}" class="prod-btn pop-cta" data-product="${escapeAttr(item.id)}" data-price="${item.priceSek}"${buttonStyle}>${escapeHtml(ctaText(item))}</a>
+        ${Number(item.priceSek) > 0 ? `<a href="/produkt/${escapeAttr(item.id)}/" style="display:block;margin-top:8px;font-size:12px;font-weight:800;color:#7ee2a8;text-decoration:none">Alla detaljer &#8594;</a>` : ""}
       </div>
     </div>`;
 }
@@ -690,20 +696,208 @@ const productSchemaJson = () => {
           "@type": "Product",
           name: item.name,
           brand: { "@type": "Brand", name: item.brand },
-          image: item.images?.[0],
+          image: absUrl(item.images?.[0] || "/assets/workshop/scooter-on-bench.jpg"),
           description: item.short,
           offers: {
             "@type": "Offer",
             price: item.priceSek,
             priceCurrency: "SEK",
             availability: schemaAvailability[item.status] || "https://schema.org/InStock",
-            url: `https://www.nordicemobility.se${bookingHref(item)}`,
+            url: `https://www.nordicemobility.se/produkt/${item.id}/`,
             seller: { "@type": "LocalBusiness", name: "Nordic E-Mobility" }
           }
         }
       }))
   };
   return `<script type="application/ld+json" id="product-catalog-schema">\n${JSON.stringify(itemList)}\n</script>`;
+};
+
+// ---------------------------------------------------------------------------
+// Produktsidor: en egen URL per prissatt produkt (/produkt/<id>/) med unik
+// title/canonical, Product-schema och legal status vid köpknappen
+// (webbaudit 2026-07-24, åtgärd 17 + 20). Sidorna är genererade och
+// incheckade precis som katalog-HTML:en — redigera aldrig för hand.
+// ---------------------------------------------------------------------------
+
+const SITE_ORIGIN = "https://www.nordicemobility.se";
+const absUrl = (src) => (/^https?:\/\//.test(src || "") ? src : `${SITE_ORIGIN}${src || ""}`);
+const productPagePath = (item) => `/produkt/${item.id}/`;
+const pageProducts = products.filter((item) => Number(item.priceSek) > 0);
+
+const truncate = (value, max) => {
+  const text = String(value || "").trim();
+  return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
+};
+
+const productPageHtml = (item) => {
+  const url = `${SITE_ORIGIN}${productPagePath(item)}`;
+  const title = truncate(`${item.name} – ${formatPrice(item.priceSek)}`, 45);
+  const description = truncate(`${item.short} Köp hos specialistverkstaden i Örebro med service efter köpet.`, 158);
+  const images = (item.images || []).map((src) => displaySrc(src, 800));
+  const mainImg = images[0] || "/assets/workshop/scooter-on-bench.jpg";
+  const legal = item.legality ? legalityText[item.legality] || item.legality : "";
+  const specItems = String(item.spec || "").split("•").map((part) => part.trim()).filter(Boolean);
+  const status = statusLabel[item.status] || item.status;
+  const delivery = item.delivery || statusCopy[item.status] || "";
+  const buyable = item.checkout && !["slut", "upphord", "demo-bara"].includes(item.status);
+
+  const schema = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: item.name,
+    brand: { "@type": "Brand", name: item.brand },
+    image: (item.images || []).map((src) => absUrl(src)),
+    description: item.short,
+    sku: item.id,
+    itemCondition: "https://schema.org/NewCondition",
+    offers: {
+      "@type": "Offer",
+      price: item.priceSek,
+      priceCurrency: "SEK",
+      availability: schemaAvailability[item.status] || "https://schema.org/InStock",
+      url,
+      seller: { "@type": "LocalBusiness", name: "Nordic E-Mobility" }
+    }
+  };
+  const breadcrumb = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Start", item: `${SITE_ORIGIN}/` },
+      { "@type": "ListItem", position: 2, name: "Nya elscootrar", item: `${SITE_ORIGIN}/nya-elscootrar/` },
+      { "@type": "ListItem", position: 3, name: item.name, item: url }
+    ]
+  };
+
+  const thumbs = images
+    .slice(0, 4)
+    .map((src, index) => `<button type="button" class="pp-thumb${index === 0 ? " is-active" : ""}" data-src="${escapeAttr(src)}" aria-label="Visa bild ${index + 1}"><img loading="lazy" decoding="async" width="120" height="120" src="${escapeAttr(src)}" alt="${escapeAttr(item.name)} bild ${index + 1}"></button>`)
+    .join("");
+
+  return `<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>${escapeHtml(title)} | Nordic E-Mobility</title>
+<meta name="description" content="${escapeAttr(description)}">
+<link rel="canonical" href="${escapeAttr(url)}">
+<meta property="og:type" content="product">
+<meta property="og:title" content="${escapeAttr(title)} | Nordic E-Mobility">
+<meta property="og:description" content="${escapeAttr(description)}">
+<meta property="og:url" content="${escapeAttr(url)}">
+<meta property="og:image" content="${escapeAttr(absUrl(item.images?.[0] || "/assets/workshop/scooter-on-bench.jpg"))}">
+<meta name="robots" content="index, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/seo.css">
+<script>window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debugMode:new URLSearchParams(window.location.search).has("ga_debug")};</script>
+<script src="/assets/analytics.js" defer></script>
+<script src="/assets/product-checkout.js" defer></script>
+<script type="application/ld+json">
+${JSON.stringify(schema)}
+</script>
+<script type="application/ld+json">
+${JSON.stringify(breadcrumb)}
+</script>
+<style>
+.pp-layout{display:grid;grid-template-columns:minmax(280px,460px) 1fr;gap:28px;align-items:start}
+.pp-stage{background:#111712;border:1px solid #243026;border-radius:10px}
+.pp-stage img{width:100%;aspect-ratio:1/1;object-fit:contain;padding:16px;display:block}
+.pp-thumbs{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:8px}
+.pp-thumb{border:1px solid #27352b;background:#111;border-radius:8px;padding:4px;cursor:pointer}
+.pp-thumb.is-active{border-color:#00C853}
+.pp-thumb img{width:100%;aspect-ratio:1/1;object-fit:contain;display:block}
+.pp-price{font-size:32px;font-weight:900;margin:10px 0 2px}
+.pp-badge-row{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.pp-badge-row span{border:1px solid var(--line,#2c3830);border-radius:999px;padding:6px 12px;font-size:12px;font-weight:800;color:#cfd8d2}
+.pp-legal{border:1px solid rgba(255,138,28,.42);background:rgba(255,138,28,.1);color:#ffd9b3;border-radius:8px;padding:12px 14px;font-size:13px;line-height:1.5;margin:14px 0}
+.pp-specs{margin:16px 0;padding:0;display:grid;gap:8px}
+.pp-specs li{list-style:none;border:1px solid #222c24;background:#0d120e;border-radius:8px;padding:10px 12px;font-size:14px;color:#d7ddd9}
+.pp-actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 8px}
+.pp-meta{color:#9eaaa2;font-size:13px;line-height:1.6}
+.payment-methods{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
+.pay-logo{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border-radius:5px;padding:4px 7px;background:#f4f6f5;color:#071008;font-size:11px;font-weight:950;line-height:1}
+.pay-logo.klarna{background:#ffb3c7;color:#111}.pay-logo.apple{background:#fff;color:#000}.pay-logo.gpay{background:#fff;color:#1f1f1f}.pay-logo.card{background:#15251a;color:#dfffea;border:1px solid rgba(0,200,83,.24)}.pay-logo.stripe{background:#635bff;color:#fff}
+@media(max-width:820px){.pp-layout{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header class="site-header"><nav class="nav"><a class="brand" href="/"><img src="/logo.png" alt="Nordic E-Mobility" width="44" height="44">Nordic E-Mobility</a><div class="nav-links"><a href="/nya-elscootrar/">Nya elscootrar</a><a href="/book-online/">Boka service</a><a href="/regler-elscooter/">Regler</a><a class="btn btn-primary" href="tel:+46101385498">010-138 54 98</a></div><button class="hamburger" onclick="this.classList.toggle('active');document.getElementById('mobileNav').classList.toggle('open')" aria-label="Meny"><span></span><span></span><span></span></button></nav></header>
+<div class="mobile-nav" id="mobileNav"><a href="/">Start</a><a href="/nya-elscootrar/">Nya elscootrar</a><a href="/book-online/">Boka service</a><a href="/regler-elscooter/">Regler</a><a href="tel:+46101385498">010-138 54 98</a></div>
+<div class="breadcrumb"><a href="/">Start</a> / <a href="/nya-elscootrar/">Nya elscootrar</a> / ${escapeHtml(item.name)}</div>
+<main>
+<section class="section"><div class="wrap">
+<div class="pp-layout">
+  <div>
+    <div class="pp-stage"><img id="ppMainImage" src="${escapeAttr(mainImg)}" alt="${escapeAttr(item.name)}" width="800" height="800" decoding="async" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'"></div>
+    ${thumbs ? `<div class="pp-thumbs">${thumbs}</div>` : ""}
+  </div>
+  <div>
+    <span class="eyebrow">${escapeHtml(item.brand)}</span>
+    <h1>${escapeHtml(item.name)}</h1>
+    <div class="pp-price">${formatPrice(item.priceSek)}</div>
+    <p class="pp-meta">Pris inkl. moms.${item.checkout ? " Klarna kan erbjudas i checkout." : ""}</p>
+    <div class="pp-badge-row"><span>${escapeHtml(status)}</span><span>${escapeHtml(item.positioning || item.brand)}</span></div>
+    ${legal ? `<div class="pp-legal"><strong>Användning:</strong> ${escapeHtml(legal)}</div>` : ""}
+    <p>${escapeHtml(item.short)}</p>
+    <ul class="pp-specs">${specItems.map((part) => `<li>${escapeHtml(part)}</li>`).join("")}<li><strong>Leverans:</strong> ${escapeHtml(delivery)}</li></ul>
+    <div class="pp-actions">
+      ${buyable ? `<a class="btn btn-primary" href="${escapeAttr(bookingHref(item))}" data-product="${escapeAttr(item.id)}">Köp nu – trygg checkout</a>` : ""}
+      <a class="btn btn-secondary" href="${escapeAttr(bookingHref(item))}">Fråga verkstaden</a>
+    </div>
+    ${item.checkout ? paymentStrip() : ""}
+    <p class="pp-meta">Service, garanti och reservdelar hanteras i vår verkstad i Örebro. <a href="/garanti/">Garanti &amp; 3 års reklamationsrätt</a> · <a href="/villkor/#returer">14 dagars ångerrätt</a> · <a href="/regler-elscooter/">Regelguiden</a></p>
+  </div>
+</div>
+</div></section>
+</main>
+<footer class="footer"><div class="wrap"><div><strong>Nordic E-Mobility</strong><p>Specialistverkstad för mikromobilitet och litiumbatterier i Örebro.</p></div><div><a href="/villkor/">Villkor</a><a href="/garanti/">Garanti</a><a href="/integritet/">Integritet</a><a href="/angra-kop/">Ångra köp</a></div><div><a href="/nya-elscootrar/">Nya elscootrar</a><a href="/book-online/">Boka service</a><a href="/kontakt/">Kontakt</a></div></div><div class="legal-footer" style="margin-top:16px;color:#777;font-size:12px;line-height:1.5">Nordic E-Mobility · Org.nr 880809-6658 · VAT SE880809665801 · Innehar F-skatt<br>Pistolvägen 6, 702 21 Örebro</div></footer>
+<script>
+document.querySelectorAll('.pp-thumb').forEach((button)=>button.addEventListener('click',()=>{
+  document.getElementById('ppMainImage').src=button.dataset.src;
+  document.querySelectorAll('.pp-thumb').forEach((other)=>other.classList.toggle('is-active',other===button));
+}));
+</script>
+</body>
+</html>
+`;
+};
+
+function writeProductPages() {
+  const produktRoot = path.join(root, "produkt");
+  fs.mkdirSync(produktRoot, { recursive: true });
+  const validIds = new Set(pageProducts.map((item) => item.id));
+  // Städa bort sidor för produkter som lämnat katalogen.
+  for (const entry of fs.readdirSync(produktRoot, { withFileTypes: true })) {
+    if (entry.isDirectory() && !validIds.has(entry.name)) {
+      fs.rmSync(path.join(produktRoot, entry.name), { recursive: true, force: true });
+    }
+  }
+  let written = 0;
+  for (const item of pageProducts) {
+    const dir = path.join(produktRoot, item.id);
+    fs.mkdirSync(dir, { recursive: true });
+    const filePath = path.join(dir, "index.html");
+    const next = productPageHtml(item);
+    const before = fs.existsSync(filePath) ? fs.readFileSync(filePath, "utf8") : "";
+    if (toLf(before) !== toLf(next)) {
+      fs.writeFileSync(filePath, next, "utf8");
+      written += 1;
+    }
+  }
+  return written;
+}
+
+const sitemapProductBlock = () => {
+  // lastmod från katalogens updated-fält (inte dagens datum) så att sitemapen
+  // bara ändras när produktdatat faktiskt ändrats.
+  const lastmod = catalog.updated || new Date().toISOString().slice(0, 10);
+  return pageProducts
+    .map((item) => `  <url><loc>${SITE_ORIGIN}${productPagePath(item)}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`)
+    .join("\n");
 };
 
 const changed = [];
@@ -772,6 +966,20 @@ if (
   changed.push("index.html");
 }
 
-console.log(`Generated product HTML for ${products.length} products and ${accessories.length} accessories.`);
+const pagesWritten = writeProductPages();
+if (pagesWritten) changed.push(`produkt/ (${pagesWritten} sidor)`);
+
+if (
+  updateFile("sitemap.xml", (xml) =>
+    xml.replace(
+      /  <!-- produkt:auto:start -->[\s\S]*?  <!-- produkt:auto:end -->/,
+      `  <!-- produkt:auto:start -->\n${sitemapProductBlock()}\n  <!-- produkt:auto:end -->`
+    )
+  )
+) {
+  changed.push("sitemap.xml");
+}
+
+console.log(`Generated product HTML for ${products.length} products and ${accessories.length} accessories (${pageProducts.length} produktsidor).`);
 if (changed.length) console.log(`Updated: ${changed.join(", ")}`);
 else console.log("No HTML changes needed.");

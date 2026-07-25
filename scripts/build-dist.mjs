@@ -31,6 +31,7 @@ const PUBLIC_DIRS = [
   "nya-elscootrar",
   "om-oss",
   "priser",
+  "produkt",
   "punktering-elscooter-orebro",
   "regler-elscooter",
   "status",

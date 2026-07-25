@@ -122,6 +122,17 @@ force = true
   to = "/book-online/"
   status = 301
 
+# Produktsidor genereras under /produkt/<id>/ — bara roten redirectas.
+[[redirects]]
+  from = "/produkt"
+  to = "/nya-elscootrar/"
+  status = 301
+
+[[redirects]]
+  from = "/produkt/"
+  to = "/nya-elscootrar/"
+  status = 301
+
 [[headers]]
   for = "/*"
   [headers.values]
@@ -129,6 +140,10 @@ force = true
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
     Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+    # CSP i Report-Only först (webbaudit åtgärd 25): övervaka i webbläsar-
+    # konsolen/rapporter innan den görs blockerande. img-src https: krävs så
+    # länge leverantörsbilder (Shopify/NAVEE m.fl.) inte är helt lokalspeglade.
+    Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
 
 [[headers]]
   for = "/*.png"

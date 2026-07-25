@@ -32,6 +32,24 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-25 — Claude Code — KLAR (produktsidor /produkt/<id>/ + CSP Report-Only)
+
+- **Branch:** `feat/produktsidor` → mergad till main. Mappen på main.
+- **Gjort:** 43 genererade produktsidor (/produkt/<id>/) med unik
+  title/meta/canonical, Product+Breadcrumb-schema med absoluta bilder,
+  legal status intill köpknappen, EU-lagerstatus, checkout-CTA. Genereras
+  och städas automatiskt av generate-products.mjs — REDIGERA ALDRIG
+  produkt/-filerna för hand. Katalog-/startsidekort + modal länkar dit;
+  ItemList-schemat pekar på unika produkt-URL:er; sitemap har autoblock
+  mellan <!-- produkt:auto:start/end -->-markörer (lastmod = catalog.updated).
+  CSP tillagd i Report-Only-läge — bevaka konsolvarningar innan blockering.
+- **Tester:** npm run build ✅ (43 sidor + dist-verifiering),
+  verify:checkout-products ✅, browserverifierat (sida + kortlänkar +
+  schema-URL:er), inga konsolfel.
+- **Nästa i backlog:** integritetspolicy-uppdatering (audit p9, utkast för
+  jurist), admin-subdomän, CI-kontroller (p36), lokal bildspegling för
+  CSP-skärpning av img-src.
+
 ### 2026-07-25 — Claude Code — KLAR (orderbekräftelse med ångerinfo + automatisk ångerbekräftelse)
 
 - **Branch:** `feat/anger-orderbekraftelse` → mergad till main. Mappen på main.
