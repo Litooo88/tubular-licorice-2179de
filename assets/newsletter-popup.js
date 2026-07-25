@@ -4,6 +4,9 @@
   const dismissKey = "nemNewsletterDismissedUntil";
 
   function shouldOpen(){
+    // Visa inte popupen i kritiska flöden: bokning, checkout, villkor/ånger.
+    const path = window.location.pathname;
+    if(/^\/(book-online|checkout|villkor|angra-kop|status|admin|workshop)\//.test(path)) return false;
     try{
       if(localStorage.getItem(doneKey)==="1") return false;
       const until = Number(localStorage.getItem(dismissKey) || 0);
@@ -47,7 +50,8 @@
             <input type="hidden" name="source" value="">
             <input type="hidden" name="discountCode" value="${code}">
             <input type="text" name="bot-field" tabindex="-1" autocomplete="off" style="display:none">
-            <input type="email" name="email" required autocomplete="email" placeholder="din@email.se">
+            <label for="nemNewsletterEmail" class="nem-newsletter-small" style="display:block;margin-bottom:4px">Din e-postadress</label>
+            <input type="email" id="nemNewsletterEmail" name="email" required autocomplete="email" placeholder="din@email.se">
             <button type="submit">F&aring; koden</button>
           </form>
           <span class="nem-newsletter-small">G&auml;ller en g&aring;ng per kund. Kan inte kombineras med andra rabatter.</span>
@@ -129,8 +133,23 @@
   });
 
   if(shouldOpen()){
+    // Först efter 35 s ELLER 50 % scroll — inte ovanpå hero direkt vid landning
+    // (webbaudit 2026-07-24, punkt 14).
+    let triggered = false;
+    const trigger = function(){
+      if(triggered) return;
+      triggered = true;
+      window.removeEventListener("scroll", onScroll);
+      openPopup();
+    };
+    const onScroll = function(){
+      const doc = document.documentElement;
+      const max = doc.scrollHeight - window.innerHeight;
+      if(max > 0 && window.scrollY / max >= 0.5) trigger();
+    };
     window.addEventListener("load", function(){
-      setTimeout(openPopup, 5500);
+      setTimeout(trigger, 35000);
+      window.addEventListener("scroll", onScroll, {passive:true});
     });
   }
 })();

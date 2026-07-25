@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>&Aring;ngra k&ouml;p | Nordic E-Mobility</title>
+<meta name="description" content="Ut&ouml;va din 14 dagars &aring;ngerr&auml;tt digitalt. Fyll i formul&auml;ret s&aring; bekr&auml;ftar vi ditt &aring;ngrade k&ouml;p och skickar returinstruktioner.">
+<link rel="canonical" href="https://www.nordicemobility.se/angra-kop/">
+<meta property="og:type" content="website">
+<meta property="og:title" content="&Aring;ngra k&ouml;p | Nordic E-Mobility">
+<meta property="og:description" content="Ut&ouml;va din 14 dagars &aring;ngerr&auml;tt digitalt hos Nordic E-Mobility.">
+<meta property="og:url" content="https://www.nordicemobility.se/angra-kop/">
+<meta name="robots" content="index, follow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/seo.css">
+<script>window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debugMode:new URLSearchParams(window.location.search).has("ga_debug")};</script>
+<script src="/assets/analytics.js" defer></script>
+</head>
+<body>
+<header class="site-header"><nav class="nav"><a class="brand" href="/"><img src="/logo.png" alt="Nordic E-Mobility" width="44" height="44">Nordic E-Mobility</a><div class="nav-links"><a href="/book-online/">Boka service</a><a href="/villkor/">Villkor</a><a href="/garanti/">Garanti</a><a href="/integritet/">Integritet</a><a class="btn btn-primary" href="mailto:info@nordicemobility.se">Kontakta oss</a></div><button class="hamburger" onclick="this.classList.toggle('active');document.getElementById('mobileNav').classList.toggle('open')" aria-label="Meny"><span></span><span></span><span></span></button></nav></header>
+<div class="mobile-nav" id="mobileNav"><a href="/">Start</a><a href="/villkor/">Villkor</a><a href="/garanti/">Garanti</a><a href="/book-online/">Boka service</a><a href="tel:+46101385498">010-138 54 98</a></div>
+<div class="breadcrumb"><a href="/">Start</a> / &Aring;ngra k&ouml;p</div>
+<main>
+<section class="section"><div class="wrap"><div class="section-head"><span class="eyebrow">&Aring;ngerr&auml;tt</span><h1>&Aring;ngra ditt k&ouml;p</h1><p>Som konsument har du 14 dagars &aring;ngerr&auml;tt enligt distansavtalslagen, r&auml;knat fr&aring;n att du tog emot varan. H&auml;r ut&ouml;var du &aring;ngerr&auml;tten direkt p&aring; webbplatsen &mdash; du beh&ouml;ver inte ange n&aring;got sk&auml;l. Du kan ocks&aring; anv&auml;nda <a href="https://publikationer.konsumentverket.se/kontrakt-och-mallar/angerblankett" target="_blank" rel="noopener">Konsumentverkets standardblankett</a> eller mejla <a href="mailto:info@nordicemobility.se">info@nordicemobility.se</a>.</p></div>
+
+<div class="grid grid-2">
+<article class="card">
+<h2 style="font-size:20px;margin-bottom:12px">Meddelande om &aring;ngrat k&ouml;p</h2>
+<form name="angerratt" method="POST" action="/angra-kop/?skickat=1" data-netlify="true" netlify-honeypot="bot-field" id="angerForm">
+  <input type="hidden" name="form-name" value="angerratt">
+  <input type="hidden" name="subject" value="&Aring;NGERR&Auml;TT &ndash; kund ut&ouml;var &aring;ngerr&auml;tt (svara med bekr&auml;ftelse!)">
+  <input type="hidden" name="skickat" id="angerTimestamp" value="">
+  <p hidden><label>L&auml;mna tomt: <input type="text" name="bot-field"></label></p>
+  <p style="margin-bottom:12px"><label for="angerNamn"><strong>Namn</strong></label><br><input style="width:100%;padding:10px;border:1px solid #2f3a32;border-radius:6px;background:#0f130f;color:#fff" type="text" id="angerNamn" name="namn" required autocomplete="name"></p>
+  <p style="margin-bottom:12px"><label for="angerEmail"><strong>E-post</strong> (hit skickar vi bekr&auml;ftelsen)</label><br><input style="width:100%;padding:10px;border:1px solid #2f3a32;border-radius:6px;background:#0f130f;color:#fff" type="email" id="angerEmail" name="email" required autocomplete="email"></p>
+  <p style="margin-bottom:12px"><label for="angerTelefon"><strong>Telefon</strong> (frivilligt)</label><br><input style="width:100%;padding:10px;border:1px solid #2f3a32;border-radius:6px;background:#0f130f;color:#fff" type="tel" id="angerTelefon" name="telefon" autocomplete="tel"></p>
+  <p style="margin-bottom:12px"><label for="angerOrder"><strong>Ordernummer eller kvittoreferens</strong> (fr&aring;n orderbekr&auml;ftelsen/Stripe-kvittot)</label><br><input style="width:100%;padding:10px;border:1px solid #2f3a32;border-radius:6px;background:#0f130f;color:#fff" type="text" id="angerOrder" name="ordernummer" required></p>
+  <p style="margin-bottom:12px"><label for="angerProdukt"><strong>Produkt/modell</strong></label><br><input style="width:100%;padding:10px;border:1px solid #2f3a32;border-radius:6px;background:#0f130f;color:#fff" type="text" id="angerProdukt" name="produkt" required></p>
+  <p style="margin-bottom:12px"><label for="angerDatum"><strong>Datum d&aring; du tog emot varan</strong> (ungef&auml;rligt g&aring;r bra)</label><br><input style="width:100%;padding:10px;border:1px solid #2f3a32;border-radius:6px;background:#0f130f;color:#fff" type="text" id="angerDatum" name="leveransdatum"></p>
+  <p style="margin-bottom:12px"><label for="angerMeddelande"><strong>Meddelande</strong></label><br><textarea style="width:100%;padding:10px;border:1px solid #2f3a32;border-radius:6px;background:#0f130f;color:#fff;min-height:90px" id="angerMeddelande" name="meddelande">Jag meddelar h&auml;rmed att jag ut&ouml;var min &aring;ngerr&auml;tt och fr&aring;ntr&auml;der k&ouml;peavtalet f&ouml;r varan ovan.</textarea></p>
+  <button class="btn btn-primary" type="submit" style="min-height:44px">Skicka &aring;ngermeddelande</button>
+</form>
+<div id="angerConfirm" hidden class="notice" style="margin-top:14px"><strong>Ditt &aring;ngermeddelande &auml;r mottaget.</strong> <span id="angerConfirmTime"></span> Vi bekr&auml;ftar skriftligen via e-post utan on&ouml;digt dr&ouml;jsm&aring;l och skickar returinstruktioner. Spara g&auml;rna en sk&auml;rmbild av denna bekr&auml;ftelse.</div>
+<div id="angerError" hidden class="notice" style="margin-top:14px;border-color:#a33"><strong>Det gick inte att skicka just nu.</strong> Mejla i st&auml;llet <a href="mailto:info@nordicemobility.se?subject=%C3%85ngerr%C3%A4tt">info@nordicemobility.se</a> eller ring 010-138 54 98 &mdash; ditt &aring;ngermeddelande g&auml;ller fr&aring;n att du skickat det, oavsett kanal.</div>
+</article>
+<article class="card">
+<h2 style="font-size:20px;margin-bottom:12px">S&aring; g&aring;r det till</h2>
+<ol>
+  <li>Skicka formul&auml;ret inom 14 dagar fr&aring;n att du tog emot varan.</li>
+  <li>Du f&aring;r en skriftlig bekr&auml;ftelse fr&aring;n oss via e-post, tillsammans med returadress och instruktioner.</li>
+  <li>Returnera varan utan on&ouml;digt dr&ouml;jsm&aring;l och senast 14 dagar efter ditt &aring;ngermeddelande. Du st&aring;r f&ouml;r returfrakten.</li>
+  <li>Vi &aring;terbetalar inom 14 dagar fr&aring;n att vi tagit emot ditt &aring;ngermeddelande &mdash; dock tidigast n&auml;r vi f&aring;tt tillbaka varan eller du visat att den skickats. Eventuellt avdrag g&ouml;rs bara f&ouml;r faktisk v&auml;rdeminskning.</li>
+</ol>
+<p class="mini" style="margin-top:10px">Fullst&auml;ndiga villkor finns p&aring; <a href="/villkor/#returer">villkorssidan</a>. Fr&aring;gor? Ring 010-138 54 98 eller mejla <a href="mailto:info@nordicemobility.se">info@nordicemobility.se</a>.</p>
+</article>
+</div>
+</div></section>
+</main>
+<footer class="footer"><div class="wrap"><div><strong>Nordic E-Mobility</strong><p>Specialistverkstad f&ouml;r mikromobilitet och litiumbatterier i &Ouml;rebro.</p></div><div><a href="/villkor/">Villkor</a><a href="/garanti/">Garanti</a><a href="/integritet/">Integritet</a><a href="/angra-kop/">&Aring;ngra k&ouml;p</a></div><div><a href="/book-online/">Boka service</a><a href="/kontakt/">Kontakt</a></div></div><div class="legal-footer" style="margin-top:16px;color:#777;font-size:12px;line-height:1.5">Nordic E-Mobility &middot; Org.nr 880809-6658 &middot; VAT SE880809665801 &middot; Innehar F-skatt<br>Pistolv&auml;gen 6, 702 21 &Ouml;rebro</div></footer>
+<script>
+(()=>{
+  const form=document.getElementById('angerForm');
+  const confirmBox=document.getElementById('angerConfirm');
+  const confirmTime=document.getElementById('angerConfirmTime');
+  const errorBox=document.getElementById('angerError');
+  if(new URLSearchParams(window.location.search).has('skickat')){
+    if(form)form.hidden=true;
+    confirmBox.hidden=false;
+  }
+  if(!form)return;
+  form.addEventListener('submit',async(event)=>{
+    event.preventDefault();
+    errorBox.hidden=true;
+    const stamp=new Date().toISOString();
+    document.getElementById('angerTimestamp').value=stamp;
+    const payload=new URLSearchParams();
+    new FormData(form).forEach((value,key)=>payload.set(key,String(value)));
+    try{
+      const response=await fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:payload.toString()});
+      if(!response.ok)throw new Error('post failed');
+      form.hidden=true;
+      confirmTime.textContent='Registrerat '+new Intl.DateTimeFormat('sv-SE',{dateStyle:'long',timeStyle:'short',timeZone:'Europe/Stockholm'}).format(new Date())+'.';
+      confirmBox.hidden=false;
+      confirmBox.scrollIntoView({behavior:'smooth',block:'center'});
+    }catch{
+      errorBox.hidden=false;
+    }
+  });
+})();
+</script>
+</body>
+</html>

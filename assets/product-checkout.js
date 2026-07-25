@@ -24,7 +24,13 @@
       return true;
     } catch (error) {
       console.error("Product checkout failed", error);
-      alert("Kunde inte starta betalning just nu. Ring verkstaden på 010-138 54 98 så hjälper vi kunden direkt.");
+      // Riktig reservväg i stället för återvändsgränd: erbjud
+      // beställningsförfrågan (länkens href pekar redan på beställningsläget).
+      const fallback = link.getAttribute("href") || "/book-online/";
+      const useFallback = window.confirm(
+        "Kunde inte starta betalning just nu.\n\nVill du skicka en beställningsförfrågan i stället? Vi återkommer med betalning och leverans — oftast samma dag.\n\n(Du kan också ringa verkstaden på 010-138 54 98.)"
+      );
+      if (useFallback) window.location.href = fallback;
       return false;
     } finally {
       if (!redirecting) {

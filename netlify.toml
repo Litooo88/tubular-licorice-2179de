@@ -1,5 +1,8 @@
+# publish MÅSTE vara "dist" (byggd allowlist via scripts/build-dist.mjs).
+# publish = "." exponerade hela repot publikt — interna inköpspriser i
+# data/products.json, docs/, funktionskällkod m.m. (webbaudit 2026-07-24).
 [build]
-  publish = "."
+  publish = "dist"
   functions = "netlify/functions"
   command = "npm run build"
 
@@ -137,13 +140,31 @@ force = true
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
+# CSS/JS saknar innehållshash i filnamnen och får därför INTE ha immutable
+# årslång cache — en deploy kunde annars lämna kunder med gammal kod i upp
+# till ett år (webbaudit 2026-07-24). Bilder/ljud är stabila och cachas långt.
 [[headers]]
   for = "/*.css"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+
+[[headers]]
+  for = "/*.js"
+  [headers.values]
+    Cache-Control = "public, max-age=3600, must-revalidate"
+
+[[headers]]
+  for = "/*.webp"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 
 [[headers]]
-  for = "/assets/*"
+  for = "/*.svg"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/*.mp3"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
 

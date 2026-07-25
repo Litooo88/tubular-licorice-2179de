@@ -32,6 +32,60 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-24 — Claude Code — KLAR (webbaudit prio 0 + delar av prio 1 åtgärdade)
+
+- **Branch:** `fix/webbaudit-prio0`, pushad till origin (nätet kom tillbaka
+  i slutet av passet). PR öppnas via GitHub-UI (`gh` saknas lokalt):
+  https://github.com/Litooo88/tubular-licorice-2179de/compare/main...fix/webbaudit-prio0
+  Mappen står kvar på branchen. OBS: origin/main (PR #114+115) mergades in
+  i branchen under passet av parallell agent — ingen konflikt, bygget grönt.
+- **Underlag:** Full webbaudit 2026-07-24 (Downloads). Auditens påståenden
+  verifierade mot koden (4 verifieringsagenter, 6 stoppades av sessionstak
+  och täcktes manuellt): prio 0-fynden stämde i sak.
+- **Gjort:** (1) publish="dist" med allowlist-bygge scripts/build-dist.mjs —
+  data/products.json (costEur!), docs/, netlify/-källkod, AGENTS/CLAUDE.md
+  m.m. deployas inte längre; bygget failar om costEur läcker. (2) Halo
+  Knight-jämförpriser/kampanj borttagna → "Lanseringspris" (30-dagarsregeln);
+  originalPriceSek renderas inte ens om fältet återinförs. (3) Klarna-
+  månadsbelopp (pris/24) borttagna. (4) Legal copy: off-road-only →
+  "Endast inom inhägnat område, får inte köras i allmän trafik"; "privat
+  mark"/"gatuanpassad" borttaget; 5 uppenbara prestandamodeller (UT5 Ultra X,
+  Fighter Mini/Mini Pro/Supreme Ultra, Blade GT+ II) omklassade till
+  off-road-only; legal copy nu även på startsidans kort + modal. (5) Bokning:
+  Europe/Stockholm-datum klient+server, servervalidering (dåtid/veckodag/
+  15–18), kalender-not_configured stoppar inte längre bokningar, idempotency-
+  nyckel skrivs efter komplett bokning, Netlify-backup även vid API-fel,
+  beställningsläge utan verkstadsfält. (6) /angra-kop/ digital ångerfunktion
+  (Netlify form "angerratt") + villkor/garanti: 3 års reklamationsrätt,
+  14-dagarskrav borttaget, schablonavdrag → faktisk värdeminskning, ARN.
+  (7) GA4 bakom samtyckesbanner (laddas ej före aktivt ja), popup 35s/50%
+  scroll, checkout-fallback → beställningsförfrågan. (8) EU-LAGER-badge,
+  cachefix (JS/CSS 1h), typos, geo enhetlig.
+- **Tester:** npm run build ✅ (inkl. dist-verifiering), verify:checkout-
+  products ✅ (43 produkter), node --check på ändrade filer ✅, callflow
+  tsc ✅. Browser-verifierat på dist-server: interna paths 404, katalog/
+  bokning/consent/ånger renderar och fungerar, inga konsolfel.
+- **Kvarvarande risker/backlog:** ångerbekräftelse via mejl är manuell rutin
+  (automatisera i stripe-webhook + Resend); orderbekräftelse med ånger-
+  info efter Stripe-köp saknas (lagkrav — bygg i stripe-webhook);
+  admin/checkout/workshop/prices/quick-price deployas fortfarande publikt
+  (flytta till skyddad subdomän); >250W-modeller som fortfarande är
+  "check-rules" behöver per-modell-verifiering (NAVEE XT5/NT5-serien m.fl.);
+  geo-koordinat 59.2741,15.2066 vald som enhetlig — verifiera mot Google
+  Business Profile; Sebastian bör aktivera e-postnotis för formuläret
+  "angerratt" i Netlify.
+
+### 2026-07-24 — Claude Code — PÅGÅR-arkiv (samma pass som KLAR ovan)
+
+- Ursprunglig PÅGÅR-post: tog netlify.toml, scripts/, index.html,
+  nya-elscootrar/, book-online/, booking.mjs, villkor/. Rörde inte
+  docs/NEMOB_OS_V1_PLAN.md (ocommittad, ej min), nemob-callflow/, nemob-os/.
+- **MERGE-NOT (Drift-agenten, samma dag):** origin/main (789c039, PR #114+#115)
+  mergades in i denna branch mitt under passet — konflikt endast i denna logg,
+  löst genom att behålla båda. Verifierat efter merge: bild-PR:ens 7 lokala
+  webp-bilder OCH webbaudit-passets 30-dagarsregel-fix (originalPriceSek bort)
+  samexisterar i data/products.json.
+
 ### 2026-07-24 — Claude Code — KLAR (7 produktbilder från leverantörernas Drive-mappar inkopplade)
 
 - **Branch:** `feat/supplier-product-images` → PR mot `main`.
@@ -53,6 +107,8 @@ löpande "konversation".
   marknadsmaterial, ingen ren hero.
 - **Verifiering:** generate-products 44 produkter, build, verify checkout 43,
   bilderna renderas i nya-elscootrar (3 träffar/bild = kort+galleri) ✅.
+
+### 2026-07-24 — Claude Code — KLAR (SEO vecka noll: blogglänk, batterisidan nationaliserad, sitemap)
 
 - **Branch:** `feat/seo-week-zero` → PR mot `main`. Grundas på SEO-audit
   2026-07-24 (Perplexity, C:\Users\Sebas\Downloads\nordic_emobility_seo_audit_juli2026.pdf).

@@ -980,6 +980,36 @@ const isRateLimited = (key, { limit = 4, windowMs = 10 * 60 * 1000 } = {}) => {
 const hasHoneypotValue = (body = {}) =>
   Boolean(clean(body["bot-field"] || body.botField || body.website || body.company, 240));
 
+// Servervalidering av önskad tid: klienten kan inte litas på (lokal tidszon,
+// gammal flik, manipulerad request). Reglerna speglar bokningsformuläret:
+// tisdag-lördag, 15:00-18:00 i halvtimmessteg, aldrig i dåtid (Europe/Stockholm).
+const DROPOFF_FIRST_MINUTE = 15 * 60;
+const DROPOFF_LAST_MINUTE = 18 * 60;
+const MAX_BOOKING_AHEAD_DAYS = 60;
+
+const validatePreferredDate = (value) => {
+  const parts = parsePreferredLocalParts(value);
+  if (!parts) return "Ogiltig inlamningstid. Valj dag och klockslag i formularet.";
+  const minuteOfDay = parts.hour * 60 + parts.minute;
+  if (minuteOfDay < DROPOFF_FIRST_MINUTE || minuteOfDay > DROPOFF_LAST_MINUTE || parts.minute % 30 !== 0) {
+    return "Valj en tid mellan 15:00 och 18:00 (hel- eller halvtimme).";
+  }
+  const weekday = new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay();
+  if (weekday === 0 || weekday === 1) {
+    return "Vi tar emot inlamning och upphamtning tisdag-lordag. Valj en annan dag.";
+  }
+  const now = localPartsFromDate(new Date());
+  const nowValue = Date.UTC(now.year, now.month - 1, now.day, now.hour, now.minute);
+  const requested = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute);
+  if (requested <= nowValue) {
+    return "Tiden har redan passerat. Valj en senare tid.";
+  }
+  if (requested > nowValue + MAX_BOOKING_AHEAD_DAYS * 24 * 60 * 60 * 1000) {
+    return "Tiden ligger for langt fram. Valj en dag inom de narmaste veckorna.";
+  }
+  return "";
+};
+
 const bookingIdempotencyKey = (request, body = {}) => {
   const provided = clean(request.headers.get("idempotency-key") || request.headers.get("x-idempotency-key"), 180);
   if (provided) return `booking_header_${createHash("sha256").update(provided).digest("hex").slice(0, 48)}`;
@@ -1082,7 +1112,14 @@ export default async (request, context) => {
     if (!caseItem.preferredDate) {
       return json({ error: "Valj dag och klockslag for inlamning." }, 400);
     }
-    if (body.ownershipConfirm !== "yes") {
+    const preferredDateError = validatePreferredDate(caseItem.preferredDate);
+    if (preferredDateError) {
+      return json({ error: preferredDateError }, 400);
+    }
+    // Ägarintyget gäller inlämnade fordon — vid beställning av ny produkt
+    // finns inget fordon att intyga för.
+    const isOrderRequest = /^best[aä]llning av /i.test(service);
+    if (!isOrderRequest && body.ownershipConfirm !== "yes") {
       return json({ error: "Du maste intyga att fordonet inte ar stoldgods." }, 400);
     }
     if (body.termsConfirm !== "yes") {
@@ -1107,22 +1144,59 @@ export default async (request, context) => {
 
     const availability = await checkCalendarAvailability(caseItem);
     caseItem.notifications.calendarAvailability = availability;
-    if (availability.status !== "checked") {
+    // Kalendern får inte vara en single point of failure för bokningen:
+    // saknad konfiguration ska ge manuell hantering, inte totalstopp
+    // (CLAUDE.md: integrationer ska ha ett säkert not_configured-läge).
+    const calendarConfigured = availability.reason !== "not_configured";
+    if (availability.status !== "checked" && calendarConfigured) {
       return json({
         error: "Kunde inte kontrollera verkstadskalendern just nu. Ring eller SMS:a oss sa bokar vi tiden manuellt.",
         availability,
       }, 503);
     }
-    if (!availability.available) {
+    if (availability.status === "checked" && !availability.available) {
       return json({
         error: "Tiden ar redan upptagen i verkstadskalendern. Valj en annan tid eller kontakta oss direkt.",
         availability,
       }, 409);
     }
-    caseItem.timeline.push({ at: availability.checkedAt, event: "Kalendern kontrollerad: tiden var ledig." });
+    if (availability.status === "checked") {
+      caseItem.timeline.push({ at: availability.checkedAt, event: "Kalendern kontrollerad: tiden var ledig." });
+    } else {
+      caseItem.timeline.push({ at: new Date().toISOString(), event: "Kalender ej konfigurerad - tiden kontrolleras manuellt av verkstaden." });
+    }
 
     caseItem.serviceNumber = await reserveServiceNumber(serviceNumberIndex, id, caseItem.serviceNumber);
     await store.setJSON(id, caseItem);
+    if (caseItem.pickup_for_case_id) {
+      const originalCase = await store.getJSON(caseItem.pickup_for_case_id).catch(() => null);
+      if (originalCase) {
+        originalCase.pickup_booked_at = now;
+        originalCase.pickup_booking_case_id = id;
+        originalCase.timeline = Array.isArray(originalCase.timeline) ? originalCase.timeline : [];
+        originalCase.timeline.push({ at: now, event: `Kund bokade upphamtning: ${shortCaseId(id)}.` });
+        await store.setJSON(originalCase.id, originalCase);
+      }
+    }
+
+    const calendar = await createCalendarEvent(caseItem);
+    caseItem.notifications.calendar = calendar;
+    if (calendar.status !== "created" && calendar.status !== "disabled") {
+      caseItem.timeline.push({ at: new Date().toISOString(), event: `Kalenderhandelse kunde inte skapas: ${calendar.error || calendar.reason || "okant fel"}` });
+      await store.setJSON(id, caseItem);
+      return json({
+        error: "Tiden sag ledig ut men kunde inte bokas i kalendern. Ring eller SMS:a oss sa bokar vi manuellt.",
+        calendar,
+      }, 503);
+    }
+    if (calendar.status === "created") {
+      caseItem.timeline.push({ at: calendar.createdAt, event: "Kalenderhandelse skapad for verkstaden." });
+    }
+
+    // Idempotency-nyckeln skrivs FÖRST NU, efter att bokningen är komplett i
+    // kalendern. Skrivs den tidigare kan en retry efter 503 träffa
+    // dublettkontrollen och ge ok:true för ett ärende som varken har
+    // kalenderhändelse eller notifieringar.
     await idempotencyStore.setJSON(idempotencyKey, {
       id: idempotencyKey,
       caseId: id,
@@ -1138,28 +1212,6 @@ export default async (request, context) => {
         message: clean(error?.message, 180),
       });
     });
-    if (caseItem.pickup_for_case_id) {
-      const originalCase = await store.getJSON(caseItem.pickup_for_case_id).catch(() => null);
-      if (originalCase) {
-        originalCase.pickup_booked_at = now;
-        originalCase.pickup_booking_case_id = id;
-        originalCase.timeline = Array.isArray(originalCase.timeline) ? originalCase.timeline : [];
-        originalCase.timeline.push({ at: now, event: `Kund bokade upphamtning: ${shortCaseId(id)}.` });
-        await store.setJSON(originalCase.id, originalCase);
-      }
-    }
-
-    const calendar = await createCalendarEvent(caseItem);
-    caseItem.notifications.calendar = calendar;
-    if (calendar.status !== "created") {
-      caseItem.timeline.push({ at: new Date().toISOString(), event: `Kalenderhandelse kunde inte skapas: ${calendar.error || calendar.reason || "okant fel"}` });
-      await store.setJSON(id, caseItem);
-      return json({
-        error: "Tiden sag ledig ut men kunde inte bokas i kalendern. Ring eller SMS:a oss sa bokar vi manuellt.",
-        calendar,
-      }, 503);
-    }
-    caseItem.timeline.push({ at: calendar.createdAt, event: "Kalenderhandelse skapad for verkstaden." });
 
     const { sms, staffSms, customerEmail, workshopEmail } = await sendBookingNotifications(caseItem, smsRequested);
     caseItem.notifications = { sms, staffSms, customerEmail, workshopEmail, calendar, calendarAvailability: availability };
