@@ -492,7 +492,14 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     .sort((a, b) => String(b.at).localeCompare(String(a.at)));
   const optoutPhones = [...optoutMap.keys()];
 
-  return { rows, todayRows, activeLeadRows, totals, stats, account, inboundSms, optoutPhones, readOnly: !syncLeads };
+  // Auktoritativ kampanjhistorik per telefonnummer (store "campaign-sent") —
+  // detta, inte callId-followups, är sanningen om vem som fått kampanj-SMS.
+  const { items: campaignMap } = await loadBlobMap("campaign-sent");
+  const campaignSent = [...campaignMap.values()]
+    .filter((item) => item?.phone && item?.lastSentAt)
+    .map((item) => ({ phone: item.phone, lastSentAt: item.lastSentAt, count: Number(item.count) || 1 }));
+
+  return { rows, todayRows, activeLeadRows, totals, stats, account, inboundSms, optoutPhones, campaignSent, readOnly: !syncLeads };
 };
 
 export default async (request) => {
@@ -671,6 +678,26 @@ export default async (request) => {
     const optout = await getStore({ name: "sms-optout", consistency: "strong" })
       .get(phone, { type: "json" }).catch(() => null);
     if (optout) return json({ ok: false, skipped: "optout", followup: { callId, phone, result: { status: "optout" } } });
+    // HÅRD per-nummer-spärr: ett kampanj-SMS per nummer per 30 dagar, oavsett
+    // callId, klientlogik eller schemaläggning. Infördes efter dubbelskicket
+    // 2026-07-24, där callId-baserade followups inte räckte som dubblettskydd
+    // (rotorsak oklar — den här spärren gör frågan irrelevant). Överstyrs
+    // endast med explicit force=true.
+    const campaignStore = getStore({ name: "campaign-sent", consistency: "strong" });
+    const prior = await campaignStore.get(phone, { type: "json" }).catch(() => null);
+    const CAMPAIGN_COOLDOWN_MS = 30 * 24 * 60 * 60 * 1000;
+    if (
+      body.force !== true &&
+      prior?.lastSentAt &&
+      Date.now() - new Date(prior.lastSentAt).getTime() < CAMPAIGN_COOLDOWN_MS
+    ) {
+      return json({
+        ok: false,
+        skipped: "already_sent",
+        lastSentAt: prior.lastSentAt,
+        followup: { callId, phone, result: { status: "already_sent" } },
+      });
+    }
     const message =
       clean(body.message, 918) ||
       `Hej! Vi såg att du ringt Nordic E-Mobility. Boka service via nordicemobility.se och ange koden ${code} så får du 10% rabatt på verkstadsarbetet. Gäller ny bokning inom 7 dagar. /Nordic E-Mobility`;
@@ -699,6 +726,17 @@ export default async (request) => {
       operatorName,
     };
     await getStore({ name: "call-followups", consistency: "strong" }).setJSON(callId, entry);
+    if (result.status === "sent") {
+      // Append-säker per-nummer-historik — nyckeln är telefonnumret och
+      // historiken skrivs aldrig över, bara utökas.
+      await campaignStore.setJSON(phone, {
+        phone,
+        lastSentAt: entry.sentAt,
+        lastCode: code,
+        count: (Number(prior?.count) || 0) + 1,
+        history: [...(Array.isArray(prior?.history) ? prior.history : []).slice(-19), { at: entry.sentAt, code, callId }],
+      }).catch(() => {});
+    }
     if (currentLead) {
       await leadStore.setJSON(callId, {
         ...currentLead,
