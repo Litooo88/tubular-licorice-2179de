@@ -32,7 +32,10 @@ for (const file of htmlFiles) {
   }
 }
 
-const missingFromHtml = checkoutProducts.filter((id) => !htmlProductIds.has(id));
+// Dolda produkter (hidden: true, t.ex. interna testprodukter) ska kunna köpas
+// via sin egen /produkt/-sida men medvetet INTE synas i katalog-HTML:en.
+const hiddenIds = new Set(catalog.products.filter((product) => product.hidden).map((product) => product.id));
+const missingFromHtml = checkoutProducts.filter((id) => !htmlProductIds.has(id) && !hiddenIds.has(id));
 const missingFromBackend = checkoutProducts.filter((id) => !backendSet.has(id));
 const staleBackend = backendProducts.filter((id) => !checkoutProducts.includes(id));
 const checkoutScript = fs.readFileSync(path.join(root, "assets/product-checkout.js"), "utf8");
