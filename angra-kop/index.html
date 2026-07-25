@@ -76,17 +76,31 @@
     errorBox.hidden=true;
     const stamp=new Date().toISOString();
     document.getElementById('angerTimestamp').value=stamp;
-    const payload=new URLSearchParams();
-    new FormData(form).forEach((value,key)=>payload.set(key,String(value)));
+    const data=Object.fromEntries(new FormData(form).entries());
+    // Backup till Netlify Forms skickas alltid — även om API:et fallerar
+    // finns kundens ångermeddelande kvar hos verkstaden.
+    const backupPayload=new URLSearchParams();
+    Object.entries(data).forEach(([key,value])=>backupPayload.set(key,String(value)));
+    const backup=fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:backupPayload.toString()}).catch(()=>null);
     try{
-      const response=await fetch('/',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body:payload.toString()});
-      if(!response.ok)throw new Error('post failed');
+      const response=await fetch('/api/angerratt',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
+      const result=await response.json().catch(()=>({}));
+      if(!response.ok)throw new Error(result.error||'api failed');
       form.hidden=true;
-      confirmTime.textContent='Registrerat '+new Intl.DateTimeFormat('sv-SE',{dateStyle:'long',timeStyle:'short',timeZone:'Europe/Stockholm'}).format(new Date())+'.';
+      const when=new Intl.DateTimeFormat('sv-SE',{dateStyle:'long',timeStyle:'short',timeZone:'Europe/Stockholm'}).format(new Date(result.receivedAt||Date.now()));
+      confirmTime.textContent='Registrerat '+when+(result.id?' med ärendenummer '+result.id:'')+'.'+(result.emailConfirmation==='sent'?' En skriftlig bekräftelse har skickats till din e-post.':'');
       confirmBox.hidden=false;
       confirmBox.scrollIntoView({behavior:'smooth',block:'center'});
     }catch{
-      errorBox.hidden=false;
+      const backupOk=await backup;
+      if(backupOk&&backupOk.ok){
+        form.hidden=true;
+        confirmTime.textContent='Registrerat '+new Intl.DateTimeFormat('sv-SE',{dateStyle:'long',timeStyle:'short',timeZone:'Europe/Stockholm'}).format(new Date())+'.';
+        confirmBox.hidden=false;
+        confirmBox.scrollIntoView({behavior:'smooth',block:'center'});
+      }else{
+        errorBox.hidden=false;
+      }
     }
   });
 })();
