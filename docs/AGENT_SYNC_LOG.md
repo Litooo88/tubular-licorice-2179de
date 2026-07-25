@@ -32,6 +32,15 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-25 — Claude Code — PÅGÅR (produktsidor /produkt/<id>/ + CSP Report-Only)
+
+- **Branch:** `feat/produktsidor` (mappen byter till denna under passet).
+- **Tar:** scripts/generate-products.mjs (genererar en sida per prissatt
+  produkt med unik title/canonical/Product-schema; katalogkorten och
+  ItemList-schemat länkar till sidorna), ny katalog produkt/ (genererad,
+  incheckad), sitemap.xml (markerat autoblock), scripts/build-dist.mjs
+  (+produkt), netlify.toml (redirect /produkt → katalog, CSP Report-Only).
+
 ### 2026-07-25 — Claude Code — KLAR (orderbekräftelse med ångerinfo + automatisk ångerbekräftelse)
 
 - **Branch:** `feat/anger-orderbekraftelse` → mergad till main. Mappen på main.
