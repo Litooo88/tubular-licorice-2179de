@@ -32,6 +32,25 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-24 — Claude Code — KLAR (mobil-LCP startsidan: async fonter, WebP-hero, async popup-CSS)
+
+- **Branch:** `feat/mobile-lcp` → PR mot `main`. SEO-auditens åtgärd #4
+  (mobil-LCP 4,4 s → mål < 2,5 s, direkt rankingsignal Mobile-First).
+- **Hero-bilden (LCP-elementet):** workshop-hero.jpg 278 kB →
+  workshop-hero-1600.webp 96 kB (desktop) + workshop-hero-900.webp 42 kB
+  (mobil via media query). Preload uppdelad med media-attribut så bara EN
+  variant laddas. Original-jpg:n kvar för og:image/schema.
+- **Google Fonts:** startsidan saknade preconnect helt OCH laddade font-CSS
+  render-blockerande. Nu: preconnect ×2 + media=print-async + noscript-
+  fallback. Text renderas direkt med systemfont, Inter swappar in.
+- **newsletter-popup.css:** async (behövs först när popupen visas).
+- **Verifierat i browser:** mobil 375px → 900-webp, desktop 1280px →
+  1600-webp, Inter aktiv efter swap, popup-CSS flippar till media=all,
+  0 konsolfel. Build + dist-verifiering OK (Codex dist-bygge inkluderat).
+- **Kvar för full LCP-effekt (nästa pass):** samma font/CSS-mönster på
+  nya-elscootrar + landningssidorna, case-bilderna (206–231 kB jpg) till
+  WebP. Ommätning via PageSpeed Insights efter deploy.
+
 ### 2026-07-25 — Claude Code — KLAR (dold testprodukt 100 kr för skarptest av betalflödet)
 
 - **Branch:** `feat/testprodukt` → mergad till main (563a1d9), live-verifierad.
