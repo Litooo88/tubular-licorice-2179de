@@ -32,6 +32,15 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-25 — Claude Code — KLAR (integritetspolicy omskriven enligt auditens GDPR-checklista)
+
+- **Branch:** `feat/integritetspolicy` → mergad till main (0dd6c1d).
+- Fullständig policy: ansvarig+kontakt, kategorier per flöde, rättslig
+  grund, lagringstider, biträden (Stripe/Netlify/Resend/46elks/Google) med
+  DPF/SCC-tredjelandsöverföring, cookieavsnitt kopplat till samtyckes-
+  bannern, rättigheter + IMY. **Utkast — bör juristgranskas** innan den
+  betraktas som slutgiltig (audit p9).
+
 ### 2026-07-25 — Claude Code — KLAR (produktsidor /produkt/<id>/ + CSP Report-Only)
 
 - **Branch:** `feat/produktsidor` → mergad till main. Mappen på main.
