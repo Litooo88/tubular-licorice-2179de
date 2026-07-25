@@ -32,15 +32,27 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-07-25 — Claude Code — PÅGÅR (orderbekräftelse med ångerinfo + automatisk ångerbekräftelse)
+### 2026-07-25 — Claude Code — KLAR (orderbekräftelse med ångerinfo + automatisk ångerbekräftelse)
 
-- **Branch:** `feat/anger-orderbekraftelse` (mappen byter till denna under passet).
-- **Tar:** netlify/functions/stripe-webhook.js (orderbekräftelsemejl med
-  ångerinformation efter checkout.session.completed), ny
-  netlify/functions/anger.mjs (/api/angerratt: lagrar + bekräftar
-  ångermeddelanden via Resend), netlify/functions/_shared/email.js (delad
-  Resend-hjälpare), angra-kop/index.html (postar till funktionen med
-  Netlify Forms som backup).
+- **Branch:** `feat/anger-orderbekraftelse` → mergad till main. Mappen på main.
+- **Gjort:** (1) stripe-webhook.js skickar nu orderbekräftelse på varaktigt
+  medium efter betalt checkout-köp: avtalspart, orderreferens, belopp,
+  14 dagars ångerrätt med /angra-kop/-länk + KO-blankett, 3 års
+  reklamationsrätt — distansavtalslagens bekräftelsekrav. Intern ordernotis
+  till WORKSHOP_EMAIL (verkstaden fick tidigare INGEN notis om produktordrar).
+  Idempotent mot Stripe-omsändningar. (2) Ny anger.mjs (/api/angerratt):
+  lagrar ångermeddelanden i Blobs-store "anger-requests", skickar omedelbar
+  skriftlig bekräftelse till kund + åtgärdsnotis till verkstaden; /angra-kop/
+  postar dit med Netlify Forms som alltid-skickad backup. (3) Delad
+  _shared/email.js (Resend, not_configured-läge).
+- **Kräver i Netlify-miljön:** RESEND_API_KEY + EMAIL_FROM (samma som
+  bokningen använder — finns de är allt aktivt direkt), WORKSHOP_EMAIL.
+  Netlify Forms-notisen för "angerratt" är nu backup, inte enda vägen.
+- **Tester:** node --check ✅, ESM/CJS-interop + handler-smoketest
+  (validering/honeypot/405) ✅, npm run build + dist-verifiering ✅.
+- **Kvar i backlog:** admin/checkout/workshop till skyddad subdomän,
+  per-modell-legalverifiering av >250W "check-rules"-modeller, geo mot GBP,
+  produktsidor, CSP, integritetspolicy-uppdatering, CI-kontroller (audit p36).
 
 ### 2026-07-25 — Claude Code — KLAR (webbaudit-branchen mergad till main på Sebastians order)
 
