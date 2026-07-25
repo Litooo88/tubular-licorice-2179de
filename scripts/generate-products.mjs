@@ -266,7 +266,7 @@ function haloKnightLaunchSection() {
 function nyaElscootrarSection() {
   const featured = products.filter((item) => item.featured);
   const teverun = products.filter((item) => item.brand === "Teverun" && item.name.includes("Fighter"));
-  const orderable = products.filter((item) => item.checkout && !["slut", "upphord", "demo-bara"].includes(item.status));
+  const orderable = products.filter((item) => item.checkout && !item.hidden && !["slut", "upphord", "demo-bara"].includes(item.status));
   return `
   <section class="section" id="nya-elscootrar">
     <div class="wrap">
@@ -688,7 +688,7 @@ const productSchemaJson = () => {
     "@type": "ItemList",
     name: "Elscootrar hos Nordic E-Mobility i Örebro",
     itemListElement: products
-      .filter((item) => Number(item.priceSek) > 0)
+      .filter((item) => Number(item.priceSek) > 0 && !item.hidden)
       .map((item, index) => ({
         "@type": "ListItem",
         position: index + 1,
@@ -788,7 +788,7 @@ const productPageHtml = (item) => {
 <meta property="og:description" content="${escapeAttr(description)}">
 <meta property="og:url" content="${escapeAttr(url)}">
 <meta property="og:image" content="${escapeAttr(absUrl(item.images?.[0] || "/assets/workshop/scooter-on-bench.jpg"))}">
-<meta name="robots" content="index, follow">
+<meta name="robots" content="${item.hidden ? "noindex, nofollow" : "index, follow"}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
@@ -896,6 +896,7 @@ const sitemapProductBlock = () => {
   // bara ändras när produktdatat faktiskt ändrats.
   const lastmod = catalog.updated || new Date().toISOString().slice(0, 10);
   return pageProducts
+    .filter((item) => !item.hidden)
     .map((item) => `  <url><loc>${SITE_ORIGIN}${productPagePath(item)}</loc><lastmod>${lastmod}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`)
     .join("\n");
 };

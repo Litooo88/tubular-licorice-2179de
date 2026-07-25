@@ -51,6 +51,15 @@ löpande "konversation".
   nya-elscootrar + landningssidorna, case-bilderna (206–231 kB jpg) till
   WebP. Ommätning via PageSpeed Insights efter deploy.
 
+### 2026-07-25 — Claude Code — KLAR (dold testprodukt 100 kr för skarptest av betalflödet)
+
+- **Branch:** `feat/testprodukt` → mergad till main (563a1d9), live-verifierad.
+- Produkt `nemob-testorder-100` med nytt fält `hidden: true`: köpbar via
+  /produkt/nemob-testorder-100/ (noindex) men exkluderad från katalog,
+  startsida, ItemList-schema, Snabb beställning och sitemap. Generator +
+  verify-skript respekterar hidden-fältet. Syfte: Sebastian testar
+  checkout → orderbekräftelse → ånger för 100 kr; återbetala via Stripe
+  efteråt. Ta bort produkten (eller låt ligga) efter genomfört test.
 
 ### 2026-07-25 — Claude Code — KLAR (integritetspolicy omskriven enligt auditens GDPR-checklista)
 
