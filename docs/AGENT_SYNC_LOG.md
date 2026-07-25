@@ -109,6 +109,24 @@ löpande "konversation".
 - **Kvar i backlog:** admin/checkout/workshop till skyddad subdomän,
   per-modell-legalverifiering av >250W "check-rules"-modeller, geo mot GBP,
   produktsidor, CSP, integritetspolicy-uppdatering, CI-kontroller (audit p36).
+### 2026-07-24 — Claude Code — KLAR (HÅRD kampanjspärr per telefonnummer efter dubbelskicket)
+
+- **Branch:** `fix/campaign-dedup-guard` → PR mot `main` (byggd i separat
+  worktree — mappen var upptagen av webbaudit-passet).
+- **Bakgrund:** schemalagda vågen 24 juli 05:04 skickade om till våg 1-nummer
+  från 19 juli; callId-baserade followups räckte inte som dubblettskydd
+  (rotorsak obekräftad — 19 juli-posterna saknas i storen).
+- **Fix (server, send_discount):** NY store `campaign-sent` med telefonnummer
+  som nyckel: hård spärr 30 dagar per nummer (endast force=true överstyr),
+  append-säker historik (history[] skrivs aldrig över). GET exponerar
+  `campaignSent` som auktoritativ skickat-lista; adminpanelen använder den.
+  Dubbelskick är nu OMÖJLIGT oavsett klient/schemaläggning.
+- **OBS:** storen är tom vid deploy → de 25 som fått SMS (19+24 juli) syns
+  inte i den förrän nästa utskick — men followup-fallbacken i panelen täcker
+  24 juli-posterna, och schemalagda uppgiften är instruerad att vägra köra
+  om campaignSent saknas i API-svaret.
+- **Tester:** node --check, inline-JS 0 fel, 14/14 Node-tester.
+
 
 ### 2026-07-25 — Claude Code — KLAR (webbaudit-branchen mergad till main på Sebastians order)
 
