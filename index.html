@@ -336,7 +336,13 @@
   ]
 }
 </script>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Fonten laddas asynkront (media=print-tricket): texten renderas direkt med
+     systemfont och byter till Inter när den laddats — tar bort ~0,5-0,7 s
+     render-blockering på mobil (LCP-åtgärd, SEO-audit 2026-07-24). -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',sans-serif;background:#000;color:#fff;overflow-x:hidden}
@@ -362,7 +368,8 @@ nav a:hover{color:#fff}
 .nav-phone{color:#00C853!important;font-weight:800;font-size:14px;white-space:nowrap}
 
 /* HERO */
-.hero{padding:150px 0 80px;position:relative;background:linear-gradient(90deg,rgba(0,0,0,.94),rgba(0,0,0,.76),rgba(0,0,0,.5)),url('/assets/workshop/workshop-hero.jpg');background-size:cover;background-position:center;overflow:hidden}
+.hero{padding:150px 0 80px;position:relative;background:linear-gradient(90deg,rgba(0,0,0,.94),rgba(0,0,0,.76),rgba(0,0,0,.5)),url('/assets/workshop/workshop-hero-1600.webp');background-size:cover;background-position:center;overflow:hidden}
+@media(max-width:640px){.hero{background-image:linear-gradient(90deg,rgba(0,0,0,.94),rgba(0,0,0,.76),rgba(0,0,0,.5)),url('/assets/workshop/workshop-hero-900.webp')}}
 .hero::before{content:'';position:absolute;top:-200px;right:-200px;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,200,83,.08) 0%,transparent 70%)}
 .hero h1{font-size:50px;font-weight:900;line-height:1.1;max-width:720px;margin-bottom:20px}
 .hero .subtitle{font-size:19px;color:#bbb;max-width:540px;line-height:1.6;margin-bottom:32px}
@@ -686,8 +693,12 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 .pc,.tc,.calc-form,.price-guarantee,.prod,.bc,.prob,.usp-point,.sustain-point,.sustain-visual,.sustain-cta,.calc-match,.calc-col{border-radius:8px}
 @media(max-width:900px){.seo-quick-grid,.proof-layout,.proof-metrics,.faq-grid{grid-template-columns:1fr}.proof-feature{min-height:390px}.proof-card{min-height:230px}}
 </style>
-<link rel="preload" as="image" href="/assets/workshop/workshop-hero.jpg" fetchpriority="high">
-<link rel="stylesheet" href="/assets/newsletter-popup.css">
+<link rel="preload" as="image" href="/assets/workshop/workshop-hero-900.webp" fetchpriority="high" media="(max-width:640px)">
+<link rel="preload" as="image" href="/assets/workshop/workshop-hero-1600.webp" fetchpriority="high" media="(min-width:641px)">
+<!-- Popup-CSS:en behövs först när popupen visas (efter fördröjning) — ladda
+     asynkront så den inte blockerar första renderingen. -->
+<link rel="stylesheet" href="/assets/newsletter-popup.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="/assets/newsletter-popup.css"></noscript>
 <script>
 window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debugMode:new URLSearchParams(window.location.search).has("ga_debug")};
 </script>
