@@ -32,6 +32,24 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-25 — Claude Code — KLAR (geo-fix + mejlflödesdiagnos: STRIPE_WEBHOOK_SECRET saknas)
+
+- **Geo:** alla LocalBusiness-scheman rättade till 59.223091, 15.254543
+  (Sebastians Google Maps-avläsning; sajten pekade tidigare flera km fel).
+  Branch `fix/geo-koordinater` → main.
+- **Diagnos av uteblivna ordermejl efter Sebastians 100 kr-testköp:**
+  stripe-webhook svarar {"configured":false} i produktion —
+  **STRIPE_WEBHOOK_SECRET saknas i Netlify** och webhook-endpointen är
+  sannolikt inte registrerad i Stripe. Betalningen finns hos Stripe men
+  checkout.session.completed når aldrig sajten → ingen orderbekräftelse,
+  ingen verkstadsnotis (gäller ALLA produktordrar hittills, inte bara testet).
+  Resend-kedjan VERIFIERAD OK via ångerflödet (testärende ANGER-0AFCEA9045,
+  båda mejlen levererade sekundsnabbt). Åtgärd för Sebastian: registrera
+  webhook i Stripe (event checkout.session.completed → /.netlify/functions/
+  stripe-webhook), lägg whsec_-nyckeln som STRIPE_WEBHOOK_SECRET i Netlify,
+  trigga redeploy, klicka Resend på eventet — då skickas bekräftelsen för
+  det redan betalda testköpet.
+
 ### 2026-07-24 — Claude Code — KLAR (mobil-LCP startsidan: async fonter, WebP-hero, async popup-CSS)
 
 - **Branch:** `feat/mobile-lcp` → PR mot `main`. SEO-auditens åtgärd #4
