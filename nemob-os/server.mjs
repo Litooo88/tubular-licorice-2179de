@@ -17,6 +17,7 @@ import { generatePlan, summarizeDay } from "./lib/plan.mjs";
 import { fetchNordicBrief } from "./lib/nordic.mjs";
 import { fetchAdminCases } from "./lib/admin-cases.mjs";
 import { openCasesPrioritized, searchCases } from "./lib/lookup.mjs";
+import { RepairKnowledgeStore, defaultRepairKnowledgePath } from "./lib/repair-knowledge.mjs";
 import { AREAS, RISK_LEVELS, STATUSES, stockholmDate } from "./lib/constants.mjs";
 import {
   SessionStore,
@@ -56,6 +57,7 @@ if (AUTH.error) {
 }
 const sessions = new SessionStore();
 const store = new Store(defaultStorePath(BASE_DIR));
+const knowledgeStore = new RepairKnowledgeStore(defaultRepairKnowledgePath(BASE_DIR));
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -164,6 +166,23 @@ const handleApi = async (req, res, url) => {
 
   if (path === "/api/meta" && req.method === "GET") {
     return json(res, { areas: AREAS, statuses: STATUSES, riskLevels: RISK_LEVELS });
+  }
+
+  if (path === "/api/knowledge/stats" && req.method === "GET") {
+    return json(res, knowledgeStore.stats());
+  }
+
+  if (path === "/api/knowledge/search" && req.method === "GET") {
+    const query = (url.searchParams.get("q") || "").trim();
+    if (query.length < 2) return json(res, { error: "query_too_short" }, 400);
+    return json(res, {
+      results: knowledgeStore.search(query, {
+        limit: url.searchParams.get("limit") || 10,
+        brand: url.searchParams.get("brand") || null,
+        errorCode: url.searchParams.get("errorCode") || null,
+        rootCause: url.searchParams.get("rootCause") || null,
+      }),
+    });
   }
 
   if (path === "/api/nordic-brief" && req.method === "GET") {
@@ -336,6 +355,7 @@ server.listen(PORT, AUTH.host, () => {
   console.log(
     `NEMOB OS kör på http://${AUTH.host}:${PORT} ` +
     `(Nordic-källa: ${configured ? "konfigurerad" : "ej konfigurerad"}, ` +
-    `åtkomstskydd: ${AUTH.required ? "PIN aktiv" : "endast lokalt"})`,
+    `åtkomstskydd: ${AUTH.required ? "PIN aktiv" : "endast lokalt"}, ` +
+    `kunskapsposter: ${knowledgeStore.records.length})`,
   );
 });
