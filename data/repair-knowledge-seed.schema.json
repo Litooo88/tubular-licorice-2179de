@@ -4,28 +4,16 @@
   "type": "object",
   "additionalProperties": false,
   "required": [
-    "id",
-    "source",
-    "sourceTitle",
-    "brand",
-    "model",
-    "errorCodes",
-    "symptoms",
-    "testsPerformed",
-    "likelyRootCause",
-    "confirmedRootCause",
-    "resolution",
-    "partsMentioned",
-    "diagnosticLesson",
-    "confidence",
-    "status",
-    "reviewStatus",
-    "privacyCleaned",
-    "excerpt"
+    "id", "source", "sourceTitle", "brand", "model", "errorCodes", "symptoms",
+    "testsPerformed", "likelyRootCause", "confirmedRootCause", "resolution",
+    "partsMentioned", "diagnosticLesson", "confidence", "status", "reviewStatus",
+    "privacyCleaned", "redactionWarnings", "excerpt"
   ],
   "properties": {
-    "id": { "type": "string" },
-    "source": { "type": "string", "enum": ["chatgpt_history"] },
+    "id": { "type": "string", "minLength": 1 },
+    "source": { "type": "string", "enum": ["chatgpt_history", "workshop_case", "manual"] },
+    "sourceConversationId": { "type": ["string", "null"] },
+    "sourceMessageIds": { "type": "array", "items": { "type": "string" } },
     "sourceTitle": { "type": "string" },
     "createTime": { "type": ["string", "null"] },
     "updateTime": { "type": ["string", "null"] },
@@ -34,41 +22,8 @@
     "errorCodes": { "type": "array", "items": { "type": "string" } },
     "symptoms": { "type": "array", "items": { "type": "string" } },
     "testsPerformed": { "type": "array", "items": { "type": "string" } },
-    "likelyRootCause": {
-      "type": "string",
-      "enum": [
-        "battery_cell",
-        "bms",
-        "controller",
-        "wiring",
-        "hall_sensor",
-        "motor",
-        "puncture",
-        "brake",
-        "wear",
-        "water_damage",
-        "user_error",
-        "unknown"
-      ]
-    },
-    "confirmedRootCause": {
-      "type": ["string", "null"],
-      "enum": [
-        "battery_cell",
-        "bms",
-        "controller",
-        "wiring",
-        "hall_sensor",
-        "motor",
-        "puncture",
-        "brake",
-        "wear",
-        "water_damage",
-        "user_error",
-        "unknown",
-        null
-      ]
-    },
+    "likelyRootCause": { "$ref": "#/$defs/rootCause" },
+    "confirmedRootCause": { "oneOf": [{ "$ref": "#/$defs/rootCause" }, { "type": "null" }] },
     "resolution": { "type": ["string", "null"] },
     "partsMentioned": { "type": "array", "items": { "type": "string" } },
     "diagnosticLesson": { "type": ["string", "null"] },
@@ -83,6 +38,20 @@
     "prices": { "type": "array", "items": { "type": "string" } },
     "timeMentions": { "type": "array", "items": { "type": "string" } },
     "privacyCleaned": { "type": "boolean" },
-    "excerpt": { "type": "string" }
+    "redactionWarnings": { "type": "array", "items": { "type": "string" } },
+    "excerpt": { "type": "string" },
+    "reviewedAt": { "type": ["string", "null"] },
+    "reviewedBy": { "type": ["string", "null"] },
+    "importedAt": { "type": ["string", "null"] },
+    "contentHash": { "type": "string" }
+  },
+  "$defs": {
+    "rootCause": {
+      "type": "string",
+      "enum": [
+        "battery_cell", "bms", "controller", "wiring", "hall_sensor", "motor",
+        "puncture", "brake", "wear", "water_damage", "user_error", "unknown"
+      ]
+    }
   }
 }
