@@ -32,6 +32,23 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-27 — Claude Code — KLAR (LCP runda 2: bloggtumnaglarna var boven — 4,1 s → 2,6 s)
+
+- **Branch:** `fix/lcp-blog-thumbs` → PR mot `main`.
+- **Mätning (lokal Lighthouse, simulerad mobil — PSI-API:t hade kvottak):**
+  live-sajten efter LCP-runda 1: prestanda 86 (från 79), FCP 1,5 s (från
+  2,7), CLS 0, TBT 0 — men LCP bara 4,4→4,1 s. Nätverksanalysen visade att
+  hero-webp:n laddar på 355 ms; boven var bloggsektionens TRE tumnaglar som
+  CSS-bakgrunder (200–230 kB jpg styck = ~640 kB) som laddar direkt vid
+  sidstart (CSS-bakgrunder kan inte lazy-loadas) och tränger undan allt.
+- **Fix:** 560px-webp-tumnaglar (21–37 kB, −93 %) för case-battery-bms,
+  scooter-on-bench och showroom-group; CSS-url:erna bytta i index.html.
+  Om-mätt lokalt: **LCP 2,6 s, FCP 1,1 s** — målet <2,5 s bör nås på
+  produktion med Netlify-CDN. Verifiera i PSI några dagar efter merge.
+- **Lärdom till Codex:** lägg ALDRIG stora bilder som CSS-background —
+  de kan inte lazy-loadas och laddar alltid, även under vikningen.
+
+
 ### 2026-07-27 — Claude Code — KLAR (åtkomstgrind för interna verktyg — audit åtgärd 22 stängd)
 
 - **Branch:** `feat/admin-gate` → main (f823fc8), live-verifierad.
