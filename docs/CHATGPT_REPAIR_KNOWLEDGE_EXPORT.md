@@ -1,136 +1,160 @@
-# ChatGPT Repair Knowledge Export
+# ChatGPT → NEMOB OS Repair Knowledge
 
-Det här dokumentet beskriver hur ChatGPT-historik kan användas som seed-data till
-Nordic E-Mobilitys Repair Intelligence Loop.
+Detta flöde gör tidigare tekniska ChatGPT-dialoger till en lokal, manuellt
+godkänd och sökbar kunskapsbank i NEMOB OS.
 
-## Syfte
-
-Sebastian har under lång tid felsökt elscootrar, batterier, BMS, controllers,
-felkoder, motorer och kundcase i ChatGPT. Den historiken innehåller tekniska
-mönster som kan bli första versionen av verkstadens kunskapsbank.
-
-Målet är inte att importera allt som sanning. Målet är att skapa en
-**granskningskö** med kandidater.
+## Säkerhetsmodell
 
 ```text
-ChatGPT-historik
-→ extraherade repair-kandidater
-→ manuell granskning
-→ godkända kunskapsposter
-→ NEMOB OS / Repair Intelligence
+ChatGPT-export
+→ deterministisk extraktion
+→ automatisk grundredaktion
+→ lokal manuell granskning
+→ explicit godkännande
+→ lokal import
+→ sökbart beslutsstöd
 ```
 
-## Input
+Inget importeras automatiskt som verkstadssanning. Endast poster med
+`reviewStatus: approved` kan importeras. Importerad data lagras lokalt i
+`nemob-os/data/`, som är gitignorerad.
 
-Exportera ChatGPT-data och leta upp filen:
+## 1. Exportera ChatGPT-data
 
-```text
-conversations.json
-```
+Packa upp exporten och hitta `conversations.json`. Lägg aldrig exporten i repot.
 
-Lägg inte denna fil i repot. Den kan innehålla privat data.
+## 2. Extrahera kandidater
 
-## Körning
-
-Från projektets rotmapp:
+Från repo-roten:
 
 ```powershell
-node scripts/extract-chatgpt-repair-knowledge.mjs C:\path\to\conversations.json repair-knowledge-export
+npm run knowledge:extract -- C:\Users\Sebastian\Downloads\chatgpt-export\conversations.json
 ```
 
 Mac/Linux:
 
 ```bash
-node scripts/extract-chatgpt-repair-knowledge.mjs ~/Downloads/chatgpt-export/conversations.json repair-knowledge-export
+npm run knowledge:extract -- ~/Downloads/chatgpt-export/conversations.json
 ```
 
-## Output
+Standardmappen `repair-knowledge-export/` skapas med:
 
-Scriptet skapar:
+- `repair_knowledge_seed.jsonl`
+- `repair_cases_candidates.csv`
+- `error_code_index.csv`
+- `extraction_summary.json`
+
+Extraktorn arbetar på tekniska meddelandesegment, inte bara en hel konversation
+per post. Den försöker identifiera märke, modell, felkod, symptom, tester,
+rotorsak, bekräftad lösning, delar, spänningar, pris och tidsuppgifter.
+
+## 3. Bygg lokal granskningssida
+
+```powershell
+npm run knowledge:review -- repair-knowledge-export\repair_knowledge_seed.jsonl
+```
+
+Det skapar:
 
 ```text
-repair-knowledge-export/
-├── repair_knowledge_seed.jsonl
-├── repair_cases_candidates.csv
-├── error_code_index.csv
-└── extraction_summary.json
+repair-knowledge-export/review.html
 ```
 
-### `repair_knowledge_seed.jsonl`
+Öppna filen lokalt i webbläsaren. Sidan har inga externa script och skickar
+ingen data över internet. Du kan:
 
-En rad per möjlig kunskapspost. Avsedd för maskinell import efter granskning.
+- redigera märke, modell, felkoder och orsak
+- justera symptom, tester, delar, lösning och lärdom
+- godkänna eller avvisa varje post
+- filtrera på märke, säkerhet och granskningsstatus
+- ladda ner `approved_repair_knowledge.jsonl`
 
-### `repair_cases_candidates.csv`
+Granskningsläget sparas även lokalt i webbläsaren tills du laddar ner filen.
 
-Manuell granskningsfil. Öppnas enklast i Excel/Google Sheets.
+## 4. Importera godkända poster
 
-### `error_code_index.csv`
+Kör först dry-run:
 
-Snabb indexfil över upptäckta felkoder, märke, källa och trolig orsak.
+```powershell
+npm run knowledge:import -- approved_repair_knowledge.jsonl --dry-run
+```
 
-### `extraction_summary.json`
+Riktig import:
 
-Statistik över körningen: antal konversationer, kandidater, felkodsträffar,
-statusfördelning och märkesfördelning.
+```powershell
+npm run knowledge:import -- approved_repair_knowledge.jsonl
+```
 
-## Statusar
-
-Scriptet försöker märka kandidater med:
-
-| Status | Betydelse |
-| --- | --- |
-| `confirmed_fix` | Texten antyder att felet blev löst eller bekräftat. |
-| `likely_cause` | Texten antyder trolig orsak men inte slutverifiering. |
-| `disproven` | Texten antyder att hypotes/test inte var rätt. |
-| `diagnostic_step` | Texten innehåller främst test- eller felsökningssteg. |
-| `unknown` | Oklart. Kräver granskning. |
-
-## Granskningsregel
-
-Ingen post ska direkt bli auktoritativ verkstadskunskap.
-
-Rekommenderad review-kedja:
+Standardmål:
 
 ```text
-needs_review
-→ approved
-→ imported
+nemob-os/data/repair-knowledge.jsonl
 ```
 
-eller:
+Importen är:
+
+- idempotent — samma post dupliceras inte
+- atomisk — målfilen ersätts först när hela skrivningen lyckats
+- strikt — ogiltiga enums eller icke godkända poster importeras inte
+- integritetsspärrad — `privacyCleaned` måste vara `true`
+
+## 5. Sök i NEMOB OS
+
+Starta NEMOB OS:
+
+```powershell
+npm run nemob-os
+```
+
+Öppna dashboarden och klicka **Kunskapsbank**, eller gå till:
 
 ```text
-needs_review
-→ rejected
+http://127.0.0.1:4571/knowledge.html
 ```
 
-## Integritetsregel
-
-Scriptet gör enkel anonymisering av:
-
-- e-postadresser
-- svenska mobilnummer
-- personnummerliknande nummer
-
-Det räcker inte som fullständig sekretessgranskning. Innan data importeras till
-NEMOB OS ska kundnamn, telefonnummer, adresser och privata detaljer rensas bort
-manuellt.
-
-## Viktig begränsning
-
-Det här är en deterministisk MVP. Den använder nyckelord, regex och enkla
-heuristiker. Den gör inga AI-anrop och kan därför missa nyanser.
-
-Den ska ses som:
+API:
 
 ```text
-råmaterial → inte facit
+GET /api/knowledge/stats
+GET /api/knowledge/search?q=Ninebot%20E16&limit=20
 ```
 
-## Nästa steg
+Valfria filter:
 
-1. Kör exporten lokalt.
-2. Öppna `repair_cases_candidates.csv`.
-3. Markera 20–50 starkaste poster som `approved`.
-4. Importera endast godkända poster till Repair Intelligence-databasen.
-5. Bygg sedan `case-similar` mot godkända poster och avslutade verkstadsärenden.
+```text
+brand=ninebot
+errorCode=E16
+rootCause=wiring
+```
+
+API:t returnerar endast importerade/godkända poster och exponerar inte hela
+ChatGPT-exporten.
+
+## Vad som fortfarande kräver människa
+
+Automatisk redaktion tar bort vanliga e-postadresser, svenska mobilnummer och
+personnummerliknande värden. Den kan inte garantera att namn, ovanliga nummer,
+adresser eller privata sammanhang upptäcks. Varje post ska därför granskas innan
+godkännande.
+
+Tekniska slutsatser från ChatGPT-historik kan vara gamla, hypotetiska eller
+modellberoende. Bekräfta alltid mot fordonets kopplingsschema, mätvärden,
+kompatibilitet och aktuell säkerhetsbedömning.
+
+## Test och verifiering
+
+```powershell
+npm run test:knowledge
+npm run test:nemob-os
+npm run build
+```
+
+Separat syntaxkontroll:
+
+```powershell
+node --check scripts/extract-chatgpt-repair-knowledge.mjs
+node --check scripts/build-repair-knowledge-review.mjs
+node --check scripts/import-repair-knowledge.mjs
+node --check nemob-os/lib/repair-knowledge.mjs
+node --check nemob-os/server.mjs
+```
