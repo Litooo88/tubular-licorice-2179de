@@ -4,6 +4,7 @@ import {
   reserveServiceNumber,
   serviceNumberForCase,
 } from "./_shared/service-number.mjs";
+import { isQuietHour, nextOptimalSendAt } from "./_shared/quiet-hours.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -152,7 +153,9 @@ const shellHtml = (title, body) => `
 
 const couponCode = (caseItem) => `SCOOTER-${Buffer.from(caseItem.id).toString("base64url").slice(-6).toUpperCase()}`;
 
-const sendThankYou = async (caseItem) => {
+// Exporteras så att outbox-flush.mjs (schemalagd) kan skicka köade tack när
+// tysta timmar är över — samma mall, samma idempotencyKey.
+export const sendThankYou = async (caseItem) => {
   const code = caseItem.coupon?.code || couponCode(caseItem);
   const validUntil = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const summary = clean(caseItem.completion?.workSummary || caseItem.workshop?.workDone || caseItem.service, 1600);
@@ -848,6 +851,19 @@ export default async (request, context) => {
         thankYou: { status: "suppressed", at: now },
       };
       next.timeline.push({ at: now, event: "Avslutad/betald utan tackmail (manuellt val i admin)." });
+    } else if (thankYouTriggered && isQuietHour()) {
+      // Tysta timmar (21-08 svensk tid): nattstängda ärenden ska inte skicka
+      // recensionsutskick kl 03. Köa i outbox-storen — den schemalagda
+      // outbox-flush-funktionen skickar kl 10:00 samma/nästa förmiddag.
+      const sendAfter = nextOptimalSendAt();
+      await getStore({ name: "outbox", consistency: "strong" })
+        .setJSON(`${next.id}-thank-you`, { type: "thank_you", caseId: next.id, sendAfter, queuedAt: now })
+        .catch(() => {});
+      next.notifications = {
+        ...(next.notifications || {}),
+        thankYou: { status: "queued", sendAfter, queuedAt: now },
+      };
+      next.timeline.push({ at: now, event: `Tackmail köat (nattstängning) — skickas ${new Date(sendAfter).toLocaleString("sv-SE", { timeZone: "Europe/Stockholm", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}.` });
     } else if (thankYouTriggered) {
       // A provider failure (Resend timeout/network) must not lose the whole
       // PATCH — the status/payment change still has to be persisted below.
