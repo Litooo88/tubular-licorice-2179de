@@ -32,6 +32,23 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-25 — Claude Code — KLAR (4 märkes-servicesidor: KuKirin, NAVEE, Teverun, Halo Knight)
+
+- **Branch:** `feat/brand-service-pages` → PR mot `main`. SEO-auditens fas 3
+  ("[märke] service sverige" — ingen konkurrent rankar för dessa).
+- **Sidor:** /kukirin-service/, /navee-service/, /teverun-service/,
+  /halo-knight-service/ (bonus — nya partnern). Unikt innehåll per märke:
+  märkesspecifika vanliga fel (G2-bromsar, NAVEE V-seriens punkteringar,
+  Teveruns hydraulik/högvolt, Halo Knights felkodslista), egen FAQ ×4,
+  auktorisationsvinkel. Service+FAQ+breadcrumb-schema, async fonter,
+  WebP-hero-preloads — samma optimerade mall som stadssidorna.
+- **Sanning i copyn:** ÅF-claims stämmer mot leverantörsrelationerna
+  (KuKirin/NAVEE ÅF, Teverun via Group PZ B2B, Halo Knight partner enligt
+  mailtråd juli). Garantilöften begränsade till "fordon köpta hos oss".
+- **Infra:** sitemap → 72 URL:er, dist PUBLIC_DIRS +4 (45 poster), korsvis
+  interlänkning mellan märkena + batterisidan + nya-elscootrar.
+- **Tester:** 12 schema-block validerade, build+dist ✅.
+- **Efter merge:** GSC-indexering för de 4 nya URL:erna (Claude kör).
 ### 2026-07-27 — Claude Code — KLAR (LCP runda 2: bloggtumnaglarna var boven — 4,1 s → 2,6 s)
 
 - **Branch:** `fix/lcp-blog-thumbs` → PR mot `main`.
