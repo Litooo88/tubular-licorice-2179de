@@ -2,5 +2,9 @@ User-agent: *
 Allow: /
 Disallow: /admin/
 Disallow: /api/
+Disallow: /workshop/
+Disallow: /checkout/
+Disallow: /prices/
+Disallow: /quick-price/
 
 Sitemap: https://www.nordicemobility.se/sitemap.xml
