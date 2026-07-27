@@ -32,7 +32,28 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-07-24 — Claude Code — KLAR (4 stadssidor: Västerås, Eskilstuna, Karlstad, Linköping)
+### 2026-07-27 — Claude Code — KLAR (Stripe-webhook konfigurerad — orderbekräftelsekedjan VERIFIERAD live)
+
+- **Rotorsaken till uteblivna ordermejl är löst.** Via Sebastians inloggade
+  Chrome: webhook-destination skapad i Stripe Workbench
+  (`nordicemobility-orderbekraftelse`, event `checkout.session.completed` →
+  /.netlify/functions/stripe-webhook, API-version 2025-09-30.clover);
+  Sebastian klistrade själv in signing-nyckeln som STRIPE_WEBHOOK_SECRET
+  (secret, scopes Builds/Functions/Runtime) i Netlify; redeploy triggad;
+  sond bekräftar att funktionen nu kräver giltig Stripe-signatur.
+- **End-to-end-verifierat med nytt 100 kr-testköp:** orderbekräftelse
+  4QPPTGX5EIF2 till kund + "NY PRODUKTORDER"-notis till verkstaden landade
+  sekundsnabbt (2026-07-27 01:14). Alla framtida produktordrar mejlas nu.
+- **OBS:** eventet från det FÖRSTA testköpet (2026-07-25) kan inte skickas
+  om (destinationen fanns inte då) — det köpet får ingen bekräftelse.
+  Sebastian återbetalar BÅDA 100 kr-testköpen i Stripe (Payments → Refund).
+- Testprodukten nemob-testorder-100 ligger kvar (dold/noindex) för framtida
+  flödestester.
+- **Ingen kod ändrad i detta pass** — endast Stripe/Netlify-konfiguration
+  + denna logg. Rebase-konflikt i loggen mellan två kampanjposter löst
+  genom att behålla båda (§5). ⚠️ Kampanjavvikelsen (42 SMS/natt mot
+  godkända 25) som posten nedan flaggar är fortfarande ohanterad — ägs av
+  kampanjtråden.
 
 - **Branch:** `feat/city-landing-pages` → PR mot `main`. SEO-auditens
   expansionsförslag — Örebro-modellen (dedikerad geo-sida + Service-schema)
