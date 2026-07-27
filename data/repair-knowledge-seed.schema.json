@@ -1,0 +1,88 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "RepairKnowledgeSeed",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id",
+    "source",
+    "sourceTitle",
+    "brand",
+    "model",
+    "errorCodes",
+    "symptoms",
+    "testsPerformed",
+    "likelyRootCause",
+    "confirmedRootCause",
+    "resolution",
+    "partsMentioned",
+    "diagnosticLesson",
+    "confidence",
+    "status",
+    "reviewStatus",
+    "privacyCleaned",
+    "excerpt"
+  ],
+  "properties": {
+    "id": { "type": "string" },
+    "source": { "type": "string", "enum": ["chatgpt_history"] },
+    "sourceTitle": { "type": "string" },
+    "createTime": { "type": ["string", "null"] },
+    "updateTime": { "type": ["string", "null"] },
+    "brand": { "type": "string" },
+    "model": { "type": "string" },
+    "errorCodes": { "type": "array", "items": { "type": "string" } },
+    "symptoms": { "type": "array", "items": { "type": "string" } },
+    "testsPerformed": { "type": "array", "items": { "type": "string" } },
+    "likelyRootCause": {
+      "type": "string",
+      "enum": [
+        "battery_cell",
+        "bms",
+        "controller",
+        "wiring",
+        "hall_sensor",
+        "motor",
+        "puncture",
+        "brake",
+        "wear",
+        "water_damage",
+        "user_error",
+        "unknown"
+      ]
+    },
+    "confirmedRootCause": {
+      "type": ["string", "null"],
+      "enum": [
+        "battery_cell",
+        "bms",
+        "controller",
+        "wiring",
+        "hall_sensor",
+        "motor",
+        "puncture",
+        "brake",
+        "wear",
+        "water_damage",
+        "user_error",
+        "unknown",
+        null
+      ]
+    },
+    "resolution": { "type": ["string", "null"] },
+    "partsMentioned": { "type": "array", "items": { "type": "string" } },
+    "diagnosticLesson": { "type": ["string", "null"] },
+    "confidence": { "type": "string", "enum": ["low", "medium", "high"] },
+    "status": {
+      "type": "string",
+      "enum": ["confirmed_fix", "likely_cause", "disproven", "diagnostic_step", "parts_candidate", "unknown"]
+    },
+    "reviewStatus": { "type": "string", "enum": ["needs_review", "approved", "rejected", "imported"] },
+    "keywordHits": { "type": "array", "items": { "type": "string" } },
+    "voltages": { "type": "array", "items": { "type": "string" } },
+    "prices": { "type": "array", "items": { "type": "string" } },
+    "timeMentions": { "type": "array", "items": { "type": "string" } },
+    "privacyCleaned": { "type": "boolean" },
+    "excerpt": { "type": "string" }
+  }
+}
