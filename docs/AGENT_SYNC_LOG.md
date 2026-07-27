@@ -109,6 +109,24 @@ löpande "konversation".
 - **Loggen INTE committad:** mappen stod på branch `feat/city-landing-pages`
   med orelaterade ändringar. Committa denna post separat när mappen är
   tillbaka på `main`.
+### 2026-07-27 — Claude Code — KLAR (kampanjvåg RING20, schemalagd körning 00:50)
+
+- **Branch:** `main`, endast denna loggfil ändrad. Ingen kod rörd.
+- **Dedup-skyddet är deployat och verifierat:** `campaignSent` fanns i
+  `/api/call-dashboard`-svaret, så körningen tilläts starta.
+- **Resultat:** 25 nummer i vågen → **17 skickade**, **8 misslyckade**,
+  0 spärr-skippade, 0 optout-skippade. **12 kvar i kön.**
+- **Fel-detaljerna gick förlorade:** `javascript_tool` tajmade ut (300 s) på
+  svarskanalen medan sändningsloopen redan hade kört klart i sidan (~10 s,
+  00:50:44–00:50:54). Läget rekonstruerades i efterhand mot `campaignSent`.
+  De 8 misslyckade var inte optouts (de ligger kvar som kvalificerade) —
+  trolig orsak är fel från SMS-leverantören. Bör kollas i function-loggen.
+- **⚠️ AVVIKELSE ATT TITTA PÅ:** `campaignSent` innehöll redan 25 nummer med
+  `lastSentAt` 00:13:09–00:13:22 **samma natt**, dvs. en tidigare körning ~37
+  min före denna, utan loggpost här. Totalt gick alltså **42 SMS ut natten
+  till 2026-07-27**, mot den godkända takten 25/dygn. Ingen kund fick dubbla
+  sms (42 unika nummer, alla `count = 1` — spärren höll), men schemaläggningen
+  bör kontrolleras så att uppgiften inte triggar två gånger per dygn.
 
 ### 2026-07-24 — Claude Code — KLAR (mobil-LCP startsidan: async fonter, WebP-hero, async popup-CSS)
 
