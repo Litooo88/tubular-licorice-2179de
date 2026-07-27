@@ -32,6 +32,29 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-24 — Claude Code — KLAR (4 stadssidor: Västerås, Eskilstuna, Karlstad, Linköping)
+
+- **Branch:** `feat/city-landing-pages` → PR mot `main`. SEO-auditens
+  expansionsförslag — Örebro-modellen (dedikerad geo-sida + Service-schema)
+  replikerad till fyra mellansvenska städer utan lokal specialist.
+- **ÄRLIG vinkel, inga doorway-dubbletter:** varje sida har unik H1/intro/
+  restid/FAQ/söktermer och säger rakt ut att verkstaden ligger i Örebro.
+  Tre kanaler: kör hit (restid angiven), inskick per frakt (med varning:
+  skadade litiumbatterier får inte skickas som vanligt paket — ring först),
+  hämtning enligt offert. Schema: Service med provider=Örebro-adressen och
+  areaServed=staden+kranskommuner — INGEN falsk lokal adress.
+- **Interlänkat:** korsvisa ortlänkar + batterisidan/priser/Örebro-sidan;
+  Örebro-sidan fick sektionen "Vi hjälper hela Mellansverige" med alla fyra.
+- **seo.css: undersidornas hero → WebP** (1600/900 med media query) — samma
+  LCP-vinst som startsidan fick, nu för ALLA sidor som använder seo.css.
+- **VIKTIGT — dist-listan:** nya mappar MÅSTE läggas i PUBLIC_DIRS i
+  scripts/build-dist.mjs, annars deployas de aldrig (fångat: 37→41 poster).
+- **Tester:** 3 schema-block/sida validerade, sitemap 68 URL:er, build+dist
+  OK, browsertest Karlstad-sidan (hero-WebP, alla sektioner, FAQ 4/4,
+  ortlänkar, 0 konsolfel) ✅.
+- **Efter merge:** begär indexering i GSC för de 4 nya URL:erna.
+
+
 ### 2026-07-25 — Claude Code — KLAR (geo-fix + mejlflödesdiagnos: STRIPE_WEBHOOK_SECRET saknas)
 
 - **Geo:** alla LocalBusiness-scheman rättade till 59.223091, 15.254543
