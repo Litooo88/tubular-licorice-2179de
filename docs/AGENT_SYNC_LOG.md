@@ -32,6 +32,24 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-27 — Claude Code — KLAR (2 felsökningsguider: "startar inte" + "laddar inte")
+
+- **Branch:** `feat/troubleshooting-guides` → PR mot `main`. Sista
+  innehållsblocket i SEO-planens fas 3 — de nationella problemtermerna som
+  domineras av AI Overviews kräver FAQ-strukturerat innehåll.
+- **Sidor:** /guider/elscooter-startar-inte/ (kolla-det-enkla-först,
+  symptom→orsak, vad-du-INTE-ska-göra) och /guider/elscooter-laddar-inte/
+  (felsök-i-ordning, laddbeteende→orsak, förebyggande vanor). Article+FAQ+
+  breadcrumb-schema, async fonter, WebP-hero. Säkerhetslinjen konsekvent:
+  öppna aldrig batteripack, ladda aldrig skadade batterier, ring före frakt.
+- **Priser i copyn stämmer mot prislistan** (felsökning 349, batteritest 745,
+  laddport 595, säkring 295, BMS fr 895+del).
+- **Infra:** guider-index +2 kort (överst), sitemap 74 URL:er. dist tar
+  guider/ rekursivt — inga PUBLIC_DIRS-ändringar behövs.
+- **Tester:** 6 schema-block validerade, build+dist, browsertest (alla
+  sektioner, FAQ, interlänkar, WebP-hero, 0 konsolfel) ✅.
+- **OBS:** feat/brand-service-pages är fortfarande OMERGAD (PR:en öppnades
+  aldrig — branchen finns på GitHub). Blogg-räknaren: nu 5 guider av målets 12.
 ### 2026-07-25 — Claude Code — KLAR (4 märkes-servicesidor: KuKirin, NAVEE, Teverun, Halo Knight)
 
 - **Branch:** `feat/brand-service-pages` → PR mot `main`. SEO-auditens fas 3
