@@ -9,6 +9,10 @@
     "test:voice": "node --test tests/voice-simple.test.mjs",
     "nemob-os": "node nemob-os/server.mjs",
     "test:nemob-os": "node --test \"nemob-os/test/*.test.mjs\"",
+    "knowledge:extract": "node scripts/extract-chatgpt-repair-knowledge.mjs",
+    "knowledge:review": "node scripts/build-repair-knowledge-review.mjs",
+    "knowledge:import": "node scripts/import-repair-knowledge.mjs",
+    "test:knowledge": "node --test tests/chatgpt-repair-extractor.test.mjs nemob-os/test/repair-knowledge.test.mjs",
     "build:dist": "node scripts/build-dist.mjs",
     "build": "npm run test:voice && npm run test:status && npm run generate:products && npm run build:dist && echo Static site ready"
   },

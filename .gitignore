@@ -11,3 +11,8 @@ tmp-*
 Thumbs.db
 nemob-os/data/
 nemob-os/.env
+repair-knowledge-export/
+chatgpt-export/
+conversations.json
+approved_repair_knowledge.jsonl
+reviewed_repair_knowledge.jsonl

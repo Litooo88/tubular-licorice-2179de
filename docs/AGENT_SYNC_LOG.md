@@ -50,6 +50,38 @@ löpande "konversation".
   sektioner, FAQ, interlänkar, WebP-hero, 0 konsolfel) ✅.
 - **OBS:** feat/brand-service-pages är fortfarande OMERGAD (PR:en öppnades
   aldrig — branchen finns på GitHub). Blogg-räknaren: nu 5 guider av målets 12.
+### 2026-07-25 — Claude Code — KLAR (4 märkes-servicesidor: KuKirin, NAVEE, Teverun, Halo Knight)
+
+- **Branch:** `feat/brand-service-pages` → PR mot `main`. SEO-auditens fas 3
+  ("[märke] service sverige" — ingen konkurrent rankar för dessa).
+- **Sidor:** /kukirin-service/, /navee-service/, /teverun-service/,
+  /halo-knight-service/ (bonus — nya partnern). Unikt innehåll per märke:
+  märkesspecifika vanliga fel (G2-bromsar, NAVEE V-seriens punkteringar,
+  Teveruns hydraulik/högvolt, Halo Knights felkodslista), egen FAQ ×4,
+  auktorisationsvinkel. Service+FAQ+breadcrumb-schema, async fonter,
+  WebP-hero-preloads — samma optimerade mall som stadssidorna.
+- **Sanning i copyn:** ÅF-claims stämmer mot leverantörsrelationerna
+  (KuKirin/NAVEE ÅF, Teverun via Group PZ B2B, Halo Knight partner enligt
+  mailtråd juli). Garantilöften begränsade till "fordon köpta hos oss".
+- **Infra:** sitemap → 72 URL:er, dist PUBLIC_DIRS +4 (45 poster), korsvis
+  interlänkning mellan märkena + batterisidan + nya-elscootrar.
+- **Tester:** 12 schema-block validerade, build+dist ✅.
+- **Efter merge:** GSC-indexering för de 4 nya URL:erna (Claude kör).
+### 2026-07-27 — Claude Code — KLAR (LCP runda 2: bloggtumnaglarna var boven — 4,1 s → 2,6 s)
+
+- **Branch:** `fix/lcp-blog-thumbs` → PR mot `main`.
+- **Mätning (lokal Lighthouse, simulerad mobil — PSI-API:t hade kvottak):**
+  live-sajten efter LCP-runda 1: prestanda 86 (från 79), FCP 1,5 s (från
+  2,7), CLS 0, TBT 0 — men LCP bara 4,4→4,1 s. Nätverksanalysen visade att
+  hero-webp:n laddar på 355 ms; boven var bloggsektionens TRE tumnaglar som
+  CSS-bakgrunder (200–230 kB jpg styck = ~640 kB) som laddar direkt vid
+  sidstart (CSS-bakgrunder kan inte lazy-loadas) och tränger undan allt.
+- **Fix:** 560px-webp-tumnaglar (21–37 kB, −93 %) för case-battery-bms,
+  scooter-on-bench och showroom-group; CSS-url:erna bytta i index.html.
+  Om-mätt lokalt: **LCP 2,6 s, FCP 1,1 s** — målet <2,5 s bör nås på
+  produktion med Netlify-CDN. Verifiera i PSI några dagar efter merge.
+- **Lärdom till Codex:** lägg ALDRIG stora bilder som CSS-background —
+  de kan inte lazy-loadas och laddar alltid, även under vikningen.
 
 
 ### 2026-07-27 — Claude Code — KLAR (åtkomstgrind för interna verktyg — audit åtgärd 22 stängd)
