@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elscootern laddar inte? Felsök laddare, laddport och batteri | Nordic E-Mobility</title>
+<meta name="description" content="Elscooterns batteri laddar inte? Felsök i rätt ordning: laddarens lampa, uttag, laddport och BMS — och lär dig varningssignalerna som betyder stopp.">
+<link rel="canonical" href="https://www.nordicemobility.se/guider/elscooter-laddar-inte/">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Elscootern laddar inte? Felsök laddare, laddport och batteri">
+<meta property="og:description" content="Elscooterns batteri laddar inte? Felsök i rätt ordning: laddarens lampa, uttag, laddport och BMS — och lär dig varningssignalerna som betyder stopp.">
+<meta property="og:url" content="https://www.nordicemobility.se/guider/elscooter-laddar-inte/">
+<meta property="og:image" content="https://www.nordicemobility.se/assets/workshop/workshop-hero.jpg">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"Article","headline":"Elscootern laddar inte? Felsök laddare, laddport och batteri","author":{"@type":"Organization","name":"Nordic E-Mobility","url":"https://www.nordicemobility.se"},"publisher":{"@type":"Organization","name":"Nordic E-Mobility","logo":{"@type":"ImageObject","url":"https://www.nordicemobility.se/logo.png"}},"url":"https://www.nordicemobility.se/guider/elscooter-laddar-inte/","description":"Elscooterns batteri laddar inte? Felsök i rätt ordning: laddarens lampa, uttag, laddport och BMS — och lär dig varningssignalerna som betyder stopp."}</script>
+<script type="application/ld+json" id="schema-breadcrumb-elscooter-laddar-inte">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Start","item":"https://www.nordicemobility.se/"},{"@type":"ListItem","position":2,"name":"Guider","item":"https://www.nordicemobility.se/guider/"},{"@type":"ListItem","position":3,"name":"Elscootern laddar inte? Felsök laddare, laddport och batteri","item":"https://www.nordicemobility.se/guider/elscooter-laddar-inte/"}]}</script>
+<script type="application/ld+json" id="schema-faq-elscooter-laddar-inte">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "Varför laddar inte mitt elscooterbatteri?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Vanligaste orsakerna i fallande ordning: trasig laddare, glapp eller skada i laddporten, djupurladdat batteri som BMS:en skyddslåst, eller kyla (litium laddar inte under ca 0 °C). Felsök i den ordningen — laddaren och uttaget först."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Laddaren lyser grönt men batteriet är tomt — vad betyder det?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Att batteriet inte tar emot laddning. Oftast är packet djupurladdat eller skyddslåst av BMS:en. I verkstad kan det ofta väckas säkert — vänta inte, ju längre packet står tomt desto sämre prognos."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Vad kostar det att laga ett batteri som inte laddar?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Batterifelsökning kostar 745 kr och pekar ut orsaken. Vanliga åtgärder: laddportsbyte 595 kr, säkringsbyte 295 kr, BMS-byte från 895 kr plus del. Cellrenovering offereras — ofta 50–70 % billigare än ett nytt originalbatteri."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Är det farligt att fortsätta ladda ett batteri som beter sig konstigt?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Ja, det kan det vara. Svullnad, lukt eller värme är stoppsignaler — koppla ur, ställ packet avskilt från brännbart material och kontakta verkstad. Ett skadat litiumbatteri ska inte laddas \"för att se om det går över\"."
+   }
+  }
+ ]
+}
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+<noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet"></noscript>
+<link rel="stylesheet" href="/assets/seo.css">
+<link rel="preload" as="image" href="/assets/workshop/workshop-hero-900.webp" fetchpriority="high" media="(max-width:640px)">
+<link rel="preload" as="image" href="/assets/workshop/workshop-hero-1600.webp" fetchpriority="high" media="(min-width:641px)">
+<link rel="stylesheet" href="/assets/newsletter-popup.css" media="print" onload="this.media='all'">
+<noscript><link rel="stylesheet" href="/assets/newsletter-popup.css"></noscript>
+<script>
+window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debugMode:new URLSearchParams(window.location.search).has("ga_debug")};
+</script>
+<script src="/assets/analytics.js" defer></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Hoppa till innehåll</a>
+<header class="site-header"><nav class="nav"><a class="brand" href="/"><img loading="lazy" decoding="async" src="/logo.png" alt="Nordic E-Mobility">Nordic E-Mobility</a><div class="nav-links"><a href="/guider/">Guider</a><a href="/batterireparation-elscooter/">Batteri</a><a href="/book-online/" class="btn btn-primary">Boka felsökning</a></div><button class="hamburger" onclick="this.classList.toggle('active');document.getElementById('mobileNav').classList.toggle('open')" aria-label="Meny"><span></span><span></span><span></span></button></nav></header>
+<div class="mobile-nav" id="mobileNav">
+  <a href="/">Start</a>
+  <a href="/elscooter-reparation-orebro/">Service</a>
+  <a href="/batterireparation-elscooter/">Batteri</a>
+  <a href="/guider/">Guider</a>
+  <a href="/regler-elscooter/">Regler</a>
+  <a href="/om-oss/">Om oss</a>
+  <a href="tel:+46101385498" style="color:#aaa;font-size:16px">010-138 54 98</a>
+  <a href="/book-online/" class="nav-cta">Boka service</a>
+</div>
+<div class="breadcrumb"><a href="/">Start</a> / <a href="/guider/">Guider</a> / Elscootern laddar inte</div>
+<main id="main">
+<section class="hero"><div class="hero-inner"><span class="eyebrow">Laddningsguide</span><h1>Elscootern laddar inte — felsök i rätt ordning.</h1><p class="lead">Laddfel är ett av våra vanligaste verkstadsärenden — och orsaken sitter oftare i laddaren eller laddporten än i själva batteriet. Så här ringar du in felet hemma, säkert.</p><div class="hero-actions"><a class="btn btn-primary" href="/book-online/">Boka felsökning — fr. 349 kr</a><a class="btn btn-secondary" href="tel:+46101385498">Ring 010-138 54 98</a></div></div></section>
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2>Felsök i den här ordningen</h2><p>Börja utifrån och jobba inåt — laddare, uttag, port, batteri.</p></div>
+    <div class="grid grid-2">
+      <article class="card"><h3>1. Laddarens lampa</h3><p>Koppla in laddaren i vägguttaget UTAN fordonet. Lyser ingen lampa alls är laddaren eller uttaget boven — testa ett annat uttag först. En laddare som är tyst och kall trots vägguttag är sannolikt trasig.</p></article>
+      <article class="card"><h3>2. Anslut fordonet och läs lampan</h3><p>Röd/orange = laddning pågår, som den ska. Slår den om till grönt direkt fast batteriet är tomt? Då tar batteriet inte emot laddning — ofta djupurladdning eller BMS-skydd, läs nedan.</p></article>
+      <article class="card"><h3>3. Titta i laddporten</h3><p>Lys med ficklampa: böjda stift, smuts eller ärgade kontakter ger glappkontakt. Vicka ALDRIG hårt i porten med laddaren i — en skadad laddport är ett vanligt och onödigt följdfel.</p></article>
+      <article class="card"><h3>4. Tänk på temperaturen</h3><p>Litiumbatterier vägrar ofta ladda under ca 0 °C — det är ett skydd, inte ett fel. Ta in fordonet och låt det nå rumstemperatur i ett par timmar innan du försöker igen.</p></article>
+    </div>
+  </div>
+</section>
+<section class="section alt">
+  <div class="wrap">
+    <div class="section-head"><h2>Symptom och trolig orsak</h2><p>Laddbeteendet pekar ut felet.</p></div>
+    <div class="grid grid-2">
+      <article class="card"><h3>Grön lampa direkt, men batteriet är tomt</h3><p>Djupurladdat batteri eller BMS som skyddslåst packet. Kan ofta väckas i verkstad med rätt utrustning — men tiden spelar roll: ju längre ett paket står tomt, desto större risk för permanenta cellskador.</p></article>
+      <article class="card"><h3>Laddningen avbryts efter en stund</h3><p>Cellobalans, värmeutveckling eller BMS-skydd. Batteriet behöver testas på cellnivå innan det blir värre.</p></article>
+      <article class="card"><h3>Laddar bara ibland (glappkontakt)</h3><p>Laddport eller kabelbrott. Billig reparation (laddportsbyte 595 kr) om den görs innan glappet bränner kontakterna.</p></article>
+      <article class="card"><h3>Svullet, luktar eller blir varmt</h3><p>STOPP: ladda inte mer. Ställ batteriet avskilt från brännbart, helst utomhus, och ring oss innan inlämning — skadade litiumbatterier kräver särskild hantering.</p></article>
+    </div>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2>Så räddar du batteriet på sikt</h2><p>Tre vanor som förebygger nästa laddfel.</p></div>
+    <div class="grid grid-2">
+      <article class="card"><h3>Låt det aldrig stå tomt</h3><p>Djupurladdning är den vanligaste orsaken till "batteriet tar inte laddning". Ladda till 50–70 % före förvaring och fyll på varje månad.</p></article>
+      <article class="card"><h3>Ladda i rumstemperatur</h3><p>Kalla celler tar skada av laddning. Kör gärna i kyla — men ladda inomhus.</p></article>
+      <article class="card"><h3>Ta symptom på allvar</h3><p>Tappad räckvidd och avbruten laddning är tidiga varningar. Ett batteritest (745 kr) i tid kan rädda ett paket som annars måste bytas.</p></article>
+    </div>
+  </div>
+</section>
+<section class="section alt">
+  <div class="wrap">
+    <div class="section-head"><h2>Vanliga frågor</h2></div>
+    <div class="grid grid-2">
+      <article class="card"><h3>Varför laddar inte mitt elscooterbatteri?</h3><p>Vanligaste orsakerna i fallande ordning: trasig laddare, glapp eller skada i laddporten, djupurladdat batteri som BMS:en skyddslåst, eller kyla (litium laddar inte under ca 0 °C). Felsök i den ordningen — laddaren och uttaget först.</p></article>
+      <article class="card"><h3>Laddaren lyser grönt men batteriet är tomt — vad betyder det?</h3><p>Att batteriet inte tar emot laddning. Oftast är packet djupurladdat eller skyddslåst av BMS:en. I verkstad kan det ofta väckas säkert — vänta inte, ju längre packet står tomt desto sämre prognos.</p></article>
+      <article class="card"><h3>Vad kostar det att laga ett batteri som inte laddar?</h3><p>Batterifelsökning kostar 745 kr och pekar ut orsaken. Vanliga åtgärder: laddportsbyte 595 kr, säkringsbyte 295 kr, BMS-byte från 895 kr plus del. Cellrenovering offereras — ofta 50–70 % billigare än ett nytt originalbatteri.</p></article>
+      <article class="card"><h3>Är det farligt att fortsätta ladda ett batteri som beter sig konstigt?</h3><p>Ja, det kan det vara. Svullnad, lukt eller värme är stoppsignaler — koppla ur, ställ packet avskilt från brännbart material och kontakta verkstad. Ett skadat litiumbatteri ska inte laddas "för att se om det går över".</p></article>
+    </div>
+  </div>
+</section>
+<section class="section">
+  <div class="wrap">
+    <div class="section-head"><h2>Läs vidare</h2></div>
+    <div class="grid grid-3">
+      <a class="card service-link" href="/guider/elscooter-startar-inte/"><h3>Elscootern startar inte</h3><p>Systerguiden: felsök start, säkring, sensorer och felkoder.</p></a>
+      <a class="card service-link" href="/guider/batterilivslangd/"><h3>Batterilivslängd 101</h3><p>Ladda och förvara rätt så håller batteriet i år.</p></a>
+      <a class="card service-link" href="/batterireparation-elscooter/"><h3>Batterireparation</h3><p>Cellnivåtest i Sveriges första certifierade litiumlabb.</p></a>
+    </div>
+  </div>
+</section>
+<div class="cta-band"><div class="wrap"><div><h2>Kommer du inte vidare?</h2><p>Boka felsökning med diagnosrapport — fast pris innan åtgärd, inskick från hela Sverige.</p></div><a class="btn" href="/book-online/">Boka felsökning</a></div></div>
+</main>
+<footer class="footer"><div class="wrap"><div><strong>Nordic E-Mobility</strong><p>Pistolvägen 6, 702 21 Örebro.</p></div><div><a href="/batterireparation-elscooter/">Batterireparation</a><a href="/punktering-elscooter-orebro/">Punktering</a><a href="/foretag-serviceavtal/">Serviceavtal</a></div><div><a href="/villkor/">Villkor</a><a href="/foretag/">För företag</a><a href="/garanti/">Garanti</a><a href="/integritet/">Integritet</a><a href="/angra-kop/">Ångra köp</a><a href="tel:+46101385498">010-138 54 98</a></div></div><div class="legal-footer" style="margin-top:16px;color:#777;font-size:12px;line-height:1.5">Nordic E-Mobility &middot; Org.nr 880809-6658 &middot; VAT SE880809665801 &middot; Innehar F-skatt<br>Pistolvägen 6, 702 21 Örebro</div>
+</footer>
+<script src="/assets/newsletter-popup.js" defer></script>
+<script src="/assets/workshop-chat.js" defer></script>
+</body>
+</html>
