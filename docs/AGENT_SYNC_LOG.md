@@ -32,6 +32,22 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-27 — Claude Code — KLAR (åtkomstgrind för interna verktyg — audit åtgärd 22 stängd)
+
+- **Branch:** `feat/admin-gate` → main (f823fc8), live-verifierad.
+- Ny Edge Function netlify/edge-functions/admin-gate.mjs: /admin, /workshop,
+  /checkout, /prices, /quick-price serverar INTE HTML utan inloggning —
+  401 + inloggningssida tills korrekt ADMIN_TOKEN angetts (samma nyckel som
+  verktygen redan använder; cookie = SHA-256-fingeravtryck, 30 d, HttpOnly).
+  not_configured-läge: saknas ADMIN_TOKEN släpps trafiken igenom som förut.
+  Interna svar får noindex+no-store; robots.txt disallowar alla fem paths.
+- **Live-verifierat:** 401+inloggningssida på alla fem interna vägar, fel
+  nyckel avvisas, publika sidor opåverkade (200). ÅTERSTÅR: Sebastian
+  bekräftar positiv inloggning med riktig nyckel (jag hanterar inte secrets).
+- **Valet:** grind på befintliga URL:er i stället för subdomän-flytt — samma
+  skydd utan DNS-ändring/betalplan/nya bokmärken. Vill man senare ha
+  personliga konton: Cloudflare Access på subdomän, grinden tas då bort.
+
 ### 2026-07-27 — Claude Code — KLAR (Stripe-webhook konfigurerad — orderbekräftelsekedjan VERIFIERAD live)
 
 - **Rotorsaken till uteblivna ordermejl är löst.** Via Sebastians inloggade
