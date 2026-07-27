@@ -72,6 +72,43 @@ löpande "konversation".
   stripe-webhook), lägg whsec_-nyckeln som STRIPE_WEBHOOK_SECRET i Netlify,
   trigga redeploy, klicka Resend på eventet — då skickas bekräftelsen för
   det redan betalda testköpet.
+### 2026-07-24 — Claude Code — KLAR (tysta timmar: nattstängda ärenden köar tackmailet till kl 10)
+
+- **Branch:** `feat/thankyou-quiet-hours` → PR mot `main`. Sebastians önskan:
+  nattarbete ska inte ge kundutskick kl 03.
+- **Ny `_shared/quiet-hours.mjs`:** isQuietHour (21–08 Sthlm, DST-säker) +
+  nextOptimalSendAt (nästa kl 10:00 Sthlm — bra tid för öppning/recension).
+- **workshop-cases.mjs:** stängs ärendet under tysta timmar köas tacket i NY
+  store `outbox` (nyckel `<caseId>-thank-you`), notifications.thankYou →
+  status "queued" + sendAfter, timeline-notis med svensk tid. Dagtid: exakt
+  som förut. sendThankYou exporteras nu (named export) för flushen.
+- **NY schemalagd funktion `outbox-flush.mjs`** (cron */15 * * * *): tömmer
+  outbox när sendAfter passerats och det inte är tyst timme; skickar via
+  samma sendThankYou (Resend-idempotencyKey per ärende ⇒ dubbelsäkert),
+  uppdaterar caset (sent/coupon/timeline), behåller posten för retry vid
+  providerfel, släpper den om ärendet inte längre är "queued".
+- **Tester:** 4 nya (tysta timmar + kl-10-träff över DST), i test:status så
+  bygget kör dem. node --check ×3, build+dist ✅.
+- **OBS Codex:** alla FRAMTIDA kundutskick nattetid bör gå via outbox-mönstret.
+
+
+### 2026-07-27 — Claude Code — KLAR (daglig kampanjvåg RING20, 25 st)
+
+- **Skickade:** 25 SMS. **Spärr-skippade:** 0. **Optout-skippade:** 0.
+  **Misslyckade:** 0.
+- **Dedup-skyddet (PR #117, `fix/campaign-dedup-guard`) är LIVE i produktion.**
+  Första API-anropet i körningen returnerade ett cachat svar UTAN
+  `campaignSent` (vaktkoden avbröt korrekt); ett nytt anrop med
+  `cache:'no-store'` + cache-buster visade fältet. **Lärdom för framtida
+  körningar: anropa alltid `/api/call-dashboard` med cache-buster och
+  `cache:'no-store'`**, annars kan skyddskontrollen ge falskt larm.
+- Storen `campaign-sent` var tom före körningen (nydeployad) och innehåller nu
+  exakt vågens 25 nummer — verifierat efter sändningen.
+- **Kö kvar:** 29 kvalificerade uppringare (54 kvalificerade före vågen,
+  146 unika nummer i dashboarden).
+- **Loggen INTE committad:** mappen stod på branch `feat/city-landing-pages`
+  med orelaterade ändringar. Committa denna post separat när mappen är
+  tillbaka på `main`.
 
 ### 2026-07-24 — Claude Code — KLAR (mobil-LCP startsidan: async fonter, WebP-hero, async popup-CSS)
 
