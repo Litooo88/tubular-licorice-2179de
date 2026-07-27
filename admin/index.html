@@ -867,7 +867,8 @@ async function loadPublicConfig(){
 }
 function dateShort(value){return value?new Date(value).toLocaleString('sv-SE',{dateStyle:'short',timeStyle:'short'}):'Saknas';}
 function html(value){return String(value||'').replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[char]));}
-function showError(message){errorEl.textContent=message;errorEl.style.display=message?'block':'none';}
+function showError(message){errorEl.textContent=message;errorEl.style.display=message?'block':'none';errorEl.style.background='';errorEl.style.color='';errorEl.style.borderColor='';}
+function showNotice(message){errorEl.textContent=message;errorEl.style.display=message?'block':'none';errorEl.style.background='#e6f6ec';errorEl.style.color='#0a6b2d';errorEl.style.borderColor='#9fd8b4';}
 function showCalendarResult(result,bad=false){calendarResultEl.classList.toggle('bad',bad);calendarResultEl.innerHTML=result;calendarResultEl.style.display=result?'block':'none';}
 function showSmsDeskStatus(message,bad=false){smsDeskStatus.className=`sms-status ${message?(bad?'bad':'ok'):''}`;smsDeskStatus.textContent=message;smsDeskStatus.style.display=message?'block':'none';}
 const protectedMediaObjectUrls=new Map();
@@ -1654,6 +1655,36 @@ async function api(path,options={}){
   if(!response.ok) throw new Error(data.error||'Kunde inte l&auml;sa data.');
   return data;
 }
+
+// Skickar kund-SMS via 46elks-API:t (loggas på ärendet). Faller tillbaka till
+// telefonens sms:-länk om API:t inte är konfigurerat eller sändningen nekas.
+async function sendCaseSms(caseId,phone,message,kind,fallbackHref){
+  if(!caseId||!phone||!message)return;
+  const preview=message.length>220?message.slice(0,220)+'…':message;
+  if(!confirm(`Skicka SMS från företagsavsändaren till ${phone}?\n\n${preview}`))return;
+  try{
+    const data=await api(`/api/cases/${encodeURIComponent(caseId)}/sms`,{method:'POST',body:JSON.stringify({message,kind})});
+    if(data.status==='not_configured'){
+      if(fallbackHref&&confirm('SMS-API:t är inte konfigurerat i Netlify. Öppna telefonens SMS-app i stället?'))window.location.href=fallbackHref;
+      return;
+    }
+    showNotice(`SMS skickat till ${phone} via företagsavsändaren och loggat på ärendet.`);
+  }catch(error){
+    if(fallbackHref&&confirm(`${error.message}\n\nÖppna telefonens SMS-app i stället?`)){window.location.href=fallbackHref;return;}
+    showError(error.message);
+  }
+}
+
+document.addEventListener('click',(event)=>{
+  const link=event.target.closest('a.sms-api-send');
+  if(!link)return;
+  const href=link.getAttribute('href')||'';
+  if(!href.startsWith('sms:'))return;
+  event.preventDefault();
+  const phone=href.slice(4,href.indexOf('?'));
+  const body=decodeURIComponent((href.split('body=')[1]||'').replace(/\+/g,'%20'));
+  sendCaseSms(link.dataset.caseId,phone,body,'generic',href);
+});
 
 function openEditorIds(){
   return [...document.querySelectorAll('.edit-wrap[open] form[data-id]')].map((form)=>form.dataset.id);
@@ -3073,7 +3104,7 @@ function caseCard(item){
       <div class="meta">Logistik: <strong>${labelFrom(item.logistics,logisticsLabels)}</strong><br>Kund-SMS: <strong>${notificationLabel(sms,'sms')}</strong> &middot; Intern SMS: <strong>${notificationLabel(staffSms,'sms')}</strong><br>Kundmail: <strong>${notificationLabel(customerEmail,'email')}</strong> &middot; Verkstadsmail: <strong>${notificationLabel(workshopEmail,'email')}</strong><br>Kalender: <strong>${notificationLabel(calendar,'calendar')}</strong><br>Skapad: ${dateShort(item.createdAt)}</div>
       <div class="contact">
         <a href="tel:${html(item.customer&&item.customer.phone||'')}">Ring kund</a>
-        <a href="${html(smsHref(item))}">SMS-mall</a>
+        <a class="sms-api-send" data-case-id="${html(item.id)}" href="${html(smsHref(item))}">Skicka SMS</a>
       </div>
       <div class="quick-actions">
         <button type="button" class="secondary quick-status ${item.status==='contacted'?'active':''}" data-status="contacted" data-note="Kund kontaktad.">Kontaktad</button>
@@ -3134,9 +3165,9 @@ function caseCard(item){
             <span>Ring kund</span>
             <strong>${html(customerPhone)}</strong>
           </a>
-          <a class="contact-action ${item.customer&&item.customer.phone?'':'disabled'}" href="${html(smsHref(item))}">
+          <a class="contact-action sms-api-send ${item.customer&&item.customer.phone?'':'disabled'}" data-case-id="${html(item.id)}" href="${html(smsHref(item))}">
             <span>SMS kund</span>
-            <strong>Öppna SMS med mall</strong>
+            <strong>Skicka mall via API</strong>
           </a>
           <a class="contact-action ${item.customer&&item.customer.email?'':'disabled'}" href="${html(customerEmailHref)}">
             <span>Maila kund</span>
@@ -3271,7 +3302,7 @@ function caseCard(item){
             <button type="button" class="secondary mark-ready">Spara + markera klar</button>
           </div>
           <div class="completion-actions">
-            <button type="button" class="secondary draft-sms">Drafta SMS</button>
+            <button type="button" class="secondary draft-sms">Skicka klar-SMS</button>
             <button type="button" class="secondary draft-mail">Drafta mail</button>
             <button type="button" class="secondary copy-sms">Kopiera SMS</button>
             <button type="button" class="secondary copy-mail">Kopiera mail</button>
@@ -3358,7 +3389,7 @@ function caseCard(item){
           </div>
           <div class="completion-warning ${paymentReceiptState(payment).className} payment-receipt-state">${paymentReceiptState(payment).text}</div>
           <div class="completion-actions">
-            <button type="button" class="secondary draft-payment-sms">Drafta betal-SMS</button>
+            <button type="button" class="secondary draft-payment-sms">Skicka betal-SMS</button>
             <button type="button" class="secondary draft-payment-mail">Drafta betal-mail</button>
             <button type="button" class="secondary copy-payment-sms">Kopiera betal-SMS</button>
             <button type="button" class="secondary copy-payment-mail">Kopiera betal-mail</button>
@@ -3943,10 +3974,11 @@ function caseCard(item){
   });
   completionForm.querySelector('.draft-sms').addEventListener('click',()=>{
     const data=refreshCompletionPreview();
-    if(!data.canDraft){showError('Fyll i slutbelopp och utförda åtgärder innan du draftar SMS.');return;}
+    if(!data.canDraft){showError('Fyll i slutbelopp och utförda åtgärder innan du skickar klar-SMS.');return;}
     const phone=smsPhone(item.customer&&item.customer.phone);
     if(!phone){showError('Kundtelefon saknas på ärendet.');return;}
-    window.location.href=`sms:${phone}?&body=${encodeURIComponent(readySmsTemplate(item,completionValues()))}`;
+    const message=readySmsTemplate(item,completionValues());
+    sendCaseSms(item.id,phone,message,'ready',`sms:${phone}?&body=${encodeURIComponent(message)}`);
   });
   completionForm.querySelector('.draft-mail').addEventListener('click',()=>{
     const data=refreshCompletionPreview();
@@ -4042,10 +4074,11 @@ function caseCard(item){
   });
   paymentForm.querySelector('.draft-payment-sms').addEventListener('click',()=>{
     const data=refreshPaymentPreview();
-    if(!data.canDraftReceipt){showError('Markera kunden som betald och fyll i belopp innan du draftar betal-SMS.');return;}
+    if(!data.canDraftReceipt){showError('Markera kunden som betald och fyll i belopp innan du skickar betal-SMS.');return;}
     const phone=smsPhone(item.customer&&item.customer.phone);
     if(!phone){showError('Kundtelefon saknas p\u00e5 \u00e4rendet.');return;}
-    window.location.href=`sms:${phone}?&body=${encodeURIComponent(paymentReceiptSmsTemplate(item,{...completionValues(),...paymentValues()}))}`;
+    const message=paymentReceiptSmsTemplate(item,{...completionValues(),...paymentValues()});
+    sendCaseSms(item.id,phone,message,'receipt',`sms:${phone}?&body=${encodeURIComponent(message)}`);
   });
   paymentForm.querySelector('.draft-payment-mail').addEventListener('click',()=>{
     const data=refreshPaymentPreview();
