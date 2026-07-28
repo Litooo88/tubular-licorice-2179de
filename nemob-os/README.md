@@ -65,6 +65,38 @@ server-till-server, endast GET (proxyn kan inte skriva), telefonen får aldrig
 hela databasen — bara whitelistade fält för max 20 träffar. Listan cachas 60 s
 och senast hämtade lista visas märkt om källan är nere.
 
+## Slå upp reparationskunskap (Repair Intelligence)
+
+Knappen **Slå upp** öppnar en separat lokal sökyta för den granskade
+Repair Intelligence-kanonfilen. Den kan kombinera märke, modell, felkod,
+symptom, komponent och mätvärde, till exempel `NAVEE H5`,
+`Ninebot G30 16V` eller `BMS P- låg spänning`.
+
+Konfigurera den privata lokala filen i `nemob-os/.env`:
+
+```dotenv
+REPAIR_INTELLIGENCE_CANON_PATH=F:\nemob-kunskapsbank\kanon\diagnostik-kanon-v1.3.json
+REPAIR_INTELLIGENCE_CANON_SHA256=7FA0F950E5BCEA180F3884DC651B6BAB5B151FCF74539E54233D5D0DC78B2FC9
+```
+
+Kanonfilen öppnas endast för läsning och dess SHA-256 kontrolleras innan en
+enda träff lämnas ut. Saknad fil, ogiltig JSON eller hashavvikelse ger ett
+tydligt stoppläge — aldrig en falskt tom träfflista. NEMOB OS visar inte
+evidensutdrag, priser eller kunddata; endast tekniska kanonfält och spårbara
+evidensreferenser visas.
+
+Varje resultat märks som historiskt verkstadsfall. `safetyCritical` visas
+oberoende av confidence, med krav på manuell riskbedömning och dokumenterad
+kontroll. Uppslaget skickar inget, ändrar inga ärenden, sätter inget pris,
+beställer inga delar och skriver aldrig till kanonfilen.
+
+Feedback sparas append-only i
+`nemob-os/data/repair-intelligence-feedback.jsonl` (gitignorerad), eller i
+`REPAIR_INTELLIGENCE_FEEDBACK_PATH` om en annan lokal sökväg behövs.
+Feedbackfilen får inte vara samma fil som kanon. Servern sätter datum och ID,
+kontrollerar valda kanon-ID:n och stoppar typiska kontakt-, person-, adress-
+och registreringsuppgifter. Feedback blir aldrig automatiskt kanonkunskap.
+
 ## Utanför hemnätverket: Tailscale
 
 Installera Tailscale på dator + telefon (samma konto). Ingen konfiguration
@@ -112,6 +144,13 @@ node --test "nemob-os/test/*.test.mjs"
 
 Testerna täcker prioriteringsordningen, "Data saknas"-semantiken, planmotorn,
 persistensen och att Nordic-klienten aldrig läcker URL:en i fel eller svar.
+Repair Intelligence-testet använder endast en syntetisk kanonfixture och
+täcker de tio verkstadsfallen, hashspärr, saknad fil, PII-stopp och bevarad
+feedback:
+
+```powershell
+node --test nemob-os/test/repair-intelligence.test.mjs
+```
 
 Testknappen "Simulera att källan är nere" i UI:t (endpoint
 `/api/dev/simulate-down`) simulerar avbrott i minnet — den rör aldrig den

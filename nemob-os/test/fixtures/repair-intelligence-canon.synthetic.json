@@ -1,0 +1,202 @@
+{
+  "version": "synthetic-test-v1",
+  "posts": [
+    {
+      "id": "syn_navee_h5_start",
+      "title": "NAVEE H5 startar inte",
+      "brands": ["NAVEE"],
+      "models": ["H5"],
+      "errorCodes": [],
+      "symptom": "Displayen är svart trots 36 V vid laddporten.",
+      "rootCause": "Avbrott i matningen till displayen.",
+      "confidence": "trolig",
+      "diagnosisPath": [
+        "Mät batterispänningen utan last.",
+        "Kontrollera kontaktstycket till displayen."
+      ],
+      "fix": "Reparera matningskabeln om avbrottet verifieras.",
+      "parts": ["display", "matningskabel"],
+      "notes": "Syntetiskt testfall.",
+      "evidence": [
+        {
+          "file": "synthetic-case-001.json",
+          "date": "2026-01-01",
+          "batch": "synthetic",
+          "jsonlLine": 1,
+          "rawLineSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        }
+      ],
+      "tags": ["display", "spänningsmätning"],
+      "safetyCritical": false
+    },
+    {
+      "id": "syn_ninebot_g30_deep",
+      "title": "Ninebot G30 djupurladdat batteri",
+      "brands": ["Ninebot"],
+      "models": ["G30"],
+      "errorCodes": [],
+      "symptom": "Batteriet är djupurladdat och visar 16 V.",
+      "rootCause": "BMS har kopplat från efter djupurladdning.",
+      "confidence": "trolig",
+      "diagnosisPath": [
+        "Dokumentera packspänningen före fortsatt bedömning.",
+        "Kontrollera BMS-status utan att förbikoppla skydd."
+      ],
+      "fix": "Ingen åtgärd utförd i det syntetiska fallet.",
+      "parts": ["batteri", "BMS"],
+      "notes": "Syntetiskt testfall för djupurladdning.",
+      "evidence": [
+        {
+          "file": "synthetic-case-002.json",
+          "date": "2026-01-02",
+          "batch": "synthetic",
+          "jsonlLine": 2,
+          "rawLineSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      ],
+      "tags": ["djupurladdning", "batteri", "BMS"],
+      "safetyCritical": true
+    },
+    {
+      "id": "syn_ewheels_e16",
+      "title": "E-Wheels E16 med låst motor",
+      "brands": ["E-Wheels"],
+      "models": ["Urban"],
+      "errorCodes": ["E16"],
+      "symptom": "Motorn låser kort efter start.",
+      "rootCause": "Hallsensorns signalkabel har glapp.",
+      "confidence": "bekräftad",
+      "diagnosisPath": [
+        "Kontrollera felkod E16.",
+        "Mät hallsensorns signalledningar."
+      ],
+      "fix": "Signalkabeln reparerades och motorn provkördes.",
+      "parts": ["motor", "hallsensor", "signalkabel"],
+      "notes": "Syntetiskt verifierat testfall.",
+      "evidence": [
+        {
+          "file": "synthetic-case-003.json",
+          "date": "2026-01-03",
+          "outcome": "Motorn fungerade efter provkörning.",
+          "batch": "synthetic",
+          "jsonlLine": 3,
+          "rawLineSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      ],
+      "tags": ["motor", "hallsensor"],
+      "safetyCritical": false
+    },
+    {
+      "id": "syn_kukirin_g2_brake",
+      "title": "KuKirin G2 broms tar ojämnt",
+      "brands": ["KuKirin"],
+      "models": ["G2"],
+      "errorCodes": [],
+      "symptom": "Bromsen tar ojämnt och bromshandtaget går nära styret.",
+      "rootCause": "Bromsoket kan vara felcentrerat.",
+      "confidence": "obekräftad",
+      "diagnosisPath": [
+        "Kontrollera belägg, skiva och bromsokets centrering.",
+        "Dokumentera bromsprov före utlämning."
+      ],
+      "fix": "Ingen verifierad åtgärd.",
+      "parts": ["bromsok", "bromsskiva", "bromsbelägg"],
+      "notes": "Syntetiskt säkerhetsfall.",
+      "evidence": [
+        {
+          "file": "synthetic-case-004.json",
+          "date": "2026-01-04",
+          "batch": "synthetic",
+          "jsonlLine": 4,
+          "rawLineSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+        }
+      ],
+      "tags": ["broms"],
+      "safetyCritical": true
+    },
+    {
+      "id": "syn_rf_alarm",
+      "title": "Eftermonterat RF-larm stör controller",
+      "brands": [],
+      "models": [],
+      "errorCodes": [],
+      "symptom": "Eftermonterat RF-larm gör att controller inte aktiveras.",
+      "rootCause": "Larmets brytledning kan ligga i serie med controllersignalen.",
+      "confidence": "trolig",
+      "diagnosisPath": [
+        "Dokumentera larmets anslutningar.",
+        "Kontrollera controllersignalen före och efter larmmodulen."
+      ],
+      "fix": "Ingen verifierad åtgärd.",
+      "parts": ["RF-larm", "controller (syntetiskt 999 kr)", "brytledning"],
+      "notes": "Syntetiskt testfall.",
+      "evidence": [
+        {
+          "file": "synthetic-case-005.json",
+          "date": "2026-01-05",
+          "batch": "synthetic",
+          "jsonlLine": 5,
+          "rawLineSha256": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee"
+        }
+      ],
+      "tags": ["eftermonterat larm", "controller"],
+      "safetyCritical": false
+    },
+    {
+      "id": "syn_bms_pminus",
+      "title": "BMS P- har låg spänning",
+      "brands": [],
+      "models": [],
+      "errorCodes": [],
+      "symptom": "P- visar 11,8 V medan B- visar 41,2 V.",
+      "rootCause": "BMS-utgången kan vara frånkopplad.",
+      "confidence": "trolig",
+      "diagnosisPath": [
+        "Jämför spänningen mellan B- och P-.",
+        "Avbryt vid värme, lukt eller synlig skada."
+      ],
+      "fix": "Ingen verifierad åtgärd.",
+      "parts": ["BMS", "batteri"],
+      "notes": "Syntetiskt säkerhetsfall med låg spänning.",
+      "evidence": [
+        {
+          "file": "synthetic-case-006.json",
+          "date": "2026-01-06",
+          "batch": "synthetic",
+          "jsonlLine": 6,
+          "rawLineSha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        }
+      ],
+      "tags": ["P-", "B-", "låg spänning"],
+      "safetyCritical": true
+    },
+    {
+      "id": "syn_combined_symptoms",
+      "title": "Xiaomi Pro 2 rycker och tappar kraft",
+      "brands": ["Xiaomi"],
+      "models": ["Pro 2"],
+      "errorCodes": [],
+      "symptom": "Fordonet rycker vid gaspådrag och tappar kraft i motlut.",
+      "rootCause": "Motorfas eller kontakt kan ha intermittent anslutning.",
+      "confidence": "obekräftad",
+      "diagnosisPath": [
+        "Inspektera motorkontakten.",
+        "Mät fasanslutningarnas resistans."
+      ],
+      "fix": "Ingen verifierad åtgärd.",
+      "parts": ["motorfas", "motorkontakt"],
+      "notes": "Syntetiskt testfall för två symptom.",
+      "evidence": [
+        {
+          "file": "synthetic-case-007.json",
+          "date": "2026-01-07",
+          "batch": "synthetic",
+          "jsonlLine": 7,
+          "rawLineSha256": "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+        }
+      ],
+      "tags": ["motor", "kontakt"],
+      "safetyCritical": false
+    }
+  ]
+}

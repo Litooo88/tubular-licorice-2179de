@@ -17,7 +17,15 @@ import { generatePlan, summarizeDay } from "./lib/plan.mjs";
 import { fetchNordicBrief } from "./lib/nordic.mjs";
 import { fetchAdminCases } from "./lib/admin-cases.mjs";
 import { openCasesPrioritized, searchCases } from "./lib/lookup.mjs";
-import { RepairKnowledgeStore, defaultRepairKnowledgePath } from "./lib/repair-knowledge.mjs";
+import {
+  CanonicalKnowledgeSource,
+  RepairIntelligenceError,
+  canonicalPathsConflict,
+} from "./lib/repair-intelligence.mjs";
+import {
+  RepairFeedbackStore,
+  defaultRepairFeedbackPath,
+} from "./lib/repair-feedback.mjs";
 import { AREAS, RISK_LEVELS, STATUSES, stockholmDate } from "./lib/constants.mjs";
 import {
   SessionStore,
@@ -57,7 +65,16 @@ if (AUTH.error) {
 }
 const sessions = new SessionStore();
 const store = new Store(defaultStorePath(BASE_DIR));
-const knowledgeStore = new RepairKnowledgeStore(defaultRepairKnowledgePath(BASE_DIR));
+const canonicalPath = String(process.env.REPAIR_INTELLIGENCE_CANON_PATH || "").trim();
+const feedbackPath = String(
+  process.env.REPAIR_INTELLIGENCE_FEEDBACK_PATH || defaultRepairFeedbackPath(BASE_DIR),
+).trim();
+const knowledgeSource = new CanonicalKnowledgeSource({
+  filePath: canonicalPath,
+  expectedSha256: process.env.REPAIR_INTELLIGENCE_CANON_SHA256 || "",
+});
+const feedbackPathConflict = canonicalPathsConflict(canonicalPath, feedbackPath);
+const feedbackStore = feedbackPathConflict ? null : new RepairFeedbackStore(feedbackPath);
 
 const MIME = {
   ".html": "text/html; charset=utf-8",
@@ -168,21 +185,61 @@ const handleApi = async (req, res, url) => {
     return json(res, { areas: AREAS, statuses: STATUSES, riskLevels: RISK_LEVELS });
   }
 
-  if (path === "/api/knowledge/stats" && req.method === "GET") {
-    return json(res, knowledgeStore.stats());
+  if ((path === "/api/repair-intelligence/status" || path === "/api/knowledge/stats") &&
+      req.method === "GET") {
+    const status = knowledgeSource.status();
+    return json(res, {
+      ...status,
+      feedback: feedbackStore
+        ? feedbackStore.stats()
+        : { count: 0, error: "FEEDBACK_PATH_CONFLICT" },
+    });
   }
 
-  if (path === "/api/knowledge/search" && req.method === "GET") {
+  if ((path === "/api/repair-intelligence/search" || path === "/api/knowledge/search") &&
+      req.method === "GET") {
     const query = (url.searchParams.get("q") || "").trim();
-    if (query.length < 2) return json(res, { error: "query_too_short" }, 400);
-    return json(res, {
-      results: knowledgeStore.search(query, {
-        limit: url.searchParams.get("limit") || 10,
-        brand: url.searchParams.get("brand") || null,
-        errorCode: url.searchParams.get("errorCode") || null,
-        rootCause: url.searchParams.get("rootCause") || null,
-      }),
+    try {
+      return json(res, {
+        query,
+        historicalNotice: "Historiskt verkstadsfall – verifiera med mätning innan åtgärd.",
+        results: knowledgeSource.search(query, {
+          limit: url.searchParams.get("limit") || 20,
+        }),
+      });
+    } catch (error) {
+      if (error instanceof RepairIntelligenceError) {
+        return json(res, {
+          error: error.code,
+          message: error.publicMessage,
+        }, error.status);
+      }
+      throw error;
+    }
+  }
+
+  if (path === "/api/repair-intelligence/feedback" && req.method === "POST") {
+    if (knowledgeSource.status().status !== "ready") {
+      return json(res, {
+        error: knowledgeSource.status().code,
+        message: knowledgeSource.status().message,
+      }, 503);
+    }
+    if (!feedbackStore) {
+      return json(res, {
+        error: "FEEDBACK_PATH_CONFLICT",
+        message: "Feedbacksökvägen får inte vara samma fil som kanonfilen.",
+      }, 500);
+    }
+    const body = await readBody(req);
+    const result = feedbackStore.append(body, {
+      hasKnowledgeUnit: (id) => knowledgeSource.hasUnit(id),
     });
+    if (!result.record) return json(res, {
+      error: result.error,
+      message: result.message,
+    }, 400);
+    return json(res, { ok: true, ...result.record }, 201);
   }
 
   if (path === "/api/nordic-brief" && req.method === "GET") {
@@ -351,11 +408,13 @@ const server = createServer(async (req, res) => {
 
 server.listen(PORT, AUTH.host, () => {
   const configured = Boolean(String(process.env.NORDIC_BRIEF_URL || "").trim());
+  const repairStatus = knowledgeSource.status();
   // OBS: endast om variablerna finns — aldrig deras värden.
   console.log(
     `NEMOB OS kör på http://${AUTH.host}:${PORT} ` +
     `(Nordic-källa: ${configured ? "konfigurerad" : "ej konfigurerad"}, ` +
     `åtkomstskydd: ${AUTH.required ? "PIN aktiv" : "endast lokalt"}, ` +
-    `kunskapsposter: ${knowledgeStore.records.length})`,
+    `Repair Intelligence: ${repairStatus.status}` +
+    `${repairStatus.unitCount ? `/${repairStatus.unitCount} enheter` : ""})`,
   );
 });

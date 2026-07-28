@@ -37,6 +37,23 @@ Adminskyddade endpoints med `x-admin-token`:
 - `netlify/functions/cases.mjs` använder avsiktligt disabled rescue-routes.
 - Cloudflare Worker-routes dokumenteras i `nemob-callflow/README.md`.
 
+Lokala NEMOB OS-endpoints (endast på den lokala Node-servern):
+
+- `GET /api/repair-intelligence/status` visar kanonversion, SHA-256, antal
+  enheter och antal lokala feedbackposter. Den visar aldrig kanonsökvägen.
+- `GET /api/repair-intelligence/search?q=...&limit=20` söker en konfigurerad
+  lokal kanonkälla. Svaret innehåller endast sanerade tekniska fält och
+  evidensreferenser, aldrig evidensutdrag eller priser.
+- `POST /api/repair-intelligence/feedback` skriver enbart till en separat
+  lokal, gitignorerad JSONL-logg. Tillåtna fält är `query`,
+  `selectedKnowledgeUnits`, `assessment`, `technicalComment` och
+  `proposedKnowledge`.
+
+Repair Intelligence-routes ligger bakom samma lokala/PIN-baserade NEMOB
+OS-skydd som övriga lokala routes. De anropar inte Nordic-admin, ändrar inga
+kundärenden och kan inte skriva till kanonfilen. Sökning returnerar ett
+explicit fel vid saknad fil, ogiltig JSON eller SHA-256-avvikelse.
+
 ## Framtida: POST /api/bookings
 
 Status: **finns idag**, men ska senare anpassas till gemensam datamodell.

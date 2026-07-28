@@ -27,6 +27,22 @@ risk, kund väntar, intäkt), så räknar motorn.
   planen genereras om direkt.
 - Hinner inte → **Flytta** (tomt datum = imorgon; den återkommer själv).
 
+## Slå upp ett tekniskt historikfall
+
+1. Tryck **Slå upp** i dashboardens topp.
+2. Kombinera de fakta du faktiskt har, exempelvis `KuKirin G2 broms`,
+   `E16 motor` eller `BMS P- låg spänning`.
+3. Läs varför varje post matchade. Kontrollera confidence och den separata
+   safety-markeringen.
+4. Följ testordningen som beslutsstöd, men verifiera alltid på det aktuella
+   fordonet. Ett historiskt fall är aldrig en säker diagnos.
+5. Markera relevanta enheter och spara en teknisk bedömning i
+   feedbackformuläret. Skriv inga kund- eller kontaktuppgifter.
+
+Feedbacken ligger separat lokalt och påverkar inte kanon. Om den privata
+kanonfilen saknas eller har fel hash visar sidan ett tydligt fel och sökningen
+stoppas.
+
 ## Eftermiddag/lunch (2 min)
 
 Sektionen **"Kontroll mitt på dagen"** visar automatiskt klart/tillkommit/

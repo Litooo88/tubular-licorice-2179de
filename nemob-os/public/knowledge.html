@@ -1,16 +1,74 @@
 <!doctype html>
-<html lang="sv"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="robots" content="noindex,nofollow"><meta name="theme-color" content="#0d1210">
-<title>NEMOB OS — Kunskapsbank</title><link rel="stylesheet" href="/style.css">
-<style>
-.knowledge-shell{max-width:1100px;margin:0 auto;padding:18px}.knowledge-top{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}.knowledge-top a{color:#93d7aa}.search-row{display:flex;gap:8px}.search-row input{flex:1}.knowledge-hit{margin-top:10px}.knowledge-hit .solution{margin-top:8px;padding:9px;border-left:3px solid #47d178;background:#101713}.knowledge-meta{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}.knowledge-list{margin:6px 0 0;padding-left:20px}@media(max-width:650px){.search-row{display:block}.search-row button{width:100%;margin-top:8px}}
-</style></head><body>
-<div class="knowledge-shell">
-  <div class="knowledge-top"><h1>NEMOB <span>Kunskapsbank</span></h1><a href="/">← Dashboard</a><span class="spacer"></span><span id="knowledge-stats" class="badge">Laddar…</span></div>
-  <section class="card">
-    <h2>Sök tidigare felsökningar</h2>
-    <div class="search-row"><input id="knowledge-query" type="search" placeholder="Exempel: Ninebot E16, 41 V P-, hallsensor…" autocomplete="off"><button id="knowledge-search" class="primary">Sök</button></div>
-    <p class="small-text">Visar endast manuellt godkända/importerade poster. Resultat är beslutsstöd — verifiera alltid på det aktuella fordonet.</p>
-    <div id="knowledge-results"></div>
-  </section>
-</div><script src="/knowledge.js"></script></body></html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#0d1210">
+  <title>NEMOB OS — Slå upp</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <main class="knowledge-shell">
+    <header class="knowledge-top">
+      <h1>NEMOB <span>Slå upp</span></h1>
+      <a href="/">← Dashboard</a>
+      <span class="spacer"></span>
+      <span id="knowledge-stats" class="badge">Kontrollerar kanon…</span>
+    </header>
+
+    <section class="card">
+      <h2>Repair Intelligence</h2>
+      <div id="knowledge-status" aria-live="polite"></div>
+      <form id="knowledge-search-form" class="search-row">
+        <label class="field knowledge-query">
+          Sök märke, modell, felkod, symptom, komponent eller mätvärde
+          <input id="knowledge-query" type="search"
+                 placeholder="Exempel: Ninebot G30 16V"
+                 autocomplete="off" enterkeyhint="search" required>
+        </label>
+        <button id="knowledge-search" type="submit" class="primary">Sök</button>
+      </form>
+      <div class="historical-notice" role="note">
+        Historiskt verkstadsfall – verifiera med mätning innan åtgärd.
+      </div>
+      <div id="knowledge-results" aria-live="polite"></div>
+    </section>
+
+    <section class="card" id="feedback-section">
+      <h2>Feedback från verkligt ärende</h2>
+      <p class="small-text">
+        Feedback sparas separat lokalt och ändrar aldrig kanonfilen. Skriv inga
+        kundnamn, telefonnummer, e-postadresser, adresser, registreringsnummer
+        eller kund-ID.
+      </p>
+      <form id="feedback-form" class="grid">
+        <div class="full" id="feedback-selected">Inga kunskapsenheter valda.</div>
+        <label class="field full">Bedömning
+          <select name="assessment" required>
+            <option value="">Välj…</option>
+            <option value="helpful">Hjälpte</option>
+            <option value="partly_relevant">Delvis relevant</option>
+            <option value="incorrect_match">Felaktig träff</option>
+            <option value="no_relevant_knowledge">Ingen relevant kunskap</option>
+            <option value="new_verified_outcome">Nytt verifierat utfall finns</option>
+          </select>
+        </label>
+        <label class="field full">Teknisk kommentar
+          <textarea name="technicalComment" rows="3" maxlength="2000"
+                    placeholder="Endast tekniska observationer, inga kunduppgifter."></textarea>
+        </label>
+        <label class="field full">Eventuell föreslagen ny kunskapspost
+          <textarea name="proposedKnowledge" rows="3" maxlength="3000"
+                    placeholder="Förslag granskas manuellt och skrivs inte automatiskt till kanon."></textarea>
+        </label>
+        <div class="full feedback-actions">
+          <button type="submit" class="primary">Spara lokal feedback</button>
+          <span id="feedback-saved" class="saved-note" aria-live="polite"></span>
+        </div>
+      </form>
+    </section>
+  </main>
+  <script src="/knowledge.js"></script>
+</body>
+</html>
