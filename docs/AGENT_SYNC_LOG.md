@@ -32,17 +32,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-07-28 — Codex — PÅGÅR (Repair Intelligence, lokal read-only uppslagning)
+### 2026-07-28 — Codex — KLAR (Repair Intelligence, lokal read-only uppslagning)
 
 - **Branch:** `agent/repair-intelligence-lookup`
-- **Område:** `nemob-os/`, syntetiska tester och dokumentation för en lokal,
-  konfigurerbar och read-only kanonkälla samt separat lokal feedbacklogg.
-- **Avgränsning:** ingen verklig kanon-, evidens-, kund-, audit- eller
-  batchdata får läggas i Git. Funktionen får inte skriva till kanon,
-  Nordic-admin eller kundärenden och får inte skicka SMS/e-post, beställa
-  delar eller sätta pris.
-- **Samordning:** undvik parallella ändringar i Repair Intelligence-filerna
-  och berörda NEMOB OS-vyerna tills posten markeras `KLAR`.
+- **Resultat:** NEMOB OS har nu kombinerad sökning i en konfigurerbar lokal
+  kanonkälla, read-only SHA-256-spärr, tydliga confidence-/safety-etiketter,
+  källreferenser och separat append-only feedbacklogg med PII-stopp.
+- **Dataskydd:** endast programkod, dokumentation och syntetisk testkanon är
+  committade. Verklig kanon/evidens/kund-/audit-/batchdata ligger utanför Git.
+  Inga writes eller anrop till Nordic-admin/kundärenden/SMS/e-post/pris/order
+  har lagts till. Historiska prisfragment filtreras ur resultatvyn.
+- **Verifiering:** `npm run test:nemob-os` (56/56), `npm run build`,
+  `npm run verify:checkout-products`, `nemob-callflow: npm run check` och
+  mobiltest 390×844 passerar. Saknad kanon ger `CANON_FILE_MISSING`.
+  v1.3 SHA-256 före/efter:
+  `7FA0F950E5BCEA180F3884DC651B6BAB5B151FCF74539E54233D5D0DC78B2FC9`.
 
 ### 2026-07-27 — Claude Code — KLAR (2 felsökningsguider: "startar inte" + "laddar inte")
 
