@@ -32,6 +32,18 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-28 — Codex — PÅGÅR (Repair Intelligence, lokal read-only uppslagning)
+
+- **Branch:** `agent/repair-intelligence-lookup`
+- **Område:** `nemob-os/`, syntetiska tester och dokumentation för en lokal,
+  konfigurerbar och read-only kanonkälla samt separat lokal feedbacklogg.
+- **Avgränsning:** ingen verklig kanon-, evidens-, kund-, audit- eller
+  batchdata får läggas i Git. Funktionen får inte skriva till kanon,
+  Nordic-admin eller kundärenden och får inte skicka SMS/e-post, beställa
+  delar eller sätta pris.
+- **Samordning:** undvik parallella ändringar i Repair Intelligence-filerna
+  och berörda NEMOB OS-vyerna tills posten markeras `KLAR`.
+
 ### 2026-07-27 — Claude Code — KLAR (2 felsökningsguider: "startar inte" + "laddar inte")
 
 - **Branch:** `feat/troubleshooting-guides` → PR mot `main`. Sista
