@@ -42,10 +42,14 @@
 .pp-specs li{list-style:none;border:1px solid #222c24;background:#0d120e;border-radius:8px;padding:10px 12px;font-size:14px;color:#d7ddd9}
 .pp-actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 8px}
 .pp-meta{color:#9eaaa2;font-size:13px;line-height:1.6}
+.pp-assurance{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:28px}
+.pp-assurance article{border:1px solid #223028;background:#0c120e;border-radius:10px;padding:16px}
+.pp-assurance span{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;background:rgba(0,200,83,.14);color:#7ee2a8;font-size:12px;font-weight:950;margin-bottom:10px}
+.pp-assurance h2{font-size:18px;line-height:1.1;margin:0 0 7px}.pp-assurance p{color:#aeb8b1;font-size:13px;line-height:1.55;margin:0}
 .payment-methods{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
 .pay-logo{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border-radius:5px;padding:4px 7px;background:#f4f6f5;color:#071008;font-size:11px;font-weight:950;line-height:1}
 .pay-logo.klarna{background:#ffb3c7;color:#111}.pay-logo.apple{background:#fff;color:#000}.pay-logo.gpay{background:#fff;color:#1f1f1f}.pay-logo.card{background:#15251a;color:#dfffea;border:1px solid rgba(0,200,83,.24)}.pay-logo.stripe{background:#635bff;color:#fff}
-@media(max-width:820px){.pp-layout{grid-template-columns:1fr}}
+@media(max-width:820px){.pp-layout,.pp-assurance{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -82,6 +86,11 @@
             </div>
     <p class="pp-meta">Service, garanti och reservdelar hanteras i vår verkstad i Örebro. <a href="/garanti/">Garanti &amp; 3 års reklamationsrätt</a> · <a href="/villkor/#returer">14 dagars ångerrätt</a> · <a href="/regler-elscooter/">Regelguiden</a></p>
   </div>
+</div>
+<div class="pp-assurance" aria-label="Trygghet efter köp">
+  <article><span>01</span><h2>Köp med verkstadsstöd</h2><p>Vi hjälper dig välja rätt modell, kontrollera användningsområde och planera leverans, montering eller inbyte.</p></article>
+  <article><span>02</span><h2>Service efter kartongen</h2><p>Nordic E-Mobility hanterar felsökning, service, reservdelar och garantiärenden i Örebro när du behöver hjälp.</p></article>
+  <article><span>03</span><h2>Riktiga regler före löften</h2><p>Kraftigare modeller kan ha begränsad trafikanvändning. Vi dubbelkollar hellre än lovar fel.</p></article>
 </div>
 </div></section>
 </main>
