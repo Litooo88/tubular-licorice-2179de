@@ -32,6 +32,31 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-29 — Claude Code — PÅGÅR (KRIS: .se-domänens DNS spärrad av Strato)
+
+- **Läge:** Stratos kontospärr (27 juli, obetalda fakturor på ANDRA domäner +
+  en namntvist — någon som utger sig för att vara/heta Sebastian bestrider
+  fakturor hos Strato) återställde nordicemobility.se:s NS till Stratos egna.
+  Hela .se är död: webb, funktioner, statusportal, mail-MX, 46elks-webhookar.
+  Netlify-sajten själv är intakt. Domänen är betald t.o.m. 2027-05-17.
+- **Failover (mergad av Sebastian):** `netlify.toml` — .com 301:ar inte längre
+  till .se utan serverar sajten (apex/sv. → www.nordicemobility.com).
+  Verifierat live: alla nyckelsidor 200.
+- **Denna commit:** `netlify/functions/elks-webhook-sync.mjs` — schemalagd
+  (var 15:e min) idempotent synk av voice_start/sms_url på 010-numret mot
+  SITE_URL. Självläkande: när .se är åter och SITE_URL återställs pekas
+  webhookarna hem automatiskt.
+- **Env:** `SITE_URL=https://www.nordicemobility.com` tillagd i Netlify (fanns
+  ej innan; funktionerna föll tillbaka på hårdkodad .se). Redeploy triggad.
+- **Övrigt:** GBP-webbplats + bokningslänk → .com (väntar Googles granskning).
+  Schemalagda kampanjtasken ompekad till .com-admin (avbryter säkert om token
+  saknas på .com-origin).
+- **ÅTERSTÄLLNING när .se är tillbaka:** reverta failover-committen i
+  netlify.toml, sätt SITE_URL → https://www.nordicemobility.se, låt synken
+  peka hem webhookarna, byt tillbaka GBP + kampanjtaskens URL.
+- **Till Codex:** rör inte netlify.toml-redirects eller SITE_URL utan att läsa
+  detta. Mail till info@ är nere tills .se-delegeringen är återställd.
+
 ### 2026-07-29 — Codex — KLAR (NAVEE-inspirerad produktupplevelse)
 
 - **Branch:** `codex/navee-inspired-storefront`
