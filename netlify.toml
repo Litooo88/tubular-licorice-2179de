@@ -21,21 +21,18 @@
   status = 404
   force = true
 
+# KRISLÄGE 2026-07-29: .se-domänens DNS är kapad av Stratos kontospärr.
+# .com serverar sajten direkt tills .se-delegeringen är återställd.
+# ÅTERSTÄLL till 301 → www.nordicemobility.se när .se svarar igen.
 [[redirects]]
 from = "https://nordicemobility.com/*"
-to = "https://www.nordicemobility.se/:splat"
-status = 301
-force = true
-
-[[redirects]]
-from = "https://www.nordicemobility.com/*"
-to = "https://www.nordicemobility.se/:splat"
+to = "https://www.nordicemobility.com/:splat"
 status = 301
 force = true
 
 [[redirects]]
 from = "https://sv.nordicemobility.com/*"
-to = "https://www.nordicemobility.se/:splat"
+to = "https://www.nordicemobility.com/:splat"
 status = 301
 force = true
 
