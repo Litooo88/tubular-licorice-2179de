@@ -114,11 +114,21 @@ const paymentStrip = (compact = false) => `<div class="payment-methods${compact 
               <span class="pay-logo stripe">Stripe</span>
             </div>`;
 
+const specPills = (item, limit = 3) =>
+  String(item.spec || "")
+    .split("•")
+    .map((part) => part.trim())
+    .filter(Boolean)
+    .slice(0, limit)
+    .map((part) => `<span>${escapeHtml(part)}</span>`)
+    .join("");
+
 function productCard(item, options = {}) {
   const images = item.images || [];
   const price = formatPrice(item.priceSek) || escapeHtml(item.priceNote || "Pris efter modell");
   const campaign = campaignDetails(item);
   const legal = item.legality ? `<p class="product-legal">${escapeHtml(legalityText[item.legality] || item.legality)}</p>` : "";
+  const specs = specPills(item);
   const thumbs = images
     .slice(1, 4)
     .map((src, index) => `<button type="button" data-open-product aria-label="Visa ${escapeAttr(item.name)} bild ${index + 2}"><img loading="lazy" decoding="async" width="200" height="200" src="${escapeAttr(displaySrc(src, 200))}" alt="${escapeAttr(item.name)} extra bild ${index + 2}" onerror="this.onerror=null;this.src='${escapeAttr(fallbackSrc(src, 200))}'"></button>`)
@@ -134,6 +144,7 @@ function productCard(item, options = {}) {
             <div class="product-meta"><span>${escapeHtml(item.brand)}</span><span>${escapeHtml(statusLabel[item.status] || item.status)}</span></div>
             <h3>${escapeHtml(item.name)}</h3>
             <p class="spec">${escapeHtml(item.spec)}</p>
+            ${specs ? `<div class="spec-pills">${specs}</div>` : ""}
             <p class="copy">${escapeHtml(item.short)}</p>
             ${legal}
             <div class="price-row"><div class="price">${price}</div>${campaign ? `<span class="compare-price">${formatPrice(campaign.original)}</span>` : ""}</div>
@@ -236,6 +247,71 @@ ${list.map((item) => productCard(item)).join("\n")}
       </section>`;
 }
 
+function storefrontHeroSection() {
+  const hero = products.find((item) => item.id === "navee-xt5-ultra") || products.find((item) => item.featured) || products[0];
+  const heroImage = displaySrc(mainImage(hero), 1000);
+  const spotlightIds = ["navee-v50i-pro", "navee-n65i", "teverun-blade-mini-ultra"];
+  const spotlights = spotlightIds
+    .map((id) => products.find((item) => item.id === id))
+    .filter(Boolean)
+    .map((item) => `
+          <a class="showroom-mini" href="/produkt/${escapeAttr(item.id)}/">
+            <span>${escapeHtml(item.brand)}</span>
+            <strong>${escapeHtml(item.name.replace(/^NAVEE |^KuKirin |^Teverun |^Halo Knight /, ""))}</strong>
+            <em>${escapeHtml(formatPrice(item.priceSek) || statusCopy[item.status] || "Fråga oss")}</em>
+          </a>`)
+    .join("");
+  return `
+      <section class="showroom-hero" aria-label="Nordic E-Mobility showroom">
+        <div class="showroom-copy">
+          <span class="eyebrow">NORDIC SHOWROOM</span>
+          <h2>Köp elscooter som om du hade en verkstad i fickan.</h2>
+          <p>En renare köpupplevelse inspirerad av premiumtillverkarnas sidor, men med Nordic E-Mobilitys styrka: vi säljer modeller vi kan serva, felsöka och hjälpa dig med efter köpet.</p>
+          <div class="showroom-actions">
+            <a class="btn primary" href="#modellguiden">Hitta rätt modell</a>
+            <a class="btn ghost" href="#produkter">Se sortimentet</a>
+            <a class="btn ghost" href="/book-online/?service=bestallning">Fråga verkstaden</a>
+          </div>
+          <div class="showroom-trust">
+            <span><strong>Trygg checkout</strong>Klarna, kort, Apple Pay och Google Pay</span>
+            <span><strong>Service efter köp</strong>Verkstad, reservdelar och rådgivning i Örebro</span>
+            <span><strong>Rätt modell</strong>Vi hjälper dig kontrollera regler och användning</span>
+          </div>
+        </div>
+        <div class="showroom-product">
+          <div class="showroom-image">
+            <img width="900" height="900" loading="eager" decoding="async" src="${escapeAttr(heroImage)}" alt="${escapeAttr(hero.name)}" onerror="this.onerror=null;this.src='${escapeAttr(fallbackSrc(mainImage(hero), 1000))}'">
+          </div>
+          <div class="showroom-feature">
+            <span>${escapeHtml(hero.badge || "Utvald modell")}</span>
+            <h3>${escapeHtml(hero.name)}</h3>
+            <p>${escapeHtml(hero.short)}</p>
+            <div class="showroom-feature-row"><strong>${formatPrice(hero.priceSek)}</strong><a href="/produkt/${escapeAttr(hero.id)}/">Alla detaljer →</a></div>
+          </div>
+          <div class="showroom-minis">${spotlights}</div>
+        </div>
+      </section>`;
+}
+
+function modelGuideSection() {
+  return `
+      <section class="model-guide" id="modellguiden" aria-label="Hitta rätt elscooter">
+        <div class="model-guide-head">
+          <div>
+            <span class="eyebrow">HITTA RÄTT PÅ 20 SEKUNDER</span>
+            <h3>Välj efter hur du kör, inte bara efter maxsiffra.</h3>
+          </div>
+          <p>Stora siffror är roliga, men rätt köp börjar med vardagen: sträcka, vägar, vikt, regler och service. Här är snabbaste vägen in i sortimentet.</p>
+        </div>
+        <div class="guide-grid">
+          <a class="guide-card" href="#brand-navee"><span>01</span><strong>Vardag &amp; pendling</strong><em>NAVEE V50i Pro, G5 och N65i för smidigare daglig körning.</em></a>
+          <a class="guide-card" href="#brand-navee"><span>02</span><strong>Komfort &amp; räckvidd</strong><em>NAVEE XT/NT-serien när du vill ha stabil känsla och längre turer.</em></a>
+          <a class="guide-card" href="#brand-teverun"><span>03</span><strong>Premiumprestanda</strong><em>Teverun och kraftigare modeller för dig som behöver mer kapacitet.</em></a>
+          <a class="guide-card" href="#begagnat-renoverat"><span>04</span><strong>Verkstadens egna byggen</strong><em>Begagnat, renoverat och NEMOB Edition när varje exemplar ska kännas unikt.</em></a>
+        </div>
+      </section>`;
+}
+
 function haloKnightLaunchSection() {
   const t107Pro = products.find((item) => item.id === "halo-knight-t107-pro");
   const t108Pro = products.find((item) => item.id === "halo-knight-t108-pro");
@@ -271,6 +347,33 @@ function nyaElscootrarSection() {
   <section class="section" id="nya-elscootrar">
     <div class="wrap">
       <style>
+        .showroom-hero{display:grid;grid-template-columns:minmax(0,1.02fr) minmax(320px,.98fr);gap:22px;align-items:stretch;margin:0 0 30px;border:1px solid rgba(0,200,83,.22);border-radius:16px;overflow:hidden;background:radial-gradient(circle at 85% 10%,rgba(0,200,83,.24),transparent 32%),linear-gradient(135deg,#07110b,#050706 58%,#111a12);box-shadow:0 28px 80px rgba(0,0,0,.36)}
+        .showroom-copy{padding:34px;display:flex;flex-direction:column;justify-content:center}
+        .showroom-copy h2{font-size:clamp(34px,5vw,68px);line-height:.94;letter-spacing:-.04em;margin:0 0 16px;max-width:720px}
+        .showroom-copy p{color:#d7e3db;font-size:17px;line-height:1.65;max-width:680px}
+        .showroom-actions{display:flex;flex-wrap:wrap;gap:10px;margin:22px 0}
+        .showroom-trust{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:8px}
+        .showroom-trust span{border:1px solid rgba(255,255,255,.1);background:rgba(255,255,255,.045);border-radius:10px;padding:11px 12px;color:#b9c6be;font-size:12px;line-height:1.45}
+        .showroom-trust strong{display:block;color:#fff;font-size:13px;margin-bottom:3px}
+        .showroom-product{position:relative;display:flex;flex-direction:column;min-height:520px;background:linear-gradient(180deg,#f4f7f5,#dde5df);color:#06110a}
+        .showroom-image{flex:1;display:flex;align-items:center;justify-content:center;padding:24px 24px 4px}
+        .showroom-image img{max-width:100%;max-height:390px;object-fit:contain;filter:drop-shadow(0 28px 34px rgba(0,0,0,.26))}
+        .showroom-feature{margin:0 20px 12px;border-radius:14px;background:rgba(255,255,255,.82);border:1px solid rgba(0,0,0,.08);padding:16px;backdrop-filter:blur(10px)}
+        .showroom-feature span{font-size:11px;font-weight:950;letter-spacing:.12em;text-transform:uppercase;color:#008a39}
+        .showroom-feature h3{margin:4px 0 6px;font-size:24px;line-height:1.05;color:#06110a}
+        .showroom-feature p{margin:0;color:#425047;font-size:13px;line-height:1.45}
+        .showroom-feature-row{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:12px}
+        .showroom-feature-row strong{font-size:22px}.showroom-feature-row a{font-weight:900;color:#008a39;text-decoration:none}
+        .showroom-minis{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:0 20px 20px}
+        .showroom-mini{border:1px solid rgba(0,0,0,.08);background:#fff;border-radius:10px;padding:10px;text-decoration:none;color:#06110a}
+        .showroom-mini span{display:block;color:#6d7a71;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase}
+        .showroom-mini strong{display:block;margin:3px 0;font-size:13px;line-height:1.15}.showroom-mini em{font-style:normal;color:#008a39;font-size:12px;font-weight:900}
+        .model-guide{margin:0 0 30px;border:1px solid var(--line);border-radius:14px;background:#0b100c;padding:22px}
+        .model-guide-head{display:grid;grid-template-columns:minmax(0,.9fr) minmax(300px,1.1fr);gap:18px;align-items:end;margin-bottom:16px}
+        .model-guide-head h3{font-size:34px;line-height:1.02;margin:0}.model-guide-head p{color:#b8c3bc;margin:0;line-height:1.6}
+        .guide-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+        .guide-card{display:flex;flex-direction:column;min-height:150px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:linear-gradient(145deg,#111812,#080b09);padding:15px;text-decoration:none;color:#fff}
+        .guide-card span{color:#00c853;font-size:12px;font-weight:950}.guide-card strong{font-size:18px;line-height:1.12;margin:18px 0 8px}.guide-card em{font-style:normal;color:#aeb8b1;font-size:13px;line-height:1.45}
         .catalog-intro{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;margin-bottom:28px}
         .catalog-note{border:1px solid rgba(0,200,83,.22);background:rgba(0,200,83,.08);border-radius:8px;padding:18px;color:#dce8df}
         .catalog-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
@@ -294,6 +397,8 @@ function nyaElscootrarSection() {
         .product-thumbs img{height:100%;width:100%;object-fit:contain}
         .product-thumbs-empty{display:block;color:#8d9a91;font-size:12px;min-height:42px}
         .product-meta{display:flex;justify-content:space-between;gap:8px;color:#90a097;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+        .spec-pills{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 10px}
+        .spec-pills span{border:1px solid rgba(0,200,83,.18);background:rgba(0,200,83,.07);color:#cce8d7;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:800}
         .product-legal{margin-top:10px;color:#ffd9b3;font-size:12px;line-height:1.45}
         .price-row{display:flex;align-items:baseline;flex-wrap:wrap;gap:9px;margin-top:14px}
         .price-row .price{margin:0}
@@ -357,7 +462,8 @@ function nyaElscootrarSection() {
         .catalog-modal-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 18px;border-radius:6px;text-decoration:none;font-weight:900}
         .catalog-modal-actions .buy{background:#00C853;color:#021307}
         .catalog-modal-actions .ask{border:1px solid #344238;color:#fff}
-        @media(max-width:980px){.catalog-intro,.halo-launch{grid-template-columns:1fr}.halo-launch-media{min-height:300px}.brand-row{display:block}.brand-row p{margin-top:8px}}
+        @media(max-width:980px){.showroom-hero,.catalog-intro,.halo-launch,.model-guide-head{grid-template-columns:1fr}.showroom-trust,.guide-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.halo-launch-media{min-height:300px}.brand-row{display:block}.brand-row p{margin-top:8px}}
+        @media(max-width:620px){.showroom-copy{padding:24px}.showroom-product{min-height:auto}.showroom-trust,.showroom-minis,.guide-grid{grid-template-columns:1fr}.showroom-image img{max-height:280px}.model-guide{padding:16px}.model-guide-head h3{font-size:28px}}
         @media(max-width:700px){.catalog-modal-body{grid-template-columns:1fr}.catalog-modal-head h3{font-size:20px}}
       </style>
       <div class="section-head">
@@ -367,6 +473,8 @@ function nyaElscootrarSection() {
         </div>
         <p>Vi säljer modeller vi själva kan serva. Sortiment från Halo Knight, NAVEE, Teverun och KuKirin med samma pris och status som checkout — och service, garanti och reservdelar i vår verkstad i Örebro efter köpet.</p>
       </div>
+      ${storefrontHeroSection()}
+      ${modelGuideSection()}
       ${haloKnightLaunchSection()}
       <div class="catalog-intro">
         <div class="catalog-note">
@@ -818,10 +926,14 @@ ${JSON.stringify(breadcrumb)}
 .pp-specs li{list-style:none;border:1px solid #222c24;background:#0d120e;border-radius:8px;padding:10px 12px;font-size:14px;color:#d7ddd9}
 .pp-actions{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 8px}
 .pp-meta{color:#9eaaa2;font-size:13px;line-height:1.6}
+.pp-assurance{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin-top:28px}
+.pp-assurance article{border:1px solid #223028;background:#0c120e;border-radius:10px;padding:16px}
+.pp-assurance span{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;background:rgba(0,200,83,.14);color:#7ee2a8;font-size:12px;font-weight:950;margin-bottom:10px}
+.pp-assurance h2{font-size:18px;line-height:1.1;margin:0 0 7px}.pp-assurance p{color:#aeb8b1;font-size:13px;line-height:1.55;margin:0}
 .payment-methods{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
 .pay-logo{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border-radius:5px;padding:4px 7px;background:#f4f6f5;color:#071008;font-size:11px;font-weight:950;line-height:1}
 .pay-logo.klarna{background:#ffb3c7;color:#111}.pay-logo.apple{background:#fff;color:#000}.pay-logo.gpay{background:#fff;color:#1f1f1f}.pay-logo.card{background:#15251a;color:#dfffea;border:1px solid rgba(0,200,83,.24)}.pay-logo.stripe{background:#635bff;color:#fff}
-@media(max-width:820px){.pp-layout{grid-template-columns:1fr}}
+@media(max-width:820px){.pp-layout,.pp-assurance{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -851,6 +963,11 @@ ${JSON.stringify(breadcrumb)}
     ${item.checkout ? paymentStrip() : ""}
     <p class="pp-meta">Service, garanti och reservdelar hanteras i vår verkstad i Örebro. <a href="/garanti/">Garanti &amp; 3 års reklamationsrätt</a> · <a href="/villkor/#returer">14 dagars ångerrätt</a> · <a href="/regler-elscooter/">Regelguiden</a></p>
   </div>
+</div>
+<div class="pp-assurance" aria-label="Trygghet efter köp">
+  <article><span>01</span><h2>Köp med verkstadsstöd</h2><p>Vi hjälper dig välja rätt modell, kontrollera användningsområde och planera leverans, montering eller inbyte.</p></article>
+  <article><span>02</span><h2>Service efter kartongen</h2><p>Nordic E-Mobility hanterar felsökning, service, reservdelar och garantiärenden i Örebro när du behöver hjälp.</p></article>
+  <article><span>03</span><h2>Riktiga regler före löften</h2><p>Kraftigare modeller kan ha begränsad trafikanvändning. Vi dubbelkollar hellre än lovar fel.</p></article>
 </div>
 </div></section>
 </main>

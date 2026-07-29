@@ -32,6 +32,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-29 — Codex — KLAR (NAVEE-inspirerad produktupplevelse)
+
+- **Branch:** `codex/navee-inspired-storefront`
+- **Gjorde:** Första steg mot en NAVEE-liknande men egen Nordic-köpupplevelse för
+  `/nya-elscootrar/` och genererade produktsidor. Fokus: premium showroom,
+  snabbare valhjälp, tydligare specs/trust och verkstadspositionering.
+- **Filer/områden:** `scripts/generate-products.mjs`, genererad
+  `/nya-elscootrar/`, `/produkt/*` och ev. dokumentation. Rör inte admin,
+  SMS/mail eller operativ kunddata.
+- **Tester:** `node --check scripts/generate-products.mjs`, riktad HTML-smoke,
+  `npm run build`, `npm run verify:checkout-products`, `cd nemob-callflow &&
+  npm run check` och lokal browser-smoke på `/nya-elscootrar/` passerade.
+- **Varning:** `docs/NEMOB_OS_V1_PLAN.md` ligger untracked sedan tidigare och
+  ska inte stage:as. Inga SMS/mail, inga production-writes, ingen Supabase.
+
 ### 2026-07-28 — Codex — KLAR (Repair Intelligence, lokal read-only uppslagning)
 
 - **Branch:** `agent/repair-intelligence-lookup`
