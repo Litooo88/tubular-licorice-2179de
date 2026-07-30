@@ -32,6 +32,18 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-30 — Claude Code — PÅGÅR (copyfix "Snabb beställning")
+
+- **Branch:** `claude/upbeat-benz-80e165` (worktree)
+- **Gjorde:** Skriver om personalriktad copy i sektionen "Snabb beställning"
+  (`id="bestall-scooter"`) på `/nya-elscootrar/` till kundriktad, och tar bort
+  meningen om produkt-ID/Stripe. Ändras i källan
+  `scripts/generate-products.mjs` + regenererad `nya-elscootrar/index.html`.
+- **Filer/områden:** `scripts/generate-products.mjs`, `nya-elscootrar/index.html`.
+  Sektionen kommer från Codex `codex/navee-inspired-storefront` (PR #126).
+- **Tester:** `npm run build` + `npm run verify:checkout-products` körs före commit.
+- **Varning:** Rör inget annat i storefront-genereringen.
+
 ### 2026-07-29 — Claude Code — PÅGÅR (KRIS: .se-domänens DNS spärrad av Strato)
 
 - **Läge:** Stratos kontospärr (27 juli, obetalda fakturor på ANDRA domäner +
