@@ -539,7 +539,7 @@ ${accessories.map((item) => accessoryCard(item)).join("\n")}
       <p class="rule-note">Kraftigare elscootrar och custombyggen kan omfattas av andra regler än vanliga elsparkcyklar. Kontrollera alltid gällande regler innan användning i trafik — fråga oss eller läs <a href="/regler-elscooter/">regelguiden</a> innan du väljer modell för allmän väg.</p>
       <div class="order-list" id="bestall-scooter">
         <h3>Snabb beställning</h3>
-        <p>Har kunden redan valt modell kan köp startas direkt. Samma produkt-ID används av Stripe-checkout.</p>
+        <p>Vet du redan vilken modell du vill ha? Starta köpet direkt — leverans eller upphämtning i Örebro.</p>
         <div class="order-grid">
 ${orderable
   .map(
