@@ -832,6 +832,80 @@ const absUrl = (src) => (/^https?:\/\//.test(src || "") ? src : `${SITE_ORIGIN}$
 const productPagePath = (item) => `/produkt/${item.id}/`;
 const pageProducts = products.filter((item) => Number(item.priceSek) > 0);
 
+// "Liknande modeller": tre rekommendationer i samma pris- och effektklass
+// längst ner på varje produktsida (inspirerat av NAVEEs jämförelseblock).
+// Effekten tolkas ur spec-strängen ("2x1100W" → 2200, "800W" → 800).
+const parsePowerW = (item) => {
+  const spec = String(item.spec || "");
+  const dual = spec.match(/(\d+)\s*[x×]\s*(\d+)\s*W/i);
+  if (dual) return Number(dual[1]) * Number(dual[2]);
+  const single = spec.match(/(\d+)\s*W(?![hH])/);
+  return single ? Number(single[1]) : null;
+};
+
+const parseBatteryWh = (item) => {
+  const match = String(item.spec || "").match(/(\d+(?:[.,]\d+)?)\s*Wh/i);
+  return match ? Math.round(Number(match[1].replace(",", "."))) : null;
+};
+
+const similarProducts = (item, count = 3) => {
+  const power = parsePowerW(item);
+  return pageProducts
+    .filter(
+      (candidate) =>
+        candidate.id !== item.id &&
+        !candidate.hidden &&
+        !["slut", "upphord", "demo-bara"].includes(candidate.status),
+    )
+    .map((candidate) => {
+      const priceScore = Math.abs(candidate.priceSek - item.priceSek) / Math.max(item.priceSek, 1);
+      const candidatePower = parsePowerW(candidate);
+      // Utan känd effekt på någon sida: neutral straffterm i stället för 0,
+      // annars vinner spec-lösa produkter alla jämförelser.
+      const powerScore =
+        power && candidatePower ? (Math.abs(candidatePower - power) / power) * 0.8 : 0.25;
+      return { candidate, score: priceScore + powerScore };
+    })
+    .sort((a, b) => a.score - b.score)
+    .slice(0, count)
+    .map((entry) => entry.candidate);
+};
+
+const similarCard = (item, current) => {
+  const diff = item.priceSek - current.priceSek;
+  const diffLabel =
+    Math.abs(diff) < 300
+      ? "Samma prisklass"
+      : `${diff > 0 ? "+" : "−"}${new Intl.NumberFormat("sv-SE").format(Math.abs(diff))} kr`;
+  const power = parsePowerW(item);
+  const battery = parseBatteryWh(item);
+  const pills = [
+    power ? `${new Intl.NumberFormat("sv-SE").format(power)} W` : null,
+    battery ? `${new Intl.NumberFormat("sv-SE").format(battery)} Wh` : null,
+    statusLabel[item.status] || null,
+  ].filter(Boolean);
+  const img = displaySrc(mainImage(item), 400);
+  return `<a class="pp-sim-card" href="${escapeAttr(productPagePath(item))}">
+      <img loading="lazy" decoding="async" width="400" height="400" src="${escapeAttr(img)}" alt="${escapeAttr(item.name)}" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+      <strong>${escapeHtml(item.name)}</strong>
+      <div class="pp-sim-price">${formatPrice(item.priceSek)} <span class="pp-sim-diff${diff > 0 ? " up" : diff < 0 ? " down" : ""}">${escapeHtml(diffLabel)}</span></div>
+      <div class="pp-sim-pills">${pills.map((pill) => `<span>${escapeHtml(pill)}</span>`).join("")}</div>
+    </a>`;
+};
+
+const similarSection = (item) => {
+  const picks = similarProducts(item);
+  if (!picks.length) return "";
+  return `
+<section class="pp-similar" aria-labelledby="pp-similar-title">
+  <h2 id="pp-similar-title">Liknande modeller</h2>
+  <p class="pp-sim-sub">Tre alternativ i samma pris- och effektklass — jämför innan du bestämmer dig.</p>
+  <div class="pp-sim-grid">
+    ${picks.map((pick) => similarCard(pick, item)).join("\n    ")}
+  </div>
+</section>`;
+};
+
 const truncate = (value, max) => {
   const text = String(value || "").trim();
   return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
@@ -933,7 +1007,21 @@ ${JSON.stringify(breadcrumb)}
 .payment-methods{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
 .pay-logo{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border-radius:5px;padding:4px 7px;background:#f4f6f5;color:#071008;font-size:11px;font-weight:950;line-height:1}
 .pay-logo.klarna{background:#ffb3c7;color:#111}.pay-logo.apple{background:#fff;color:#000}.pay-logo.gpay{background:#fff;color:#1f1f1f}.pay-logo.card{background:#15251a;color:#dfffea;border:1px solid rgba(0,200,83,.24)}.pay-logo.stripe{background:#635bff;color:#fff}
-@media(max-width:820px){.pp-layout,.pp-assurance{grid-template-columns:1fr}}
+.pp-similar{margin-top:36px;padding-top:28px;border-top:1px solid #1d271f}
+.pp-similar h2{font-size:22px;margin:0 0 4px}
+.pp-sim-sub{color:#9eaaa2;font-size:14px;margin:0 0 16px}
+.pp-sim-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.pp-sim-card{display:flex;flex-direction:column;gap:8px;border:1px solid #223028;background:#0c120e;border-radius:10px;padding:14px;text-decoration:none;color:#edf6f1;transition:border-color .15s}
+.pp-sim-card:hover{border-color:#00C853}
+.pp-sim-card img{width:100%;aspect-ratio:1/1;object-fit:contain;background:#111712;border-radius:8px}
+.pp-sim-card strong{font-size:15px;line-height:1.3}
+.pp-sim-price{font-size:16px;font-weight:900;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.pp-sim-diff{font-size:11px;font-weight:800;border-radius:999px;padding:3px 9px;border:1px solid #2c3830;color:#cfd8d2}
+.pp-sim-diff.down{border-color:rgba(0,200,83,.4);color:#7ee2a8}
+.pp-sim-diff.up{border-color:rgba(255,138,28,.4);color:#ffd9b3}
+.pp-sim-pills{display:flex;flex-wrap:wrap;gap:6px}
+.pp-sim-pills span{border:1px solid #222c24;background:#0d120e;border-radius:999px;padding:4px 10px;font-size:12px;color:#aeb8b1}
+@media(max-width:820px){.pp-layout,.pp-assurance{grid-template-columns:1fr}.pp-sim-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -968,7 +1056,7 @@ ${JSON.stringify(breadcrumb)}
   <article><span>01</span><h2>Köp med verkstadsstöd</h2><p>Vi hjälper dig välja rätt modell, kontrollera användningsområde och planera leverans, montering eller inbyte.</p></article>
   <article><span>02</span><h2>Service efter kartongen</h2><p>Nordic E-Mobility hanterar felsökning, service, reservdelar och garantiärenden i Örebro när du behöver hjälp.</p></article>
   <article><span>03</span><h2>Riktiga regler före löften</h2><p>Kraftigare modeller kan ha begränsad trafikanvändning. Vi dubbelkollar hellre än lovar fel.</p></article>
-</div>
+</div>${similarSection(item)}
 </div></section>
 </main>
 <footer class="footer"><div class="wrap"><div><strong>Nordic E-Mobility</strong><p>Specialistverkstad för mikromobilitet och litiumbatterier i Örebro.</p></div><div><a href="/villkor/">Villkor</a><a href="/garanti/">Garanti</a><a href="/integritet/">Integritet</a><a href="/angra-kop/">Ångra köp</a></div><div><a href="/nya-elscootrar/">Nya elscootrar</a><a href="/book-online/">Boka service</a><a href="/kontakt/">Kontakt</a></div></div><div class="legal-footer" style="margin-top:16px;color:#777;font-size:12px;line-height:1.5">Nordic E-Mobility · Org.nr 880809-6658 · VAT SE880809665801 · Innehar F-skatt<br>Pistolvägen 6, 702 21 Örebro</div></footer>
