@@ -32,6 +32,22 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-29 — Claude Code — KLAR (Liknande modeller på produktsidorna)
+
+- **Branch:** `feat/similar-products-compare` (mergad till main, godkänd av
+  Sebastian). Bygger vidare på Codex NAVEE-storefront (#126) — rör bara
+  `scripts/generate-products.mjs` (nya helpers + produktsidemallen) och
+  regenererade `produkt/*`-sidor. `nya-elscootrar/index.html` orörd.
+- **Vad:** sektion "Liknande modeller" längst ner på varje /produkt/-sida:
+  3 rekommendationer på pris- + effektnärhet (parsear spec-strängen),
+  prisdiff-etikett, motor/batteri/status-pills. Dolda (`hidden`) och
+  slut/utgått/demo rekommenderas aldrig.
+- **Tester:** `npm run build` (inkl. test:voice, test:status, generator,
+  dist-verifiering) + `npm run verify:checkout-products` gröna.
+- **OBS:** `docs/NEMOB_OS_V1_PLAN.md` fortsatt untracked enligt Codex varning.
+  En parallell chip-session justerar Snabb beställning-copyn i samma
+  generatorfil (rad ~541) — regionerna överlappar inte.
+
 ### 2026-07-29 — Claude Code — PÅGÅR (KRIS: .se-domänens DNS spärrad av Strato)
 
 - **Läge:** Stratos kontospärr (27 juli, obetalda fakturor på ANDRA domäner +
