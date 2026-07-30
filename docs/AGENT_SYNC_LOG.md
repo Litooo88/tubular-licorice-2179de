@@ -32,17 +32,22 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-07-30 — Claude Code — PÅGÅR (copyfix "Snabb beställning")
+### 2026-07-30 — Claude Code — KLAR (copyfix "Snabb beställning")
 
-- **Branch:** `claude/upbeat-benz-80e165` (worktree)
-- **Gjorde:** Skriver om personalriktad copy i sektionen "Snabb beställning"
-  (`id="bestall-scooter"`) på `/nya-elscootrar/` till kundriktad, och tar bort
-  meningen om produkt-ID/Stripe. Ändras i källan
-  `scripts/generate-products.mjs` + regenererad `nya-elscootrar/index.html`.
+- **Branch:** `claude/upbeat-benz-80e165` (worktree), commit `254b595`
+- **Gjorde:** Skrev om personalriktad copy i sektionen "Snabb beställning"
+  (`id="bestall-scooter"`) på `/nya-elscootrar/` till kundriktad:
+  "Vet du redan vilken modell du vill ha? Starta köpet direkt — leverans eller
+  upphämtning i Örebro." Meningen om produkt-ID/Stripe borttagen. Ändrad i
+  källan `scripts/generate-products.mjs` + regenererad `nya-elscootrar/index.html`
+  (endast den raden diffar).
 - **Filer/områden:** `scripts/generate-products.mjs`, `nya-elscootrar/index.html`.
   Sektionen kommer från Codex `codex/navee-inspired-storefront` (PR #126).
-- **Tester:** `npm run build` + `npm run verify:checkout-products` körs före commit.
-- **Varning:** Rör inget annat i storefront-genereringen.
+- **Tester:** `npm run build` ✅, `npm run verify:checkout-products` ✅
+  (44 checkout-produkter verifierade).
+- **Nästa / överlämning:** Merge till `main` → Netlify deployar. Live-koll gjord
+  på **.com** (krisläge): sidan svarar 200; nya copyn syns efter deploy.
+- **Varning:** Inget annat i storefront-genereringen rört.
 
 ### 2026-07-29 — Claude Code — PÅGÅR (KRIS: .se-domänens DNS spärrad av Strato)
 
