@@ -32,6 +32,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-07-30 — Claude Code — KLAR (mobil-köprad + prishistorik)
+
+- **Branch:** `feat/sticky-buybar-price-history` (mergad till main på
+  Sebastians mandat). Rör `scripts/generate-products.mjs` (produktsidemallen)
+  + regenererade `produkt/*` + NY fil `data/price-history.json`.
+- **Vad:** (1) fast köprad på mobil (≤820px) på köpbara produktsidor —
+  pris + Köp nu alltid synlig; (2) prishistorik: generatorn loggar en rad
+  per prisändring/produkt i `data/price-history.json` som underlag för
+  Konsumentverkets 30-dagars jämförpris → kampanjpriser (överstrukna
+  priser i `campaignDetails`) kan återaktiveras lagligt när 30 dagar gått.
+- **Tester:** `npm run build` + `npm run verify:checkout-products` gröna;
+  köpraden verifierad live på .com.
+- **OBS:** `tmp/` och `docs/NEMOB_OS_V1_PLAN.md` medvetet INTE committade.
+  Krisläget (.se-DNS) kvarstår — se PÅGÅR-posten nedan.
+
 ### 2026-07-29 — Claude Code — KLAR (Liknande modeller på produktsidorna)
 
 - **Branch:** `feat/similar-products-compare` (mergad till main, godkänd av
