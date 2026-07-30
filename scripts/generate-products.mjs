@@ -1021,7 +1021,13 @@ ${JSON.stringify(breadcrumb)}
 .pp-sim-diff.up{border-color:rgba(255,138,28,.4);color:#ffd9b3}
 .pp-sim-pills{display:flex;flex-wrap:wrap;gap:6px}
 .pp-sim-pills span{border:1px solid #222c24;background:#0d120e;border-radius:999px;padding:4px 10px;font-size:12px;color:#aeb8b1}
-@media(max-width:820px){.pp-layout,.pp-assurance{grid-template-columns:1fr}.pp-sim-grid{grid-template-columns:1fr}}
+.pp-buybar{display:none}
+@media(max-width:820px){.pp-layout,.pp-assurance{grid-template-columns:1fr}.pp-sim-grid{grid-template-columns:1fr}
+.pp-buybar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(7,10,8,.96);border-top:1px solid #223028;backdrop-filter:blur(8px)}
+.pp-buybar strong{font-size:17px;display:block}
+.pp-buybar small{color:#9eaaa2;font-size:11px}
+.pp-buybar .btn{margin:0;white-space:nowrap}
+body:has(.pp-buybar){padding-bottom:76px}}
 </style>
 </head>
 <body>
@@ -1059,6 +1065,7 @@ ${JSON.stringify(breadcrumb)}
 </div>${similarSection(item)}
 </div></section>
 </main>
+${buyable ? `<div class="pp-buybar"><div><strong>${formatPrice(item.priceSek)}</strong><small>${escapeHtml(item.name)}</small></div><a class="btn btn-primary" href="${escapeAttr(bookingHref(item))}" data-product="${escapeAttr(item.id)}">Köp nu</a></div>` : ""}
 <footer class="footer"><div class="wrap"><div><strong>Nordic E-Mobility</strong><p>Specialistverkstad för mikromobilitet och litiumbatterier i Örebro.</p></div><div><a href="/villkor/">Villkor</a><a href="/garanti/">Garanti</a><a href="/integritet/">Integritet</a><a href="/angra-kop/">Ångra köp</a></div><div><a href="/nya-elscootrar/">Nya elscootrar</a><a href="/book-online/">Boka service</a><a href="/kontakt/">Kontakt</a></div></div><div class="legal-footer" style="margin-top:16px;color:#777;font-size:12px;line-height:1.5">Nordic E-Mobility · Org.nr 880809-6658 · VAT SE880809665801 · Innehar F-skatt<br>Pistolvägen 6, 702 21 Örebro</div></footer>
 <script>
 document.querySelectorAll('.pp-thumb').forEach((button)=>button.addEventListener('click',()=>{
@@ -1170,6 +1177,28 @@ if (
   })
 ) {
   changed.push("index.html");
+}
+
+// Prishistorik: dokumenterat underlag för framtida 30-dagars jämförpris
+// (Konsumentverkets krav för prissänkningsmarknadsföring). En rad per
+// prisändring och produkt. Uppdateras vid lokala generatorkörningar och
+// committas med övriga ändringar; Netlify-byggets skrivning är efemär.
+const historyPath = path.join(root, "data", "price-history.json");
+let priceHistory = {};
+try { priceHistory = JSON.parse(fs.readFileSync(historyPath, "utf8")); } catch {}
+const historyDate = new Date().toISOString().slice(0, 10);
+let historyChanged = false;
+for (const item of pageProducts) {
+  const entries = priceHistory[item.id] || (priceHistory[item.id] = []);
+  const last = entries[entries.length - 1];
+  if (!last || last.priceSek !== item.priceSek) {
+    entries.push({ date: historyDate, priceSek: item.priceSek });
+    historyChanged = true;
+  }
+}
+if (historyChanged) {
+  fs.writeFileSync(historyPath, `${JSON.stringify(priceHistory, null, 2)}\n`, "utf8");
+  changed.push("data/price-history.json");
 }
 
 const pagesWritten = writeProductPages();
