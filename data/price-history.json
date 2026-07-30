@@ -1,0 +1,266 @@
+{
+  "navee-ut5-ultra-x": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 23490
+    }
+  ],
+  "navee-xt5-ultra": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 16990
+    }
+  ],
+  "navee-nt5-ultra-x": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 13490
+    }
+  ],
+  "navee-xt5-pro": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 11990
+    }
+  ],
+  "navee-nt5-max": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 10990
+    }
+  ],
+  "navee-n65i": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 8499
+    }
+  ],
+  "navee-v50i-pro": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 5990
+    }
+  ],
+  "navee-g5": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 5490
+    }
+  ],
+  "navee-v25i-pro-ii": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 4490
+    }
+  ],
+  "navee-k100-max": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 3499
+    }
+  ],
+  "halo-knight-t102": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 7990
+    }
+  ],
+  "halo-knight-t104": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 8990
+    }
+  ],
+  "halo-knight-t108": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 10990
+    }
+  ],
+  "halo-knight-t107-pro": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 16990
+    }
+  ],
+  "halo-knight-t108-pro": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 17490
+    }
+  ],
+  "teverun-space-lite": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 12990
+    }
+  ],
+  "teverun-blade-mini-pro": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 14990
+    }
+  ],
+  "teverun-blade-mini-pro-ekfv": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 15490
+    }
+  ],
+  "teverun-blade-mini-ultra": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 17990
+    }
+  ],
+  "teverun-blade-mini-ultra-ekfv": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 19990
+    }
+  ],
+  "teverun-blade-gt-ii": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 24990
+    }
+  ],
+  "teverun-blade-gt-plus-ii": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 28990
+    }
+  ],
+  "teverun-fighter-mini-pro-ekfv": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 27990
+    }
+  ],
+  "teverun-fighter-mini": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 23990
+    }
+  ],
+  "teverun-fighter-mini-pro": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 26990
+    }
+  ],
+  "teverun-fighter-supreme-ultra": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 49990
+    }
+  ],
+  "teverun-fighter-eleven-plus": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 39990
+    }
+  ],
+  "teverun-supreme-7260r": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 54990
+    }
+  ],
+  "kukirin-s1-max": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 4990
+    }
+  ],
+  "kukirin-g2": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 7990
+    }
+  ],
+  "kukirin-m4-max": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 7490
+    }
+  ],
+  "kukirin-g4-special": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 9950
+    }
+  ],
+  "kukirin-g3": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 10490
+    }
+  ],
+  "kukirin-g2-max": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 10990
+    }
+  ],
+  "kukirin-g3-pro": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 18990
+    }
+  ],
+  "kukirin-g4-max": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 26990
+    }
+  ],
+  "kukirin-g2-master": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 11990
+    }
+  ],
+  "kukirin-g2-pro": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 7990
+    }
+  ],
+  "kukirin-a1": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 5995
+    }
+  ],
+  "kukirin-c1-pro-26ah": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 6995
+    }
+  ],
+  "navee-st3-pro": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 10990
+    }
+  ],
+  "navee-st5-max": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 11990
+    }
+  ],
+  "navee-st3": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 8990
+    }
+  ],
+  "nemob-testorder-100": [
+    {
+      "date": "2026-07-30",
+      "priceSek": 100
+    }
+  ]
+}
