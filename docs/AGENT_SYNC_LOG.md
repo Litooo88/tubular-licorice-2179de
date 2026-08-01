@@ -63,6 +63,21 @@ löpande "konversation".
   En parallell chip-session justerar Snabb beställning-copyn i samma
   generatorfil (rad ~541) — regionerna överlappar inte.
 
+### 2026-08-01 — Claude Code — PÅGÅR (återställning efter Loopia-flytt + DNS-luckor)
+
+- **Läge:** .se flyttad Strato→Loopia (Sebastian + ChatGPT/Codex), NS
+  ns1/ns2.loopia.se, drift verifierad globalt (lokala resolver-cachar kan
+  släpa). .com-failovern i netlify.toml är MEDVETET kvar tills
+  46elks-webhookarnas faktiska URL:er bekräftats — reverta den INTE.
+- **KRITISKA DNS-LUCKOR i Loopia-zonen** (gamla Netlify-zonen är facit och
+  finns kvar orörd i Netlify DNS-vyn): resend._domainkey TXT,
+  send.nordicemobility.se MX+SPF (Amazon SES), _dmarc TXT,
+  google-site-verification TXT, samt include:amazonses.com saknas i SPF @.
+  → Resend-utskick (bokningsbekräftelser/tackmail) och GSC-verifiering i
+  riskzonen tills posterna läggs in i Loopia.
+- **Gjort:** kampanjtaskens URL:er återställda till .se. Kvar: SITE_URL-env
+  → .se + redeploy, GBP-webbplats/bokningslänk → .se (kräver Chrome-session).
+
 ### 2026-07-29 — Claude Code — PÅGÅR (KRIS: .se-domänens DNS spärrad av Strato)
 
 - **Läge:** Stratos kontospärr (27 juli, obetalda fakturor på ANDRA domäner +
