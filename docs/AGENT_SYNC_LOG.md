@@ -63,7 +63,23 @@ löpande "konversation".
   En parallell chip-session justerar Snabb beställning-copyn i samma
   generatorfil (rad ~541) — regionerna överlappar inte.
 
-### 2026-08-01 — Claude Code — PÅGÅR (återställning efter Loopia-flytt + DNS-luckor)
+### 2026-08-01 — Claude Code — KLAR (krisåterställning genomförd, 3 DNS-poster kvar)
+
+- **Återställt:** .com-failovern i netlify.toml revertad (.com 301:ar åter
+  till .se — säkert: 46elks-webhookarna lämnade aldrig .se), SITE_URL-env →
+  https://www.nordicemobility.se + redeploy, GBP webbplats+bokningslänk →
+  .se, kampanjtaskens URL:er → .se.
+- **DNS-luckor åtgärdade i Loopia:** resend._domainkey TXT ✓, send MX
+  (feedback-smtp.eu-west-1.amazonses.com) ✓, _dmarc TXT ✓.
+- **KVAR (Loopias DNS-editor servar sidan utan JS/CSS — gruppknapparna
+  döda, går ej att lägga records på befintliga subdomäner just nu):**
+  (1) TXT send → "v=spf1 include:amazonses.com ~all",
+  (2) TXT @ → google-site-verification=xltzGBfpmikGBENyRkzHJF7f3NI_BWDy8CWKmlZENy0,
+  (3) ändra TXT @ SPF → "v=spf1 include:_spf.google.com include:amazonses.com ~all".
+  Försök igen när Loopia lagat sidan.
+- **Verifiering:** .se 200 globalt (lokala resolvrar kan släpa), Resend-DKIM
+  åter i DNS. elks-webhook-sync ska logga "unchanged" nästa tick när
+  SITE_URL-deployen är live — annars felsök.
 
 - **Läge:** .se flyttad Strato→Loopia (Sebastian + ChatGPT/Codex), NS
   ns1/ns2.loopia.se, drift verifierad globalt (lokala resolver-cachar kan
