@@ -68,7 +68,11 @@ const ctaText = (item) => {
 
 const bookingHref = (item) => `/book-online/?service=bestallning&modell=${slugModel(item.name)}`;
 
-const mainImage = (item) => item.images?.[0] || "/assets/workshop/scooter-on-bench.jpg";
+// Modeller utan leverantörsbild får en ren märkesplatta — ALDRIG det röriga
+// verkstadsfotot (såg ut som ett AI-montage på produktkorten, 2026-08-02).
+const PLACEHOLDER_IMG = "/assets/products/produktbild-pa-vag.webp";
+const PLACEHOLDER_OG = "/assets/products/produktbild-pa-vag.jpg";
+const mainImage = (item) => item.images?.[0] || PLACEHOLDER_IMG;
 
 // Begär rätt storlek från Shopify-CDN:et i stället för originalet
 // (tumnaglarna är 58px höga, kortbilderna ~210px) — stor bandbreddsbesparing.
@@ -87,7 +91,7 @@ try {
 } catch {}
 const displaySrc = (src, width) => imageMirror[src] || sizedSrc(src, width);
 const fallbackSrc = (src, width) =>
-  imageMirror[src] ? sizedSrc(src, width) : "/assets/workshop/scooter-on-bench.jpg";
+  imageMirror[src] ? sizedSrc(src, width) : PLACEHOLDER_IMG;
 
 const galleryAttr = (item) => escapeAttr(JSON.stringify((item.images || []).map((src) => imageMirror[src] || src)));
 
@@ -186,7 +190,7 @@ function refurbCard(item) {
   const legal = item.legalNote ? `<p class="product-legal">${escapeHtml(item.legalNote)}</p>` : "";
   const image = item.images?.length
     ? `<img loading="lazy" decoding="async" src="${escapeAttr(displaySrc(item.images[0], 800))}" alt="${escapeAttr(item.name)}" onerror="this.onerror=null;this.src='${escapeAttr(fallbackSrc(item.images[0], 800))}'">`
-    : `<img loading="lazy" src="/assets/workshop/scooter-on-bench.jpg" alt="Renovering pågår i verkstaden – riktiga bilder på ${escapeAttr(item.name)} publiceras när bygget är klart">`;
+    : `<img loading="lazy" src="${PLACEHOLDER_IMG}" alt="Renovering pågår i verkstaden – riktiga bilder på ${escapeAttr(item.name)} publiceras när bygget är klart">`;
   return `
         <article class="card product-card refurb-card" data-brand="${escapeAttr(item.brand)}">
           <div class="product-media">
@@ -804,7 +808,7 @@ const productSchemaJson = () => {
           "@type": "Product",
           name: item.name,
           brand: { "@type": "Brand", name: item.brand },
-          image: absUrl(item.images?.[0] || "/assets/workshop/scooter-on-bench.jpg"),
+          image: absUrl(item.images?.[0] || PLACEHOLDER_OG),
           description: item.short,
           offers: {
             "@type": "Offer",
@@ -886,7 +890,7 @@ const similarCard = (item, current) => {
   ].filter(Boolean);
   const img = displaySrc(mainImage(item), 400);
   return `<a class="pp-sim-card" href="${escapeAttr(productPagePath(item))}">
-      <img loading="lazy" decoding="async" width="400" height="400" src="${escapeAttr(img)}" alt="${escapeAttr(item.name)}" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'">
+      <img loading="lazy" decoding="async" width="400" height="400" src="${escapeAttr(img)}" alt="${escapeAttr(item.name)}" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'">
       <strong>${escapeHtml(item.name)}</strong>
       <div class="pp-sim-price">${formatPrice(item.priceSek)} <span class="pp-sim-diff${diff > 0 ? " up" : diff < 0 ? " down" : ""}">${escapeHtml(diffLabel)}</span></div>
       <div class="pp-sim-pills">${pills.map((pill) => `<span>${escapeHtml(pill)}</span>`).join("")}</div>
@@ -916,7 +920,7 @@ const productPageHtml = (item) => {
   const title = truncate(`${item.name} – ${formatPrice(item.priceSek)}`, 45);
   const description = truncate(`${item.short} Köp hos specialistverkstaden i Örebro med service efter köpet.`, 158);
   const images = (item.images || []).map((src) => displaySrc(src, 800));
-  const mainImg = images[0] || "/assets/workshop/scooter-on-bench.jpg";
+  const mainImg = images[0] || PLACEHOLDER_IMG;
   const legal = item.legality ? legalityText[item.legality] || item.legality : "";
   const specItems = String(item.spec || "").split("•").map((part) => part.trim()).filter(Boolean);
   const status = statusLabel[item.status] || item.status;
@@ -969,7 +973,7 @@ const productPageHtml = (item) => {
 <meta property="og:title" content="${escapeAttr(title)} | Nordic E-Mobility">
 <meta property="og:description" content="${escapeAttr(description)}">
 <meta property="og:url" content="${escapeAttr(url)}">
-<meta property="og:image" content="${escapeAttr(absUrl(item.images?.[0] || "/assets/workshop/scooter-on-bench.jpg"))}">
+<meta property="og:image" content="${escapeAttr(absUrl(item.images?.[0] || PLACEHOLDER_OG))}">
 <meta name="robots" content="${item.hidden ? "noindex, nofollow" : "index, follow"}">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1038,7 +1042,7 @@ body:has(.pp-buybar){padding-bottom:76px}}
 <section class="section"><div class="wrap">
 <div class="pp-layout">
   <div>
-    <div class="pp-stage"><img id="ppMainImage" src="${escapeAttr(mainImg)}" alt="${escapeAttr(item.name)}" width="800" height="800" decoding="async" onerror="this.onerror=null;this.src='/assets/workshop/scooter-on-bench.jpg'"></div>
+    <div class="pp-stage"><img id="ppMainImage" src="${escapeAttr(mainImg)}" alt="${escapeAttr(item.name)}" width="800" height="800" decoding="async" onerror="this.onerror=null;this.src='${PLACEHOLDER_IMG}'"></div>
     ${thumbs ? `<div class="pp-thumbs">${thumbs}</div>` : ""}
   </div>
   <div>
