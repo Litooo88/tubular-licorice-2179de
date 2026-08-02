@@ -43,7 +43,12 @@ export default async () => {
   if (voiceSecret) {
     desired.voice_start = `${siteUrl}/.netlify/functions/voice-simple?secret=${encodeURIComponent(voiceSecret)}`;
   }
-  desired.sms_url = `${siteUrl}/api/sms-inbound${smsSecret ? `?secret=${encodeURIComponent(smsSecret)}` : ""}`;
+  // sms_url bara om numret alls kan ta emot SMS — 010-numret är Fixed/Voice-
+  // only och 46elks svarar 403 på sms_url-uppdateringar för det (2026-08-02).
+  const capabilities = Array.isArray(numberEntry.capabilities) ? numberEntry.capabilities : [];
+  if (capabilities.includes("sms") || capabilities.includes("mms")) {
+    desired.sms_url = `${siteUrl}/api/sms-inbound${smsSecret ? `?secret=${encodeURIComponent(smsSecret)}` : ""}`;
+  }
 
   const changes = {};
   for (const [field, wanted] of Object.entries(desired)) {
