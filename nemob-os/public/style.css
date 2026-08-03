@@ -197,7 +197,9 @@ label.check input { width: auto; }
 #modal .m-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
 #modal input, #modal textarea { width: 100%; }
 
-#lookup-input { width: 100%; font-size: 16px; padding: 10px 12px; }
+#lookup-input, #batteriref-input { width: 100%; font-size: 16px; padding: 10px 12px; }
+#batteriref-banner .banner { margin-top: 8px; margin-bottom: 8px; }
+#batteriref-results { overflow-wrap: anywhere; }
 .lookup-hit .tel-link { color: var(--accent); text-decoration: none; margin-left: 8px; font-weight: 400; }
 .chip.status-ready { color: #b8f5cd; border-color: #2f7a4c; }
 .chip.status-in_progress, .chip.status-checked_in { color: #b8dcf5; border-color: #37698a; }

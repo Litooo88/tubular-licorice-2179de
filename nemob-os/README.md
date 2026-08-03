@@ -106,6 +106,18 @@ var som helst via datorns Tailscale-adress: `http://<tailscale-ip>:4571`
 enhet-till-enhet; ingen port öppnas mot internet. Windows räknar
 Tailscale-gränssnittet som privat nätverk, så brandväggsregeln ovan täcker det.
 
+## Batteripriser — intern referens
+
+Sökbar batteriprisreferens (konkurrentbaserad, 264 rader elcykel/elmoped/verktyg)
+med Nordic −10 %-kolumner, riskindikatorer, balanseringens beslutsregel
+(grönt/gult/rött) och NIU 4803-prisstegen under knappen **Beslutsstöd**.
+
+Kräver `NEMOB_BATTERIREF_PATH` i `.env` som pekar på JSON-filen i
+`F:\nemob-kunskapsbank\referens\` (genereras från Excelarket, ligger UTANFÖR
+repot). **Hårda regler, upprätthållna i kod och UI:** materialet är internt —
+bannern "inte automatisk offert" följer alltid med API-svaren, och
+konkurrentdatan får aldrig committas eller publiceras.
+
 ## Vad Nordic-integrationen är — och inte är
 
 - **Endast GET** mot briefing-endpointen. Ingen kod i `nemob-os/` kan ändra

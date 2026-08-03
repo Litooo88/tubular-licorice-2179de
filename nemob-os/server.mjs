@@ -17,6 +17,7 @@ import { generatePlan, summarizeDay } from "./lib/plan.mjs";
 import { fetchNordicBrief } from "./lib/nordic.mjs";
 import { fetchAdminCases } from "./lib/admin-cases.mjs";
 import { openCasesPrioritized, searchCases } from "./lib/lookup.mjs";
+import { banner as batterirefBanner, beslutsstod, loadBatteriref, searchRows } from "./lib/batteriref.mjs";
 import {
   CanonicalKnowledgeSource,
   RepairIntelligenceError,
@@ -274,6 +275,24 @@ const handleApi = async (req, res, url) => {
       stale: result.status === "down",
       results: openCasesPrioritized(result.cases),
     });
+  }
+
+  // Batteriprisreferens (internt material, läses utanför repot via env).
+  if (path === "/api/batteriref" && req.method === "GET") {
+    const loaded = loadBatteriref(process.env.NEMOB_BATTERIREF_PATH);
+    if (loaded.status !== "ok") return json(res, { status: loaded.status });
+    return json(res, {
+      status: "ok",
+      banner: batterirefBanner(loaded.data),
+      version: loaded.data.version,
+      results: searchRows(loaded.data, url.searchParams.get("q") || ""),
+    });
+  }
+
+  if (path === "/api/batteriref/beslutsstod" && req.method === "GET") {
+    const loaded = loadBatteriref(process.env.NEMOB_BATTERIREF_PATH);
+    if (loaded.status !== "ok") return json(res, { status: loaded.status });
+    return json(res, { status: "ok", banner: batterirefBanner(loaded.data), ...beslutsstod(loaded.data) });
   }
 
   if (path === "/api/tasks" && req.method === "GET") {

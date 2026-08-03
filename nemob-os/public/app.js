@@ -538,6 +538,87 @@ $("#btn-open-cases").addEventListener("click", async () => {
   }
 });
 
+/* ---------- Batteriprisreferens (intern) ---------- */
+
+const RISK_CHIP = {
+  "Normal referens": "",
+  "Smart/BMS – kalkyl": "status-waiting_customer",
+  "Funktionsändring": "status-blockerad",
+};
+
+const renderBatterirefStatus = (status) => {
+  if (status === "not_configured") {
+    $("#batteriref-results").innerHTML = `<div class="banner not_configured">Referensen är inte konfigurerad.
+      Sätt <strong>NEMOB_BATTERIREF_PATH</strong> i <code>nemob-os/.env</code> och starta om.</div>`;
+    return true;
+  }
+  if (status === "unreadable") {
+    $("#batteriref-results").innerHTML = `<div class="banner down">Referensfilen kunde inte läsas — kontrollera sökvägen i .env.</div>`;
+    return true;
+  }
+  return false;
+};
+
+let batterirefTimer = null;
+$("#batteriref-input").addEventListener("input", (event) => {
+  clearTimeout(batterirefTimer);
+  const query = event.target.value.trim();
+  if (query.length < 2) { $("#batteriref-results").innerHTML = ""; return; }
+  batterirefTimer = setTimeout(async () => {
+    try {
+      const data = await api(`/api/batteriref?q=${encodeURIComponent(query)}`);
+      if (renderBatterirefStatus(data.status)) return;
+      $("#batteriref-banner").innerHTML = `<div class="banner not_configured">${escapeHtml(data.banner)}</div>`;
+      if (!data.results.length) {
+        $("#batteriref-results").innerHTML = `<span class="muted">Inga träffar — diagnostisera och kalkylera separat (regel 3).</span>`;
+        return;
+      }
+      $("#batteriref-results").innerHTML = data.results.map((r) => `
+        <div class="task-row">
+          <div class="t-title">${escapeHtml(r.modell)}${r.variant ? ` <span class="small-text">${escapeHtml(r.variant)}</span>` : ""}
+            <span class="chip">${escapeHtml(r.kategori)}</span>
+            <span class="chip ${RISK_CHIP[r.risk] || "status-blockerad"}">${escapeHtml(r.risk)}</span>
+          </div>
+          <div class="t-meta">${escapeHtml(r.tjanst)}</div>
+          <div class="t-meta"><strong>Nordic-ref: ${r.nordicMin === r.nordicMax ? `${r.nordicMin} kr` : `${r.nordicMin}–${r.nordicMax} kr`}</strong>
+            · marknad ${r.bdMin === r.bdMax ? `${r.bdMin} kr` : `${r.bdMin}–${r.bdMax} kr`} · ${escapeHtml(r.status)}</div>
+        </div>`).join("");
+    } catch (error) {
+      $("#batteriref-results").innerHTML = `<div class="banner down">${escapeHtml(error.message)}</div>`;
+    }
+  }, 300);
+});
+
+$("#btn-beslutsstod").addEventListener("click", async () => {
+  try {
+    const d = await api("/api/batteriref/beslutsstod");
+    if (renderBatterirefStatus(d.status)) return;
+    const regelRows = d.balanseringsregel.map((r) => `
+      <div class="task-row">
+        <div class="t-title">${escapeHtml(r.kontroll)}</div>
+        <div class="t-meta">🟢 ${escapeHtml(r.gront)}</div>
+        <div class="t-meta">🟡 ${escapeHtml(r.gult)}</div>
+        <div class="t-meta">🔴 ${escapeHtml(r.rott)}</div>
+        <div class="t-meta"><strong>Åtgärd:</strong> ${escapeHtml(r.atgard)}</div>
+      </div>`).join("");
+    const stegeRows = (d.niu4803?.prisstege || []).map((s) => `
+      <div class="task-row">
+        <div class="t-title">Steg ${escapeHtml(String(s.steg))}: ${escapeHtml(s.atgard)}
+          <span class="chip">${s.nordicPris} kr</span></div>
+        <div class="t-meta">${escapeHtml(s.nar)}</div>
+        ${s.villkor ? `<div class="t-meta small-text">Villkor: ${escapeHtml(s.villkor)}</div>` : ""}
+      </div>`).join("");
+    $("#batteriref-results").innerHTML = `
+      <div class="banner not_configured">${escapeHtml(d.banner)}</div>
+      <div class="block"><h3>Balansering — beslutsregel (grönt/gult/rött)</h3>${regelRows}</div>
+      <div class="block"><h3>NIU 4803 — prisstege</h3>${stegeRows}
+        ${d.niu4803?.kundformulering ? `<div class="t-meta" style="margin-top:8px"><strong>Kundformulering:</strong> ${escapeHtml(d.niu4803.kundformulering)}</div>` : ""}</div>
+      <div class="block"><h3>Regler</h3><ul class="plain">${d.regler.map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul></div>`;
+  } catch (error) {
+    $("#batteriref-results").innerHTML = `<div class="banner down">${escapeHtml(error.message)}</div>`;
+  }
+});
+
 /* ---------- Toppknappar ---------- */
 
 $("#btn-regenerate").addEventListener("click", async () => {
