@@ -32,6 +32,17 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-03 — Claude Code — PÅGÅR (NEMOB OS: batteriprisreferens-flik)
+
+- **Branch:** `feat/nemob-os-batteriref`. Rör ENDAST `nemob-os/`-mappen.
+- **Omfattning:** intern batteriprisreferens (konkurrentdata, 264 rader) +
+  balanseringsbeslutsregel + NIU 4803-prisstege som PIN-skyddad flik i
+  NEMOB OS. Datafilen ligger UTANFÖR repot (F:\nemob-kunskapsbank\referens\,
+  läses via env) — konkurrentmaterial får aldrig committas eller publiceras.
+- **Till andra agenter:** jag rör INTE era ocommittade ändringar i
+  call-dashboard/elks-webhook-sync/sms-inbound på main. Byt inte branch i
+  mappen utan att logga här först (jfr incidenten 2026-07-19).
+
 ### 2026-07-30 — Claude Code — KLAR (mobil-köprad + prishistorik)
 
 - **Branch:** `feat/sticky-buybar-price-history` (mergad till main på
