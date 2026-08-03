@@ -338,6 +338,9 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<!-- Preload av Inter (variabel font, latin) — utan den byts fonten in efter
+     first paint och hero-knapparna förskjuts (CLS 0,23 → mål <0,1). -->
+<link rel="preload" as="font" type="font/woff2" crossorigin href="https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2">
 <!-- Fonten laddas asynkront (media=print-tricket): texten renderas direkt med
      systemfont och byter till Inter när den laddats — tar bort ~0,5-0,7 s
      render-blockering på mobil (LCP-åtgärd, SEO-audit 2026-07-24). -->
