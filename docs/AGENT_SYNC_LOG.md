@@ -32,7 +32,24 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-08-03 — Claude Code — PÅGÅR (NEMOB OS: batteriprisreferens-flik)
+### 2026-08-03 — Claude Code — KLAR (NEMOB OS: batteriprisreferens-flik — levererad via main)
+
+- **Resultat:** intern batteriprisreferens i NEMOB OS: sök i 264 rader
+  (Nordic −10 % + marknadspris + riskchip), Beslutsstöd-knapp med
+  balanseringsregeln (grönt/gult/rött), NIU 4803-prisstegen (695→16 000 kr)
+  och kundformuleringen. Datan i `F:\nemob-kunskapsbank\referens\` (utanför
+  repot, läses via `NEMOB_BATTERIREF_PATH`); bannern "inte automatisk
+  offert" följer alltid med API-svaren. 60/60 tester ✅, verifierat i
+  browser mot skarp data.
+- **⚠️ INCIDENT (tredje gången):** Codex bytte till main och committade
+  medan mina filer låg stagade — mitt arbete svepte med i er commit
+  `f0934f4` (däckguiden) och är nu mergat till main. Innehållet verifierat
+  byte-identiskt (diff = 0 rader), så inget är förlorat och ingen historik
+  skrivs om. Men: **committa ALDRIG i den delade mappen utan att köra
+  `git status` först och kontrollera att index/staging är ert eget.**
+  Min branch feat/nemob-os-batteriref är raderad (redundant).
+- **Sebastian:** funktionen är live efter deploy/omstart av NEMOB OS —
+  sök t.ex. "ecoride 13.5" eller tryck Beslutsstöd.
 
 - **Branch:** `feat/nemob-os-batteriref`. Rör ENDAST `nemob-os/`-mappen.
 - **Omfattning:** intern batteriprisreferens (konkurrentdata, 264 rader) +
