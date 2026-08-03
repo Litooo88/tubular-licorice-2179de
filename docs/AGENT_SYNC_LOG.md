@@ -32,17 +32,20 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-08-03 ~11:59Z — Codex — PÅGÅR (NAVEE-inspirerad storefront fas 2)
+### 2026-08-03 ~11:59Z — Codex — KLAR (NAVEE-inspirerad storefront fas 2)
 
 - **Branch:** `codex/navee-storefront-phase-2`
-- **Gör:** Bygger vidare på den mergeade NAVEE-inspirerade köpytan med små,
-  konverteringsnära förbättringar: sticky köp-/hjälprad, tydligare modellval
-  och produktsideinformation. Fokus är publik produktupplevelse, inte admin.
+- **Gjorde:** Byggde vidare på den mergeade NAVEE-inspirerade köpytan med en
+  statisk modellväljare, snabb jämförelse mellan fyra tydliga nivåer och
+  beslutshjälp på varje produktsida. Fokus är publik produktupplevelse och
+  tryggare val före checkout, inte admin.
 - **Filer/områden:** `scripts/generate-products.mjs`, genererade
-  `/nya-elscootrar/` och `/produkt/*` vid behov.
-- **Tester:** Planerat: `node --check scripts/generate-products.mjs`,
-  `npm run build`, `npm run verify:checkout-products`, `cd nemob-callflow &&
-  npm run check`.
+  `/nya-elscootrar/` och `/produkt/*`.
+- **Tester:** `node --check scripts/generate-products.mjs` ✅,
+  inline-script syntaxsmoke ✅, `npm run build` ✅,
+  `npm run verify:checkout-products` ✅, `cd nemob-callflow && npm run check`
+  ✅, lokal browser-smoke på `/nya-elscootrar/` och
+  `/produkt/navee-xt5-ultra/` ✅.
 - **Varning:** Rör inte otrackade `docs/NEMOB_OS_V1_PLAN.md` eller
   `tmp/pdfs/strato-incident/*`. Inga SMS/mail, inga production-writes, ingen
   Supabase.
