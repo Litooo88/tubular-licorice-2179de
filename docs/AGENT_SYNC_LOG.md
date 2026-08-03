@@ -32,6 +32,25 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-02 — Claude Code — KLAR (Svara RING-kanalen + däckguide + tillfälligt mobilnummer)
+
+- **Telefon:** Sebastians mobil trasig — VOICE_PRIMARY_NUMBER/VOICE_NOTIFY_TO
+  pekade redan på tillfälliga +46725751086; WORKSHOP_SMS_TO uppdaterad dit.
+- **Virtuellt SMS-nummer köpt: +46766867131** (ny action allocate_sms_number
+  i call-dashboard, idempotent — återanvänder befintligt SMS-kapabelt nummer
+  om ett finns). ELKS_SMS_NUMBER satt i Netlify env. sms-inbound och
+  replyable-avsändaren läser den (fallback ELKS_NUMBER); webhooksynken
+  håller numrets sms_url i linje med SITE_URL. Kampanjvågens schemalagda
+  task skickar nu replyable:true med RING/STOPP-copy och exkluderar
+  +46700243319 / +46725751086 / +46766867131 som mottagare.
+- **Blogg 6/12:** guider/punkteringsfria-dack-eller-tubeless/ live, kort i
+  guideöversikten, sitemap 75 URL:er. Blogg 7/12 (KuKirin G4-recension)
+  schemalagd 2026-08-04 09:00 som engångstask (blogg-kukirin-g4-recension)
+  med instruktion att följa sync-loggprotokollet.
+- **Väntar Sebastians ok:** riktat RING-utskick till 18 het-leads (11 aldrig
+  nådda + 7 kampanjöverlapp, kräver force). Torrkörning gjord, mottagarlista
+  verifierad — inget skickat ännu.
+
 ### 2026-08-03 — Claude Code — KLAR (NEMOB OS: batteriprisreferens-flik — levererad via main)
 
 - **Resultat:** intern batteriprisreferens i NEMOB OS: sök i 264 rader
