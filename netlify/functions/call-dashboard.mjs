@@ -657,6 +657,69 @@ export default async (request) => {
       return json({ ok: true, number: ourNumber, voiceStart: voiceStartUrl.replace(/secret=[^&]+/, "secret=***") });
     }
 
+    if (action === "allocate_sms_number") {
+      // Skaffar ett virtuellt SMS-kapabelt svenskt mobilnummer via 46elks och
+      // kopplar dess sms_url till sms-inbound. Godkänt av Sebastian 2026-08-02
+      // ("Behöver vi skaffa ett virtuellt mobilnummer så har du min tillåtelse").
+      // Idempotent: finns redan ett aktivt SMS-kapabelt nummer på kontot
+      // återanvänds det i stället för att köpa ett nytt.
+      const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
+      const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
+      if (!username || !password) return json({ error: "46elks API saknas i Netlify env." }, 503);
+      const authHeader = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
+      const readBody = async (response) => {
+        const text = clean(await response.text().catch(() => ""), 500);
+        try { return { text, json: JSON.parse(text) }; } catch { return { text, json: null }; }
+      };
+      const listResponse = await fetch("https://api.46elks.com/a1/numbers", {
+        headers: { Authorization: authHeader },
+        signal: AbortSignal.timeout(10000),
+      });
+      const listBody = await readBody(listResponse);
+      if (!listResponse.ok) {
+        return json({ error: `Lista nummer nekades: HTTP ${listResponse.status} ${clean(listBody.json?.error || listBody.text, 200)}` }, 502);
+      }
+      let entry = (Array.isArray(listBody.json?.data) ? listBody.json.data : []).find(
+        (item) =>
+          item.active !== "no" &&
+          Array.isArray(item.capabilities) &&
+          (item.capabilities.includes("sms") || item.capabilities.includes("mms")),
+      );
+      let allocated = false;
+      if (!entry) {
+        const createResponse = await fetch("https://api.46elks.com/a1/numbers", {
+          method: "POST",
+          headers: { Authorization: authHeader, "Content-Type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ country: "se", category: "mobile" }),
+          signal: AbortSignal.timeout(15000),
+        });
+        const createBody = await readBody(createResponse);
+        if (!createResponse.ok) {
+          return json({ error: `Nummerköp nekades av 46elks: HTTP ${createResponse.status} ${clean(createBody.json?.error || createBody.text, 300)}`, step: "allocate" }, 502);
+        }
+        entry = createBody.json;
+        allocated = true;
+      }
+      const siteUrl = (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
+      const smsSecret = clean(env("SMS_INBOUND_SECRET"), 240);
+      const smsUrl = `${siteUrl}/api/sms-inbound${smsSecret ? `?secret=${encodeURIComponent(smsSecret)}` : ""}`;
+      const updateResponse = await fetch(`https://api.46elks.com/a1/numbers/${encodeURIComponent(entry.id)}`, {
+        method: "POST",
+        headers: { Authorization: authHeader, "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({ sms_url: smsUrl }),
+        signal: AbortSignal.timeout(10000),
+      });
+      const updateBody = await readBody(updateResponse);
+      return json({
+        ok: true,
+        number: entry.number,
+        allocated,
+        smsUrlConfigured: updateResponse.ok,
+        smsUrlError: updateResponse.ok ? null : clean(updateBody.json?.error || updateBody.text, 200),
+        nextStep: `Sätt ELKS_SMS_NUMBER=${entry.number} i Netlify env och deploya om.`,
+      });
+    }
+
     if (action === "mark_inbound_handled") {
       const key = clean(body.key, 200);
       if (!key) return json({ error: "Nyckel saknas." }, 400);
@@ -712,9 +775,12 @@ export default async (request) => {
     }
     const leadStore = getStore({ name: "call-leads", consistency: "strong" });
     const currentLead = callId ? await leadStore.get(callId, { type: "json" }).catch(() => null) : null;
-    // replyable=true skickar från 010-numret så kunden kan svara (RING/STOPP
-    // landar i sms-inbound-webhooken). Annars alfanumerisk avsändare.
-    const replyFrom = body.replyable === true ? normalizePhone(env("ELKS_NUMBER") || "+46101385498") : "";
+    // replyable=true skickar från det SMS-kapabla numret så kunden kan svara
+    // (RING/STOPP landar i sms-inbound-webhooken). ELKS_SMS_NUMBER = virtuellt
+    // mobilnummer; 010-numret är Fixed och kan inte ta emot svar.
+    const replyFrom = body.replyable === true
+      ? normalizePhone(env("ELKS_SMS_NUMBER") || env("ELKS_NUMBER") || "+46101385498")
+      : "";
     const result = await postSms({ to: phone, message, from: replyFrom || undefined });
     const entry = {
       callId,
