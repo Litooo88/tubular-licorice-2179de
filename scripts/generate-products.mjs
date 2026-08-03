@@ -127,6 +127,24 @@ const specPills = (item, limit = 3) =>
     .map((part) => `<span>${escapeHtml(part)}</span>`)
     .join("");
 
+const publicProducts = () =>
+  products.filter((item) => !item.hidden && Number(item.priceSek) > 0 && item.brand !== "NEMOB");
+
+const compactModelName = (item) =>
+  item.name.replace(/^NAVEE |^KuKirin |^Teverun |^Halo Knight /, "");
+
+const jsonForInlineScript = (value) => JSON.stringify(value).replace(/</g, "\\u003c");
+
+const productBestFor = (item) => {
+  const tags = new Set(item.use || []);
+  if (tags.has("extrem-prestanda") || tags.has("dubbelmotor")) return "Hög prestanda och körning inom rätt miljö";
+  if (tags.has("premium") && tags.has("lång-rackvidd")) return "Lång räckvidd och premiumkänsla";
+  if (tags.has("komfort")) return "Komfort, stabilitet och daglig pendling";
+  if (tags.has("pendling")) return "Vardagspendling med trygg service efter köp";
+  if (tags.has("budget")) return "Prisvärd startmodell med verkstadsstöd";
+  return item.positioning || "Kund som vill få modellen kontrollerad av verkstaden";
+};
+
 function productCard(item, options = {}) {
   const images = item.images || [];
   const price = formatPrice(item.priceSek) || escapeHtml(item.priceNote || "Pris efter modell");
@@ -316,6 +334,83 @@ function modelGuideSection() {
       </section>`;
 }
 
+function fitFinderSection() {
+  const finderProducts = publicProducts()
+    .filter((item) => !["slut", "upphord", "demo-bara"].includes(item.status))
+    .map((item) => ({
+      id: item.id,
+      brand: item.brand,
+      name: item.name,
+      compactName: compactModelName(item),
+      priceSek: item.priceSek,
+      price: formatPrice(item.priceSek),
+      status: statusLabel[item.status] || item.status,
+      tags: item.use || [],
+      spec: String(item.spec || "")
+        .split("•")
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .slice(0, 3),
+      short: item.short,
+      bestFor: productBestFor(item),
+      href: productPagePath(item),
+      bookingHref: bookingHref(item),
+      image: displaySrc(mainImage(item), 500)
+    }));
+  return `
+      <section class="fit-finder" id="modellvaljaren" aria-label="Modellväljare">
+        <div class="fit-finder-head">
+          <div>
+            <span class="eyebrow">MODELLVÄLJAREN</span>
+            <h3>Få tre rimliga modeller innan du fastnar i spec-tabeller.</h3>
+          </div>
+          <p>Välj hur scootern ska användas. Vi visar ett litet urval från samma produktdata som checkout och länkar vidare till detaljer eller verkstadsfråga. Inget AI-anrop och ingen data skickas.</p>
+        </div>
+        <div class="fit-controls" role="group" aria-label="Välj användning">
+          <button type="button" class="fit-btn is-active" data-fit-profile="pendling">Pendling</button>
+          <button type="button" class="fit-btn" data-fit-profile="komfort">Komfort &amp; räckvidd</button>
+          <button type="button" class="fit-btn" data-fit-profile="budget">Prisvärd</button>
+          <button type="button" class="fit-btn" data-fit-profile="premium">Premium</button>
+          <button type="button" class="fit-btn" data-fit-profile="prestanda">Prestanda</button>
+        </div>
+        <div class="fit-result-note" id="fitResultNote" aria-live="polite"></div>
+        <div class="fit-result-grid" id="fitResultGrid"></div>
+        <script type="application/json" id="fitFinderProducts">${jsonForInlineScript(finderProducts)}</script>
+      </section>`;
+}
+
+function comparisonSection() {
+  const compareIds = ["navee-v50i-pro", "navee-n65i", "navee-xt5-ultra", "teverun-blade-mini-ultra"];
+  const compareProducts = compareIds
+    .map((id) => products.find((item) => item.id === id))
+    .filter(Boolean);
+  if (!compareProducts.length) return "";
+  return `
+      <section class="model-compare" id="jamfor-modeller" aria-label="Snabb jämförelse">
+        <div class="model-compare-head">
+          <div>
+            <span class="eyebrow">SNABB JÄMFÖRELSE</span>
+            <h3>Fyra tydliga nivåer, från smidig vardag till premium.</h3>
+          </div>
+          <p>En butikssida ska hjälpa kunden välja snabbare. Här jämför vi pris, känsla och nästa steg utan att gömma verkstadens råd.</p>
+        </div>
+        <div class="compare-grid">
+          ${compareProducts
+            .map(
+              (item) => `<article class="compare-card">
+            <span>${escapeHtml(item.brand)}</span>
+            <h4>${escapeHtml(compactModelName(item))}</h4>
+            <strong>${formatPrice(item.priceSek)}</strong>
+            <p>${escapeHtml(productBestFor(item))}</p>
+            <div class="compare-pills">${specPills(item, 2)}</div>
+            <a href="${escapeAttr(productPagePath(item))}">Se detaljer</a>
+          </article>`
+            )
+            .join("\n          ")}
+        </div>
+      </section>`;
+}
+
 function haloKnightLaunchSection() {
   const t107Pro = products.find((item) => item.id === "halo-knight-t107-pro");
   const t108Pro = products.find((item) => item.id === "halo-knight-t108-pro");
@@ -378,6 +473,28 @@ function nyaElscootrarSection() {
         .guide-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
         .guide-card{display:flex;flex-direction:column;min-height:150px;border:1px solid rgba(255,255,255,.1);border-radius:12px;background:linear-gradient(145deg,#111812,#080b09);padding:15px;text-decoration:none;color:#fff}
         .guide-card span{color:#00c853;font-size:12px;font-weight:950}.guide-card strong{font-size:18px;line-height:1.12;margin:18px 0 8px}.guide-card em{font-style:normal;color:#aeb8b1;font-size:13px;line-height:1.45}
+        .fit-finder{margin:0 0 30px;border:1px solid rgba(0,200,83,.22);border-radius:14px;background:linear-gradient(145deg,#0d150f,#060907);padding:22px}
+        .fit-finder-head,.model-compare-head{display:grid;grid-template-columns:minmax(0,.95fr) minmax(300px,1.05fr);gap:18px;align-items:end;margin-bottom:16px}
+        .fit-finder-head h3,.model-compare-head h3{font-size:32px;line-height:1.04;margin:0}.fit-finder-head p,.model-compare-head p{color:#b8c3bc;margin:0;line-height:1.6}
+        .fit-controls{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+        .fit-btn{border:1px solid #2f3a32;background:#111712;color:#cfd8d2;border-radius:999px;padding:10px 14px;font:inherit;font-size:13px;font-weight:900;cursor:pointer}
+        .fit-btn.is-active{background:#00c853;border-color:#00c853;color:#031006}
+        .fit-result-note{color:#9eaaa2;font-size:13px;margin:0 0 12px}
+        .fit-result-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+        .fit-result-card{display:grid;grid-template-columns:96px 1fr;gap:12px;align-items:center;border:1px solid rgba(255,255,255,.1);background:#0b100c;border-radius:12px;padding:12px;text-decoration:none;color:#fff}
+        .fit-result-card img{width:96px;height:96px;object-fit:contain;background:#111712;border-radius:10px}
+        .fit-result-card span{display:block;color:#8ea098;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase}
+        .fit-result-card h4{margin:3px 0 5px;font-size:17px;line-height:1.15}
+        .fit-result-card strong{display:block;color:#00c853;font-size:16px;margin-bottom:5px}
+        .fit-result-card p{margin:0;color:#b8c3bc;font-size:12px;line-height:1.45}
+        .model-compare{margin:0 0 30px;border:1px solid var(--line);border-radius:14px;background:#0b100c;padding:22px}
+        .compare-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+        .compare-card{border:1px solid rgba(255,255,255,.1);border-radius:12px;background:linear-gradient(180deg,#121813,#080b09);padding:15px}
+        .compare-card span{display:block;color:#8ea098;font-size:10px;font-weight:950;letter-spacing:.12em;text-transform:uppercase}
+        .compare-card h4{font-size:19px;line-height:1.1;margin:7px 0}.compare-card strong{display:block;color:#00c853;font-size:20px;margin-bottom:8px}
+        .compare-card p{color:#b8c3bc;font-size:13px;line-height:1.45;margin:0 0 10px}
+        .compare-pills{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}.compare-pills span{border:1px solid rgba(0,200,83,.18);background:rgba(0,200,83,.07);color:#cce8d7;border-radius:999px;padding:5px 8px;font-size:11px;font-weight:800}
+        .compare-card a{color:#7ee2a8;text-decoration:none;font-weight:900;font-size:13px}
         .catalog-intro{display:grid;grid-template-columns:1.05fr .95fr;gap:18px;margin-bottom:28px}
         .catalog-note{border:1px solid rgba(0,200,83,.22);background:rgba(0,200,83,.08);border-radius:8px;padding:18px;color:#dce8df}
         .catalog-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:14px}
@@ -466,8 +583,8 @@ function nyaElscootrarSection() {
         .catalog-modal-actions a{display:inline-flex;align-items:center;justify-content:center;min-height:42px;padding:0 18px;border-radius:6px;text-decoration:none;font-weight:900}
         .catalog-modal-actions .buy{background:#00C853;color:#021307}
         .catalog-modal-actions .ask{border:1px solid #344238;color:#fff}
-        @media(max-width:980px){.showroom-hero,.catalog-intro,.halo-launch,.model-guide-head{grid-template-columns:1fr}.showroom-trust,.guide-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.halo-launch-media{min-height:300px}.brand-row{display:block}.brand-row p{margin-top:8px}}
-        @media(max-width:620px){.showroom-copy{padding:24px}.showroom-product{min-height:auto}.showroom-trust,.showroom-minis,.guide-grid{grid-template-columns:1fr}.showroom-image img{max-height:280px}.model-guide{padding:16px}.model-guide-head h3{font-size:28px}}
+        @media(max-width:980px){.showroom-hero,.catalog-intro,.halo-launch,.model-guide-head,.fit-finder-head,.model-compare-head{grid-template-columns:1fr}.showroom-trust,.guide-grid,.fit-result-grid,.compare-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.halo-launch-media{min-height:300px}.brand-row{display:block}.brand-row p{margin-top:8px}}
+        @media(max-width:620px){.showroom-copy{padding:24px}.showroom-product{min-height:auto}.showroom-trust,.showroom-minis,.guide-grid,.fit-result-grid,.compare-grid{grid-template-columns:1fr}.showroom-image img{max-height:280px}.model-guide,.fit-finder,.model-compare{padding:16px}.model-guide-head h3,.fit-finder-head h3,.model-compare-head h3{font-size:28px}.fit-result-card{grid-template-columns:82px 1fr}.fit-result-card img{width:82px;height:82px}}
         @media(max-width:700px){.catalog-modal-body{grid-template-columns:1fr}.catalog-modal-head h3{font-size:20px}}
       </style>
       <div class="section-head">
@@ -479,6 +596,8 @@ function nyaElscootrarSection() {
       </div>
       ${storefrontHeroSection()}
       ${modelGuideSection()}
+      ${fitFinderSection()}
+      ${comparisonSection()}
       ${haloKnightLaunchSection()}
       <div class="catalog-intro">
         <div class="catalog-note">
@@ -587,6 +706,7 @@ ${orderable
       </div>
       <script>
       (()=>{const modal=document.getElementById('catalogProductModal');if(!modal)return;const title=document.getElementById('catalogModalTitle'),price=document.getElementById('catalogModalPrice'),image=document.getElementById('catalogModalImage'),summary=document.getElementById('catalogModalSummary'),details=document.getElementById('catalogModalDetails'),thumbs=document.getElementById('catalogModalThumbs'),buy=document.getElementById('catalogModalBuy');let gallery=[],galleryIndex=0;function render(){if(!gallery.length)return;image.src=gallery[galleryIndex];thumbs.innerHTML=gallery.map((src,index)=>\`<button type="button" class="\${index===galleryIndex?'is-active':''}" aria-label="Visa bild \${index+1}"><img src="\${src}" alt=""></button>\`).join('');thumbs.querySelectorAll('button').forEach((button,index)=>button.addEventListener('click',()=>{galleryIndex=index;render()}))}function info(card){const name=card.querySelector('h3')?.textContent.trim()||'Produkt';const priceText=card.querySelector('.price')?.textContent.trim()||'Kontakta oss';const spec=card.querySelector('.spec')?.textContent.trim()||'Specifikation saknas.';const copy=card.querySelector('.copy')?.textContent.trim()||'Kontakta verkstaden om du vill veta om modellen passar din körning och lokala regler.';const stock=card.querySelector('.stock-copy')?.textContent.trim()||card.querySelector('.product-meta span:last-child')?.textContent.trim()||'';const legal=card.querySelector('.product-legal')?.textContent.trim()||'';const img=card.querySelector('.product-media img');const link=card.querySelector('.card-actions a[data-product], .card-actions a');let images=[];try{if(card.dataset.gallery)images=JSON.parse(card.dataset.gallery)}catch{}if(!images.length&&img?.src)images=[img.getAttribute('src')];return {name,priceText,spec,copy,stock,legal,imgAlt:img?.alt||name,href:link?.href||'/book-online/',productId:link?.dataset.product||'',cta:link?.textContent.trim()||'Köp nu',images}}function open(card){const item=info(card);title.textContent=item.name;price.textContent=item.priceText;summary.textContent=item.copy;gallery=item.images;galleryIndex=0;image.alt=item.imgAlt;render();details.innerHTML=[\`<li><strong>Specifikation</strong>\${item.spec}</li>\`,\`<li><strong>Status / leverans</strong>\${item.stock}</li>\`,item.legal?\`<li style="border-color:rgba(255,138,28,.5);color:#ffd9b3"><strong>Användning</strong>\${item.legal}</li>\`:'',\`<li><strong>Nästa steg</strong>Köp direkt i checkout eller skicka fråga om du vill kontrollera modell, regler, inbyte eller leverans först.</li>\`].filter(Boolean).join('');buy.href=item.href;buy.textContent=item.cta;if(item.productId){buy.dataset.product=item.productId}else{delete buy.dataset.product}const more=document.getElementById('catalogModalMore');if(more){if(card.dataset.url){more.href=card.dataset.url;more.style.display=''}else{more.style.display='none'}}modal.classList.add('is-open');modal.setAttribute('aria-hidden','false');modal.querySelector('.catalog-modal-close').focus()}function close(){modal.classList.remove('is-open');modal.setAttribute('aria-hidden','true')}document.querySelectorAll('.product-card').forEach((card)=>{card.querySelectorAll('[data-open-product]').forEach((trigger)=>trigger.addEventListener('click',(event)=>{event.preventDefault();open(card)}));});modal.querySelector('.catalog-modal-close').addEventListener('click',close);modal.querySelector('.catalog-modal-prev').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex-1+gallery.length)%gallery.length;render()});modal.querySelector('.catalog-modal-next').addEventListener('click',()=>{if(!gallery.length)return;galleryIndex=(galleryIndex+1)%gallery.length;render()});modal.addEventListener('click',(event)=>{if(event.target===modal)close()});document.addEventListener('keydown',(event)=>{if(event.key==='Escape'&&modal.classList.contains('is-open'))close()})})();
+      (()=>{const dataEl=document.getElementById('fitFinderProducts'),grid=document.getElementById('fitResultGrid'),note=document.getElementById('fitResultNote');if(!dataEl||!grid)return;let products=[];try{products=JSON.parse(dataEl.textContent||'[]')}catch{}const esc=(value)=>String(value??'').replace(/[&<>"']/g,(char)=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));const rules={pendling:{label:'pendling',tags:['pendling','vardag'],max:13000},komfort:{label:'komfort och räckvidd',tags:['komfort','lång-rackvidd','premium'],max:22000},budget:{label:'prisvärd modell',tags:['budget','vardag'],max:8500},premium:{label:'premiumkänsla',tags:['premium','komfort','lång-rackvidd'],min:10000},prestanda:{label:'prestanda',tags:['prestanda','dubbelmotor','extrem-prestanda','premium'],min:9000}};function score(item,rule){const tags=item.tags||[];let points=0;rule.tags.forEach((tag)=>{if(tags.includes(tag))points+=4});if(item.status==='EU-LAGER')points+=2;if(rule.max&&item.priceSek<=rule.max)points+=2;if(rule.min&&item.priceSek>=rule.min)points+=1;if(item.brand==='NAVEE'&&['pendling','komfort','budget'].includes(rule.label))points+=1;return points}function render(profile='pendling'){const rule=rules[profile]||rules.pendling;const picks=products.map((item)=>({...item,matchScore:score(item,rule)})).filter((item)=>item.matchScore>0).sort((a,b)=>b.matchScore-a.matchScore||a.priceSek-b.priceSek).slice(0,3);if(note)note.textContent=picks.length?'Visar '+picks.length+' matchningar för '+rule.label+'. Slutligt val bör alltid kontrolleras mot regler, vikt, räckvidd och hur du kör.':'Ingen tydlig matchning hittades. Fråga verkstaden så hjälper vi dig välja.';grid.innerHTML=picks.map((item,index)=>\`<a class="fit-result-card" href="\${esc(item.href)}"><img loading="lazy" decoding="async" width="160" height="160" src="\${esc(item.image)}" alt="\${esc(item.name)}"><div><span>\${index===0?'Bästa match':'Alternativ '+(index+1)} · \${esc(item.brand)}</span><h4>\${esc(item.compactName)}</h4><strong>\${esc(item.price)}</strong><p>\${esc(item.bestFor)}</p></div></a>\`).join('')}document.querySelectorAll('.fit-btn').forEach((button)=>button.addEventListener('click',()=>{document.querySelectorAll('.fit-btn').forEach((other)=>other.classList.toggle('is-active',other===button));render(button.dataset.fitProfile)}));render();})();
       (()=>{const bar=document.querySelector('.catalog-filter');if(!bar)return;
       const countEl=document.getElementById('filterCount');
       const stockToggle=document.getElementById('filterInStock');
@@ -915,6 +1035,50 @@ const truncate = (value, max) => {
   return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
 };
 
+const productDecisionBullets = (item) => {
+  const tags = new Set(item.use || []);
+  const bullets = [];
+  if (tags.has("pendling") || tags.has("vardag")) {
+    bullets.push("du vill ha en modell för återkommande vardagskörning och enkel servicekontakt efter köpet");
+  }
+  if (tags.has("komfort") || tags.has("lång-rackvidd")) {
+    bullets.push("komfort, stabil känsla och längre turer väger tyngre än lägsta möjliga pris");
+  }
+  if (tags.has("budget")) {
+    bullets.push("du vill hålla köppriset nere men ändå köpa genom en verkstad som kan hjälpa dig vidare");
+  }
+  if (tags.has("premium") || tags.has("prestanda") || tags.has("extrem-prestanda")) {
+    bullets.push("du prioriterar mer kapacitet och vill dubbelkolla användning, regler och servicebehov innan köp");
+  }
+  if (!bullets.length) bullets.push("du vill få modellen kontrollerad mot dina behov innan du bestämmer dig");
+  return bullets.slice(0, 3);
+};
+
+const productDecisionSection = (item) => {
+  const bullets = productDecisionBullets(item);
+  const caveat = item.legality
+    ? "Den här modellen bör alltid kontrolleras mot regler och tänkt användning innan köp."
+    : "Osäker på räckvidd, vikt eller användning? Fråga verkstaden innan du köper.";
+  return `
+<section class="pp-decision" aria-labelledby="pp-decision-title">
+  <div>
+    <span class="eyebrow">BESLUTSHJÄLP</span>
+    <h2 id="pp-decision-title">Passar ${escapeHtml(item.name)} dig?</h2>
+    <p>${escapeHtml(item.short)}</p>
+  </div>
+  <div>
+    <ul>
+      ${bullets.map((bullet) => `<li>Passar om ${escapeHtml(bullet)}.</li>`).join("\n      ")}
+      <li>${escapeHtml(caveat)}</li>
+    </ul>
+    <div class="pp-decision-actions">
+      <a href="/nya-elscootrar/#modellvaljaren">Jämför med modellväljaren</a>
+      <a href="${escapeAttr(bookingHref(item))}">Fråga verkstaden</a>
+    </div>
+  </div>
+</section>`;
+};
+
 const productPageHtml = (item) => {
   const url = `${SITE_ORIGIN}${productPagePath(item)}`;
   const title = truncate(`${item.name} – ${formatPrice(item.priceSek)}`, 45);
@@ -1008,6 +1172,10 @@ ${JSON.stringify(breadcrumb)}
 .pp-assurance article{border:1px solid #223028;background:#0c120e;border-radius:10px;padding:16px}
 .pp-assurance span{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:999px;background:rgba(0,200,83,.14);color:#7ee2a8;font-size:12px;font-weight:950;margin-bottom:10px}
 .pp-assurance h2{font-size:18px;line-height:1.1;margin:0 0 7px}.pp-assurance p{color:#aeb8b1;font-size:13px;line-height:1.55;margin:0}
+.pp-decision{display:grid;grid-template-columns:minmax(0,.92fr) minmax(300px,1.08fr);gap:22px;margin-top:28px;border:1px solid rgba(0,200,83,.22);background:linear-gradient(145deg,#0d150f,#060907);border-radius:12px;padding:20px}
+.pp-decision h2{font-size:24px;line-height:1.08;margin:4px 0 10px}.pp-decision p{color:#b8c3bc;line-height:1.6;margin:0}
+.pp-decision ul{margin:0;padding:0;display:grid;gap:8px}.pp-decision li{list-style:none;border:1px solid #223028;background:#0c120e;border-radius:9px;padding:10px 12px;color:#d7ddd9;font-size:14px;line-height:1.45}
+.pp-decision-actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:14px}.pp-decision-actions a{border:1px solid #344238;border-radius:999px;padding:9px 12px;text-decoration:none;color:#fff;font-size:13px;font-weight:900}.pp-decision-actions a:first-child{background:#00C853;border-color:#00C853;color:#031006}
 .payment-methods{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0}
 .pay-logo{display:inline-flex;align-items:center;justify-content:center;min-height:24px;border-radius:5px;padding:4px 7px;background:#f4f6f5;color:#071008;font-size:11px;font-weight:950;line-height:1}
 .pay-logo.klarna{background:#ffb3c7;color:#111}.pay-logo.apple{background:#fff;color:#000}.pay-logo.gpay{background:#fff;color:#1f1f1f}.pay-logo.card{background:#15251a;color:#dfffea;border:1px solid rgba(0,200,83,.24)}.pay-logo.stripe{background:#635bff;color:#fff}
@@ -1026,7 +1194,7 @@ ${JSON.stringify(breadcrumb)}
 .pp-sim-pills{display:flex;flex-wrap:wrap;gap:6px}
 .pp-sim-pills span{border:1px solid #222c24;background:#0d120e;border-radius:999px;padding:4px 10px;font-size:12px;color:#aeb8b1}
 .pp-buybar{display:none}
-@media(max-width:820px){.pp-layout,.pp-assurance{grid-template-columns:1fr}.pp-sim-grid{grid-template-columns:1fr}
+@media(max-width:820px){.pp-layout,.pp-assurance,.pp-decision{grid-template-columns:1fr}.pp-sim-grid{grid-template-columns:1fr}
 .pp-buybar{position:fixed;left:0;right:0;bottom:0;z-index:60;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:10px 14px calc(10px + env(safe-area-inset-bottom));background:rgba(7,10,8,.96);border-top:1px solid #223028;backdrop-filter:blur(8px)}
 .pp-buybar strong{font-size:17px;display:block}
 .pp-buybar small{color:#9eaaa2;font-size:11px}
@@ -1066,7 +1234,7 @@ body:has(.pp-buybar){padding-bottom:76px}}
   <article><span>01</span><h2>Köp med verkstadsstöd</h2><p>Vi hjälper dig välja rätt modell, kontrollera användningsområde och planera leverans, montering eller inbyte.</p></article>
   <article><span>02</span><h2>Service efter kartongen</h2><p>Nordic E-Mobility hanterar felsökning, service, reservdelar och garantiärenden i Örebro när du behöver hjälp.</p></article>
   <article><span>03</span><h2>Riktiga regler före löften</h2><p>Kraftigare modeller kan ha begränsad trafikanvändning. Vi dubbelkollar hellre än lovar fel.</p></article>
-</div>${similarSection(item)}
+</div>${productDecisionSection(item)}${similarSection(item)}
 </div></section>
 </main>
 ${buyable ? `<div class="pp-buybar"><div><strong>${formatPrice(item.priceSek)}</strong><small>${escapeHtml(item.name)}</small></div><a class="btn btn-primary" href="${escapeAttr(bookingHref(item))}" data-product="${escapeAttr(item.id)}">Köp nu</a></div>` : ""}
