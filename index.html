@@ -348,7 +348,10 @@
 <noscript><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"></noscript>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',sans-serif;background:#000;color:#fff;overflow-x:hidden}
+/* Metrik-matchad reservfont: Arial justerad till Inters mått så att det sena
+   fontbytet (asynk CSS) inte förskjuter layouten (CLS-fix, hero-choices). */
+@font-face{font-family:'Inter Fallback';src:local('Arial');size-adjust:107%;ascent-override:90.44%;descent-override:22.52%;line-gap-override:0%}
+body{font-family:'Inter','Inter Fallback',sans-serif;background:#000;color:#fff;overflow-x:hidden}
 .container{max-width:1200px;margin:0 auto;padding:0 24px}
 .accent{color:#00C853}
 .btn-primary{display:inline-flex;align-items:center;gap:10px;background:#00C853;color:#000;font-weight:700;font-size:17px;padding:16px 36px;border-radius:8px;border:none;cursor:pointer;text-decoration:none;transition:all .2s}
