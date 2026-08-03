@@ -24,7 +24,10 @@ const normalizePhone = (phone) => {
   return compact.length >= 7 ? `+46${compact}` : "";
 };
 
-const OUR_NUMBER = () => normalizePhone(env("ELKS_NUMBER") || "+46101385498");
+// ELKS_SMS_NUMBER = det virtuella SMS-kapabla mobilnumret (010-numret är
+// Fixed/Voice-only och kan aldrig ta emot SMS). Faller tillbaka på
+// ELKS_NUMBER för bakåtkompatibilitet tills env-varn är satt.
+const OUR_NUMBER = () => normalizePhone(env("ELKS_SMS_NUMBER") || env("ELKS_NUMBER") || "+46101385498");
 
 const postSms = async ({ to, message }) => {
   const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");

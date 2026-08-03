@@ -50,6 +50,28 @@ export default async () => {
     desired.sms_url = `${siteUrl}/api/sms-inbound${smsSecret ? `?secret=${encodeURIComponent(smsSecret)}` : ""}`;
   }
 
+  // Det virtuella SMS-numret (ELKS_SMS_NUMBER) synkas separat: bara sms_url.
+  const smsNumber = normalizePhone(env("ELKS_SMS_NUMBER"));
+  const smsEntry = smsNumber
+    ? (Array.isArray(listBody?.data) ? listBody.data : []).find(
+        (item) => normalizePhone(item.number) === smsNumber && item.active !== "no",
+      )
+    : null;
+  const desiredSmsUrl = `${siteUrl}/api/sms-inbound${smsSecret ? `?secret=${encodeURIComponent(smsSecret)}` : ""}`;
+  if (smsEntry && (smsEntry.sms_url || "") !== desiredSmsUrl) {
+    const smsUpdate = await fetch(`https://api.46elks.com/a1/numbers/${encodeURIComponent(smsEntry.id)}`, {
+      method: "POST",
+      headers: { Authorization: authHeader, "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({ sms_url: desiredSmsUrl }),
+      signal: AbortSignal.timeout(10000),
+    }).catch(() => null);
+    console.log(
+      smsUpdate?.ok
+        ? `elks-webhook-sync: sms_url på ${smsNumber} ompekad till ${new URL(siteUrl).host}.`
+        : `elks-webhook-sync: sms_url-uppdatering på ${smsNumber} nekades (HTTP ${smsUpdate?.status || "nätfel"}).`,
+    );
+  }
+
   const changes = {};
   for (const [field, wanted] of Object.entries(desired)) {
     if ((numberEntry[field] || "") !== wanted) changes[field] = wanted;
