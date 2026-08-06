@@ -151,10 +151,20 @@ export default async (request, context) => {
   try {
     const store = getStore({ name: "workshop-cases" });
     const { blobs } = await store.list();
+    // Parallell hämtning i batchar. Den gamla sekventiella loopen tog
+    // >10 s när ärendemängden växte (125+ öppna) och fick funktionen att
+    // slå i Netlifys timeout — dashboarden såg källan som nere.
     const cases = [];
-    for (const blob of blobs) {
-      const item = await store.get(blob.key, { type: "json" }).catch(() => null);
-      if (item && typeof item === "object") cases.push(item);
+    const BATCH_SIZE = 25;
+    for (let start = 0; start < blobs.length; start += BATCH_SIZE) {
+      const batch = await Promise.all(
+        blobs.slice(start, start + BATCH_SIZE).map((blob) =>
+          store.get(blob.key, { type: "json" }).catch(() => null),
+        ),
+      );
+      for (const item of batch) {
+        if (item && typeof item === "object") cases.push(item);
+      }
     }
     return json(buildBriefData(cases));
   } catch (error) {
