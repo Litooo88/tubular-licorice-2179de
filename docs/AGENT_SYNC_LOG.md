@@ -32,16 +32,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-08-06 — Codex — PÅGÅR (next action per ärende)
+### 2026-08-06 — Codex — KLAR (next action per ärende)
 
 - **Branch:** `codex/nemob-strategic-implementation-plan`
-- **Gör:** Fortsätter från strategiplanen med ett litet operativt steg:
+- **Gjorde:** Fortsatte från strategiplanen med ett litet operativt steg:
   bakåtkompatibla fält för nästa åtgärd på kundärenden och minimal visning i
   admin.
 - **Filer/områden:** `admin/index.html`, `netlify/functions/workshop-cases.mjs`,
   denna sync-logg. Rör inte `.claude/launch.json` eller otrackade tempfiler.
-- **Tester:** `node --check` på ändrade JS/MJS, `npm run build`,
-  `npm run verify:checkout-products`, `cd nemob-callflow && npm run check`.
+- **Tester:** `node --check netlify/functions/workshop-cases.mjs` ✅,
+  inline-script parse för `admin/index.html` ✅, `git diff --check` ✅,
+  `npm run build` ✅, `npm run verify:checkout-products` ✅,
+  `cd nemob-callflow && npm run check` ✅.
+- **Resultat:** Admin har nu filterbar KPI `Saknar nästa steg`, kundkort visar
+  `Nästa åtgärd`, datum och riskflaggor, och `/api/cases` sparar optional
+  `nextAction`, `nextActionDate` och normaliserade `riskFlags` utan migration.
 - **Varning:** Inga SMS/mail, inga production-writes utöver normal admin-PATCH
   när en människa sparar ett ärende, ingen Supabase.
 
