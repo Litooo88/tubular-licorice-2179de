@@ -32,6 +32,19 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-06 — Codex — PÅGÅR (strategisk genomförandeplan)
+
+- **Branch:** `codex/nemob-strategic-implementation-plan`
+- **Gör:** Skapar en tydlig, repo-buren genomförandeplan för hur PDF:ens
+  Repair Case-/servicemottagarstrategi införs i små PR:ar och hur publika
+  sidan uppdateras löpande från verklig verkstadsdata.
+- **Filer/områden:** Nytt dokument `docs/NEMOB_STRATEGIC_IMPLEMENTATION_PLAN.md`
+  och denna sync-logg. Inga admin-/booking-/API-ändringar i detta första steg.
+- **Tester:** Docs-only; kör diff-/markdownkontroll. Ingen build planeras om
+  endast dokumentation ändras.
+- **Varning:** Rör inte otrackade `docs/NEMOB_OS_V1_PLAN.md` eller
+  `tmp/pdfs/*`. Inga SMS/mail, inga production-writes, ingen Supabase.
+
 ### 2026-08-03 ~11:59Z — Codex — KLAR (NAVEE-inspirerad storefront fas 2)
 
 - **Branch:** `codex/navee-storefront-phase-2`
