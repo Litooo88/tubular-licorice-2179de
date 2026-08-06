@@ -32,16 +32,18 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-08-06 — Codex — PÅGÅR (strategisk genomförandeplan)
+### 2026-08-06 — Codex — KLAR (strategisk genomförandeplan)
 
 - **Branch:** `codex/nemob-strategic-implementation-plan`
-- **Gör:** Skapar en tydlig, repo-buren genomförandeplan för hur PDF:ens
+- **Gjorde:** Skapade en tydlig, repo-buren genomförandeplan för hur PDF:ens
   Repair Case-/servicemottagarstrategi införs i små PR:ar och hur publika
   sidan uppdateras löpande från verklig verkstadsdata.
 - **Filer/områden:** Nytt dokument `docs/NEMOB_STRATEGIC_IMPLEMENTATION_PLAN.md`
   och denna sync-logg. Inga admin-/booking-/API-ändringar i detta första steg.
-- **Tester:** Docs-only; kör diff-/markdownkontroll. Ingen build planeras om
-  endast dokumentation ändras.
+- **Tester:** `git diff --check` ✅. Docs-only, därför ingen build.
+- **Resultat:** Planen bryter ned strategin i små PR:ar: admin truth model,
+  `/api/cases` som primär brief-källa, nästa åtgärd per case, intake A/B/C,
+  godkända svarblock, WIP-läge och löpande webbuppdatering från verkliga case.
 - **Varning:** Rör inte otrackade `docs/NEMOB_OS_V1_PLAN.md` eller
   `tmp/pdfs/*`. Inga SMS/mail, inga production-writes, ingen Supabase.
 
