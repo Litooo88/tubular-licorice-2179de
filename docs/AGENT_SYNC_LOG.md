@@ -32,6 +32,19 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-06 — Codex — PÅGÅR (next action per ärende)
+
+- **Branch:** `codex/nemob-strategic-implementation-plan`
+- **Gör:** Fortsätter från strategiplanen med ett litet operativt steg:
+  bakåtkompatibla fält för nästa åtgärd på kundärenden och minimal visning i
+  admin.
+- **Filer/områden:** `admin/index.html`, `netlify/functions/workshop-cases.mjs`,
+  denna sync-logg. Rör inte `.claude/launch.json` eller otrackade tempfiler.
+- **Tester:** `node --check` på ändrade JS/MJS, `npm run build`,
+  `npm run verify:checkout-products`, `cd nemob-callflow && npm run check`.
+- **Varning:** Inga SMS/mail, inga production-writes utöver normal admin-PATCH
+  när en människa sparar ett ärende, ingen Supabase.
+
 ### 2026-08-06 — Codex — KLAR (strategisk genomförandeplan)
 
 - **Branch:** `codex/nemob-strategic-implementation-plan`
