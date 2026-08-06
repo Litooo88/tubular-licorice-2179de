@@ -224,6 +224,13 @@ button.stat.is-filtering{border-color:#00c853;outline:1px solid rgba(0,200,83,.5
 .customer-line{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0 12px}
 .customer-chip{display:inline-flex;align-items:center;gap:6px;border:1px solid #2b342d;border-radius:999px;padding:5px 9px;background:#0a0f0a;color:#dce5de;font-size:12px;font-weight:800}
 .customer-chip strong{color:#fff}
+.next-action-box{border:1px solid #2f3a32;border-radius:10px;background:#071008;padding:10px 12px;margin:0 0 10px;color:#eaf3ed}
+.next-action-box.is-due{border-color:#caa24a;background:rgba(202,162,74,.11)}
+.next-action-box strong{display:block;color:#baffcf;margin-bottom:3px}
+.next-action-box small{display:block;color:#aeb8b0;line-height:1.45;margin-top:4px}
+.risk-flag-list{display:flex;flex-wrap:wrap;gap:5px;margin-top:6px}
+.risk-flag{display:inline-flex;border:1px solid rgba(255,194,71,.35);border-radius:999px;padding:3px 7px;background:rgba(255,194,71,.08);color:#ffe0a3;font-size:11px;font-weight:900}
+.next-action-input-help{display:block;color:#8f9a92;font-size:12px;line-height:1.45;margin-top:4px}
 .badge{display:inline-flex;border-radius:999px;background:rgba(0,200,83,.12);border:1px solid rgba(0,200,83,.3);color:#aaffc6;font-size:11px;font-weight:900;padding:3px 8px;white-space:nowrap}
 .badge.warn{background:rgba(255,194,71,.12);border-color:rgba(255,194,71,.35);color:#ffe0a3}
 .meta{font-size:13px;color:#c5ccc7;line-height:1.5;margin:8px 0}
@@ -388,6 +395,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   <section class="stats operational-kpis" id="operationalKpis">
     <button type="button" class="panel stat" data-ops-filter="doNow" title="&Ouml;ppna &auml;renden med minst en &aring;tg&auml;rdsflagga. Klicka f&ouml;r att visa exakt dessa i listan nedan."><span>G&ouml;r nu</span><b id="doNowTotal">0</b></button>
     <button type="button" class="panel stat" data-ops-filter="newUnconfirmed" title="Nya bokningar d&auml;r kundens bekr&auml;ftelse (SMS/mail) inte kunnat verifieras som levererad. Klicka f&ouml;r att visa dem."><span>Nya utan bekr&auml;ftelse</span><b id="unconfirmedTotal">0</b></button>
+    <button type="button" class="panel stat" data-ops-filter="missingNextAction" title="&Ouml;ppna &auml;renden d&auml;r ingen konkret n&auml;sta &aring;tg&auml;rd &auml;r satt. Klicka f&ouml;r att triagera dem."><span>Saknar n&auml;sta steg</span><b id="missingNextActionTotal">0</b></button>
     <button type="button" class="panel stat" data-ops-filter="waitingCustomer" title="&Auml;renden med status V&auml;ntar kund. Klicka f&ouml;r att visa dem."><span>V&auml;ntar kund</span><b id="waitingCustomerTotal">0</b></button>
     <button type="button" class="panel stat" data-ops-filter="waitingParts" title="&Auml;renden med status V&auml;ntar delar. Klicka f&ouml;r att visa dem."><span>V&auml;ntar del</span><b id="waitingPartsTotal">0</b></button>
     <button type="button" class="panel stat" data-ops-filter="readyPickup" title="Status Klar d&auml;r klarbesked till kunden inte skickats &auml;n. Klicka f&ouml;r att visa dem."><span>Klara att h&auml;mta</span><b id="readyPickupTotal">0</b></button>
@@ -400,6 +408,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <ul>
       <li><strong>G&ouml;r nu</strong> — &ouml;ppna &auml;renden med minst en &aring;tg&auml;rdsflagga (flaggan syns i Prio-kolumnen i listan).</li>
       <li><strong>Nya utan bekr&auml;ftelse</strong> — nya bokningar d&auml;r bekr&auml;ftelsen till kund inte verifierats levererad; f&ouml;lj upp manuellt.</li>
+      <li><strong>Saknar n&auml;sta steg</strong> — &ouml;ppna &auml;renden utan ett sparat f&auml;lt f&ouml;r n&auml;sta konkreta &aring;tg&auml;rd.</li>
       <li><strong>V&auml;ntar kund / V&auml;ntar del</strong> — &auml;renden i respektive status.</li>
       <li><strong>Klara att h&auml;mta</strong> — status Klar men klarbeskedet till kunden &auml;r inte skickat.</li>
       <li><strong>Klara att fakturera/betala</strong> — f&auml;rdigt arbete med belopp &ouml;ver 0 kr (eller status Klar/Klar f&ouml;r faktura) som inte betalats/fakturerats. Bokningar som bara ligger nya r&auml;knas inte.</li>
@@ -630,6 +639,20 @@ const columns=[
   {key:'ready',title:'Klara / avsluta',statuses:['ready','done']}
 ];
 const statusLabels={new:'Ny',contacted:'Kontaktad',checked_in:'Inl&auml;mnad',diagnosing:'Diagnos',repairing:'Reparerar',waiting_parts:'V&auml;ntar delar',waiting_customer:'V&auml;ntar kund',ready:'Klar',done:'Avslutad',archived:'Arkiverad'};
+const riskFlagLabels={
+  battery:'Batteri',
+  complaint:'Reklamation',
+  angry_customer:'Missn\u00f6jd kund',
+  price_over_995:'Pris \u00f6ver 995 kr',
+  discount:'Rabatt',
+  warranty:'Garanti',
+  legal:'Juridiskt/ansvar',
+  parts_over_500:'Reservdel \u00f6ver 500 kr',
+  promise_risk:'L\u00f6fte/skuld-risk',
+  fire_or_short:'Brand/kortslutning',
+  stale:'St\u00e5tt stilla',
+  other:'Annan risk'
+};
 const paymentStatusLabels={unpaid:'Ej betald',invoice_ready:'Klar f&ouml;r faktura',invoiced:'Fakturerad',paid:'Betald'};
 const paymentMethodLabels={swish:'Swish',card:'Kort',cash:'Kontant',invoice:'Faktura',bank:'Bank',other:'Annat'};
 const contentStatusLabels={draft:'Utkast',review:'F&ouml;r granskning',ready:'Redo att publicera',published:'Publicerat'};
@@ -1265,6 +1288,38 @@ function caseHasMissingModel(item){
   const model=String(item&&item.vehicle&&item.vehicle.model||'').trim();
   return !model||/^ok\u00e4nd|^okand|^test$/i.test(model);
 }
+function riskFlagsFor(item){
+  const raw=item&&item.riskFlags;
+  if(Array.isArray(raw))return [...new Set(raw.map((flag)=>String(flag||'').trim()).filter(Boolean))];
+  return String(raw||'').split(/[,\n;]/).map((flag)=>flag.trim()).filter(Boolean);
+}
+function riskFlagLabel(flag){
+  return riskFlagLabels[flag]||String(flag||'').replace(/[_-]+/g,' ');
+}
+function riskFlagsHtml(item){
+  const flags=riskFlagsFor(item);
+  if(!flags.length)return '';
+  return `<div class="risk-flag-list">${flags.map((flag)=>`<span class="risk-flag">${html(riskFlagLabel(flag))}</span>`).join('')}</div>`;
+}
+function nextActionTime(item){
+  const raw=String(item&&item.nextActionDate||'').trim();
+  if(!raw)return 0;
+  const time=new Date(raw).getTime();
+  return Number.isFinite(time)?time:0;
+}
+function hasNextActionDue(item){
+  if(!item||isCaseClosed(item)||!String(item.nextAction||'').trim())return false;
+  const time=nextActionTime(item);
+  if(!time)return false;
+  const endOfToday=new Date();
+  endOfToday.setHours(23,59,59,999);
+  return time<=endOfToday.getTime();
+}
+function nextActionDisplay(item){
+  const action=String(item&&item.nextAction||'').trim();
+  const due=item&&item.nextActionDate?dateShort(item.nextActionDate):'Datum saknas';
+  return action?`${action} (${due})`:'Saknas';
+}
 function isCaseStale(item){
   // "Stått stilla" gäller pågående verkstadsarbete — inte nya leads (de
   // fångas av "Ny utan bekräftelse") och inte kunder vi väntar svar från.
@@ -1273,6 +1328,7 @@ function isCaseStale(item){
   return updated?Date.now()-updated>48*60*60*1000:false;
 }
 function isHighRiskCase(item){
+  if(riskFlagsFor(item).length)return true;
   const text=[
     item&&item.priority,
     item&&item.service,
@@ -1321,6 +1377,7 @@ function matchedMissedCallCaseIds(){
 function operationalReasons(item){
   if(!item||isCaseClosed(item))return[];
   const reasons=[];
+  if(hasNextActionDue(item))reasons.push('N\u00e4sta \u00e5tg\u00e4rd idag/f\u00f6rsenad');
   if(isNewWithoutConfirmation(item))reasons.push('Ny utan bekr\u00e4ftelse');
   if(isReadyPickupNeedsNotice(item))reasons.push('Klar - kund ej notifierad');
   if(isReadyForBilling(item))reasons.push('Klar att fakturera/betala');
@@ -1337,6 +1394,7 @@ function operationalPriorityScore(item){
   const scoreMap={
     'Missat samtal matchat':100,
     'Risk':90,
+    'N\u00e4sta \u00e5tg\u00e4rd idag/f\u00f6rsenad':88,
     'St\u00e5tt stilla':80,
     'Ny utan bekr\u00e4ftelse':75,
     'Klar - kund ej notifierad':70,
@@ -1353,6 +1411,7 @@ function operationalMetrics(caseRows=cases){
   const notClosed=all.filter((item)=>!isCaseClosed(item));
   const notArchived=all.filter((item)=>String(item&&item.status||'')!=='archived');
   const newUnconfirmed=notClosed.filter(isNewWithoutConfirmation);
+  const missingNextAction=notClosed.filter((item)=>!String(item&&item.nextAction||'').trim());
   const waitingCustomer=notClosed.filter(isWaitingCustomer);
   const waitingParts=notClosed.filter(isWaitingParts);
   const readyPickup=notClosed.filter(isReadyPickupNeedsNotice);
@@ -1367,6 +1426,7 @@ function operationalMetrics(caseRows=cases){
     notArchived,
     doNow,
     newUnconfirmed,
+    missingNextAction,
     waitingCustomer,
     waitingParts,
     readyPickup,
@@ -1786,6 +1846,7 @@ async function testCalendar(){
 const OPS_FILTER_LABELS={
   doNow:'Gör nu',
   newUnconfirmed:'Nya utan bekräftelse',
+  missingNextAction:'Saknar nästa steg',
   waitingCustomer:'Väntar kund',
   waitingParts:'Väntar del',
   readyPickup:'Klara att hämta',
@@ -1815,6 +1876,7 @@ function render(){
   updateOpsFilterUi(ops);
   document.getElementById('doNowTotal').textContent=ops.doNow.length;
   document.getElementById('unconfirmedTotal').textContent=ops.newUnconfirmed.length;
+  document.getElementById('missingNextActionTotal').textContent=ops.missingNextAction.length;
   document.getElementById('waitingCustomerTotal').textContent=ops.waitingCustomer.length;
   document.getElementById('waitingPartsTotal').textContent=ops.waitingParts.length;
   document.getElementById('readyPickupTotal').textContent=ops.readyPickup.length;
@@ -2529,6 +2591,12 @@ function renderActiveOverview(active){
         const createdBy=item.createdBy&&item.createdBy.name?item.createdBy.name:(item.source||item.channel||'ok&auml;nt');
         const updatedBy=item.updatedBy&&item.updatedBy.name?item.updatedBy.name:'saknas';
         const operationalReasonList=operationalReasons(item);
+        const nextActionText=String(item.nextAction||'').trim();
+        const nextActionMeta=[
+          item.nextActionDate?`N\u00e4sta datum: ${dateShort(item.nextActionDate)}`:'',
+          riskFlagsFor(item).length?`Risk: ${riskFlagsFor(item).map(riskFlagLabel).join(', ')}`:'',
+          item.message||'Ingen felbeskrivning'
+        ].filter(Boolean).join(' | ');
         const priorityText=item.priority==='urgent'?'Akut':stale?'St&aring;tt stilla':missingModel?'Saknar modell':'Normal';
         const priorityClass=item.priority==='urgent'?'priority-urgent':stale||missingModel?'priority-stale':'';
         return `<tr>
@@ -2536,7 +2604,7 @@ function renderActiveOverview(active){
           <td><strong>${html(item.customer&&item.customer.name||'Ok&auml;nd kund')}</strong><span class="muted-small">${html(item.customer&&item.customer.phone||'Telefon saknas')}</span></td>
           <td><strong>${html(model||'MODELL SAKNAS')}</strong><span class="muted-small">${html(item.service||'Tj&auml;nst saknas')}</span></td>
           <td>${html(statusLabels[item.status]||item.status)}<span class="muted-small">${html(displayDate(item.preferredDate))}</span></td>
-          <td>${html(lastTimeline)}<span class="muted-small">${html(item.message||'Ingen felbeskrivning')}</span></td>
+          <td>${html(nextActionText||lastTimeline)}<span class="muted-small">${html(nextActionMeta)}</span></td>
           <td>${html(caseOwner(item).name)}</td>
           <td>Skapad: ${html(createdBy)}<span class="muted-small">Senast: ${html(updatedBy)} ${html(dateShort(updated))}</span></td>
           <td><button type="button" class="secondary open-case" data-case-id="${html(item.id)}">&Ouml;ppna</button></td>
@@ -3047,6 +3115,15 @@ function caseCard(item){
   const isPickupReady=item.logistics==='pickup-ready';
   const addonHtml=addonsFor(item).length?`<div class="addons-box"><strong>Tillval</strong>${html(addonText(item))}</div>`:'';
   const completionBanner=completion.workSummary||completion.totalCost?`<div class="addons-box"><strong>Klarunderlag</strong>${completion.workSummary?`${html(completion.workSummary)}<br>`:''}Slutbelopp: ${html(completion.totalLabel)}${completion.readyAt?`<br>Klarmarkerad: ${html(dateShort(completion.readyAt))}`:''}${completion.customerNotifiedAt?`<br>Kund aviserad: ${html(completion.customerNotifiedLabel)}`:''}</div>`:'';
+  const nextActionText=String(item.nextAction||'').trim();
+  const nextActionDue=hasNextActionDue(item);
+  const nextActionBox=(nextActionText||item.nextActionDate||riskFlagsFor(item).length)?`
+      <div class="next-action-box ${nextActionDue?'is-due':''}">
+        <strong>N&auml;sta &aring;tg&auml;rd${nextActionDue?' - g&ouml;r nu':''}</strong>
+        ${nextActionText?html(nextActionText):'<span class="muted">Ingen n&auml;sta &aring;tg&auml;rd satt.</span>'}
+        <small>${item.nextActionDate?`Datum: ${html(dateShort(item.nextActionDate))}`:'Datum saknas'}${riskFlagsFor(item).length?' &middot; Kr&auml;ver extra kontroll':''}</small>
+        ${riskFlagsHtml(item)}
+      </div>`:'';
   const mediaHtml=media.length
     ? `<div class="media-grid">${media.map((entry)=>`
       <article class="media-card">
@@ -3083,6 +3160,7 @@ function caseCard(item){
     </div>
     <div class="card-panel ${activeTab==='overview'?'is-active':''}" data-panel="overview">
       <div class="key-date ${missingPreferred?'missing':''}"><span>${isPickupReady?'Planerad upph&auml;mtning':'Planerad inl&auml;mning'}</span><b>${missingPreferred?'Beh&ouml;ver bokas in':html(displayDate(item.preferredDate))}</b></div>
+      ${nextActionBox}
       <div class="delivery-banner ${delivery.className}"><strong>${delivery.title}</strong>${html(delivery.text)}</div>
       <div class="message-box"><strong>${html(item.service||'Annat')}</strong><br>${html(item.message||'Ingen beskrivning')}</div>
       ${addonHtml}
@@ -3146,6 +3224,11 @@ function caseCard(item){
             <div><label>V&auml;rde</label><input name="estimatedValue" type="number" min="0" step="1" value="${Number(item.estimatedValue||0)}"></div>
             <div><label>Prioritet</label><select name="priority"><option value="normal" ${item.priority!=='urgent'?'selected':''}>Normal</option><option value="urgent" ${item.priority==='urgent'?'selected':''}>Akut</option></select></div>
           </div>
+          <div class="row">
+            <div><label>N&auml;sta &aring;tg&auml;rd</label><input name="nextAction" value="${html(item.nextAction||'')}" placeholder="Ex: ring kund, best&auml;ll slang, inv&auml;nta godk&auml;nnande"></div>
+            <div><label>Datum f&ouml;r n&auml;sta &aring;tg&auml;rd</label><input name="nextActionDate" type="datetime-local" value="${localInput(item.nextActionDate)}"></div>
+          </div>
+          <div><label>Riskflaggor</label><input name="riskFlags" value="${html(riskFlagsFor(item).map(riskFlagLabel).join(', '))}" placeholder="Ex: batteri, reklamation, garanti, pris &ouml;ver 995"><span class="next-action-input-help">Kommaseparerat. Anv&auml;nds f&ouml;r G&ouml;r nu/Risk i admin och framtida AI-brief, men skickar inget till kund.</span></div>
           <div class="row">
             <div><label>Faktiskt inl&auml;mnad</label><input name="intakeAt" type="datetime-local" value="${localInput(item.intakeAt)}"></div>
             <div><label>Klar senast</label><input name="promisedAt" type="datetime-local" value="${localInput(item.promisedAt)}"></div>

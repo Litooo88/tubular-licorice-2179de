@@ -109,6 +109,54 @@ const PAYMENT_METHODS = new Set(["swish", "card", "cash", "invoice", "bank", "ot
 const PAYMENT_SWISH_NUMBER = "123 240 6775";
 const PAYMENT_BANKGIRO = "5290-5494";
 const CONTENT_STATUSES = new Set(["draft", "review", "ready", "published"]);
+const RISK_FLAGS = new Set([
+  "battery",
+  "complaint",
+  "angry_customer",
+  "price_over_995",
+  "discount",
+  "warranty",
+  "legal",
+  "parts_over_500",
+  "promise_risk",
+  "fire_or_short",
+  "stale",
+  "other",
+]);
+const RISK_FLAG_ALIASES = new Map([
+  ["batteri", "battery"],
+  ["bms", "battery"],
+  ["reklamation", "complaint"],
+  ["missnojd", "angry_customer"],
+  ["missnöjd", "angry_customer"],
+  ["missnojd kund", "angry_customer"],
+  ["missnöjd kund", "angry_customer"],
+  ["arg", "angry_customer"],
+  ["pris over 995", "price_over_995"],
+  ["pris över 995", "price_over_995"],
+  ["pris over 995 kr", "price_over_995"],
+  ["pris över 995 kr", "price_over_995"],
+  ["rabatt", "discount"],
+  ["garanti", "warranty"],
+  ["juridik", "legal"],
+  ["juridiskt", "legal"],
+  ["juridiskt ansvar", "legal"],
+  ["ansvar", "legal"],
+  ["reservdel over 500", "parts_over_500"],
+  ["reservdel över 500", "parts_over_500"],
+  ["reservdel over 500 kr", "parts_over_500"],
+  ["reservdel över 500 kr", "parts_over_500"],
+  ["löfte", "promise_risk"],
+  ["lofte", "promise_risk"],
+  ["lofte skuld risk", "promise_risk"],
+  ["löfte skuld risk", "promise_risk"],
+  ["brand", "fire_or_short"],
+  ["brand kortslutning", "fire_or_short"],
+  ["kortslutning", "fire_or_short"],
+  ["står stilla", "stale"],
+  ["star stilla", "stale"],
+  ["annat", "other"],
+]);
 const JOB_TYPES = new Set(["puncture", "tire", "brake", "throttle", "electrical", "battery", "service"]);
 const SERVICE_ACTIONS = new Set([
   "wheel_remove",
@@ -128,6 +176,25 @@ const SERVICE_ACTIONS = new Set([
 ]);
 const POSITIONS = new Set(["front", "rear", "motor_wheel", "not_applicable"]);
 const boolValue = (value) => value === true || value === "true" || value === "on" || value === 1 || value === "1";
+const normalizeRiskFlag = (value) => {
+  const raw = clean(value, 80).toLowerCase().replace(/[_/-]+/g, " ").replace(/\s+/g, " ").trim();
+  if (!raw) return "";
+  const alias = RISK_FLAG_ALIASES.get(raw) || raw.replace(/\s+/g, "_");
+  return RISK_FLAGS.has(alias) ? alias : "";
+};
+const normalizeRiskFlags = (value, fallback = []) => {
+  if (value === undefined) {
+    return Array.isArray(fallback)
+      ? [...new Set(fallback.map(normalizeRiskFlag).filter(Boolean))]
+      : [];
+  }
+  const parts = Array.isArray(value)
+    ? value
+    : String(value || "")
+      .split(/[,\n;]/)
+      .map((item) => item.trim());
+  return [...new Set(parts.map(normalizeRiskFlag).filter(Boolean))];
+};
 
 const footerHtml = () => `
   <div style="border-top:1px solid #dfe5dc;margin-top:22px;padding-top:18px;color:#53605a;font-size:13px;line-height:1.55">
@@ -219,6 +286,9 @@ const normalizeStoredCase = (item) => {
   if (!item) return null;
   const next = {
     ...item,
+    nextAction: clean(item.nextAction, 1200),
+    nextActionDate: clean(item.nextActionDate, 80) || null,
+    riskFlags: normalizeRiskFlags(item.riskFlags),
     assignedTo: normalizeOwner(item.assignedTo),
   };
   if (next.quote) {
@@ -345,6 +415,9 @@ export default async (request, context) => {
       source: clean(body.source, 80) || "admin",
       channel: "internal",
       priority: clean(body.priority, 40) || "normal",
+      nextAction: clean(body.nextAction, 1200),
+      nextActionDate: clean(body.nextActionDate, 80) || null,
+      riskFlags: normalizeRiskFlags(body.riskFlags),
       preferredContactTime: null,
       preferredDate: null,
       discountCode: null,
@@ -745,6 +818,9 @@ export default async (request, context) => {
       promisedAt: body.promisedAt === undefined ? current.promisedAt : clean(body.promisedAt, 80) || null,
       estimatedValue: body.estimatedValue === undefined ? current.estimatedValue : Number(body.estimatedValue || 0),
       priority: body.priority === undefined ? current.priority : clean(body.priority, 40) || "normal",
+      nextAction: body.nextAction === undefined ? current.nextAction || "" : clean(body.nextAction, 1200),
+      nextActionDate: body.nextActionDate === undefined ? current.nextActionDate || null : clean(body.nextActionDate, 80) || null,
+      riskFlags: body.riskFlags === undefined ? normalizeRiskFlags(current.riskFlags) : normalizeRiskFlags(body.riskFlags),
       service: body.service === undefined ? current.service : clean(body.service, 160) || current.service,
       message: body.message === undefined ? current.message : clean(body.message, 3000),
       customer: {
@@ -800,6 +876,10 @@ export default async (request, context) => {
       body.contentNotes !== undefined ||
       body.contentReviewedAt !== undefined ||
       body.contentPublishedAt !== undefined;
+    const operationalTouched =
+      body.nextAction !== undefined ||
+      body.nextActionDate !== undefined ||
+      body.riskFlags !== undefined;
     const readyNotificationTouched = body.customerNotifiedAt !== undefined || body.customerNotifiedVia !== undefined;
 
     if (paymentTouched) {
@@ -821,6 +901,15 @@ export default async (request, context) => {
       timeline.push({
         at: now,
         event: `Content uppdaterat: ${nextContent.status}${targetInfo}.`,
+      });
+    }
+
+    if (operationalTouched) {
+      const due = next.nextActionDate ? ` (${next.nextActionDate})` : "";
+      const flags = next.riskFlags.length ? ` Riskflaggor: ${next.riskFlags.join(", ")}.` : "";
+      timeline.push({
+        at: now,
+        event: `Nasta atgard uppdaterad: ${next.nextAction || "saknas"}${due}.${flags}`,
       });
     }
 
