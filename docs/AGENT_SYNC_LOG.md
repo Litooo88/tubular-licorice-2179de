@@ -1,4 +1,4 @@
-# Agent Sync Log — Nordic E-Mobility
+﻿# Agent Sync Log — Nordic E-Mobility
 
 Delad realtidslogg mellan AI-agenter som jobbar i detta repo (Claude Code,
 Codex, m.fl.). Syftet: vi jobbar ofta **parallellt i samma mapp** och får inte
@@ -31,6 +31,13 @@ löpande "konversation".
 ## Logg
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
+
+### 2026-08-07 — Claude Code — KLAR (SMS-utkastinkorg: AI draftar, Sebastian godkänner, systemet skickar)
+
+- **Branch/PR:** `feat/sms-draft-inbox` (byggd i isolerad worktree).
+- **Ny funktion `sms-drafts.mjs`** (blob `sms-drafts`): PUT import (+ mailnotis via Resend till verkstadsmailen), GET lista, POST :id/approve (skickar via _shared/sms, optout-kontroll, status new→contacted, smsLog+timeline, raderar utkast), POST :id/skip.
+- **Admin:** ny sektion 'SMS-utkast väntar godkännande' överst — kort per ärende med kundens meddelande, redigerbart utkast, Godkänn & skicka / Hoppa över.
+- **79 utkast genererade lokalt** (24 färska m. pris+bokningslänk, 55 återaktivering) — importeras EFTER merge, inget skickas utan godkännande per ärende.
 
 ### 2026-08-06 — Codex — KLAR (strategisk genomförandeplan)
 

@@ -368,6 +368,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     </div>
   </div>
 
+  <section id="sms-drafts-section" style="display:none;border:2px solid #b7791f;border-radius:10px;padding:14px 16px;margin-bottom:16px;background:#fffaf0">
+    <h2 style="margin:0 0 4px;font-size:16px">📨 SMS-utkast väntar godkännande <span id="sms-drafts-count" style="background:#b7791f;color:#fff;border-radius:999px;padding:1px 10px;font-size:13px"></span></h2>
+    <p class="muted" style="margin:0 0 10px">AI-genererade svar till obesvarade ärenden. Inget skickas förrän du godkänner varje utkast. Godkända skickas via företags-SMS, loggas på ärendet och flyttar status till "contacted".</p>
+    <div id="sms-drafts-list"></div>
+  </section>
+
   <section class="login">
     <div><label for="token">Admin-token</label><input id="token" type="password" autocomplete="current-password" placeholder="ADMIN_TOKEN fr&aring;n Netlify"></div>
     <div><label for="operatorName">Jag &auml;r</label><select id="operatorName"><option value="Sebastian">Sebastian</option><option value="Verkstaden">Verkstaden</option></select></div>
@@ -1656,6 +1662,58 @@ async function api(path,options={}){
   return data;
 }
 
+/* ---------- SMS-utkastinkorgen (AI draftar, du godkänner, systemet skickar) ---------- */
+const smsDraftCatLabel={A:'Färsk — svar + pris + bokning',B:'Återaktivering (äldre ärende)',C:'Manuell hantering'};
+async function loadSmsDrafts(){
+  const section=document.getElementById('sms-drafts-section');
+  try{
+    const data=await api('/api/sms-drafts');
+    if(!data.count){section.style.display='none';return;}
+    section.style.display='block';
+    document.getElementById('sms-drafts-count').textContent=data.count;
+    document.getElementById('sms-drafts-list').innerHTML=data.drafts.map((d)=>`
+      <div class="sms-draft-card" data-id="${html(d.caseId)}" style="border:1px solid #ddd;border-radius:8px;padding:10px 12px;margin-bottom:10px;background:#fff">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline">
+          <strong>${html(d.meta.namn||'Okänd kund')}</strong>
+          <span class="muted">${html(d.meta.telefon)}</span>
+          <span class="muted">${html(d.meta.tjanst||'')}</span>
+          <span style="background:${d.category==='A'?'#c6f6d5':d.category==='B'?'#feebc8':'#e2e8f0'};border-radius:999px;padding:1px 10px;font-size:12px">${html(smsDraftCatLabel[d.category]||d.category)} · ${d.meta.alderDagar} dagar</span>
+        </div>
+        ${d.meta.ursprung?`<div class="muted" style="font-size:13px;margin-top:6px">Kunden skrev: &rdquo;${html(d.meta.ursprung)}&rdquo;</div>`:''}
+        <textarea class="sms-draft-text" style="width:100%;margin-top:8px;min-height:96px;font-size:14px">${html(d.message)}</textarea>
+        <div style="display:flex;gap:8px;margin-top:6px">
+          <button class="sms-draft-approve">Godkänn &amp; skicka</button>
+          <button class="secondary sms-draft-skip">Hoppa över</button>
+          <span class="sms-draft-status muted" style="align-self:center"></span>
+        </div>
+      </div>`).join('');
+  }catch(_e){section.style.display='none';}
+}
+document.addEventListener('click',async(event)=>{
+  const approve=event.target.closest('.sms-draft-approve');
+  const skip=event.target.closest('.sms-draft-skip');
+  if(!approve&&!skip)return;
+  const card=event.target.closest('.sms-draft-card');
+  const id=card.dataset.id;
+  const statusEl=card.querySelector('.sms-draft-status');
+  card.querySelectorAll('button').forEach((b)=>b.disabled=true);
+  try{
+    if(approve){
+      const message=card.querySelector('.sms-draft-text').value.trim();
+      statusEl.textContent='Skickar…';
+      const result=await api(`/api/sms-drafts/${encodeURIComponent(id)}/approve`,{method:'POST',body:JSON.stringify({message})});
+      statusEl.textContent=result.status==='sent'?'✓ Skickat och loggat':'API ej konfigurerat';
+    }else{
+      await api(`/api/sms-drafts/${encodeURIComponent(id)}/skip`,{method:'POST',body:JSON.stringify({})});
+      statusEl.textContent='Överhoppad';
+    }
+    setTimeout(()=>{card.remove();const left=document.querySelectorAll('.sms-draft-card').length;document.getElementById('sms-drafts-count').textContent=left;if(!left)document.getElementById('sms-drafts-section').style.display='none';},900);
+  }catch(error){
+    statusEl.textContent=error.message;
+    card.querySelectorAll('button').forEach((b)=>b.disabled=false);
+  }
+});
+
 // Skickar kund-SMS via 46elks-API:t (loggas på ärendet). Faller tillbaka till
 // telefonens sms:-länk om API:t inte är konfigurerat eller sändningen nekas.
 async function sendCaseSms(caseId,phone,message,kind,fallbackHref){
@@ -1731,6 +1789,7 @@ function shouldPauseRefresh(){
 
 async function loadCases(options={}){
   if(isLoadingCases) return;
+  loadSmsDrafts();
   const refresh=document.getElementById('refresh');
   const openIds=openEditorIds();
   const focusedField=focusedEditorField();
