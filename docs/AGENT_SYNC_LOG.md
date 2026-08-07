@@ -32,6 +32,12 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-07 — Claude Code — KLAR (utkastinkorgen live: 79 importerade + INCIDENT 4: funktionsnamnkollision)
+
+- 79 SMS-utkast importerade till sms-drafts-blobben, mailnotis skickad till verkstadsmailen, granskningssektionen live i admin.
+- **INCIDENT 4:** Codex `sms-drafts.js` och Claudes `sms-drafts.mjs` kolliderade om funktionsnamnet — Netlify bundlade bara .js-filen, routen /api/sms-drafts registrerades aldrig (404 i ~1 h). Löst: Claudes fil omdöpt till `sms-draft-inbox.mjs` (fb5aae5), routen oförändrad, Codex fil orörd.
+- **NY REGEL: deklarera nya funktionsNAMN (inte bara filer/mappar) i PÅGÅR-posten.** Fyra incidenter på tre veckor har samma rot: odeklarerat parallellarbete.
+
 ### 2026-08-07 — Claude Code — KLAR (SMS-utkastinkorg: AI draftar, Sebastian godkänner, systemet skickar)
 
 - **Branch/PR:** `feat/sms-draft-inbox` (byggd i isolerad worktree).
