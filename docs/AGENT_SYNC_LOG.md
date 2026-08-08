@@ -32,6 +32,20 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-08 — Codex — PÅGÅR (admin triage-läge)
+
+- **Branch:** `codex/nemob-strategic-implementation-plan`
+- **Gör:** Bygger ett minimalt triage-läge i admin ovanpå `nextAction`,
+  `nextActionDate` och `riskFlags`: visa ärenden som saknar nästa steg eller
+  har nästa åtgärd idag/försenad, med snabbknappar som bara sparar admin-data.
+- **Filer/områden:** `admin/index.html` och denna sync-logg. Rör inte
+  `.claude/launch.json`, `docs/NEMOB_OS_V1_PLAN.md` eller `tmp/pdfs/*`.
+- **Tester:** inline-script parse, `npm run build`,
+  `npm run verify:checkout-products`, `cd nemob-callflow && npm run check`.
+- **Varning:** Inga SMS/mail, inga production-writes under test, ingen
+  Supabase. Snabbknappar får bara använda befintlig authad admin-PATCH när en
+  operatör klickar.
+
 ### 2026-08-06 — Codex — KLAR (next action per ärende)
 
 - **Branch:** `codex/nemob-strategic-implementation-plan`
