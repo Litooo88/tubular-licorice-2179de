@@ -5,7 +5,7 @@
       "name": "nemob-os",
       "runtimeExecutable": "node",
       "runtimeArgs": ["nemob-os/server.mjs"],
-      "port": 4571
+      "port": 4572
     },
     {
       "name": "static-site",
