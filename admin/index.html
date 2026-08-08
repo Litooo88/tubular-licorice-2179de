@@ -148,6 +148,23 @@ button.stat.is-filtering{border-color:#00c853;outline:1px solid rgba(0,200,83,.5
 .ops-legend ul{margin:10px 0 0 18px;line-height:1.6}
 .ops-filter-chip{display:none;margin:0 0 10px;border:1px solid rgba(0,200,83,.4);background:rgba(0,200,83,.1);border-radius:999px;padding:8px 14px;font-size:13px;font-weight:800;color:#c9f5d8;cursor:pointer}
 .ops-filter-chip.is-active{display:inline-block}
+.triage-panel{padding:16px;margin:0 0 14px}
+.triage-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px}
+.triage-head h2{margin:0 0 6px;font-size:20px}
+.triage-head p{margin:0;color:#aab5ac;font-size:13px;line-height:1.45}
+.triage-status{display:none;border-radius:8px;padding:9px 11px;margin:8px 0 0;font-size:13px;line-height:1.45}
+.triage-status.ok{display:block;background:rgba(0,200,83,.10);border:1px solid rgba(0,200,83,.3);color:#e6ffef}
+.triage-status.warn{display:block;background:rgba(255,194,71,.12);border:1px solid rgba(255,194,71,.35);color:#fff1cf}
+.triage-status.bad{display:block;background:rgba(255,90,95,.12);border:1px solid rgba(255,90,95,.4);color:#ffe1e3}
+.triage-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin:10px 0 12px}
+.triage-list{display:grid;gap:8px}
+.triage-item{border:1px solid #263029;border-radius:10px;background:#080d09;padding:11px 12px}
+.triage-item.is-due{border-color:rgba(255,194,71,.4);background:rgba(255,194,71,.08)}
+.triage-item-head{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;margin-bottom:6px}
+.triage-item h3{font-size:15px;margin:0;color:#fff}
+.triage-item small{display:block;color:#9ea79f;line-height:1.45;margin-top:3px}
+.triage-actions{display:flex;flex-wrap:wrap;gap:6px;margin-top:9px}
+.triage-actions button{padding:7px 9px;font-size:12px}
 .ai-control-grid .stat[title]{cursor:help}
 .toolbar{display:flex;gap:10px;align-items:end;justify-content:space-between;flex-wrap:wrap;margin:18px 0}
 .filters{display:flex;gap:10px;align-items:end;flex-wrap:wrap}
@@ -580,6 +597,22 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div class="sms-status" id="smsDeskStatus"></div>
   </section>
 
+  <section class="panel triage-panel">
+    <div class="triage-head">
+      <div>
+        <h2>Akut triage &ndash; n&auml;sta steg</h2>
+        <p>Fokuserar p&aring; &auml;renden som saknar n&auml;sta &aring;tg&auml;rd eller har en &aring;tg&auml;rd idag/f&ouml;rsenad. Snabbknapparna sparar bara &auml;rendedata. Inget SMS eller mail skickas.</p>
+        <div class="triage-status" id="triageStatus"></div>
+      </div>
+    </div>
+    <div class="triage-stats">
+      <div class="panel stat"><span>Saknar n&auml;sta steg</span><b id="triageMissingTotal">0</b></div>
+      <div class="panel stat"><span>Idag / f&ouml;rsenad</span><b id="triageDueTotal">0</b></div>
+      <div class="panel stat"><span>Riskflaggade</span><b id="triageRiskTotal">0</b></div>
+    </div>
+    <div class="triage-list" id="triageList">Laddar triage...</div>
+  </section>
+
   <section class="panel active-overview">
     <h2>Operativ &auml;rendelista</h2>
     <p>Prioriterad lista d&auml;r &ldquo;G&ouml;r nu&rdquo; betyder faktisk &aring;tg&auml;rd: bekr&auml;fta, kontakta kund, v&auml;nta in del, ta betalt eller f&aring;nga risk/stillest&aring;nd.</p>
@@ -713,6 +746,8 @@ const smsMessageText=document.getElementById('smsMessageText');
 const smsDeskStatus=document.getElementById('smsDeskStatus');
 const operatorInput=document.getElementById('operatorName');
 const activeOverviewEl=document.getElementById('activeOverview');
+const triageListEl=document.getElementById('triageList');
+const triageStatusEl=document.getElementById('triageStatus');
 const overviewView=document.getElementById('overviewView');
 const cardsView=document.getElementById('cardsView');
 const callStatsEl=document.getElementById('callDashboardStats');
@@ -805,6 +840,11 @@ document.getElementById('operationalKpis').addEventListener('click',(event)=>{
 document.getElementById('opsFilterChip').addEventListener('click',()=>{
   opsFilterKey=null;
   render();
+});
+triageListEl.addEventListener('click',(event)=>{
+  const button=event.target&&event.target.closest&&event.target.closest('[data-triage-preset]');
+  if(!button)return;
+  applyTriagePreset(button);
 });
 document.addEventListener('click',(event)=>{
   const link=event.target&&event.target.closest&&event.target.closest('[data-open-case-link]');
@@ -1435,6 +1475,140 @@ function operationalMetrics(caseRows=cases){
     possibleRevenue:doNow.reduce((sum,item)=>sum+Number(paymentData(item).amount||completionData(item).totalCost||item.estimatedValue||0),0)
   };
 }
+const TRIAGE_PRESETS={
+  call_today:{
+    label:'Ring kund idag',
+    nextAction:'Ring kund, dokumentera svar och s\u00e4tt n\u00e4sta steg.',
+    days:0,
+    hour:16,
+    status:(item)=>item.status==='new'?'contacted':undefined
+  },
+  wait_customer:{
+    label:'V\u00e4ntar kund',
+    nextAction:'Inv\u00e4nta kundsvar och f\u00f6lj upp om inget svar kommit.',
+    days:2,
+    hour:10,
+    status:'waiting_customer'
+  },
+  diagnose_today:{
+    label:'Fels\u00f6k idag',
+    nextAction:'Fels\u00f6k fordonet och skriv diagnos/\u00e5tg\u00e4rdsf\u00f6rslag.',
+    days:0,
+    hour:17,
+    status:'diagnosing'
+  },
+  order_part:{
+    label:'Kontrollera del',
+    nextAction:'Kontrollera reservdel, pris och leveranstid innan kundl\u00f6fte.',
+    days:1,
+    hour:10,
+    status:'waiting_parts'
+  },
+  invoice_today:{
+    label:'Ta betalt',
+    nextAction:'Kontrollera slutbelopp och skicka betalinfo manuellt.',
+    days:0,
+    hour:15
+  }
+};
+function triageDateValue(days=0,hour=16){
+  const date=new Date();
+  date.setDate(date.getDate()+Number(days||0));
+  date.setHours(Number(hour||16),0,0,0);
+  const pad=(value)=>String(value).padStart(2,'0');
+  return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
+function resolvePresetValue(value,item){
+  return typeof value==='function'?value(item):value;
+}
+function triageRows(ops){
+  const rows=new Map();
+  const add=(item,reason)=>{
+    if(!item||!item.id||isCaseClosed(item))return;
+    const current=rows.get(item.id)||{item,reasons:[]};
+    if(reason&&!current.reasons.includes(reason))current.reasons.push(reason);
+    rows.set(item.id,current);
+  };
+  (ops.doNow||[]).filter(hasNextActionDue).forEach((item)=>add(item,'n\u00e4sta \u00e5tg\u00e4rd idag/f\u00f6rsenad'));
+  (ops.missingNextAction||[]).forEach((item)=>add(item,'saknar n\u00e4sta steg'));
+  (ops.riskStale||[]).filter((item)=>isHighRiskCase(item)&&!String(item.nextAction||'').trim()).forEach((item)=>add(item,'risk utan n\u00e4sta steg'));
+  return [...rows.values()].sort((a,b)=>{
+    const dueDelta=Number(hasNextActionDue(b.item))-Number(hasNextActionDue(a.item));
+    if(dueDelta)return dueDelta;
+    const riskDelta=Number(isHighRiskCase(b.item))-Number(isHighRiskCase(a.item));
+    if(riskDelta)return riskDelta;
+    return operationalPriorityScore(b.item)-operationalPriorityScore(a.item)||caseUpdatedTime(b.item)-caseUpdatedTime(a.item);
+  });
+}
+function showTriageStatus(message,state='ok'){
+  if(!triageStatusEl)return;
+  triageStatusEl.className=`triage-status ${state}`;
+  triageStatusEl.textContent=message||'';
+}
+function renderTriagePanel(ops){
+  if(!triageListEl)return;
+  const due=(ops.notClosed||[]).filter(hasNextActionDue);
+  const risk=(ops.notClosed||[]).filter((item)=>isHighRiskCase(item));
+  document.getElementById('triageMissingTotal').textContent=(ops.missingNextAction||[]).length;
+  document.getElementById('triageDueTotal').textContent=due.length;
+  document.getElementById('triageRiskTotal').textContent=risk.length;
+  const rows=triageRows(ops).slice(0,12);
+  if(!rows.length){
+    triageListEl.innerHTML='<div class="muted">Inga akuta triageposter just nu. Bra. Den h&auml;r rutan fylls n&auml;r &auml;renden saknar n&auml;sta steg eller har f&ouml;rfallen &aring;tg&auml;rd.</div>';
+    return;
+  }
+  triageListEl.innerHTML=rows.map(({item,reasons})=>{
+    const caseId=String(item.id||'');
+    const dueText=item.nextActionDate?dateShort(item.nextActionDate):'datum saknas';
+    const statusLabel=statusLabels[item.status]||html(item.status||'ok&auml;nd');
+    const action=String(item.nextAction||'').trim();
+    const flags=riskFlagsFor(item);
+    return `<article class="triage-item ${hasNextActionDue(item)?'is-due':''}">
+      <div class="triage-item-head">
+        <div>
+          <h3>${html(item.customer&&item.customer.name||'Ok&auml;nd kund')}</h3>
+          <small>${html(item.customer&&item.customer.phone||'Telefon saknas')} &middot; ${html(item.vehicle&&item.vehicle.model||'Modell saknas')} &middot; ${statusLabel}</small>
+        </div>
+        <a class="secondary" href="${caseDeepLink(caseId,'overview')}" data-open-case-link="${html(caseId)}" data-open-case-tab="overview">&Ouml;ppna</a>
+      </div>
+      <strong>${html(action||'Saknar n&auml;sta konkreta &aring;tg&auml;rd')}</strong>
+      <small>${html(reasons.join(', ')||'triage')} &middot; N&auml;sta datum: ${html(dueText)}${flags.length?` &middot; Risk: ${html(flags.map(riskFlagLabel).join(', '))}`:''}</small>
+      <div class="triage-actions">
+        ${Object.entries(TRIAGE_PRESETS).map(([key,preset])=>`<button type="button" class="secondary" data-triage-preset="${html(key)}" data-case-id="${html(caseId)}">${html(preset.label)}</button>`).join('')}
+      </div>
+    </article>`;
+  }).join('');
+}
+async function applyTriagePreset(button){
+  const caseId=button.dataset.caseId;
+  const preset=TRIAGE_PRESETS[button.dataset.triagePreset];
+  const item=cases.find((row)=>String(row.id)===String(caseId));
+  if(!preset||!item){showTriageStatus('Kunde inte hitta triageposten. Uppdatera sidan och f\u00f6rs\u00f6k igen.','bad');return;}
+  const nextStatus=resolvePresetValue(preset.status,item);
+  if(nextStatus&&nextStatus!==item.status&&!confirm(`Spara "${preset.label}" och byta status fr\u00e5n ${statusLabels[item.status]||item.status} till ${statusLabels[nextStatus]||nextStatus}?`))return;
+  const original=button.textContent;
+  button.disabled=true;
+  button.textContent='Sparar...';
+  try{
+    const payload={
+      nextAction:resolvePresetValue(preset.nextAction,item),
+      nextActionDate:triageDateValue(preset.days,preset.hour),
+      suppressThankYou:true
+    };
+    if(nextStatus)payload.status=nextStatus;
+    if(Array.isArray(preset.riskFlags)){
+      payload.riskFlags=[...new Set([...riskFlagsFor(item),...preset.riskFlags])];
+    }
+    await api('/api/cases/'+encodeURIComponent(caseId),{method:'PATCH',body:JSON.stringify(payload)});
+    showTriageStatus(`Sparat: ${preset.label} f\u00f6r ${item.customer&&item.customer.name||shortId(caseId)}. Inget SMS/mail skickades.`,'ok');
+    await loadCases();
+  }catch(error){
+    showTriageStatus(error.message||'Triage kunde inte sparas.','bad');
+  }finally{
+    button.disabled=false;
+    button.textContent=original;
+  }
+}
 function readyDeliveryState(data){
   if(!data.canDraft)return {className:'warn',text:'Fyll i slutbelopp och utf\u00f6rda \u00e5tg\u00e4rder innan du draftar SMS eller mail.'};
   if(data.customerNotifiedAt)return {className:'good',text:`Klarmeddelandet \u00e4r markerat som skickat via ${data.customerNotifiedVia==='email'?'mail':'SMS'} ${dateShort(data.customerNotifiedAt)}.`};
@@ -1873,6 +2047,7 @@ function render(){
   const ops=operationalMetrics(cases);
   const overviewList=opsFilterKey&&Array.isArray(ops[opsFilterKey])?ops[opsFilterKey]:(ops.doNow.length?ops.doNow:ops.notClosed);
   renderActiveOverview(overviewList);
+  renderTriagePanel(ops);
   updateOpsFilterUi(ops);
   document.getElementById('doNowTotal').textContent=ops.doNow.length;
   document.getElementById('unconfirmedTotal').textContent=ops.newUnconfirmed.length;
