@@ -20,6 +20,21 @@ Implementerad i `netlify/functions/_shared/lead-priority.mjs` (`scoreLead`), anv
 Summa 0–100. Varje rad i inkorgen visar poäng + motivering, t.ex.
 `15 missade samtal · 29 d · bokningsintention · ~600 kr/35 min`.
 
+## Huvudsortering: chans att stänga bokning (0–100)
+
+Inkorgen sorteras i första hand på **closeProbability** — hur stor chans vi har att få
+bokningen om vi bara svarar eller ringer. 100 = så gott som garanterad. Bas: bokning 55,
+köp 35, oklar 25, generell 15; +5 per gång kunden ringt förgäves (max +30); +15 vid 0
+dagar → 0 vid 30; +5 om modell anges; +5 om felet är beskrivet. Poängen ovan (priority)
+används som andrasortering.
+
+## Auto-svar under 500 kr
+
+Ärenden med uppskattat ordervärde < 500 kr (känt ämne, t.ex. bromsjustering, rådgivning,
+tomma förfrågningar) får systemet svara på automatiskt med ett enkelt svar + raden
+"Har vi redan pratat så bortse från detta". Okänt ämne med bokningsintention, köp-leads
+och allt ≥ 500 kr går alltid som utkast till Sebastian.
+
 ## Datakällor och begränsningar
 
 - Missade samtal kräver berikning från `call-dashboard` vid import (importören skickar

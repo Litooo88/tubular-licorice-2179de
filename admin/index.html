@@ -1678,9 +1678,9 @@ async function loadSmsDrafts(){
           <span class="muted">${html(d.meta.telefon)}</span>
           <span class="muted">${html(d.meta.tjanst||'')}</span>
           <span style="background:${d.category==='A'?'#c6f6d5':d.category==='B'?'#feebc8':'#e2e8f0'};border-radius:999px;padding:1px 10px;font-size:12px">${html(smsDraftCatLabel[d.category]||d.category)} · ${d.meta.alderDagar} dagar</span>
-          ${d.priority!==undefined?`<span style="background:${d.priority>=60?'#fed7d7':d.priority>=35?'#feebc8':'#e2e8f0'};border-radius:999px;padding:1px 10px;font-size:12px;font-weight:600" title="Prioritet: missade samtal / färskhet / bokningsintention / kr per minut">Prio ${d.priority}</span>`:''}
+          ${d.priority!==undefined?`<span style="background:${(d.closeProbability??d.priority)>=75?'#fed7d7':(d.closeProbability??d.priority)>=50?'#feebc8':'#e2e8f0'};border-radius:999px;padding:1px 10px;font-size:12px;font-weight:600" title="Prioritet: missade samtal / färskhet / bokningsintention / kr per minut">Chans ${d.closeProbability!==undefined?d.closeProbability:d.priority}</span>`:''}
         </div>
-        ${d.reason?`<div class="muted" style="font-size:12px;margin-top:4px">Varför här: ${html(d.reason)}</div>`:''}
+        ${d.reason?`<div class="muted" style="font-size:12px;margin-top:4px">Chans att stänga: <strong>${d.closeProbability!==undefined?d.closeProbability+" %":"–"}</strong> · ${html(d.reason)}</div>`:''}
         ${d.meta.ursprung?`<div class="muted" style="font-size:13px;margin-top:6px">Kunden skrev: &rdquo;${html(d.meta.ursprung)}&rdquo;</div>`:''}
         <textarea class="sms-draft-text" style="width:100%;margin-top:8px;min-height:96px;font-size:14px">${html(d.message)}</textarea>
         <div style="display:flex;gap:8px;margin-top:6px">

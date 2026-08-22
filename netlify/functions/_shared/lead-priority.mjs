@@ -38,7 +38,7 @@ export const TOPIC_ECONOMY = {
 export const classifyIntent = (message, service) => {
   const s = clean(`${service || ""} ${message || ""}`);
   if (!s.trim()) return "oklar";
-  const concreteFault = /punkter|trasig|s[oö]nder|fungerar (inte|ej|d[aå]ligt)|funkar (inte|ej)|startar inte|laddar inte|felkod|l[aä]cker|missljud|hackar|byta|bytt|byte|glapp|kortslut|brinn|r[oö]k|slang|d[aä]ck|broms|reparera|laga|f[oö]rst[oö]r|saknas|st[oö]ld|stulen|stj[aä]la|nyckel|startkab|problem som/.test(s);
+  const concreteFault = /punkter|trasig|s[oö]nder|fungerar (inte|ej|d[aå]ligt)|funkar (inte|ej)|startar inte|laddar inte|tar (inte|ej) laddning|felkod|l[aä]cker|missljud|hackar|byta|bytt|byte|glapp|kortslut|brinn|r[oö]k|slang|d[aä]ck|broms|reparera|laga|f[oö]rst[oö]r|saknas|st[oö]ld|stulen|stj[aä]la|nyckel|startkab|problem som/.test(s);
   const timeWord = /idag|imorgon|akut|snabbt|n[aä]r kan|boka|h[aä]mta|l[aä]mna in|denna vecka|helgen/.test(s);
   const modelWord = /xiaomi|ninebot|segway|kukirin|kugoo|navee|vsett|dualtron|inokim|emove|halo|teverun|e-wheels|ewheels|nitrox|v[aä]ssla|surron|iscooter|es[1-4]\b|g30|g2\b|g3\b|g4\b|st3|gt3/.test(s);
   const purchase = /vill k[oö]pa|k[oö]pa (en|ny)|s[aä]ljer ni|till salu|intresserad av att k[oö]pa/.test(s);
@@ -64,10 +64,24 @@ export const scoreLead = (meta = {}) => {
   const valueScore = intent === "bokning" ? Math.min(15, Math.round(rate)) : 0;      // regel 4: max 15
 
   const priority = Math.min(100, Math.round(callScore + recencyScore + intentScore + valueScore));
+
+  // Chans att stänga bokning (0–100) om vi bara svarar/ringer. 100 = så gott som garanterad.
+  // Huvudsortering enligt Sebastian: intentbas + kunden jagar oss + färskhet + konkretion.
+  const text = `${meta.tjanst || ""} ${meta.ursprung || ""}`;
+  let closeProbability = { bokning: 55, kop: 35, oklar: 25, generell: 15 }[intent];
+  closeProbability += Math.min(missedCalls, 6) * 5;
+  closeProbability += Math.max(0, 15 - age * 0.5);
+  if (/xiaomi|ninebot|segway|kukirin|navee|vsett|dualtron|iscooter|es[1-4]|g30|g2|g3|g4|st3|gt3/i.test(text)) closeProbability += 5;
+  if (String(meta.ursprung || "").length > 60) closeProbability += 5;
+  closeProbability = Math.max(0, Math.min(100, Math.round(closeProbability)));
+
+  // Auto-svar (Sebastians regel): ordervärde < 500 kr ⇒ systemet får svara själv, enkelt.
+  // Bara när ämnet är KÄNT (okänt ämne med bokningsintention = riktig reparation ⇒ utkast).
+  const autoReplyEligible = intent !== "kop" && (intent !== "bokning" ? true : (topic !== null && econ.valueSek < 500));
   const parts = [];
   if (missedCalls) parts.push(`${missedCalls} missade samtal`);
   parts.push(`${age} d`);
   parts.push({ bokning: "bokningsintention", kop: "köpintention (butik)", generell: "generell fråga", oklar: "oklar intention" }[intent]);
   if (intent === "bokning" && econ.valueSek) parts.push(`~${econ.valueSek} kr/${econ.minutes} min`);
-  return { priority, intent, topic, estValueSek: intent === "bokning" ? econ.valueSek : 0, estMinutes: econ.minutes, reason: parts.join(" · ") };
+  return { priority, closeProbability, autoReplyEligible, intent, topic, estValueSek: intent === "bokning" ? econ.valueSek : 0, estMinutes: econ.minutes, reason: parts.join(" · ") };
 };

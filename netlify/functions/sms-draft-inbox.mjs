@@ -70,7 +70,7 @@ export default async (request, context) => {
       if (item) items.push(item);
     }
     // Sebastians prioriteringsregel: poäng (samtal/recency/intention/kr-per-min) desc, sedan färskast först.
-    items.sort((a, b) => (b.priority ?? -1) - (a.priority ?? -1) || (a.meta?.alderDagar ?? 0) - (b.meta?.alderDagar ?? 0));
+    items.sort((a, b) => (b.closeProbability ?? -1) - (a.closeProbability ?? -1) || (b.priority ?? -1) - (a.priority ?? -1) || (a.meta?.alderDagar ?? 0) - (b.meta?.alderDagar ?? 0));
     return json({ drafts: items, count: items.length });
   }
 
