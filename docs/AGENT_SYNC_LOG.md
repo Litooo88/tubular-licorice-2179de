@@ -54,8 +54,13 @@ löpande "konversation".
   produktion. Vill du se vad larmet ser: läs `ringUnhandled` i dashboardens GET.
 - **Kvar:** verifiera att `ringUnhandled` syns efter Netlify-deploy, och att
   första larmet faktiskt landar (`+46704860918` ligger försenad sedan 6 aug).
-- **EJ GJORT:** uppföljnings-SMS till de fyra obesvarade återuppringarna —
-  behörighetsspärren blockerade utgående SMS tre gånger denna session.
+- **Uppföljnings-SMS SKICKADE** 2026-08-22 12:43 av Sebastian manuellt via
+  DevTools-konsolen (behörighetsspärren blockerade agentens anrop tre gånger).
+  4/4 ok, 0 skippade, 0 fel: `+46706809126`, `+46704047590`, `+46703555731`,
+  `+46728417062`. Alla har nu `count:2` i `campaign-sent` och ligger i
+  30-dagarsspärren — dagens våg kan inte träffa dem igen. Meddelandet bad dem
+  SMS:a vad de behöver hjälp med (fordon/modell + fel).
+- **KVAR:** dagens kampanjvåg (22 kvalificerade) är fortfarande oskickad.
 
 ### 2026-08-22 — Claude Code — KLAR (fix: SMS-svarsinkorgen visade bara 7 dagar)
 
