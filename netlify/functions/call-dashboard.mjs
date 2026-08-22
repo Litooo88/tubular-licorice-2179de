@@ -170,6 +170,31 @@ const loadBlobMap = async (storeName) => {
   return { store, items };
 };
 
+// Företagets egna nummer får aldrig ta emot kampanj-SMS. De kan dyka upp som
+// inringare (testsamtal, vidarekoppling) och hamnade tidigare i utskickslistan
+// om man byggde den i admin — undantaget fanns bara i agentens skript, alltså
+// inte alls för UI-vägen. Läses ur env så inget nummer hårdkodas.
+const OWN_NUMBER_ENV_KEYS = [
+  "VOICE_PRIMARY_NUMBER",
+  "VOICE_NOTIFY_TO",
+  "VOICE_WORKSHOP_PHONE",
+  "VOICE_SEBASTIAN_PHONE",
+  "SEBASTIAN_SMS_TO",
+  "WORKSHOP_SMS_TO",
+  "ELKS_SMS_NUMBER",
+  "VOICE_FALLBACK_NUMBER",
+];
+const ownNumbers = () => {
+  const set = new Set();
+  for (const key of OWN_NUMBER_ENV_KEYS) {
+    for (const part of String(env(key) || "").split(/[,;\s]+/)) {
+      const normalized = normalizePhone(part);
+      if (normalized) set.add(normalized);
+    }
+  }
+  return set;
+};
+
 const staffVoiceNumbers = () => ({
   workshop: normalizePhone(env("VOICE_WORKSHOP_PHONE")),
   sebastian: normalizePhone(env("VOICE_SEBASTIAN_PHONE") || env("VOICE_PRIMARY_NUMBER")),
@@ -510,7 +535,7 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     .filter((item) => item?.phone && item?.lastSentAt)
     .map((item) => ({ phone: item.phone, lastSentAt: item.lastSentAt, count: Number(item.count) || 1 }));
 
-  return { rows, todayRows, activeLeadRows, totals, stats, account, inboundSms, ringUnhandled, optoutPhones, campaignSent, readOnly: !syncLeads };
+  return { rows, todayRows, activeLeadRows, totals, stats, account, inboundSms, ringUnhandled, optoutPhones, ownNumbers: [...ownNumbers()], campaignSent, readOnly: !syncLeads };
 };
 
 export default async (request) => {
@@ -748,6 +773,11 @@ export default async (request) => {
     const code = clean(body.code, 30) || "RING10";
     if (!phone || phone === "+46") return json({ error: "Telefonnummer saknas." }, 400);
     if (!callId) return json({ error: "Call ID saknas." }, 400);
+    // Egna nummer spärras alltid, även med force=true — ett kampanj-SMS till
+    // verkstadstelefonen är alltid ett misstag.
+    if (ownNumbers().has(phone)) {
+      return json({ ok: false, skipped: "own_number", followup: { callId, phone, result: { status: "own_number" } } });
+    }
     // Optout gäller alltid — även om numret råkat komma med i en lista.
     const optout = await getStore({ name: "sms-optout", consistency: "strong" })
       .get(phone, { type: "json" }).catch(() => null);

@@ -515,7 +515,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     </div>
     <p class="muted" style="font-size:12px;margin-top:6px">Portionera utskicket: s&auml;tt max-antalet (t.ex. en tredjedel av listan) och skicka en v&aring;g per dag. Redan kontaktade nummer filtreras bort automatiskt n&auml;sta g&aring;ng du bygger listan, s&aring; det &auml;r bara att bygga om och skicka n&auml;sta v&aring;g dagen efter &mdash; ingen f&aring;r dubbelt. Nummer som svarat STOPP sp&auml;rras automatiskt p&aring; serversidan.</p>
     <h3 style="margin-top:18px">Svars-inkorg &mdash; RING-svar och andra SMS-svar</h3>
-    <p class="call-dashboard-note">Kunder som svarar <strong>RING</strong> f&aring;r automatiskt "Vi ringer upp dig inom 24 timmar" och du f&aring;r ett direkt-SMS. Listan nedan visar senaste 7 dagarna &mdash; bocka av n&auml;r du ringt.</p>
+    <p class="call-dashboard-note">Kunder som svarar <strong>RING</strong> f&aring;r automatiskt "Vi ringer upp dig inom 24 timmar" och du f&aring;r ett direkt-SMS. Listan nedan visar senaste 60 dagarna &mdash; bocka av n&auml;r du ringt. Ligger ett RING-svar obesvarat &ouml;ver 24h larmar systemet dig automatiskt via SMS.</p>
     <div class="call-actions">
       <button type="button" class="secondary" id="activateSmsInbound">Aktivera SMS-mottagning p&aring; 010-numret (eng&aring;ngs)</button>
     </div>
@@ -727,6 +727,7 @@ const customerExportEmailsEl=document.getElementById('customerExportEmails');
 const customerExportPhonesEl=document.getElementById('customerExportPhones');
 let callDashboardRows=[];
 let callOptoutPhones=[];
+let callOwnNumbers=[];
 let callCampaignSent=new Map();
 let communicationRadarEvents=[];
 let latestCustomerEmails=[];
@@ -2626,6 +2627,7 @@ async function loadCallDashboard(){
     }
     callDashboardRows=data.rows||data.todayRows||[];
     callOptoutPhones=data.optoutPhones||[];
+    callOwnNumbers=data.ownNumbers||[];
     callCampaignSent=new Map((data.campaignSent||[]).map((c)=>[c.phone,c]));
     renderCallDashboard(data);
     renderSmsInbox(data.inboundSms||[],data.ringUnhandled||[]);
@@ -2819,6 +2821,10 @@ async function buildCampaignList(){
     if(!callDashboardRows.length){showCampaignStatus('Inga samtal hittades – kontrollera samtalskällan ovan.',true);return;}
     const includeCase=document.getElementById('campaignIncludeActive').checked;
     const optouts=new Set(callOptoutPhones);
+    // Företagets egna nummer (verkstadstelefon, SMS-nummer m.fl.) kommer från
+    // servern. De spärras även serverside, men filtreras här så antalet i
+    // förhandsvisningen är sant.
+    const own=new Set(callOwnNumbers||[]);
     const groups=new Map();
     callDashboardRows.forEach((row)=>{
       if(!row.phone||!String(row.phone).startsWith('+'))return;
@@ -2843,7 +2849,7 @@ async function buildCampaignList(){
       if(['converted','ignored'].includes(String(row.leadStatus||'')))group.blocked=true;
       groups.set(row.phone,group);
     });
-    const all=[...groups.values()].filter((g)=>!g.blocked&&!optouts.has(g.phone));
+    const all=[...groups.values()].filter((g)=>!g.blocked&&!optouts.has(g.phone)&&!own.has(g.phone));
     const excludedCase=includeCase?0:all.filter((g)=>g.hasCase&&!g.sentAt).length;
     const excludedReached=all.filter((g)=>g.reached&&!g.sentAt&&(includeCase||!g.hasCase)).length;
     const pool=all.filter((g)=>(includeCase||!g.hasCase));
