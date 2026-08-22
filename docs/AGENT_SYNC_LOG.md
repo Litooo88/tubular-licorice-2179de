@@ -1,4 +1,4 @@
-﻿# Agent Sync Log — Nordic E-Mobility
+# Agent Sync Log — Nordic E-Mobility
 
 Delad realtidslogg mellan AI-agenter som jobbar i detta repo (Claude Code,
 Codex, m.fl.). Syftet: vi jobbar ofta **parallellt i samma mapp** och får inte
@@ -31,6 +31,52 @@ löpande "konversation".
 ## Logg
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
+
+### 2026-08-22 — Claude Code — KLAR (fix: SMS-svarsinkorgen visade bara 7 dagar)
+
+- **Branch:** `main`, pushad som `5239035`.
+- **Problem:** `inboundSms` i `call-dashboard.mjs` filtrerades till 7 dagar
+  medan all övrig samtalsdata visas i 60 (`CALL_WINDOW_DAYS`). Kampanjvågorna
+  går var ~14:e dag, så varje utskick hann bli osynligt innan svaren kunde
+  räknas. Svaren fanns hela tiden i blobben `sms-inbound` — de visades aldrig.
+  Kampanjens faktiska svarsfrekvens var därmed omätbar.
+- **Fix:** `inboundCutoff` följer nu `CALL_WINDOW_DAYS`. Tomtexten i
+  `admin/index.html` (`renderSmsInbox`) säger 60 dagar. `npm run build` OK.
+- **Filer:** `netlify/functions/call-dashboard.mjs`, `admin/index.html`.
+- **Kampanjanalys (2026-08-22):** 66 kampanj-SMS utskickade totalt. 9 svenska
+  nummer ringde tillbaka efteråt: 4 kom fram till slut, 1 blev kundkort,
+  **4 ringde och fick aldrig svar**, 54 hörde aldrig av sig. Tre av fyra
+  obesvarade ringde ca 15–16, värt att kolla mot bemanningen.
+- **Prioriterad ringlista (obesvarade återuppringare):** `+46706809126`
+  (9 obesvarade försök, senast 19 aug — akut), `+46704047590`, `+46703555731`,
+  `+46728417062`.
+- **EJ GJORT:** Dagens kampanjvåg (22 kvalificerade) och uppföljnings-SMS till
+  de fyra ovan gick INTE iväg — behörighetsspärren i sessionen blockerade
+  utgående SMS-anrop två gånger. Inga SMS skickade denna session.
+- **Obs:** Uppföljning till de fyra kräver `force:true` — alla fick kampanj-SMS
+  för 16–26 dagar sedan och ligger inom 30-dagarsspärren.
+- **Öppen risk:** 0 optouts och 0 inkommande SMS registrerade. Verifiera att
+  `sms-inbound`-webhooken faktiskt tar emot innan vi ber kunder svara.
+
+### 2026-08-08 — Claude Code — KLAR (kampanjvåg RING20, daglig)
+
+- **Branch:** mappen stod på `codex/nemob-strategic-implementation-plan` —
+  loggposten är därför **inte committad** (den schemalagda uppgiften tillåter
+  commit endast från `main`). Ta gärna med posten när loggen nästa gång går
+  över main.
+- **Gjorde:** Schemalagd daglig kampanjvåg (SMS, kod `RING20`, giltig t.o.m.
+  2026-08-22) till högst rankade uppringare utan kundkort som aldrig nåtts.
+- **Resultat:** 9 försökta, **9 skickade**, 0 spärr-skippade, 0 optout-skippade,
+  0 misslyckade. Kön är därmed **tom** — 0 kvalificerade kvar (143 nummergrupper,
+  734 rader i dashboarden).
+- **Skydd:** `campaignSent` fanns i API-svaret (57 nummer i 30-dagarsspärren)
+  och kontrollerades före utskick — dedup-guarden är deployad och verifierad.
+- **Filer/områden:** endast denna sync-logg. Rörde inte `admin/index.html`,
+  `.claude/launch.json`, `docs/NEMOB_OS_V1_PLAN.md` eller `tmp/`.
+- **Not:** Ett tidigare försök samma dag avbröts helt innan steg 1 (Chrome-
+  tillägget ej anslutet) — inga SMS gick iväg då, så ingen dubbelrisk.
+- **Förslag:** Listan är avbetad. Överväg att pausa den schemalagda uppgiften i
+  Scheduled-sidofältet tills nya obesvarade samtal ackumulerats.
 
 ### 2026-08-07 — Claude Code — KLAR (utkastinkorgen live: 79 importerade + INCIDENT 4: funktionsnamnkollision)
 
