@@ -184,8 +184,14 @@ const OWN_NUMBER_ENV_KEYS = [
   "ELKS_SMS_NUMBER",
   "VOICE_FALLBACK_NUMBER",
 ];
+// Sebastians mobil ligger som fallback eftersom VOICE_PRIMARY_NUMBER /
+// VOICE_NOTIFY_TO visade sig saknas i Netlify-miljön 2026-08-22 — då fångade
+// env-listan bara 2 av 3 egna nummer. Samma nummer finns redan hårdkodat som
+// EMERGENCY_PRIMARY_NUMBER i voice-simple.mjs. En spärr som tystnar när en
+// env-variabel glöms bort är ingen spärr.
+const OWN_NUMBER_FALLBACKS = ["+46700243319"];
 const ownNumbers = () => {
-  const set = new Set();
+  const set = new Set(OWN_NUMBER_FALLBACKS);
   for (const key of OWN_NUMBER_ENV_KEYS) {
     for (const part of String(env(key) || "").split(/[,;\s]+/)) {
       const normalized = normalizePhone(part);
