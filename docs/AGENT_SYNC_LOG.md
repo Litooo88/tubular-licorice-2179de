@@ -55,8 +55,18 @@ löpande "konversation".
   utgående SMS-anrop två gånger. Inga SMS skickade denna session.
 - **Obs:** Uppföljning till de fyra kräver `force:true` — alla fick kampanj-SMS
   för 16–26 dagar sedan och ligger inom 30-dagarsspärren.
-- **Öppen risk:** 0 optouts och 0 inkommande SMS registrerade. Verifiera att
-  `sms-inbound`-webhooken faktiskt tar emot innan vi ber kunder svara.
+- **Deployad** som `5239035` (verifierad live 2026-08-22). Fixen avslöjade
+  direkt ett dolt RING-svar som legat obesvarat i 16 dagar:
+- **HETASTE LEADET — `+46704860918`:** ringde 4 ggr 4 aug (aldrig svar, lämnade
+  röstbrevlåda), fick kampanj-SMS 6 aug 01:33, svarade **"Ring"** 6 aug 05:31.
+  Vi lovade uppringning inom 24h. `handled:false`, ingen uppringning, inget
+  kundkort, personen har inte hört av sig igen. Detta var osynligt i admin
+  enbart p.g.a. 7-dagarsfiltret. RING FÖRST — SMS:a inte, personen har redan
+  bett om ett samtal.
+- **Webhooken fungerar** — `sms-inbound` tog emot svaret korrekt. 0 optouts är
+  alltså äkta, inte ett trasigt flöde.
+- **Öppen risk:** RING-svar syns bara om någon tittar i inkorgen. Överväg
+  notis/eskalering när ett `type:"ring"` legat `handled:false` > 24h.
 
 ### 2026-08-08 — Claude Code — KLAR (kampanjvåg RING20, daglig)
 
