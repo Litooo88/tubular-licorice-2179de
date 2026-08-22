@@ -1998,3 +1998,9 @@ löpande "konversation".
 - **Nästa / överlämning:** <vad som är kvar>
 - **Varning:** <vad den andra agenten bör undvika att röra just nu>
 ```
+
+### 2026-08-22 — Claude Code — KLAR — Obesvarade förfrågningar: auto-svar <500 kr + pricksäkra utkast + stängningschans
+- Auto-skickat (46elks, via /api/sms-drafts/:id/approve) till 6 småärenden <500 kr med gardering "Har vi redan pratat så bortse från detta". Testärende skippat.
+- 31 individuella utkast (pris som från-pris, RING + bokningslänk, gardering) ersatte mallutkasten i inkorgen; mejlnotis skickad.
+- PR #132 (feat/lead-prioritering) uppdaterad: closeProbability 0–100 = huvudsortering, autoReplyEligible-regel, admin visar "Chans X %", docs/LEAD-PRIORITERING.md. Ej mergad ännu — efter merge: kör berikning (missedCalls) så att sorteringen blir skarp.
+- Kvar: dag-för-dag-sammanställning av samtal + utredning av "20% rabatt"-SMS.
