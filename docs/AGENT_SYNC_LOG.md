@@ -32,6 +32,37 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-22 — Claude Code — KLAR (egna nummer spärrade + schemalagd uppgift gjord till rapport)
+
+- **Branch:** `main`, pushad som `fb40961` + `734e063`.
+- **Hittade:** undantaget för företagets EGNA nummer fanns bara som hårdkodad
+  lista i agentens kampanjskript. Byggde man utskickslistan i **admin-UI:t**
+  saknades det helt — ett eget nummer som dykt upp som inringare (testsamtal,
+  vidarekoppling) hade fått kampanj-SMS. UI:t och skriptet filtrerade i övrigt
+  IDENTISKT, så gapet gällde bara egna nummer.
+- **Fix:** `ownNumbers()` i `call-dashboard.mjs` läser numren ur env
+  (`VOICE_PRIMARY_NUMBER`, `SEBASTIAN_SMS_TO`, `WORKSHOP_SMS_TO`,
+  `ELKS_SMS_NUMBER` m.fl.). `send_discount` svarar `skipped:"own_number"`,
+  spärren gäller även med `force=true`. Numren exponeras som `ownNumbers` så
+  admin filtrerar dem ur förhandsvisningen.
+- **ENV-GAP UPPTÄCKT:** vid verifiering mot live fångades bara 2 av 3 nummer
+  (`+46725751086`, `+46766867131`). **`VOICE_PRIMARY_NUMBER` och
+  `VOICE_NOTIFY_TO` är inte satta i Netlify** — därför saknades
+  `+46700243319`. Lagt som fallback i koden, men **sätt env-variablerna**;
+  andra funktioner kan förlita sig på dem. `voice-simple.mjs` har samma nummer
+  hårdkodat som `EMERGENCY_PRIMARY_NUMBER`, vilket döljer att env saknas.
+- **Följd för RING-larmet:** `SEBASTIAN_SMS_TO` verkar också saknas, så
+  `ring-escalate` faller tillbaka på `WORKSHOP_SMS_TO` (+46725751086). Larmet
+  går fram, men till verkstadsnumret.
+- **Rättat:** texten i svars-inkorgen sa fortfarande "senaste 7 dagarna" efter
+  fönsterbytet tidigare idag.
+- **Schemalagd uppgift `kampanjvag-1-sondag-10` omgjord till ren
+  lägesrapport** (skickar inga SMS). Den försökte skicka och blockerades av
+  behörighetsspärren varje körning. Utskicket görs i admin-panelen
+  "Uppringar-kampanj" (Bygg utskickslista → max 25 → Skicka), som redan har
+  redigerbar meddelandetext och samma filter. Ingen DevTools-konsol behövs.
+- **Testat:** `npm run build` OK, `ownNumbers` verifierad mot live-deployen.
+
 ### 2026-08-22 — Claude Code — KLAR (larm för obesvarade RING-svar)
 
 - **Branch:** `main`, pushad som `26e9a4c` (rebasad över Codex `9b45e2e`).
