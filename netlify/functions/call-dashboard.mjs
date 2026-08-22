@@ -480,8 +480,11 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     account = null;
   }
 
-  // Svars-inkorg: inkommande SMS (RING-svar m.m.) senaste 7 dagarna + optouts.
-  const inboundCutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  // Svars-inkorg: inkommande SMS (RING-svar m.m.) + optouts. Fönstret följer
+  // CALL_WINDOW_DAYS så inkorgen täcker samma period som samtalsdatan — med
+  // det gamla 7-dagarsfönstret blev svar på kampanj-SMS osynliga så fort
+  // utskicket var drygt en vecka gammalt (kampanjvågorna går var 14:e dag).
+  const inboundCutoff = Date.now() - CALL_WINDOW_DAYS * 24 * 60 * 60 * 1000;
   const [{ items: inboundMap }, { items: optoutMap }] = await Promise.all([
     loadBlobMap("sms-inbound"),
     loadBlobMap("sms-optout"),

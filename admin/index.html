@@ -2907,7 +2907,7 @@ async function sendCampaign(){
 function renderSmsInbox(items){
   const el=document.getElementById('smsInboxList');
   if(!el)return;
-  if(!items.length){el.innerHTML='<div class="muted">Inga SMS-svar senaste 7 dagarna.</div>';return;}
+  if(!items.length){el.innerHTML='<div class="muted">Inga SMS-svar senaste 60 dagarna.</div>';return;}
   const typeLabel={ring:'RING – vill bli uppringd',stopp:'STOPP (avregistrerad)',other:'Övrigt svar'};
   el.innerHTML=`
     <table class="call-table">
