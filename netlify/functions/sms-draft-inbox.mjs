@@ -1,6 +1,7 @@
 import { getStore } from "@netlify/blobs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
 import { normalizePhone, postSms } from "./_shared/sms.mjs";
+import { scoreLead } from "./_shared/lead-priority.mjs";
 
 // SMS-utkastinkorg: AI/agent genererar utkast för obesvarade ärenden,
 // Sebastian granskar och godkänner i admin, systemet skickar spårbart.
@@ -68,7 +69,8 @@ export default async (request, context) => {
       const item = await drafts.get(blob.key, { type: "json" }).catch(() => null);
       if (item) items.push(item);
     }
-    items.sort((a, b) => String(a.meta?.alderDagar ?? 0) - String(b.meta?.alderDagar ?? 0));
+    // Sebastians prioriteringsregel: poäng (samtal/recency/intention/kr-per-min) desc, sedan färskast först.
+    items.sort((a, b) => (b.priority ?? -1) - (a.priority ?? -1) || (a.meta?.alderDagar ?? 0) - (b.meta?.alderDagar ?? 0));
     return json({ drafts: items, count: items.length });
   }
 
@@ -91,12 +93,21 @@ export default async (request, context) => {
           tjanst: clean(draft.meta?.tjanst, 140),
           alderDagar: Number(draft.meta?.alderDagar) || 0,
           ursprung: clean(draft.meta?.ursprung, 300),
+          missedCalls: Number(draft.meta?.missedCalls) || 0,
+          lastCallDate: clean(draft.meta?.lastCallDate, 20),
         },
+        ...scoreLead({
+          missedCalls: draft.meta?.missedCalls,
+          alderDagar: draft.meta?.alderDagar,
+          ursprung: draft.meta?.ursprung,
+          tjanst: draft.meta?.tjanst,
+        }),
         importedAt: new Date().toISOString(),
       });
       stored++;
     }
-    const mail = await notifyEmail(stored);
+    // silent=true vid om-import/berikning (ingen ny mailnotis).
+    const mail = body.silent === true ? { status: "silent" } : await notifyEmail(stored);
     return json({ ok: true, stored, notification: mail.status });
   }
 
