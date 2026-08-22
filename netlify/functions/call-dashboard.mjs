@@ -1,5 +1,6 @@
 import { getStore } from "@netlify/blobs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
+import { findStaleRingReplies } from "./_shared/ring-escalation.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -495,6 +496,13 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     .sort((a, b) => String(b.at).localeCompare(String(a.at)));
   const optoutPhones = [...optoutMap.keys()];
 
+  // Obesvarade RING-svar som passerat tröskeln. Samma detektion som det
+  // schemalagda larmet (ring-escalate.mjs) — admin och SMS-larm får aldrig
+  // visa olika sanning. Läser inboundMap som redan hämtats ovan.
+  const ringUnhandled = await findStaleRingReplies({
+    items: [...inboundMap.entries()].map(([key, item]) => ({ key, ...item })),
+  }).catch(() => []);
+
   // Auktoritativ kampanjhistorik per telefonnummer (store "campaign-sent") —
   // detta, inte callId-followups, är sanningen om vem som fått kampanj-SMS.
   const { items: campaignMap } = await loadBlobMap("campaign-sent");
@@ -502,7 +510,7 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     .filter((item) => item?.phone && item?.lastSentAt)
     .map((item) => ({ phone: item.phone, lastSentAt: item.lastSentAt, count: Number(item.count) || 1 }));
 
-  return { rows, todayRows, activeLeadRows, totals, stats, account, inboundSms, optoutPhones, campaignSent, readOnly: !syncLeads };
+  return { rows, todayRows, activeLeadRows, totals, stats, account, inboundSms, ringUnhandled, optoutPhones, campaignSent, readOnly: !syncLeads };
 };
 
 export default async (request) => {

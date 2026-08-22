@@ -2626,7 +2626,7 @@ async function loadCallDashboard(){
     callOptoutPhones=data.optoutPhones||[];
     callCampaignSent=new Map((data.campaignSent||[]).map((c)=>[c.phone,c]));
     renderCallDashboard(data);
-    renderSmsInbox(data.inboundSms||[]);
+    renderSmsInbox(data.inboundSms||[],data.ringUnhandled||[]);
     showCallStatus(`Samtal uppdaterade ${new Date().toLocaleTimeString('sv-SE')}.`);
   }catch(error){
     showCallStatus(error.message,true);
@@ -2904,12 +2904,20 @@ async function sendCampaign(){
   showCampaignStatus(`Våg klar: ${ok} skickade${failed.length?`, ${failed.length} misslyckades (${failed.slice(0,5).join(', ')}${failed.length>5?'…':''})`:''}${remaining?` · ${remaining} nummer kvar till nästa våg`:' · hela listan är nu kontaktad'}.`,Boolean(failed.length));
   await loadCallDashboard();
 }
-function renderSmsInbox(items){
+function renderSmsInbox(items,stale){
   const el=document.getElementById('smsInboxList');
   if(!el)return;
-  if(!items.length){el.innerHTML='<div class="muted">Inga SMS-svar senaste 60 dagarna.</div>';return;}
+  // Samma lista som det schemalagda larmet (ring-escalate) ser. En kund som
+  // svarat RING är lovad uppringning inom 24h - ligger den kvar är det ett
+  // tapp, inte en notis bland andra.
+  const overdue=(stale||[]);
+  const banner=overdue.length?`<div class="panel stat" style="border-color:#c0392b;background:rgba(192,57,43,.12);display:block;margin-bottom:10px">
+      <b style="color:#ff6b5e">${overdue.length} RING-svar väntar på uppringning &mdash; lovad inom 24h</b>
+      <div class="muted-small">${overdue.map((o)=>`${html(o.phone)} (${o.waitedHours>=48?Math.floor(o.waitedHours/24)+' dygn':o.waitedHours+' h'})`).join(' &middot; ')}</div>
+    </div>`:'';
+  if(!items.length){el.innerHTML=banner+'<div class="muted">Inga SMS-svar senaste 60 dagarna.</div>';return;}
   const typeLabel={ring:'RING – vill bli uppringd',stopp:'STOPP (avregistrerad)',other:'Övrigt svar'};
-  el.innerHTML=`
+  el.innerHTML=banner+`
     <table class="call-table">
       <thead><tr><th>Tid</th><th>Nummer</th><th>Typ</th><th>Meddelande</th><th>Status</th></tr></thead>
       <tbody>${items.map((item)=>`
