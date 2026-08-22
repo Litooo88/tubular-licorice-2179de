@@ -32,6 +32,31 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-22 — Claude Code — KLAR (larm för obesvarade RING-svar)
+
+- **Branch:** `main`, pushad som `26e9a4c` (rebasad över Codex `9b45e2e`).
+- **Varför:** Följd av 16-dagarsfyndet i posten nedan. Ett RING-svar syntes
+  bara om någon öppnade admin — men felet ÄR att ingen tittar.
+- **Nya filer:** `netlify/functions/_shared/ring-escalation.mjs` (delad
+  detektion), `netlify/functions/ring-escalate.mjs` (schemalagd, `7 * * * *`).
+- **Ändrat:** `call-dashboard.mjs` exponerar `ringUnhandled`; `admin/index.html`
+  visar röd banner överst i svars-inkorgen med nummer + väntetid.
+- **Beteende:** nya försenade poster larmar direkt, kvarliggande påminner var
+  24h, tyst 21–07 svensk tid, staten nollas när kön är tom. Saknas SMS-env
+  svarar den `not_configured` utan att krascha.
+- **Env (alla har defaults):** `RING_ESCALATE_HOURS` (24),
+  `RING_REALERT_HOURS` (24), `RING_ALERT_QUIET_START` (21),
+  `RING_ALERT_QUIET_END` (7).
+- **Testat:** `npm run build` OK. Enhetstest av detektionen lokalt — filtrerar
+  bort `handled`, `stopp`, `other`, för färska och trasiga tidsstämplar;
+  sorterar äldst först; tysta timmar verifierade mot Europe/Stockholm.
+- **OBS för nästa agent:** scheduled functions går INTE att anropa via HTTP i
+  produktion. Vill du se vad larmet ser: läs `ringUnhandled` i dashboardens GET.
+- **Kvar:** verifiera att `ringUnhandled` syns efter Netlify-deploy, och att
+  första larmet faktiskt landar (`+46704860918` ligger försenad sedan 6 aug).
+- **EJ GJORT:** uppföljnings-SMS till de fyra obesvarade återuppringarna —
+  behörighetsspärren blockerade utgående SMS tre gånger denna session.
+
 ### 2026-08-22 — Claude Code — KLAR (fix: SMS-svarsinkorgen visade bara 7 dagar)
 
 - **Branch:** `main`, pushad som `5239035`.
