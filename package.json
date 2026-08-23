@@ -17,6 +17,7 @@
     "build": "npm run test:voice && npm run test:status && npm run generate:products && npm run build:dist && echo Static site ready"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.120.0",
     "@netlify/blobs": "^8.1.0",
     "stripe": "^14.0.0"
   }
