@@ -195,7 +195,10 @@ label.check input { width: auto; }
 }
 #modal h3 { margin-bottom: 10px; font-size: 15px; }
 #modal .m-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
-#modal input, #modal textarea { width: 100%; }
+#modal input, #modal textarea, #modal select { width: 100%; }
+.advice ul, .advice ol { margin: 6px 0 6px 18px; }
+.advice li { margin: 2px 0; }
+.advice blockquote { margin: 4px 0; padding: 6px 10px; border-left: 3px solid var(--accent); }
 
 #lookup-input, #batteriref-input { width: 100%; font-size: 16px; padding: 10px 12px; }
 #batteriref-banner .banner { margin-top: 8px; margin-bottom: 8px; }

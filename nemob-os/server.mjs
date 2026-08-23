@@ -17,6 +17,7 @@ import { generatePlan, summarizeDay } from "./lib/plan.mjs";
 import { fetchNordicBrief } from "./lib/nordic.mjs";
 import { fetchAdminCases } from "./lib/admin-cases.mjs";
 import { openCasesPrioritized, searchCases } from "./lib/lookup.mjs";
+import { adviseTask } from "./lib/advice.mjs";
 import { runAdminAction } from "./lib/admin-actions.mjs";
 import { banner as batterirefBanner, beslutsstod, loadBatteriref, searchRows } from "./lib/batteriref.mjs";
 import {
@@ -321,6 +322,14 @@ const handleApi = async (req, res, url) => {
   }
 
   const taskMatch = path.match(/^\/api\/tasks\/([A-Za-z0-9_]+)$/);
+  // Rådgivning: ska uppgiften bokas om, och hur? Ändrar ingenting — bara förslag.
+  const adviceMatch = path.match(/^\/api\/tasks\/([^/]+)\/advice$/);
+  if (adviceMatch && req.method === "POST") {
+    const task = store.taskById(adviceMatch[1]);
+    if (!task) return json(res, { error: "Uppgiften finns inte." }, 404);
+    return json(res, await adviseTask(task, store.tasks));
+  }
+
   if (taskMatch && req.method === "PATCH") {
     const existing = store.taskById(taskMatch[1]);
     if (!existing) return json(res, { error: "Uppgiften finns inte." }, 404);

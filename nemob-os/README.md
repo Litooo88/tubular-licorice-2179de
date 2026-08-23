@@ -53,6 +53,21 @@ Skyddet: PIN krävs för allt (sidor och API), timing-safe jämförelse, max 20
 felförsök/timme, sessioner dör när servern startas om på riktigt (i minnet).
 Datorn måste vara på och telefonen på samma nätverk — datan lämnar aldrig huset.
 
+## Råd – ska uppgiften bokas om?
+
+Varje uppgift har knappen **Råd**. Den svarar på en enda fråga: *ska jag boka om
+den här, och i så fall hur?* Svaret är ett förslag (Gör idag / Flytta → datum /
+Dela upp / Kontakta först / Delegera / Släpp) med skäl, konkreta steg och risken
+om den flyttas. Datumförslag är alltid en vardag med ledig kapacitet (max 300
+min/dag) och senast dagen före deadline. Kund som väntar får alltid rådet
+"livstecken idag, jobbet flyttas". Inget ändras förrän du väljer **Tillämpa**
+(flytta / prioritera / sätt nästa steg).
+
+Två lager: regler (fungerar alltid) och Claude ovanpå om `ANTHROPIC_API_KEY`
+finns i `.env` (`lib/advice.mjs`, modell `claude-opus-5`, strukturerat
+JSON-svar, låg effort). Utan nyckel: `not_configured` och regelrådet visas.
+Nyckeln läses bara från env och når aldrig telefonen.
+
 ## Slå upp ärende (sökrutan överst)
 
 Sök på **namn, telefonnummer (valfritt format), modell eller ärendenummer** —

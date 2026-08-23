@@ -133,6 +133,38 @@ const actions = {
     return patchTask(id, { pinned: !task?.pinned });
   },
   edit: (id) => startEdit(id),
+  advice: async (id) => {
+    const task = state.tasks.find((item) => item.id === id);
+    if (!task) return;
+    const waiting = openModal("Rådgivning", `<span class="muted">Tänker… (väger deadline, kund, belastning och dagens topp 5)</span>`);
+    let data;
+    try { data = await api(`/api/tasks/${id}/advice`, { method: "POST", body: {} }); }
+    catch (error) { closeModal(null); alert(error.message); return; }
+    closeModal(null); await waiting;
+    const a = data.advice;
+    const src = a.source === "ai" ? "Claude + regler" : data.aiStatus === "not_configured" ? "regler (lägg ANTHROPIC_API_KEY i .env för AI-råd)" : `regler (AI nere: ${escapeHtml(data.aiCode || "")})`;
+    const result = await openModal(`Råd: ${escapeHtml(task.title)}`, `
+      <div class="advice">
+        <div class="t-title">${escapeHtml(a.recommendationLabel)}${a.suggestedDate ? ` → ${escapeHtml(a.suggestedDate)}` : ""}</div>
+        <ul>${(a.reasons || []).map((r) => `<li>${escapeHtml(r)}</li>`).join("")}</ul>
+        ${a.steps?.length ? `<div class="t-meta">Så gör du:</div><ol>${a.steps.map((s) => `<li>${escapeHtml(s)}</li>`).join("")}</ol>` : ""}
+        <div class="t-meta">Risk om den flyttas: ${escapeHtml(a.riskIfMoved || "–")}</div>
+        ${a.messageToCustomer ? `<div class="t-meta">Förslag till kunden:</div><blockquote>${escapeHtml(a.messageToCustomer)}</blockquote>` : ""}
+        <div class="small-text muted">Källa: ${src}</div>
+        <label class="field">Tillämpa
+          <select name="apply">
+            <option value="">Ingenting – jag bestämmer själv</option>
+            ${a.suggestedDate ? `<option value="move" selected>Flytta till ${escapeHtml(a.suggestedDate)}</option>` : ""}
+            <option value="pin">Prioritera överst idag</option>
+            ${a.steps?.length ? `<option value="nextstep">Sätt första steget som nästa steg</option>` : ""}
+          </select>
+        </label>
+      </div>`);
+    if (!result) return;
+    if (result.apply === "move") await patchTask(id, { status: "flyttad", movedToDate: a.suggestedDate });
+    else if (result.apply === "pin") await patchTask(id, { pinned: true, status: task.status === "flyttad" ? "ny" : task.status });
+    else if (result.apply === "nextstep") await patchTask(id, { nextStep: a.steps[0].slice(0, 500) });
+  },
 };
 
 document.body.addEventListener("click", (event) => {
@@ -162,6 +194,7 @@ const actionButtons = (task) => {
   } else {
     buttons.push(`<button class="small" data-action="reopen" data-id="${task.id}">Öppna igen</button>`);
   }
+  buttons.push(`<button class="small" data-action="advice" data-id="${task.id}">Råd</button>`);
   buttons.push(`<button class="small" data-action="edit" data-id="${task.id}">Redigera</button>`);
   return `<div class="row-actions">${buttons.join("")}</div>`;
 };
