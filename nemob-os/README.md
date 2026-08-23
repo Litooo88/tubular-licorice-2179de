@@ -59,9 +59,18 @@ Sök på **namn, telefonnummer (valfritt format), modell eller ärendenummer** �
 träffarna visar ägare, klickbart telefonnummer, fordon, status och dagar öppet.
 Knappen **"Pågående arbeten"** ger den prioriterade verkstadslistan (äldst först).
 
+Varje träff har **📞 Ring via växeln** och **💬 SMS**. Ring = 46elks ringer upp
+din mobil först (från företagsnumret); när du svarar kopplas kunden in och ser
+010-138 54 98. Samtalet hamnar i 46elks samtalslogg som utgående och får en
+rad på ärendet (timeline + callLog). SMS skickas via API från företagsnumret
+och loggas på ärendet. Är växeln/SMS-API:t inte konfigurerat faller knapparna
+tillbaka till telefonens egna tel:/sms:-länkar.
+
 Kräver `NORDIC_ADMIN_TOKEN` i `.env` (samma token som admin). Utan den visas
 ett tydligt `not_configured`-läge. Säkerhetsmodell: token skickas endast
-server-till-server, endast GET (proxyn kan inte skriva), telefonen får aldrig
+server-till-server; läsning är GET-only, och de enda skrivvägarna är de två
+whitelistade kontaktåtgärderna (`lib/admin-actions.mjs` — ändrar aldrig status,
+bokar inte om, skickar ingen mail); telefonen får aldrig
 hela databasen — bara whitelistade fält för max 20 träffar. Listan cachas 60 s
 och senast hämtade lista visas märkt om källan är nere.
 

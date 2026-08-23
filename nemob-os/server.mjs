@@ -17,6 +17,7 @@ import { generatePlan, summarizeDay } from "./lib/plan.mjs";
 import { fetchNordicBrief } from "./lib/nordic.mjs";
 import { fetchAdminCases } from "./lib/admin-cases.mjs";
 import { openCasesPrioritized, searchCases } from "./lib/lookup.mjs";
+import { runAdminAction } from "./lib/admin-actions.mjs";
 import { banner as batterirefBanner, beslutsstod, loadBatteriref, searchRows } from "./lib/batteriref.mjs";
 import {
   CanonicalKnowledgeSource,
@@ -275,6 +276,18 @@ const handleApi = async (req, res, url) => {
       stale: result.status === "down",
       results: openCasesPrioritized(result.cases),
     });
+  }
+
+  // Kundkontakt från ärendet: ring (click-to-call via växeln) eller SMS.
+  // Enda skrivvägarna mot admin — whitelistade i lib/admin-actions.mjs.
+  const actionMatch = path.match(/^\/api\/lookup\/([^/]+)\/(call|sms)$/);
+  if (actionMatch && req.method === "POST") {
+    const body = await readBody(req);
+    const result = await runAdminAction(actionMatch[2], decodeURIComponent(actionMatch[1]), body || {});
+    if (result.status === "ok") return json(res, { status: "ok", ...result.result });
+    if (result.status === "not_configured") return json(res, { status: "not_configured" });
+    if (result.status === "rejected") return json(res, { error: result.error || "Åtgärden avvisades." }, 400);
+    return json(res, { error: `Kan inte nå ärendedatabasen just nu (${result.code}).` }, 502);
   }
 
   // Batteriprisreferens (internt material, läses utanför repot via env).
