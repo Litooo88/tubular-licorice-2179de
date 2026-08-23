@@ -2071,3 +2071,8 @@ löpande "konversation".
 - NEMOB OS: `lib/admin-actions.mjs` (enda POST-vägarna mot admin: call + sms), routes POST /api/lookup/:id/(call|sms), knappar i Slå upp-fliken. Tester 67/67, build OK.
 - Samtalsrapport levererad till Sebastian (993 samtal 24 maj–21 aug, 10,8 % besvarade; RING20-kampanjen = 20 %-SMS:et). Skript i Claude-scratchpad, inget i repot.
 - Obs för andra agenter: call-dashboard filtrerar direction=incoming — utgående click-to-call-samtal syns i 46elks men inte i dashboarden ännu (följearbete).
+
+### 2026-08-23 — Claude Code — KLAR — Råd-knapp i NEMOB OS (PR feat/task-advice)
+- `nemob-os/lib/advice.mjs`: regelråd (deadline/kund väntar/stora block/belastning per vardag) + Claude-lager via `@anthropic-ai/sdk` (claude-opus-5, json_schema) bakom ANTHROPIC_API_KEY, not_configured utan nyckel. POST /api/tasks/:id/advice ändrar inget; Tillämpa i UI gör PATCH.
+- Root package.json har nu `@anthropic-ai/sdk` som dependency (kör `npm install` efter merge). Tester 68/68, smoke-testat i browser.
+- Öppna PR:er från Claude: feat/click-to-call (case-call.mjs) och feat/task-advice. Oberoende av varandra.
