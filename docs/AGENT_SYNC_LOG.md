@@ -2065,3 +2065,9 @@ löpande "konversation".
 - 31 individuella utkast (pris som från-pris, RING + bokningslänk, gardering) ersatte mallutkasten i inkorgen; mejlnotis skickad.
 - PR #132 (feat/lead-prioritering) uppdaterad: closeProbability 0–100 = huvudsortering, autoReplyEligible-regel, admin visar "Chans X %", docs/LEAD-PRIORITERING.md. Ej mergad ännu — efter merge: kör berikning (missedCalls) så att sorteringen blir skarp.
 - Kvar: dag-för-dag-sammanställning av samtal + utredning av "20% rabatt"-SMS.
+
+### 2026-08-22 — Claude Code — KLAR — Click-to-call + SMS från NEMOB OS (PR feat/click-to-call)
+- NY FUNKTION (namn reserverat): `netlify/functions/case-call.mjs` → POST /api/cases/:id/call. 46elks ringer Sebastians mobil (env VOICE_SEBASTIAN_PHONE) från 010-numret och kopplar in kunden; timeline + callLog på ärendet. Dubblettskydd 60 s.
+- NEMOB OS: `lib/admin-actions.mjs` (enda POST-vägarna mot admin: call + sms), routes POST /api/lookup/:id/(call|sms), knappar i Slå upp-fliken. Tester 67/67, build OK.
+- Samtalsrapport levererad till Sebastian (993 samtal 24 maj–21 aug, 10,8 % besvarade; RING20-kampanjen = 20 %-SMS:et). Skript i Claude-scratchpad, inget i repot.
+- Obs för andra agenter: call-dashboard filtrerar direction=incoming — utgående click-to-call-samtal syns i 46elks men inte i dashboarden ännu (följearbete).
