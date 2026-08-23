@@ -512,8 +512,59 @@ const renderLookupResults = (data, mode) => {
         ${c.daysOpen !== null ? ` · ${c.daysOpen} dagar` : ""}
         ${c.paymentStatus && c.paymentStatus !== "unpaid" ? ` · betalning: ${escapeHtml(c.paymentStatus)}` : ""}
       </div>
+      ${c.phone ? `<div class="contact-actions" data-case="${escapeHtml(c.id)}" data-phone="${escapeHtml(c.phone)}">
+        <button class="small act-call" type="button">📞 Ring via växeln</button>
+        <button class="small act-sms" type="button">💬 SMS</button>
+        <span class="contact-status small-text"></span>
+        <div class="sms-box" hidden>
+          <textarea rows="3" maxlength="600" placeholder="Meddelande till kunden… (skickas från företagsnumret, loggas på ärendet)"></textarea>
+          <div class="m-actions"><button class="small act-sms-cancel" type="button">Avbryt</button><button class="small primary act-sms-send" type="button">Skicka SMS</button></div>
+        </div>
+      </div>` : ""}
     </div>`).join("");
 };
+
+// Kundkontakt från träffen. Ring = 46elks ringer upp din mobil först, sedan
+// kunden (kunden ser 010-numret, samtalet loggas på ärendet). Faller tillbaka
+// till telefonens egna tel:/sms:-länkar om växeln inte är konfigurerad.
+$("#lookup-results").addEventListener("click", async (event) => {
+  const button = event.target.closest("button");
+  if (!button) return;
+  const box = button.closest(".contact-actions");
+  if (!box) return;
+  const caseId = box.dataset.case;
+  const phone = box.dataset.phone;
+  const status = box.querySelector(".contact-status");
+  const smsBox = box.querySelector(".sms-box");
+  const say = (text, bad = false) => { status.textContent = text; status.style.color = bad ? "#f5c0b8" : "var(--accent)"; };
+
+  if (button.classList.contains("act-sms")) { smsBox.hidden = !smsBox.hidden; if (!smsBox.hidden) smsBox.querySelector("textarea").focus(); return; }
+  if (button.classList.contains("act-sms-cancel")) { smsBox.hidden = true; return; }
+
+  if (button.classList.contains("act-call")) {
+    if (!confirm(`Ringa ${phone} via växeln?\n\nDin mobil ringer först – svara, så kopplas kunden in. Kunden ser 010-138 54 98.`)) return;
+    button.disabled = true; say("Startar samtal…");
+    try {
+      const data = await api(`/api/lookup/${encodeURIComponent(caseId)}/call`, { method: "POST", body: {} });
+      if (data.status === "not_configured") { say("Växeln ej konfigurerad – ringer från mobilen."); window.location.href = `tel:${phone}`; }
+      else say("Din mobil ringer strax – svara så kopplas kunden in.");
+    } catch (error) { say(error.message, true); }
+    finally { setTimeout(() => { button.disabled = false; }, 60000); }
+    return;
+  }
+
+  if (button.classList.contains("act-sms-send")) {
+    const message = smsBox.querySelector("textarea").value.trim();
+    if (!message) { say("Skriv ett meddelande först.", true); return; }
+    button.disabled = true; say("Skickar…");
+    try {
+      const data = await api(`/api/lookup/${encodeURIComponent(caseId)}/sms`, { method: "POST", body: { message } });
+      if (data.status === "not_configured") { say("SMS-API ej konfigurerat – öppnar telefonens SMS."); window.location.href = `sms:${phone}?body=${encodeURIComponent(message)}`; }
+      else { say("SMS skickat och loggat på ärendet."); smsBox.querySelector("textarea").value = ""; smsBox.hidden = true; }
+    } catch (error) { say(error.message, true); }
+    finally { button.disabled = false; }
+  }
+});
 
 let lookupTimer = null;
 $("#lookup-input").addEventListener("input", (event) => {

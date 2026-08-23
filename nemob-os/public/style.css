@@ -201,6 +201,10 @@ label.check input { width: auto; }
 #batteriref-banner .banner { margin-top: 8px; margin-bottom: 8px; }
 #batteriref-results { overflow-wrap: anywhere; }
 .lookup-hit .tel-link { color: var(--accent); text-decoration: none; margin-left: 8px; font-weight: 400; }
+.contact-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 8px; }
+.contact-actions button { min-height: 36px; }
+.contact-actions .sms-box { flex-basis: 100%; }
+.contact-actions textarea { width: 100%; font-size: 16px; }
 .chip.status-ready { color: #b8f5cd; border-color: #2f7a4c; }
 .chip.status-in_progress, .chip.status-checked_in { color: #b8dcf5; border-color: #37698a; }
 .chip.status-waiting_customer { color: #f0dfa8; border-color: #7a6c3c; }
