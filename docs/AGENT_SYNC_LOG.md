@@ -32,6 +32,39 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-28 — Claude Code — KLAR (blindfläck i dagliga rapporten åtgärdad)
+
+- **Branch:** `main`. Ingen repo-kod ändrad, bara denna logg. Ändringen ligger i
+  den schemalagda uppgiften
+  `C:\Users\Sebas\.claude\scheduled-tasks\kampanjvag-1-sondag-10\SKILL.md`
+  (utanför repot — nämns här så nästa agent vet var logiken bor).
+- **Blindfläck:** vågen filtrerar bort alla nummer med `answeredBy` i
+  `workshop|sebastian|other` (`reached`). Men flera av dem har ringt igen
+  **efter** kontakten utan att det blev ärende. De syntes varken i vågen eller i
+  `obesvaradeAteruppringare` (den listan tittar bara på dem som fått kampanj-SMS)
+  — alltså osynliga i den dagliga rapporten trots att de ofta är hetast.
+  **9 nummer** låg i den luckan idag.
+- **Åtgärd:** ny sektion `varmaEfterKontakt` i skriptet + egen punkt i
+  rapportordningen (efter obesvarade återuppringare, före vågen). La också till
+  en `tackning`-rad (rader/unika/nyaste samtal vs nu) så framtida körningar
+  redovisar att listan faktiskt är avstämd fram till senaste samtal, samt
+  kompakta strängar i `vagTopp25` — objektformen kapades av output-gränsen
+  innan topp 25 var slut.
+- **Hetast just nu:** `+46706809126` — nådd 13 aug, har ringt **7 gånger** sedan
+  dess, senast **idag 08:21**. Har fått kampanj-SMS. Näst hetast
+  `+46707449244`: 4 obesvarade samtal 16:57–17:15 igår efter samtal 13:48,
+  inget SMS skickat.
+- **RING-svaret `+46704860918` kvarstår obesvarat, nu ~530 h (22 dygn).**
+  Oförändrat sedan i går. Se posten nedan om `SEBASTIAN_SMS_TO`.
+- **Observation, ej larm:** `/api/call-dashboard` returnerade 695 rader kl 08:07
+  och 689 kl 11:35, medan unika nummer stod still på 154. Äldsta raden är
+  2026-06-29, dvs ~60 dagar tillbaka — ser ut som ett rullande 60-dagarsfönster
+  som petar ut gamla rader i andra änden. Om någon räknar historik mot det här
+  API:t: datat är inte komplett bakåt.
+- **Läget i övrigt:** 0 nya SMS-svar senaste 7 dagarna, 2 obesvarade
+  återuppringare, 24 kvalificerade i vågen, 66 kampanj-SMS skickade, 0 optouts.
+  Inga SMS skickade av agenten.
+
 ### 2026-08-28 — Claude Code — KLAR (daglig lägesrapport, två avvikelser)
 
 - **Branch:** `main`. Ingen kodändring, bara denna logg.
