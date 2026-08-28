@@ -786,7 +786,17 @@ export default async (request) => {
       // lagring + inkorg utan OpenAI; utan override försöker den ladda ner
       // wav-URL:en (får vara påhittad — då blir status "failed", vilket
       // också bevisar fallback-vägen).
-      const { processVoicemailAnalysis } = await import("./_shared/voicemail-analysis.mjs");
+      const { processVoicemailAnalysis, voicemailAiEnabledForCaller, voicemailInternalSmsEnabled } = await import("./_shared/voicemail-analysis.mjs");
+      // Flagg-introspektion (inga hemligheter): visar produktionens env-läge
+      // och om en given uppringare skulle passera allowlisten.
+      const flags = {
+        aiEnabledRaw: clean(env("VOICEMAIL_AI_ENABLED"), 20),
+        internalSms: voicemailInternalSmsEnabled(),
+        testCallerSet: Boolean(clean(env("VOICEMAIL_AI_TEST_CALLER"), 200)),
+        aiEnabledForProvidedFrom: voicemailAiEnabledForCaller(clean(body.from, 40) || ""),
+        openaiKeySet: Boolean(clean(env("OPENAI_API_KEY"), 10)),
+      };
+      if (body.flagsOnly === true) return json({ ok: true, flags });
       const payload = {
         id: clean(body.testId, 60) || `test_${Date.now()}`,
         from: clean(body.from, 40) || "+46700000000",
