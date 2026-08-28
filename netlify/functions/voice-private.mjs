@@ -146,10 +146,13 @@ const json = (body, status = 200) =>
     headers: { "Content-Type": "application/json; charset=utf-8" },
   });
 
-const selfUrl = (origin, auth, step) => {
+const selfUrl = (origin, auth, step, caller) => {
   const url = new URL("/.netlify/functions/voice-private", origin);
   if (step) url.searchParams.set("step", step);
   if (auth.configured) url.searchParams.set("secret", auth.secret);
+  // Uppringaren bärs med genom stegkedjan — recording-callbackens "from"
+  // är inte pålitligt (rotorsaken från testfönstret 2026-08-28).
+  if (caller) url.searchParams.set("caller", caller);
   return url.toString();
 };
 
@@ -170,7 +173,10 @@ export default async (request, context) => {
   if (!auth.ok) return json({ error: "Unauthorized" }, 401);
 
   const origin = new URL(request.url).origin;
-  const step = clean(new URL(request.url).searchParams.get("step"), 40);
+  const requestUrl = new URL(request.url);
+  const step = clean(requestUrl.searchParams.get("step"), 40);
+  const formPayload = await parseForm(request);
+  const chainCaller = clean(requestUrl.searchParams.get("caller"), 40) || clean(formPayload.from, 40);
   const timeout = Math.min(Math.max(Number(env("VOICE_TIMEOUT_SECONDS")) || 25, 10), 60);
   const siteUrl = (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
   const voicemailPrompt = clean(env("VOICE_VOICEMAIL_MP3_URL"), 400) || `${siteUrl}/audio/voicemail-prompt.mp3`;
@@ -180,25 +186,26 @@ export default async (request, context) => {
 
   // Obesvarat eller utanför ringtid → telefonsvarare.
   if (step === "voicemail") {
-    return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record") });
+    return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record", chainCaller) });
   }
 
   if (step === "record") {
-    return json({ record: selfUrl(origin, auth, "saved"), timelimit: 90, silencedetection: "no" });
+    return json({ record: selfUrl(origin, auth, "saved", chainCaller), timelimit: 90, silencedetection: "no" });
   }
 
   if (step === "saved") {
-    const payload = await parseForm(request);
+    const payload = { ...formPayload, from: chainCaller || formPayload.from };
     // Tillfällig felsökningsrad (testfönstret 2026-08-28) — inga nummer
     // eller hemligheter loggas.
     console.log("voicemail_saved_debug", {
       line: "private",
       authConfigured: auth.configured,
       aiEnabledForCaller: voicemailAiEnabledForCaller(payload.from),
+      callerFromUrl: Boolean(requestUrl.searchParams.get("caller")),
       fromSuffix: clean(payload.from, 40).slice(-4),
       hasWav: Boolean(payload.wav),
       hasCallId: Boolean(payload.callid || payload.id),
-      fields: Object.keys(payload).join(","),
+      fields: Object.keys(formPayload).join(","),
     });
     const caller = normalizePhone(payload.from) || "okänt nummer";
     const wav = clean(payload.wav, 400);
@@ -232,8 +239,7 @@ export default async (request, context) => {
   }
 
   // Inkommande samtal.
-  const payload = await parseForm(request);
-  const caller = normalizePhone(payload.from);
+  const caller = normalizePhone(formPayload.from);
 
   if (!isRingTime(now)) {
     if (caller && notifyTo) {
@@ -243,11 +249,11 @@ export default async (request, context) => {
         message: `[Privatlinjen] ${stockholmTime()} Samtal utanför ringtid från ${callerLabel(caller, customer)} — kopplas till telefonsvararen.`,
       });
     }
-    return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record") });
+    return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record", caller) });
   }
 
   const target = clean(env("VOICE_PRIMARY_NUMBER"), 40);
-  if (!target) return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record") });
+  if (!target) return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record", caller) });
 
   // Kunduppslags-SMS:et skickas före connect så notisen hinner fram medan
   // luren ringer — fail-open med tidsbudget så samtalet aldrig fördröjs länge.
@@ -259,5 +265,5 @@ export default async (request, context) => {
     });
   }
 
-  return json({ connect: target, timeout, next: selfUrl(origin, auth, "voicemail") });
+  return json({ connect: target, timeout, next: selfUrl(origin, auth, "voicemail", caller) });
 };

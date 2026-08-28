@@ -80,10 +80,15 @@ const json = (body, status = 200) =>
     headers: { "Content-Type": "application/json; charset=utf-8" },
   });
 
-const selfUrl = (origin, auth, step) => {
+const selfUrl = (origin, auth, step, caller) => {
   const url = new URL("/.netlify/functions/voice-simple", origin);
   if (step) url.searchParams.set("step", step);
   if (auth.configured) url.searchParams.set("secret", auth.secret);
+  // Uppringarens nummer bärs med genom stegkedjan i URL:en — inspelnings-
+  // callbacken (saved) kan inte litas på att ha rätt "from" (fältet kan
+  // sakna/avse annat i recording-callbacks; rotorsak till att AI-grenen
+  // aldrig togs under testfönstret 2026-08-28).
+  if (caller) url.searchParams.set("caller", caller);
   return url.toString();
 };
 
@@ -141,7 +146,12 @@ export default async (request, context) => {
   if (!auth.ok) return json(auth.body || { error: "Unauthorized" }, auth.status || 401);
 
   const origin = new URL(request.url).origin;
-  const step = clean(new URL(request.url).searchParams.get("step"), 40);
+  const requestUrl = new URL(request.url);
+  const step = clean(requestUrl.searchParams.get("step"), 40);
+  // Uppringaren: URL-param (medburen genom kedjan) vinner över payload.from,
+  // som inte är pålitligt i recording-callbacks.
+  const payload = await parseForm(request);
+  const caller = clean(requestUrl.searchParams.get("caller"), 40) || clean(payload.from, 40);
   // 46elks tillåter 10-60 sekunder för connect-timeout.
   const timeout = Math.min(Math.max(Number(env("VOICE_TIMEOUT_SECONDS")) || 25, 10), 60);
   const siteUrl = (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
@@ -158,43 +168,44 @@ export default async (request, context) => {
   // annars direkt till telefonsvararen.
   if (step === "fallback") {
     const fallback = clean(env("VOICE_FALLBACK_NUMBER"), 40);
-    if (!fallback) return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record") });
-    const action = { connect: fallback, timeout, next: selfUrl(origin, auth, "voicemail") };
+    if (!fallback) return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record", caller) });
+    const action = { connect: fallback, timeout, next: selfUrl(origin, auth, "voicemail", caller) };
     if (auth.configured) action.whenhangup = callbackUrl(origin, auth);
     return json(action);
   }
 
   // Steg 3: inte heller fallback-numret svarade → telefonsvararens prompt.
   if (step === "voicemail") {
-    return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record") });
+    return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record", caller) });
   }
 
   // Steg 4: spela in meddelandet (max 90 s, samma gräns som gamla växeln).
   if (step === "record") {
-    return json({ record: selfUrl(origin, auth, "saved"), timelimit: 90, silencedetection: "no" });
+    return json({ record: selfUrl(origin, auth, "saved", caller), timelimit: 90, silencedetection: "no" });
   }
 
   // Steg 5: inspelningen klar. AI är opt-in och kan begränsas till ett
   // testnummer. 46elks får svar direkt medan Netlify slutför analysen.
   if (step === "saved") {
-    const payload = await parseForm(request);
+    const savedPayload = { ...payload, from: caller || payload.from };
     // Tillfällig felsökningsrad (testfönstret 2026-08-28): visar varför
     // AI-grenen tas eller inte, utan att logga nummer eller hemligheter.
     console.log("voicemail_saved_debug", {
       line: "workshop",
       authConfigured: auth.configured,
-      aiEnabledForCaller: voicemailAiEnabledForCaller(payload.from),
-      fromSuffix: clean(payload.from, 40).slice(-4),
+      aiEnabledForCaller: voicemailAiEnabledForCaller(savedPayload.from),
+      callerFromUrl: Boolean(requestUrl.searchParams.get("caller")),
+      fromSuffix: clean(savedPayload.from, 40).slice(-4),
       hasWav: Boolean(payload.wav),
       hasCallId: Boolean(payload.callid || payload.id),
       fields: Object.keys(payload).join(","),
     });
-    if (!auth.configured || !voicemailAiEnabledForCaller(payload.from)) {
-      await postSms({ to: voicemailNotifyTo(), message: legacyVoicemailMessage(payload) });
+    if (!auth.configured || !voicemailAiEnabledForCaller(savedPayload.from)) {
+      await postSms({ to: voicemailNotifyTo(), message: legacyVoicemailMessage(savedPayload) });
       return json({});
     }
     const job = processVoicemailAnalysis({
-      payload,
+      payload: savedPayload,
       source: "workshop-line",
       lineLabel: "Nordic verkstad",
       notify: voicemailInternalSmsEnabled()
@@ -202,11 +213,11 @@ export default async (request, context) => {
         : null,
     }).then(async (result) => {
       if (["invalid_callback", "not_configured", "failed"].includes(result.status)) {
-        await postSms({ to: voicemailNotifyTo(), message: legacyVoicemailMessage(payload) });
+        await postSms({ to: voicemailNotifyTo(), message: legacyVoicemailMessage(savedPayload) });
       }
     }).catch(async (error) => {
       console.error("voicemail_analysis_failed", { source: "workshop-line", message: clean(error?.message, 180) });
-      await postSms({ to: voicemailNotifyTo(), message: legacyVoicemailMessage(payload) });
+      await postSms({ to: voicemailNotifyTo(), message: legacyVoicemailMessage(savedPayload) });
     });
     if (context?.waitUntil) context.waitUntil(job);
     else await job;
@@ -215,7 +226,7 @@ export default async (request, context) => {
 
   // Utanför telefontid → gamla televäxelns besked, sedan telefonsvararen.
   if (!isOfficeHours(now)) {
-    return json({ play: closedPrompt, next: selfUrl(origin, auth, "record") });
+    return json({ play: closedPrompt, next: selfUrl(origin, auth, "record", caller) });
   }
 
   const sebastian = clean(
@@ -229,7 +240,7 @@ export default async (request, context) => {
   const action = {
     connect: sebastian,
     timeout,
-    next: selfUrl(origin, auth, "fallback"),
+    next: selfUrl(origin, auth, "fallback", caller),
   };
   if (auth.configured) action.whenhangup = callbackUrl(origin, auth);
 

@@ -780,6 +780,22 @@ export default async (request) => {
       return json({ ok: true });
     }
 
+    if (action === "list_recordings") {
+      // Felsökning: lista senaste inspelningarna direkt från 46elks så att
+      // verkliga wav-URL:er och fältvärden kan inspekteras utan telefonsamtal.
+      const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
+      const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
+      if (!username || !password) return json({ error: "46elks API saknas." }, 503);
+      const response = await fetch("https://api.46elks.com/a1/recordings", {
+        headers: { Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}` },
+        signal: AbortSignal.timeout(10000),
+      });
+      const bodyJson = await response.json().catch(() => ({}));
+      if (!response.ok) return json({ error: `46elks HTTP ${response.status}` }, 502);
+      const items = (Array.isArray(bodyJson?.data) ? bodyJson.data : []).slice(0, 8);
+      return json({ ok: true, recordings: items });
+    }
+
     if (action === "test_voicemail_analysis") {
       // Syntetiskt test av analyskedjan utan telefonsamtal (admin-authat,
       // skickar aldrig SMS). Med transcriptOverride testas klassificering +
