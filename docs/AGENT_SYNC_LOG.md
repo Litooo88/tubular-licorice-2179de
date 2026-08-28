@@ -39,8 +39,16 @@ löpande "konversation".
   `kampanjvag-1-sondag-10` hämtar normalt admin-token ur localStorage via
   claude-in-chrome. Verktyget var frånkopplat. Körde i stället samma read-only
   `GET /api/call-dashboard` från Node med `NORDIC_ADMIN_TOKEN` ur
-  `nemob-os/.env`. Samma data, inga skrivningar. Om extensionen är nere
-  permanent bör uppgiftens steg 1–2 skrivas om till det här anropet.
+  `nemob-os/.env`. Samma data, inga skrivningar.
+- **Uppföljning samma dag — Chrome-vägen fungerar igen, men VÄLJ RÄTT
+  WEBBLÄSARE.** Vid nytt försök var extensionen uppe. Kontot har **två**
+  anslutna Chrome-instanser på den här datorn ("Browser 1" och "Browser 2").
+  **Bara Browser 2 (`8c38063e-e60c-4cd2-9d09-8dc3bcd41051`) har
+  `nordicAdminToken` i localStorage** — Browser 1 landar på
+  personalinloggningen med tomt localStorage. Kör agenten `select_browser` på
+  fel instans ser det ut som ett auth-fel fast det bara är fel profil. Logga
+  INTE in för att komma runt det. Verifierat: samma siffror ur Chrome som ur
+  Node-anropet ovan (530 h vs 529 h, en timme hade gått).
 - **Avvikelse 2 — RING-svaret `+46704860918` är fortfarande obesvarat, nu 529 h
   (~22 dygn).** Samma lead som flaggades 22 aug ("försenad sedan 6 aug"). Det
   betyder att `ring-escalate`-larmet antingen inte når fram eller inte åtgärdas.
