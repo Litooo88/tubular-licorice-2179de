@@ -780,6 +780,29 @@ export default async (request) => {
       return json({ ok: true });
     }
 
+    if (action === "test_voicemail_analysis") {
+      // Syntetiskt test av analyskedjan utan telefonsamtal (admin-authat,
+      // skickar aldrig SMS). Med transcriptOverride testas klassificering +
+      // lagring + inkorg utan OpenAI; utan override försöker den ladda ner
+      // wav-URL:en (får vara påhittad — då blir status "failed", vilket
+      // också bevisar fallback-vägen).
+      const { processVoicemailAnalysis } = await import("./_shared/voicemail-analysis.mjs");
+      const payload = {
+        id: clean(body.testId, 60) || `test_${Date.now()}`,
+        from: clean(body.from, 40) || "+46700000000",
+        wav: clean(body.wav, 400) || "https://api.46elks.com/a1/recordings/test-nonexistent.wav",
+        created: new Date().toISOString(),
+        duration: 5,
+      };
+      const result = await processVoicemailAnalysis({
+        payload,
+        source: "synthetic-test",
+        lineLabel: "TEST",
+        notify: null,
+      });
+      return json({ ok: true, result: { status: result.status, prio: result.item?.classification?.label || null, id: result.item?.id || payload.id } });
+    }
+
     if (action === "mark_voicemail_handled") {
       const key = clean(body.key, 200);
       if (!key) return json({ error: "Nyckel saknas." }, 400);

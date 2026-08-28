@@ -178,6 +178,17 @@ export default async (request, context) => {
   // testnummer. 46elks får svar direkt medan Netlify slutför analysen.
   if (step === "saved") {
     const payload = await parseForm(request);
+    // Tillfällig felsökningsrad (testfönstret 2026-08-28): visar varför
+    // AI-grenen tas eller inte, utan att logga nummer eller hemligheter.
+    console.log("voicemail_saved_debug", {
+      line: "workshop",
+      authConfigured: auth.configured,
+      aiEnabledForCaller: voicemailAiEnabledForCaller(payload.from),
+      fromSuffix: clean(payload.from, 40).slice(-4),
+      hasWav: Boolean(payload.wav),
+      hasCallId: Boolean(payload.callid || payload.id),
+      fields: Object.keys(payload).join(","),
+    });
     if (!auth.configured || !voicemailAiEnabledForCaller(payload.from)) {
       await postSms({ to: voicemailNotifyTo(), message: legacyVoicemailMessage(payload) });
       return json({});
