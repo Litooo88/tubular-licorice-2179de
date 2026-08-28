@@ -64,7 +64,7 @@ test("routes calls when the shared secret has not been configured yet", async ()
     const action = await response.json();
     assert.equal(action.connect, "+46700000001");
     assert.equal(action.timeout, 25);
-    assert.match(action.next, /voice-simple\?step=fallback$/);
+    assert.match(action.next, /voice-simple\?step=fallback&caller=%2B46700000000$/);
   });
 });
 
@@ -80,7 +80,7 @@ test("requires the configured shared secret", async () => {
       const action = await allowed.json();
       assert.equal(action.connect, "+46700000001");
       assert.match(action.whenhangup, /voice-notify\?secret=test-secret$/);
-      assert.match(action.next, /voice-simple\?step=fallback&secret=test-secret$/);
+      assert.match(action.next, /voice-simple\?step=fallback&secret=test-secret&caller=%2B46700000000$/);
     },
   );
 });
@@ -100,7 +100,7 @@ test("plays the outside-hours prompt and then records a voicemail when closed", 
     assert.equal(response.status, 200);
     const action = await response.json();
     assert.equal(action.play, "https://www.nordicemobility.se/audio/outside-hours-prompt.mp3");
-    assert.match(action.next, /voice-simple\?step=record$/);
+    assert.match(action.next, /voice-simple\?step=record&caller=%2B46700000000$/);
   });
 });
 
@@ -112,7 +112,7 @@ test("fallback step connects the fallback number when configured", async () => {
       assert.equal(response.status, 200);
       const action = await response.json();
       assert.equal(action.connect, "+46700000002");
-      assert.match(action.next, /voice-simple\?step=voicemail$/);
+      assert.match(action.next, /voice-simple\?step=voicemail&caller=%2B46700000000$/);
     },
   );
 });
@@ -123,7 +123,7 @@ test("fallback step goes straight to voicemail when no fallback number is config
     assert.equal(response.status, 200);
     const action = await response.json();
     assert.equal(action.play, "https://www.nordicemobility.se/audio/voicemail-prompt.mp3");
-    assert.match(action.next, /voice-simple\?step=record$/);
+    assert.match(action.next, /voice-simple\?step=record&caller=%2B46700000000$/);
   });
 });
 
@@ -132,7 +132,7 @@ test("voicemail step plays the prompt and continues to recording", async () => {
     const response = await voiceSimple(request("?step=voicemail"));
     const action = await response.json();
     assert.equal(action.play, "https://www.nordicemobility.se/audio/voicemail-prompt.mp3");
-    assert.match(action.next, /voice-simple\?step=record$/);
+    assert.match(action.next, /voice-simple\?step=record&caller=%2B46700000000$/);
   });
 });
 
@@ -140,7 +140,7 @@ test("record step starts a recording that reports back to the saved step", async
   await withEnv({ VOICE_PRIMARY_NUMBER: "+46700000001", VOICE_TEST_NOW: OPEN_NOW }, async () => {
     const response = await voiceSimple(request("?step=record"));
     const action = await response.json();
-    assert.match(action.record, /voice-simple\?step=saved$/);
+    assert.match(action.record, /voice-simple\?step=saved&caller=%2B46700000000$/);
     assert.equal(action.timelimit, 90);
   });
 });
