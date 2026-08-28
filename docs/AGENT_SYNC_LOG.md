@@ -32,6 +32,24 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-28 — Claude Code — KLAR (daglig lägesrapport, två avvikelser)
+
+- **Branch:** `main`. Ingen kodändring, bara denna logg.
+- **Avvikelse 1 — Chrome-extensionen svarade inte.** Den schemalagda uppgiften
+  `kampanjvag-1-sondag-10` hämtar normalt admin-token ur localStorage via
+  claude-in-chrome. Verktyget var frånkopplat. Körde i stället samma read-only
+  `GET /api/call-dashboard` från Node med `NORDIC_ADMIN_TOKEN` ur
+  `nemob-os/.env`. Samma data, inga skrivningar. Om extensionen är nere
+  permanent bör uppgiftens steg 1–2 skrivas om till det här anropet.
+- **Avvikelse 2 — RING-svaret `+46704860918` är fortfarande obesvarat, nu 529 h
+  (~22 dygn).** Samma lead som flaggades 22 aug ("försenad sedan 6 aug"). Det
+  betyder att `ring-escalate`-larmet antingen inte når fram eller inte åtgärdas.
+  Värt att kontrollera att `SEBASTIAN_SMS_TO` numera är satt i Netlify (se
+  posten 2026-08-22) — annars går larmet bara till verkstadsnumret.
+- **Läget i övrigt:** 0 nya SMS-svar senaste 7 dagarna, 2 obesvarade
+  återuppringare, 24 kvalificerade i vågen (listan börjar bli avbetad),
+  66 kampanj-SMS skickade totalt, 0 optouts.
+
 ### 2026-08-22 — Claude Code — KLAR (egna nummer spärrade + schemalagd uppgift gjord till rapport)
 
 - **Branch:** `main`, pushad som `fb40961` + `734e063`.
