@@ -189,6 +189,17 @@ export default async (request, context) => {
 
   if (step === "saved") {
     const payload = await parseForm(request);
+    // Tillfällig felsökningsrad (testfönstret 2026-08-28) — inga nummer
+    // eller hemligheter loggas.
+    console.log("voicemail_saved_debug", {
+      line: "private",
+      authConfigured: auth.configured,
+      aiEnabledForCaller: voicemailAiEnabledForCaller(payload.from),
+      fromSuffix: clean(payload.from, 40).slice(-4),
+      hasWav: Boolean(payload.wav),
+      hasCallId: Boolean(payload.callid || payload.id),
+      fields: Object.keys(payload).join(","),
+    });
     const caller = normalizePhone(payload.from) || "okänt nummer";
     const wav = clean(payload.wav, 400);
     const legacyMessage = `[Privatlinjen] ${stockholmTime()} Röstmeddelande från ${caller}.\nLyssna: ${wav || "inspelning saknas"}\n(kräver 46elks-inloggning)`;
