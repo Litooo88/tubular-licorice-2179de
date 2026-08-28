@@ -32,6 +32,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-28 — Codex — PÅGÅR (återinför AI-telesvarsanalys)
+
+- **Branch:** `codex/restore-voicemail-ai`
+- **Gör:** Anpassar den tidigare opt-in-implementationen `c94146c` till dagens
+  `main`: svensk transkribering, kundmatchning, konservativ prioritering,
+  adminvy och kortlivad Blob-lagring. Ingen kundkommunikation automatiseras.
+- **Filer/områden:** `voice-simple.mjs`, delad voicemail-analys,
+  `call-dashboard.mjs`, `admin/index.html`, riktade tester samt telefoni-/API-
+  och schemadokumentation.
+- **Tester:** Riktade tester, syntaxkontroller, `npm run build`, checkout-
+  verifiering och `nemob-callflow` TypeScript-check. Därefter Netlify-preview
+  och produktion med `VOICEMAIL_AI_ENABLED` fortsatt avstängd.
+- **Varning:** Inga riktiga samtal, SMS eller kunddata skapas i kodtesterna.
+  Otrackade `docs/NEMOB_OS_V1_PLAN.md` och `tmp/` lämnas orörda.
+
 ### 2026-08-08 — Claude Code — KLAR (Privatlinjen live + G4-recension + Codex-branch pushad)
 
 - **Privatlinjen (godkänd "kör på"):** ny `netlify/functions/voice-private.mjs`
