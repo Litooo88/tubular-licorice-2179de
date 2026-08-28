@@ -7,6 +7,11 @@
 //      whenhangup när VOICE_WEBHOOK_SECRET är konfigurerad).
 
 import { tokenMatches } from "./_shared/admin-auth.mjs";
+import {
+  processVoicemailAnalysis,
+  voicemailAiEnabledForCaller,
+  voicemailInternalSmsEnabled,
+} from "./_shared/voicemail-analysis.mjs";
 
 const env = (name) => {
   try {
@@ -118,7 +123,20 @@ const postSms = async ({ to, message }) => {
   }
 };
 
-export default async (request) => {
+const voicemailNotifyTo = () => clean(env("VOICE_NOTIFY_TO") || env("VOICE_MISSED_SMS_TO"), 40);
+
+const legacyVoicemailMessage = (payload) => {
+  const caller = clean(payload.from, 40) || "okänt nummer";
+  const wav = clean(payload.wav, 400);
+  const time = new Date().toLocaleTimeString("sv-SE", {
+    timeZone: "Europe/Stockholm",
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+  return `[Nordic] ${time} Röstmeddelande från ${caller}.\nLyssna: ${wav || "inspelning saknas"}\n(kräver 46elks-inloggning)`;
+};
+
+export default async (request, context) => {
   const auth = authorizeVoiceWebhook(request);
   if (!auth.ok) return json(auth.body || { error: "Unauthorized" }, auth.status || 401);
 
@@ -156,17 +174,31 @@ export default async (request) => {
     return json({ record: selfUrl(origin, auth, "saved"), timelimit: 90, silencedetection: "no" });
   }
 
-  // Steg 5: inspelningen klar → SMS till Sebastian med länk till ljudfilen.
+  // Steg 5: inspelningen klar. AI är opt-in och kan begränsas till ett
+  // testnummer. 46elks får svar direkt medan Netlify slutför analysen.
   if (step === "saved") {
     const payload = await parseForm(request);
-    const caller = clean(payload.from, 40) || "okänt nummer";
-    const wav = clean(payload.wav, 400);
-    const notifyTo = clean(env("VOICE_NOTIFY_TO") || env("VOICE_MISSED_SMS_TO"), 40);
-    const time = new Date().toLocaleTimeString("sv-SE", { timeZone: "Europe/Stockholm", hour: "2-digit", minute: "2-digit" });
-    await postSms({
-      to: notifyTo,
-      message: `[Nordic] ${time} Röstmeddelande från ${caller}.\nLyssna: ${wav || "inspelning saknas"}\n(kräver 46elks-inloggning)`,
+    if (!auth.configured || !voicemailAiEnabledForCaller(payload.from)) {
+      await postSms({ to: voicemailNotifyTo(), message: legacyVoicemailMessage(payload) });
+      return json({});
+    }
+    const job = processVoicemailAnalysis({
+      payload,
+      source: "workshop-line",
+      lineLabel: "Nordic verkstad",
+      notify: voicemailInternalSmsEnabled()
+        ? (message) => postSms({ to: voicemailNotifyTo(), message })
+        : null,
+    }).then(async (result) => {
+      if (["invalid_callback", "not_configured", "failed"].includes(result.status)) {
+        await postSms({ to: voicemailNotifyTo(), message: legacyVoicemailMessage(payload) });
+      }
+    }).catch(async (error) => {
+      console.error("voicemail_analysis_failed", { source: "workshop-line", message: clean(error?.message, 180) });
+      await postSms({ to: voicemailNotifyTo(), message: legacyVoicemailMessage(payload) });
     });
+    if (context?.waitUntil) context.waitUntil(job);
+    else await job;
     return json({});
   }
 

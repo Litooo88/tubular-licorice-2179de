@@ -541,7 +541,15 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     .filter((item) => item?.phone && item?.lastSentAt)
     .map((item) => ({ phone: item.phone, lastSentAt: item.lastSentAt, count: Number(item.count) || 1 }));
 
-  return { rows, todayRows, activeLeadRows, totals, stats, account, inboundSms, ringUnhandled, optoutPhones, ownNumbers: [...ownNumbers()], campaignSent, readOnly: !syncLeads };
+  // AI-telesvarsinkorgen (store "voicemail-analysis", retention sköts av
+  // analysmodulen). En gemensam inkorg för båda linjerna, nyaste först.
+  const { items: voicemailMap } = await loadBlobMap("voicemail-analysis");
+  const voicemailAnalyses = [...voicemailMap.values()]
+    .filter((item) => item?.id)
+    .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
+    .slice(0, 50);
+
+  return { rows, todayRows, activeLeadRows, totals, stats, account, inboundSms, ringUnhandled, optoutPhones, ownNumbers: [...ownNumbers()], campaignSent, voicemailAnalyses, readOnly: !syncLeads };
 };
 
 export default async (request) => {
@@ -769,6 +777,16 @@ export default async (request) => {
       const entry = await inboundStore.get(key, { type: "json" }).catch(() => null);
       if (!entry) return json({ error: "Posten hittades inte." }, 404);
       await inboundStore.setJSON(key, { ...entry, handled: true, handledAt: new Date().toISOString(), handledBy: operatorName });
+      return json({ ok: true });
+    }
+
+    if (action === "mark_voicemail_handled") {
+      const key = clean(body.key, 200);
+      if (!key) return json({ error: "Nyckel saknas." }, 400);
+      const voicemailStore = getStore({ name: "voicemail-analysis", consistency: "strong" });
+      const entry = await voicemailStore.get(key, { type: "json" }).catch(() => null);
+      if (!entry) return json({ error: "Posten hittades inte." }, 404);
+      await voicemailStore.setJSON(key, { ...entry, handled: true, handledAt: new Date().toISOString(), handledBy: operatorName });
       return json({ ok: true });
     }
 
