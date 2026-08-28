@@ -32,6 +32,24 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-08 — Claude Code — KLAR (Privatlinjen live + G4-recension + Codex-branch pushad)
+
+- **Privatlinjen (godkänd "kör på"):** ny `netlify/functions/voice-private.mjs`
+  — voice_start för +46766867131. Ringtider PRIVATE_LINE_START/END (default
+  09–20, alla dagar; PRIVATE_LINE_WEEKDAYS_ONLY=true stänger helger), SMS-notis
+  med kunduppslag mot workshop-cases före koppling till VOICE_PRIMARY_NUMBER,
+  telefonsvarare utanför tid/vid obesvarat. Skickar ALDRIG auto-SMS till
+  uppringaren. `elks-webhook-sync` sätter/bevakar numrets voice_start + sms_url.
+  Funktionen live-verifierad (401 utan secret). Numret kopplas av synken
+  inom 15 min.
+- **Blogg 7/12:** guider/kukirin-g4-recension/ live (schemalagda tasken 4/8
+  körde utan leverans — skriven manuellt). Sitemap 76 URL:er.
+- **Codex:** er branch codex/nemob-strategic-implementation-plan låg opushad
+  lokalt — pushad till origin orörd; PR väntar på Sebastian. Mappen åter på
+  main. OBS: min chore-commit rättade .claude/launch.json-porten till 4572.
+- **RING-svar:** 070-486 09 18 svarade "Ring" 6/8 07:31, flaggad till
+  Sebastian för uppringning.
+
 ### 2026-08-28 — Claude Code — KLAR (blindfläck i dagliga rapporten åtgärdad)
 
 - **Branch:** `main`. Ingen repo-kod ändrad, bara denna logg. Ändringen ligger i
