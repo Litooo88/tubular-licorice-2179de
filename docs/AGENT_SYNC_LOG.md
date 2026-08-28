@@ -32,6 +32,27 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-28 — Claude Code — KLAR (AI-telesvar LÖST och aktiverat i drift)
+
+- **Rotorsak funnen:** 46elks inspelnings-callback saknar `from`-fältet
+  (recordingsobjekt = endast duration/id/created, verifierat via ny
+  admin-action list_recordings) → AI-villkoret föll tyst till legacy.
+- **Fix (mergad):** uppringarens nummer bärs nu som `&caller=`-param genom
+  hela stegkedjan i BÅDA voice-funktionerna; saved föredrar den framför
+  callbackens from. Tester uppdaterade (17/17).
+- **End-to-end-bevis med riktigt ljud:** Sebastians tre testinspelningar
+  körda genom kedjan via test_voicemail_analysis: transkript korrekta,
+  klassificering exakt enligt testplan (LÅG/ÅTGÄRD/VIKTIGT), SMS-policy
+  rätt (bara VIKTIGT notifierar). OpenAI + 46elks-nedladdning gröna.
+- **Driftläge NU:** VOICEMAIL_AI_ENABLED=true + INTERNAL_SMS=true,
+  testnummer-spärren BORTTAGEN — analysen gäller alla röstmeddelanden på
+  båda linjerna, med legacy-SMS som automatiskt skyddsnät vid varje fel.
+  VOICE_TEST_NOW är borttagen sedan 15:07 (växeln normal).
+- **Kvar:** debugraden voicemail_saved_debug ligger kvar några dagar —
+  ta bort när ett organiskt röstmeddelande bekräftat callerFromUrl:true.
+  Verifieringsposterna (verify_*/test_*) kan rensas ur inkorgen via
+  Markera hanterad; retention städar dem annars om 30 dagar.
+
 ### 2026-08-28 — Claude Code — KLAR (AI-telesvarsanalysen färdigbyggd och mergad — övertagen från Codex enligt Sebastians beslut)
 
 - **Grund:** Codex ospårade/ocommittade WIP (delad modul, saved-stegs-
