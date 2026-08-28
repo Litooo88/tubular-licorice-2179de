@@ -521,6 +521,9 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     </div>
     <div id="smsInboxList" class="muted">Uppdatera samtalen ovan f&ouml;r att ladda inkorgen.</div>
     <span class="live-send-warning">Varning: knappen skickar RIKTIGA SMS via 46elks till hela listan. Svar hanteras i din vanliga SMS-inkorg &mdash; respektera STOPP-svar.</span>
+    <h3 style="margin-top:18px">AI-telesvar &mdash; gemensam inkorg (b&aring;da linjerna)</h3>
+    <p class="call-dashboard-note">R&ouml;stmeddelanden fr&aring;n v&auml;xeln (010) och privatlinjen (076) transkriberas och prioriteras automatiskt n&auml;r AI-analysen &auml;r aktiverad (<code>VOICEMAIL_AI_ENABLED</code>). Endast <strong>VIKTIGT</strong> ger internt SMS; allt landar h&auml;r. AI:n svarar aldrig kunden och &auml;ndrar aldrig &auml;renden. Transkript raderas automatiskt efter 30 dagar; r&aring;ljudet sparas inte av oss.</p>
+    <div id="voicemailList" class="muted">Uppdatera samtalen ovan f&ouml;r att ladda telesvarsinkorgen.</div>
   </section>
 
   <section class="panel campaign-panel">
@@ -756,6 +759,10 @@ document.getElementById('activateSmsInbound').addEventListener('click',activateS
 document.getElementById('smsInboxList').addEventListener('click',(event)=>{
   const button=event.target.closest('[data-inbound-handled]');
   if(button)markInboundHandled(button.dataset.inboundHandled,button);
+});
+document.getElementById('voicemailList').addEventListener('click',(event)=>{
+  const button=event.target.closest('[data-voicemail-handled]');
+  if(button)markVoicemailHandled(button.dataset.voicemailHandled,button);
 });
 document.getElementById('campaignMessage').value=campaignDefaultMessage();
 document.getElementById('buildStatusRollout').addEventListener('click',buildStatusRollout);
@@ -2631,6 +2638,7 @@ async function loadCallDashboard(){
     callCampaignSent=new Map((data.campaignSent||[]).map((c)=>[c.phone,c]));
     renderCallDashboard(data);
     renderSmsInbox(data.inboundSms||[],data.ringUnhandled||[]);
+    renderVoicemailInbox(data.voicemailAnalyses||[]);
     showCallStatus(`Samtal uppdaterade ${new Date().toLocaleTimeString('sv-SE')}.`);
   }catch(error){
     showCallStatus(error.message,true);
@@ -2937,6 +2945,48 @@ function renderSmsInbox(items,stale){
           <td>${item.handled?'<span class="muted-small">Hanterad</span>':`<button type="button" class="secondary" data-inbound-handled="${html(item.key)}">Markera uppringd</button>`}</td>
         </tr>`).join('')}</tbody>
     </table>`;
+}
+function renderVoicemailInbox(items){
+  const el=document.getElementById('voicemailList');
+  if(!el)return;
+  if(!items.length){el.innerHTML='<div class="muted">Inga AI-analyserade telesvar &auml;nnu. (Kr&auml;ver VOICEMAIL_AI_ENABLED=true i Netlify.)</div>';return;}
+  const prio=(c)=>{
+    const p=c&&c.priority;
+    if(p==='urgent')return '<b style="color:#ff6b5e">VIKTIGT</b>';
+    if(p==='action')return '<b style="color:#f0a929">'+html((c&&c.label)||'ÅTGÄRD')+'</b>';
+    if(p==='low')return '<span class="muted-small">LÅG</span>';
+    return '<span class="muted-small">bearbetas…</span>';
+  };
+  el.innerHTML=`
+    <table class="call-table">
+      <thead><tr><th>Tid</th><th>Linje</th><th>Nummer / kund</th><th>Prioritet</th><th>Sammanfattning</th><th>Status</th></tr></thead>
+      <tbody>${items.map((item)=>{
+        const kund=item.customerMatch&&item.customerMatch.matched
+          ?`${html(item.customerMatch.customerName||'kund')}${item.customerMatch.model?' &middot; '+html(item.customerMatch.model):''}<br><span class="muted-small">${html(item.caller||'')}</span>`
+          :html(item.caller||'okänt');
+        const detaljer=item.transcript
+          ?`<details><summary>${html(item.summary||'')}</summary><div class="muted-small" style="white-space:pre-wrap;margin-top:4px">${html(item.transcript)}</div>${item.classification&&item.classification.suggestedAction?`<div class="muted-small" style="margin-top:4px"><b>F&ouml;rslag:</b> ${html(item.classification.suggestedAction)}</div>`:''}</details>`
+          :html(item.summary||'(ingen transkribering)');
+        return `
+        <tr class="${item.classification&&item.classification.priority==='urgent'&&!item.handled?'call-row-lost':''}">
+          <td>${html(String(item.createdAt||'').slice(0,16).replace('T',' '))}</td>
+          <td>${html(item.lineLabel||item.source||'')}</td>
+          <td>${kund}</td>
+          <td>${prio(item.classification)}</td>
+          <td>${detaljer}${item.recordingUrl?` <a href="${html(item.recordingUrl)}" target="_blank" rel="noopener" class="muted-small">ljud</a>`:''}</td>
+          <td>${item.handled?'<span class="muted-small">Hanterad</span>':`<button type="button" class="secondary" data-voicemail-handled="${html(item.id)}">Markera hanterad</button>`}</td>
+        </tr>`;}).join('')}</tbody>
+    </table>`;
+}
+async function markVoicemailHandled(key,button){
+  button.disabled=true;
+  try{
+    await api('/api/call-dashboard',{method:'POST',body:JSON.stringify({action:'mark_voicemail_handled',key})});
+    await loadCallDashboard();
+  }catch(error){
+    button.disabled=false;
+    alert('Kunde inte markera: '+(error&&error.message||error));
+  }
 }
 async function markInboundHandled(key,button){
   button.disabled=true;

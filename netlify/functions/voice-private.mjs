@@ -15,6 +15,11 @@
 
 import { getStore } from "@netlify/blobs";
 import { tokenMatches } from "./_shared/admin-auth.mjs";
+import {
+  processVoicemailAnalysis,
+  voicemailAiEnabledForCaller,
+  voicemailInternalSmsEnabled,
+} from "./_shared/voicemail-analysis.mjs";
 
 const env = (name) => {
   try {
@@ -160,7 +165,7 @@ const parseForm = async (request) => {
 const stockholmTime = () =>
   new Date().toLocaleTimeString("sv-SE", { timeZone: "Europe/Stockholm", hour: "2-digit", minute: "2-digit" });
 
-export default async (request) => {
+export default async (request, context) => {
   const auth = authorize(request);
   if (!auth.ok) return json({ error: "Unauthorized" }, 401);
 
@@ -186,6 +191,27 @@ export default async (request) => {
     const payload = await parseForm(request);
     const caller = normalizePhone(payload.from) || "okänt nummer";
     const wav = clean(payload.wav, 400);
+    const legacyMessage = `[Privatlinjen] ${stockholmTime()} Röstmeddelande från ${caller}.\nLyssna: ${wav || "inspelning saknas"}\n(kräver 46elks-inloggning)`;
+    if (auth.configured && voicemailAiEnabledForCaller(payload.from)) {
+      const job = processVoicemailAnalysis({
+        payload,
+        source: "private-line",
+        lineLabel: "Privatlinjen",
+        notify: voicemailInternalSmsEnabled()
+          ? (message) => postSms({ to: notifyTo, message })
+          : null,
+      }).then(async (result) => {
+        if (["invalid_callback", "not_configured", "failed"].includes(result.status)) {
+          await postSms({ to: notifyTo, message: legacyMessage });
+        }
+      }).catch(async (error) => {
+        console.error("voicemail_analysis_failed", { source: "private-line", message: clean(error?.message, 180) });
+        await postSms({ to: notifyTo, message: legacyMessage });
+      });
+      if (context?.waitUntil) context.waitUntil(job);
+      else await job;
+      return json({});
+    }
     const customer = caller.startsWith("+") ? await lookupCustomer(caller) : null;
     await postSms({
       to: notifyTo,
