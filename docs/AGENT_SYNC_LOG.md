@@ -32,6 +32,26 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-28 — Claude Code — KLAR (AI-telesvarsanalysen färdigbyggd och mergad — övertagen från Codex enligt Sebastians beslut)
+
+- **Grund:** Codex ospårade/ocommittade WIP (delad modul, saved-stegs-
+  integration i båda voice-funktionerna, tester, env-sanering) — mycket
+  bra skick, övertogs orört där det höll.
+- **Claudes färdigställande:** policyfix (BARA VIKTIGT ⇒ internt SMS,
+  ÅTGÄRD/LÅG endast admin — Sebastians spec p.7), handled-fält, gemensam
+  admininkorg "AI-telesvar" (voicemailAnalyses i call-dashboard GET +
+  action mark_voicemail_handled + panel i admin/index.html).
+- **Tester:** 17/17 (voice+voicemail), npm run build,
+  verify:checkout-products, nemob-callflow check — gröna. Admin-UI
+  röktestad i lokal preview (inga JS-fel, panel+funktioner finns).
+- **Deploy:** mergad till main, live-verifierad (funktionerna 401-låsta).
+  AI:n är AV (VOICEMAIL_AI_ENABLED saknas) — produktionsbeteendet är
+  oförändrat tills testfönstret körs. Aktivering: VOICEMAIL_AI_ENABLED=true
+  + VOICEMAIL_INTERNAL_SMS_ENABLED=true + ev. VOICEMAIL_AI_TEST_CALLER.
+- **Till Codex:** er branch codex/restore-voicemail-ai är överspelad av
+  denna merge — radera utan att merga. Arkitekturen följer BESLUT-posten
+  nedan: en motor, en inkorg, båda linjerna.
+
 ### 2026-08-28 — Claude Code — BESLUT (telefoni-arkitektur: analysen blir delat lager — förankrat med Sebastian)
 
 Sebastian har sett båda telefonispåren och beslutat: **bygg ihop dem.**
