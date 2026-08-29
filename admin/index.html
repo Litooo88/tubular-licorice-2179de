@@ -374,6 +374,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div id="sms-drafts-list"></div>
   </section>
 
+  <section id="ring-list-section" style="display:none;border:2px solid #c53030;border-radius:10px;padding:14px 16px;margin-bottom:16px;background:#fff5f5">
+    <h2 style="margin:0 0 4px;font-size:16px">🔥 Ringlista — varma kunder som missats igen <span id="ring-list-count" style="background:#c53030;color:#fff;border-radius:999px;padding:1px 10px;font-size:13px"></span></h2>
+    <p class="muted" style="margin:0 0 10px">Nummer som fått utskick/återkontakt och sedan ringt oss utan att nås. De har informerats om att de står på återuppringningslistan (svara RING = uppringning inom 24 tim). Ring uppifrån och ned — flest försök överst. Klar = numret bevakas vidare men lämnar listan.</p>
+    <div id="ring-list-items"></div>
+  </section>
+
   <section class="login">
     <div><label for="token">Admin-token</label><input id="token" type="password" autocomplete="current-password" placeholder="ADMIN_TOKEN fr&aring;n Netlify"></div>
     <div><label for="operatorName">Jag &auml;r</label><select id="operatorName"><option value="Sebastian">Sebastian</option><option value="Verkstaden">Verkstaden</option></select></div>
@@ -1684,6 +1690,74 @@ async function api(path,options={}){
   return data;
 }
 
+/* ---------- Ringlistan (varma kunder som missats igen) ---------- */
+async function loadRingList(){
+  const section=document.getElementById('ring-list-section');
+  try{
+    const data=await api('/api/ring-list');
+    if(!data.count){section.style.display='none';return;}
+    section.style.display='block';
+    document.getElementById('ring-list-count').textContent=data.count;
+    document.getElementById('ring-list-items').innerHTML=data.items.map((r)=>`
+      <div class="ring-item" data-phone="${html(r.phone)}" data-case="${html(r.caseId||'')}" style="border:1px solid #ddd;border-radius:8px;padding:10px 12px;margin-bottom:10px;background:#fff">
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:baseline">
+          <strong>${html(r.name||'Okänd kund')}</strong>
+          <a href="tel:${html(r.phone)}">${html(r.phone)}</a>
+          <span style="background:#fed7d7;border-radius:999px;padding:1px 10px;font-size:12px;font-weight:600">${r.attempts||1} försök</span>
+          <span class="muted" style="font-size:12px">senast ${html((r.lastCustomerCallAt||'').slice(0,16).replace('T',' '))}</span>
+        </div>
+        ${r.reason?`<div class="muted" style="font-size:12px;margin-top:4px">${html(r.reason)}</div>`:''}
+        <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap">
+          ${r.caseId?`<button class="ring-call">📞 Ring via växeln</button>`:`<a href="tel:${html(r.phone)}" style="align-self:center"><button type="button">📞 Ring</button></a>`}
+          <button class="secondary ring-sms-toggle">💬 SMS</button>
+          <button class="secondary ring-done">Klar</button>
+          <span class="ring-status muted" style="align-self:center"></span>
+        </div>
+        <div class="ring-sms-box" style="display:none;margin-top:8px">
+          <textarea class="ring-sms-text" style="width:100%;min-height:64px;font-size:14px" placeholder="Meddelande till kunden…"></textarea>
+          <button class="ring-sms-send" style="margin-top:6px">Skicka SMS</button>
+        </div>
+      </div>`).join('');
+  }catch(_e){section.style.display='none';}
+}
+document.addEventListener('click',async(event)=>{
+  const item=event.target.closest('.ring-item');
+  if(!item)return;
+  const phone=item.dataset.phone;
+  const caseId=item.dataset.case;
+  const statusEl=item.querySelector('.ring-status');
+  try{
+    if(event.target.closest('.ring-sms-toggle')){
+      const box=item.querySelector('.ring-sms-box');
+      box.style.display=box.style.display==='none'?'block':'none';
+      return;
+    }
+    if(event.target.closest('.ring-call')){
+      if(!confirm('Ringa '+phone+' via växeln? Din mobil ringer först — svara, så kopplas kunden in.'))return;
+      statusEl.textContent='Startar samtal…';
+      await api('/api/cases/'+encodeURIComponent(caseId)+'/call',{method:'POST',body:JSON.stringify({operator:operatorInput.value})});
+      statusEl.textContent='✓ Din mobil ringer strax';
+      return;
+    }
+    if(event.target.closest('.ring-sms-send')){
+      const message=item.querySelector('.ring-sms-text').value.trim();
+      if(!message){statusEl.textContent='Skriv ett meddelande först.';return;}
+      statusEl.textContent='Skickar…';
+      await api('/api/ring-list/'+encodeURIComponent(phone)+'/sms',{method:'POST',body:JSON.stringify({message})});
+      statusEl.textContent='✓ SMS skickat';
+      item.querySelector('.ring-sms-box').style.display='none';
+      return;
+    }
+    if(event.target.closest('.ring-done')){
+      await api('/api/ring-list/'+encodeURIComponent(phone)+'/done',{method:'POST',body:JSON.stringify({})});
+      item.remove();
+      const left=document.querySelectorAll('.ring-item').length;
+      document.getElementById('ring-list-count').textContent=left;
+      if(!left)document.getElementById('ring-list-section').style.display='none';
+    }
+  }catch(error){statusEl.textContent=error.message;}
+});
+
 /* ---------- SMS-utkastinkorgen (AI draftar, du godkänner, systemet skickar) ---------- */
 const smsDraftCatLabel={A:'Färsk — svar + pris + bokning',B:'Återaktivering (äldre ärende)',C:'Manuell hantering'};
 async function loadSmsDrafts(){
@@ -1814,6 +1888,7 @@ function shouldPauseRefresh(){
 async function loadCases(options={}){
   if(isLoadingCases) return;
   loadSmsDrafts();
+  loadRingList();
   const refresh=document.getElementById('refresh');
   const openIds=openEditorIds();
   const focusedField=focusedEditorField();
