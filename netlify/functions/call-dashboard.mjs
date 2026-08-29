@@ -780,6 +780,35 @@ export default async (request) => {
       return json({ ok: true });
     }
 
+    if (action === "click_to_call") {
+      // Klick-att-ringa (godkänt av Sebastian 2026-08-29 "kör"): 46elks ringer
+      // först upp Sebastians mobil; när han svarar kopplas kunden. Utgående
+      // nummer mot kunden är det virtuella 076-numret — aldrig privata.
+      const target = normalizePhone(clean(body.phone, 40));
+      if (!target || !target.startsWith("+")) return json({ error: "Ogiltigt nummer." }, 400);
+      const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
+      const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
+      const myMobile = normalizePhone(env("VOICE_PRIMARY_NUMBER"));
+      const outboundFrom = normalizePhone(env("ELKS_SMS_NUMBER") || env("ELKS_NUMBER") || "+46101385498");
+      if (!username || !password || !myMobile) return json({ error: "Telefonuppgifter saknas i env." }, 503);
+      const response = await fetch("https://api.46elks.com/a1/calls", {
+        method: "POST",
+        headers: {
+          Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
+          "Content-Type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({
+          from: outboundFrom,
+          to: myMobile,
+          voice_start: JSON.stringify({ connect: target }),
+        }),
+        signal: AbortSignal.timeout(12000),
+      });
+      const bodyText = clean(await response.text().catch(() => ""), 300);
+      if (!response.ok) return json({ error: `46elks nekade samtalet: HTTP ${response.status} ${bodyText}` }, 502);
+      return json({ ok: true, to: target });
+    }
+
     if (action === "list_recordings") {
       // Felsökning: lista senaste inspelningarna direkt från 46elks så att
       // verkliga wav-URL:er och fältvärden kan inspekteras utan telefonsamtal.

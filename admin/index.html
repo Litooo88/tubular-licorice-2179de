@@ -386,7 +386,8 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   <div class="calendar-result" id="calendarResult"></div>
   <section class="panel notice"><strong>Automatiskt fl&ouml;de:</strong> Nya bokningar sparas h&auml;r, kunden ska f&aring; SMS och e-post direkt, och verkstaden f&aring;r avisering. Om ett kort markeras med r&ouml;d kundbekr&auml;ftelse beh&ouml;ver kunden f&ouml;ljas upp manuellt direkt.</section>
   <nav class="admin-tabs" aria-label="Adminvyer">
-    <button type="button" class="is-active" data-admin-tab="overview">Översikt & samtal</button>
+    <button type="button" class="is-active" data-admin-tab="overview">Översikt</button>
+    <button type="button" data-admin-tab="phone">Telefoni</button>
     <button type="button" data-admin-tab="cards">Kundkort</button>
   </nav>
 
@@ -476,6 +477,47 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     </div>
     <div class="communication-draft-preview" id="communicationDraftPreview"></div>
   </details>
+
+  <section class="panel active-overview">
+    <h2>Operativ &auml;rendelista</h2>
+    <p>Prioriterad lista d&auml;r &ldquo;G&ouml;r nu&rdquo; betyder faktisk &aring;tg&auml;rd: bekr&auml;fta, kontakta kund, v&auml;nta in del, ta betalt eller f&aring;nga risk/stillest&aring;nd.</p>
+    <button type="button" class="ops-filter-chip" id="opsFilterChip"></button>
+    <div id="activeOverview">Laddar &auml;renden...</div>
+  </section>
+
+  <details class="panel customer-export-panel">
+    <summary>
+      <div class="customer-export-head">
+        <div>
+          <h2>Kundexport</h2>
+          <p>Sekund&auml;rt read-only verktyg f&ouml;r e-post/telefonexport. Ingen massutskick-funktion och inget mail skickas.</p>
+          <div class="customer-export-status warn" id="customerExportStatus">Nedf&auml;lld tills du beh&ouml;ver exportera. Akut uppf&ouml;ljning anv&auml;nder kundkort via /api/cases.</div>
+        </div>
+      </div>
+    </summary>
+    <div class="customer-export-actions">
+      <button type="button" class="secondary" id="exportCustomers">Exportera kundlista</button>
+      <button type="button" class="secondary" id="copyCustomerEmails">Kopiera e-postlista</button>
+      <button type="button" class="secondary" id="copyCustomerPhones">Kopiera telefonlista</button>
+    </div>
+    <div class="customer-export-output" id="customerExportOutput">
+      <div class="customer-export-grid">
+        <div>
+          <label for="customerExportEmails">E-postadresser</label>
+          <textarea id="customerExportEmails" readonly placeholder="Inga adresser h&auml;mtade."></textarea>
+        </div>
+        <div>
+          <label for="customerExportPhones">Telefonnummer</label>
+          <textarea id="customerExportPhones" readonly placeholder="Inga telefonnummer h&auml;mtade."></textarea>
+        </div>
+      </div>
+    </div>
+  </details>
+  </div>
+
+
+  <div class="admin-view" id="phoneView" hidden>
+  <section class="panel notice" id="phoneSummaryPanel"><strong>Telefonil&auml;get just nu:</strong> <span id="phoneSummary" class="muted">Klicka p&aring; Uppdatera i samtalspanelen nedan f&ouml;r att ladda.</span></section>
   <section class="panel call-dashboard">
     <h2>Live samtalsdashboard</h2>
     <p>Dagens inkommande samtal matchas mot kundregistret n&auml;r 46elks/call-log-k&auml;llan finns. Saknas k&auml;llan ska siffror inte tolkas som live.</p>
@@ -579,42 +621,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     </div>
     <div class="sms-status" id="smsDeskStatus"></div>
   </section>
-
-  <section class="panel active-overview">
-    <h2>Operativ &auml;rendelista</h2>
-    <p>Prioriterad lista d&auml;r &ldquo;G&ouml;r nu&rdquo; betyder faktisk &aring;tg&auml;rd: bekr&auml;fta, kontakta kund, v&auml;nta in del, ta betalt eller f&aring;nga risk/stillest&aring;nd.</p>
-    <button type="button" class="ops-filter-chip" id="opsFilterChip"></button>
-    <div id="activeOverview">Laddar &auml;renden...</div>
-  </section>
-
-  <details class="panel customer-export-panel">
-    <summary>
-      <div class="customer-export-head">
-        <div>
-          <h2>Kundexport</h2>
-          <p>Sekund&auml;rt read-only verktyg f&ouml;r e-post/telefonexport. Ingen massutskick-funktion och inget mail skickas.</p>
-          <div class="customer-export-status warn" id="customerExportStatus">Nedf&auml;lld tills du beh&ouml;ver exportera. Akut uppf&ouml;ljning anv&auml;nder kundkort via /api/cases.</div>
-        </div>
-      </div>
-    </summary>
-    <div class="customer-export-actions">
-      <button type="button" class="secondary" id="exportCustomers">Exportera kundlista</button>
-      <button type="button" class="secondary" id="copyCustomerEmails">Kopiera e-postlista</button>
-      <button type="button" class="secondary" id="copyCustomerPhones">Kopiera telefonlista</button>
-    </div>
-    <div class="customer-export-output" id="customerExportOutput">
-      <div class="customer-export-grid">
-        <div>
-          <label for="customerExportEmails">E-postadresser</label>
-          <textarea id="customerExportEmails" readonly placeholder="Inga adresser h&auml;mtade."></textarea>
-        </div>
-        <div>
-          <label for="customerExportPhones">Telefonnummer</label>
-          <textarea id="customerExportPhones" readonly placeholder="Inga telefonnummer h&auml;mtade."></textarea>
-        </div>
-      </div>
-    </div>
-  </details>
   </div>
 
   <div class="admin-view" id="cardsView" hidden>
@@ -700,6 +706,7 @@ const smsDeskStatus=document.getElementById('smsDeskStatus');
 const operatorInput=document.getElementById('operatorName');
 const activeOverviewEl=document.getElementById('activeOverview');
 const overviewView=document.getElementById('overviewView');
+const phoneView=document.getElementById('phoneView');
 const cardsView=document.getElementById('cardsView');
 const callStatsEl=document.getElementById('callDashboardStats');
 const callTableEl=document.getElementById('callDashboardTable');
@@ -763,6 +770,10 @@ document.getElementById('smsInboxList').addEventListener('click',(event)=>{
 document.getElementById('voicemailList').addEventListener('click',(event)=>{
   const button=event.target.closest('[data-voicemail-handled]');
   if(button)markVoicemailHandled(button.dataset.voicemailHandled,button);
+});
+document.addEventListener('click',(event)=>{
+  const button=event.target.closest('[data-call-number]');
+  if(button)clickToCall(button.dataset.callNumber,button);
 });
 document.getElementById('campaignMessage').value=campaignDefaultMessage();
 document.getElementById('buildStatusRollout').addEventListener('click',buildStatusRollout);
@@ -922,9 +933,9 @@ function showCallStatus(message,bad=false){
   callStatusEl.style.display=message?'block':'none';
 }
 function setAdminView(view='overview'){
-  const isCards=view==='cards';
-  overviewView.hidden=isCards;
-  cardsView.hidden=!isCards;
+  overviewView.hidden=view!=='overview';
+  phoneView.hidden=view!=='phone';
+  cardsView.hidden=view!=='cards';
   document.querySelectorAll('[data-admin-tab]').forEach((button)=>button.classList.toggle('is-active',button.dataset.adminTab===view));
 }
 function selectedSmsCase(){return cases.find((item)=>item.id===smsCaseSelect.value)||null;}
@@ -2639,6 +2650,7 @@ async function loadCallDashboard(){
     renderCallDashboard(data);
     renderSmsInbox(data.inboundSms||[],data.ringUnhandled||[]);
     renderVoicemailInbox(data.voicemailAnalyses||[]);
+    renderPhoneSummary(data);
     showCallStatus(`Samtal uppdaterade ${new Date().toLocaleTimeString('sv-SE')}.`);
   }catch(error){
     showCallStatus(error.message,true);
@@ -2942,9 +2954,39 @@ function renderSmsInbox(items,stale){
           <td>${html(item.phone)}</td>
           <td>${html(typeLabel[item.type]||item.type)}</td>
           <td>${html(item.message||'')}</td>
-          <td>${item.handled?'<span class="muted-small">Hanterad</span>':`<button type="button" class="secondary" data-inbound-handled="${html(item.key)}">Markera uppringd</button>`}</td>
+          <td><button type="button" class="secondary" data-call-number="${html(item.phone)}">Ring</button> ${item.handled?'<span class="muted-small">Hanterad</span>':`<button type="button" class="secondary" data-inbound-handled="${html(item.key)}">Markera uppringd</button>`}</td>
         </tr>`).join('')}</tbody>
     </table>`;
+}
+function renderPhoneSummary(data){
+  const el=document.getElementById('phoneSummary');
+  if(!el)return;
+  const ringV=(data.ringUnhandled||[]).length;
+  const viktiga=(data.voicemailAnalyses||[]).filter(v=>v.classification&&v.classification.priority==='urgent'&&!v.handled).length;
+  const s=data.stats||{};
+  const svarsgrad=s.total?Math.round((Number(s.answered)||0)/Number(s.total)*100):null;
+  const saldo=data.account?`${data.account.balanceSek} kr saldo${data.account.low?' ⚠️':''}`:'saldo okänt';
+  const delar=[
+    ringV?`<b style="color:#ff6b5e">${ringV} RING-svar väntar på uppringning</b>`:'inga väntande RING-svar',
+    viktiga?`<b style="color:#ff6b5e">${viktiga} VIKTIGT-telesvar ohanterade</b>`:'inga ohanterade VIKTIGT-telesvar',
+    svarsgrad===null?'svarsgrad okänd':`svarsgrad 60 dgr: ${svarsgrad}% (${s.answered}/${s.total})`,
+    saldo,
+  ];
+  el.innerHTML=delar.join(' &middot; ');
+}
+async function clickToCall(number,button){
+  const target=String(number||'').trim();
+  if(!target)return;
+  if(!confirm(`Ringa upp ${target}?\n\nDin mobil ringer först — svara, så kopplas kunden upp. Utgående nummer: 076-686 71 31.`))return;
+  if(button)button.disabled=true;
+  try{
+    const result=await api('/api/call-dashboard',{method:'POST',body:JSON.stringify({action:'click_to_call',phone:target})});
+    alert(result.ok?'Samtalet startas — svara i din mobil så kopplas kunden.':'Kunde inte starta samtalet: '+(result.error||'okänt fel'));
+  }catch(error){
+    alert('Kunde inte starta samtalet: '+(error&&error.message||error));
+  }finally{
+    if(button)button.disabled=false;
+  }
 }
 function renderVoicemailInbox(items){
   const el=document.getElementById('voicemailList');
@@ -2974,7 +3016,7 @@ function renderVoicemailInbox(items){
           <td>${kund}</td>
           <td>${prio(item.classification)}</td>
           <td>${detaljer}${item.recordingUrl?` <a href="${html(item.recordingUrl)}" target="_blank" rel="noopener" class="muted-small">ljud</a>`:''}</td>
-          <td>${item.handled?'<span class="muted-small">Hanterad</span>':`<button type="button" class="secondary" data-voicemail-handled="${html(item.id)}">Markera hanterad</button>`}</td>
+          <td>${String(item.caller||'').startsWith('+')?`<button type="button" class="secondary" data-call-number="${html(item.caller)}">Ring</button> `:''}${item.handled?'<span class="muted-small">Hanterad</span>':`<button type="button" class="secondary" data-voicemail-handled="${html(item.id)}">Markera hanterad</button>`}</td>
         </tr>`;}).join('')}</tbody>
     </table>`;
 }
