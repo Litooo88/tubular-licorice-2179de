@@ -532,6 +532,9 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <h3 style="margin-top:18px" id="callStatsHeading">Ringstatistik</h3>
     <p class="call-dashboard-note">Hela 30-dagarsf&ouml;nstret fr&aring;n 46elks live. "Besvarade" = en m&auml;nniska svarade. R&ouml;stbrevl&aring;da r&auml;knas inte som besvarat &mdash; kunden n&aring;dde inte fram.</p>
     <div class="call-dashboard-grid" id="callStats30"></div>
+    <h3 style="margin-top:18px">Svarsgradstrend sedan rotorsaksfixen 19 juli</h3>
+    <p class="call-dashboard-note">Styrm&aring;ttet: m&auml;ts fr&aring;n att telefonhaveriets rotorsak fixades (saldo + webhook, 19/7) s&aring; att haveriperioden inte f&ouml;rorenar siffran. "N&aring;dd" = svarad av m&auml;nniska. Unika uppringare = en kund som ringer 20 g&aring;nger r&auml;knas en g&aring;ng.</p>
+    <div id="baselineTrend" class="muted">Laddar trend...</div>
     <div id="callStats30Days" class="muted">Laddar statistik...</div>
   </section>
 
@@ -2677,6 +2680,7 @@ function renderCallDashboard(data){
   }).join('');
   if(account&&account.low)showCallStatus(`VARNING: 46elks-saldot är ${account.balanceSek} kr (gräns ${account.warnBelowSek} kr). Fyll på nu — vid 0 kr dör telefon och SMS.`,true);
   renderCallStats30(data.stats||null);
+  renderBaselineTrend(data.baselineStats||null);
   renderCallLeads(data.activeLeadRows||[]);
   const rows=data.todayRows||[];
   if(!rows.length){
@@ -2704,6 +2708,26 @@ function renderCallDashboard(data){
           <td><div class="call-actions">${actionHtml}</div></td>
         </tr>`;
       }).join('')}</tbody>
+    </table>`;
+}
+function renderBaselineTrend(baseline){
+  const el=document.getElementById('baselineTrend');
+  if(!el)return;
+  if(!baseline||!(baseline.weekly||[]).length){el.innerHTML='<div class="muted">Ingen data sedan 19 juli ännu.</div>';return;}
+  const veckor=baseline.weekly;
+  el.innerHTML=`
+    <table class="call-table">
+      <thead><tr><th>Vecka fr.o.m.</th><th>Samtal</th><th>Nådda samtal</th><th>Unika uppringare</th><th>Unika nådda</th><th>Svarsgrad (unika)</th></tr></thead>
+      <tbody>${veckor.map((v)=>{
+        const rate=v.uniqueCallers?Math.round(v.uniqueReached/v.uniqueCallers*100):0;
+        return `<tr>
+          <td>${html(v.week)}</td>
+          <td>${html(v.calls)}</td>
+          <td>${html(v.callsReached)}</td>
+          <td>${html(v.uniqueCallers)}</td>
+          <td>${html(v.uniqueReached)}</td>
+          <td><b style="color:${rate>=60?'#7ee2a8':rate>=35?'#f0a929':'#ff6b5e'}">${rate}%</b></td>
+        </tr>`;}).join('')}</tbody>
     </table>`;
 }
 function renderCallStats30(stats){
@@ -2963,13 +2987,14 @@ function renderPhoneSummary(data){
   if(!el)return;
   const ringV=(data.ringUnhandled||[]).length;
   const viktiga=(data.voicemailAnalyses||[]).filter(v=>v.classification&&v.classification.priority==='urgent'&&!v.handled).length;
-  const s=data.stats||{};
-  const svarsgrad=s.total?Math.round((Number(s.answered)||0)/Number(s.total)*100):null;
+  const b=data.baselineStats||{};
+  const senasteVecka=(b.weekly||[]).slice(-1)[0];
+  const svarsgrad=senasteVecka&&senasteVecka.uniqueCallers?Math.round(senasteVecka.uniqueReached/senasteVecka.uniqueCallers*100):null;
   const saldo=data.account?`${data.account.balanceSek} kr saldo${data.account.low?' ⚠️':''}`:'saldo okänt';
   const delar=[
     ringV?`<b style="color:#ff6b5e">${ringV} RING-svar väntar på uppringning</b>`:'inga väntande RING-svar',
     viktiga?`<b style="color:#ff6b5e">${viktiga} VIKTIGT-telesvar ohanterade</b>`:'inga ohanterade VIKTIGT-telesvar',
-    svarsgrad===null?'svarsgrad okänd':`svarsgrad 60 dgr: ${svarsgrad}% (${s.answered}/${s.total})`,
+    svarsgrad===null?'svarsgrad okänd':`svarsgrad denna vecka: ${svarsgrad}% av unika uppringare (${senasteVecka.uniqueReached}/${senasteVecka.uniqueCallers})`,
     saldo,
   ];
   el.innerHTML=delar.join(' &middot; ');

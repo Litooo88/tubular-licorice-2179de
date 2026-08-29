@@ -478,6 +478,48 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     newLeadsToday: todayRows.filter((row) => row.lead?.status === "new").length,
   };
 
+  // Svarsgrad mätt från rotorsaksfixen 2026-07-19 (46elks-saldot påfyllt +
+  // webhook lagad). 60-dagarsfönstret drar annars med hela haveriperioden och
+  // blir obrukbart som styrmått (Sebastians beslut 2026-08-29). Två mått:
+  // per samtal och per unik uppringare (en kund som ringer 20 ggr ska inte
+  // sänka siffran 20 ggr). "Nådd" = svarad av människa (ej telefonsvarare).
+  const STATS_BASELINE = "2026-07-19T12:00:00";
+  const own = ownNumbers();
+  const reachedBy = (row) => ["workshop", "sebastian", "other"].includes(String(row.answeredBy));
+  const baselineRows = rows.filter(
+    (row) => String(row.timestamp) > STATS_BASELINE && row.phone && !own.has(row.phone),
+  );
+  const weekOf = (timestamp) => {
+    const date = new Date(timestamp);
+    const monday = new Date(date);
+    monday.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+    return monday.toISOString().slice(0, 10);
+  };
+  const weekMap = new Map();
+  for (const row of baselineRows) {
+    const week = weekOf(row.timestamp);
+    const bucket = weekMap.get(week) || { week, calls: 0, callsReached: 0, callers: new Map() };
+    bucket.calls += 1;
+    if (reachedBy(row)) bucket.callsReached += 1;
+    bucket.callers.set(row.phone, bucket.callers.get(row.phone) || reachedBy(row));
+    if (reachedBy(row)) bucket.callers.set(row.phone, true);
+    weekMap.set(week, bucket);
+  }
+  const baselineStats = {
+    since: STATS_BASELINE.slice(0, 10),
+    calls: baselineRows.length,
+    callsReached: baselineRows.filter(reachedBy).length,
+    weekly: [...weekMap.values()]
+      .sort((a, b) => a.week.localeCompare(b.week))
+      .map((bucket) => ({
+        week: bucket.week,
+        calls: bucket.calls,
+        callsReached: bucket.callsReached,
+        uniqueCallers: bucket.callers.size,
+        uniqueReached: [...bucket.callers.values()].filter(Boolean).length,
+      })),
+  };
+
   // Saldovakt: hämtar 46elks-saldot (10000 = 1 SEK). Under tröskeln skickas
   // varnings-SMS till Sebastian max 1 gång per dygn (blob-throttle) — tomt
   // saldo var grundorsaken till telefonhaveriet 13-17 juli och får aldrig
@@ -549,7 +591,7 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
     .slice(0, 50);
 
-  return { rows, todayRows, activeLeadRows, totals, stats, account, inboundSms, ringUnhandled, optoutPhones, ownNumbers: [...ownNumbers()], campaignSent, voicemailAnalyses, readOnly: !syncLeads };
+  return { rows, todayRows, activeLeadRows, totals, stats, baselineStats, account, inboundSms, ringUnhandled, optoutPhones, ownNumbers: [...ownNumbers()], campaignSent, voicemailAnalyses, readOnly: !syncLeads };
 };
 
 export default async (request) => {
