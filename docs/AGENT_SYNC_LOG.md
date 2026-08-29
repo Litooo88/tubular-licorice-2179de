@@ -32,6 +32,27 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-29 — Claude Code — KLAR (Telefoni-flik + klick-att-ringa; AI-telesvar verifierat i skarp drift)
+
+- **Ny flik "Telefoni" i admin:** alla telefonipaneler (samtalsdashboard,
+  ringstatistik, vinn tillbaka, servicelänk-utrullning, svars-inkorg,
+  AI-telesvar, SMS-sändaren) flyttade till egen vy (`phoneView`) med
+  sammanfattningsremsa överst (väntande RING, ohanterade VIKTIGT,
+  svarsgrad, 46elks-saldo). setAdminView är nu trevägs.
+- **Klick-att-ringa:** ny action click_to_call i call-dashboard —
+  46elks ringer Sebastians mobil (VOICE_PRIMARY_NUMBER) först och
+  kopplar sedan kunden; utgående nummer är alltid ELKS_SMS_NUMBER
+  (076), aldrig privata. Ring-knappar i båda inkorgarna,
+  bekräftelsedialog före samtal. OBS: startade samtal kostar per minut.
+- **AI-telesvar LIVE-verifierat:** skarpt samtal 29/8 14:32 (Sebastians
+  test från +46700243319) gick genom hela kedjan — caller-medbärningen
+  fungerade, transkript korrekt, VIKTIGT-klassning, internt SMS "sent".
+  Debugraden voicemail_saved_debug kan nu tas bort vid nästa städpass.
+- **Driftnotis:** 46elks-saldot var 107 kr vid verifieringen — nära
+  100-kronorsgränsen. Sebastian flaggad för påfyllning.
+- **Tester:** 17/17 + build + checkout-verify gröna; UI röktestad lokalt
+  och live (flik, remsa, 9 Ring-knappar renderade).
+
 ### 2026-08-28 — Claude Code — KLAR (AI-telesvar LÖST och aktiverat i drift)
 
 - **Rotorsak funnen:** 46elks inspelnings-callback saknar `from`-fältet
