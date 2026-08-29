@@ -2259,3 +2259,10 @@ AI-telesvarsanalys blir det gemensamma efterbearbetningslagret. Konkret:
 - `nemob-os/lib/advice.mjs`: regelråd (deadline/kund väntar/stora block/belastning per vardag) + Claude-lager via `@anthropic-ai/sdk` (claude-opus-5, json_schema) bakom ANTHROPIC_API_KEY, not_configured utan nyckel. POST /api/tasks/:id/advice ändrar inget; Tillämpa i UI gör PATCH.
 - Root package.json har nu `@anthropic-ai/sdk` som dependency (kör `npm install` efter merge). Tester 68/68, smoke-testat i browser.
 - Öppna PR:er från Claude: feat/click-to-call (case-call.mjs) och feat/task-advice. Oberoende av varandra.
+
+### 2026-08-29 — Claude Code — KLAR — Ringlistan: ingen varm kund missas två gånger (mergad till main)
+- NYA FUNKTIONER (namn reserverade): `ring-list.mjs` (API + store ring-list, statusar watch/new/done) och `ring-list-scan.mjs` (schemalagd */10: varmt nummer som ringer utan att nås ⇒ status new + info-SMS till kund (max 1/7 dgr, ej optout, ej 21–08, max 5/körning) + larm-SMS till Sebastian (max 1/6 tim)).
+- Admin: röd sektion "Ringlista" överst, sorterad på flest försök; click-to-call när kundkort finns, snabb-SMS, Klar ⇒ watch. docs/RINGLISTA.md.
+- Seedat: 156 watch-poster (alla återkontaktade) + 15 heta (ringt igen utan att nås); info-SMS skickat till 11, skippat för 4 som nyss fått personligt SMS (Simon, Adam E, Malin) — allt via API, loggat per post.
+- Fix i samma pass: GET /api/ring-list batchar blob-läsning parallellt (sekventiellt timeoutade vid 150+).
+- Bakgrund/data: 46 ringde tillbaka efter återkontakt, endast 18 nåddes; 15 oräddade. Mobilexporter (Motorola+Samsung) inlagda i samtalsrapporten; rotorsak juli = Comviq samtalsspärr 25 jun–14 aug (PTS).
