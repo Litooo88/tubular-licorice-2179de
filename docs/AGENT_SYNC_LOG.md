@@ -32,6 +32,27 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-29 — Claude Code — KLAR (samtalsstatistik: växeln + båda mobilloggarna, read-only)
+
+- **Vad:** Full sammanställning av alla inkommande samtal 8 maj – 29 aug,
+  fyra källor deduplicerade på samtals-id: 46elks månadsexport (maj/juni),
+  API-arkivsnapshot 22/8, live `/api/call-dashboard` (60 dagar) och
+  mobilloggarna. Ingen kod ändrad, inga writes, inga SMS.
+- **Siffror:** 1 101 kundsamtal till växeln + 217 direkt till mobilen,
+  253 unika nummer, svarsgrad 11,8 % (124 besvarade, 80 röstmeddelanden,
+  843 missade, 54 utan status ur CSV-exporten). 170 nummer har vi aldrig
+  pratat med. På dagar med mobillogg fick bara 61,8 % av växelsamtalen
+  mobilen att ens ringa — och av de 235 som ringde besvarades 35.
+- **Blindfläckar (viktigt för nästa körning):** (1) `mobil-kundkontakter.json`
+  är förfiltrerad — alla 87 nummer finns redan i växelloggen, så kunder som
+  bara ringt mobilen syns inte; kräver ny extraktion ur telefonernas råa
+  logg. (2) Mobilloggen saknar 26 juni – 31 juli och allt efter 28 aug.
+  (3) Privatlinjen 076 ingår inte: `call-dashboard` filtrerar
+  `call.to === "+46101385498"`, så trafik till 076-numret sedan 8 aug är
+  oräknad — hämtas separat ur 46elks eller genom att bredda filtret.
+- **Leverans:** Artifact-rapport + tre CSV:er (per nummer/dag/vecka) till
+  Sebastian. Skript ligger i Claude-scratchpad, inget nytt i repot.
+
 ### 2026-08-29 — Claude Code — KLAR (Telefoni-flik + klick-att-ringa; AI-telesvar verifierat i skarp drift)
 
 - **Ny flik "Telefoni" i admin:** alla telefonipaneler (samtalsdashboard,
