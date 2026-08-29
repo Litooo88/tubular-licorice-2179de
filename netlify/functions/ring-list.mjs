@@ -64,9 +64,11 @@ export default async (request, context) => {
   if (request.method === "GET" && !id) {
     const { blobs } = await list.list().catch(() => ({ blobs: [] }));
     const items = [];
-    for (const blob of blobs || []) {
-      const item = await list.get(blob.key, { type: "json" }).catch(() => null);
-      if (item && item.status === "new") items.push(item);
+    // Batchad parallell-läsning — sekventiellt timeoutar vid 150+ poster.
+    const keys = (blobs || []).map((blob) => blob.key);
+    for (let i = 0; i < keys.length; i += 25) {
+      const batch = await Promise.all(keys.slice(i, i + 25).map((key) => list.get(key, { type: "json" }).catch(() => null)));
+      for (const item of batch) if (item && item.status === "new") items.push(item);
     }
     items.sort(
       (a, b) => (b.attempts || 0) - (a.attempts || 0) ||
