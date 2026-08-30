@@ -642,6 +642,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <div><label for="statusFilter">Status</label><select id="statusFilter"><option value="">Alla</option><option value="new">Ny</option><option value="contacted">Kontaktad</option><option value="waiting_customer">V&auml;ntar kund</option><option value="checked_in">Inl&auml;mnad</option><option value="diagnosing">Diagnos</option><option value="repairing">Reparerar</option><option value="waiting_parts">V&auml;ntar delar</option><option value="ready">Klar</option><option value="done">Avslutad</option></select></div>
     </div>
   </div>
+  <section class="panel" id="reviewPanel" style="display:none;border-color:#6b5226">
+    <h2 style="color:#ffd9b3">Att dubbelkolla <span id="reviewCount" style="font-size:14px"></span></h2>
+    <p class="call-dashboard-note">&Auml;renden flaggade f&ouml;r din granskning: chattar som blivit kundkort utan bokning (svepvyns "Oklart/chatt") och verkstadsloggar som skickats till dig f&ouml;r genomg&aring;ng. Utred, och tryck sedan "Utrett &#10003;" s&aring; f&ouml;rsvinner raden.</p>
+    <div id="reviewList"></div>
+  </section>
   <section class="board" id="board"></section>
   </div>
 </main>
@@ -1966,8 +1971,60 @@ function updateOpsFilterUi(ops){
     chip.classList.remove('is-active');
   }
 }
+function renderReviewList(){
+  const panel=document.getElementById('reviewPanel');
+  const list=document.getElementById('reviewList');
+  if(!panel||!list)return;
+  const flagged=(cases||[]).filter((item)=>item.workshop&&item.workshop.needsSebastianReview&&!['done','archived'].includes(item.status));
+  document.getElementById('reviewCount').textContent=flagged.length?`(${flagged.length})`:'';
+  if(!flagged.length){panel.style.display='none';return;}
+  panel.style.display='';
+  list.innerHTML=`<table class="call-table">
+    <thead><tr><th>Kund</th><th>Modell / &auml;rende</th><th>Senaste notering</th><th></th></tr></thead>
+    <tbody>${flagged.map((item)=>{
+      const c=item.customer||{};
+      const senaste=(item.notes||[]).slice(-1).map((n)=>String(n.text||'').slice(0,90))[0]||'';
+      return `<tr>
+        <td><b>${html(c.name||'Okänd')}</b><br><span class="muted-small">${html(c.phone||'')}</span></td>
+        <td>${html((item.vehicle&&item.vehicle.model)||'')}<br><span class="muted-small">${html(item.service||'')} &middot; ${html(item.status||'')}</span></td>
+        <td class="muted-small">${html(senaste)}</td>
+        <td style="white-space:nowrap">
+          ${c.phone?`<button type="button" class="secondary" data-call-number="${html(c.phone)}">Ring</button>`:''}
+          <button type="button" class="secondary" data-review-open="${html(item.id)}">Visa kort</button>
+          <button type="button" class="secondary" data-review-clear="${html(item.id)}">Utrett ✓</button>
+        </td>
+      </tr>`;}).join('')}</tbody>
+  </table>`;
+}
+async function clearReviewFlag(id,button){
+  button.disabled=true;
+  try{
+    await api('/api/cases/'+encodeURIComponent(id),{method:'PATCH',body:JSON.stringify({workshop:{needsSebastianReview:false},note:'Dubbelkoll utredd — flagga borttagen.'})});
+    const item=(cases||[]).find((c)=>c.id===id);
+    if(item&&item.workshop)item.workshop.needsSebastianReview=false;
+    render();
+  }catch(error){
+    button.disabled=false;
+    alert('Kunde inte ta bort flaggan: '+(error&&error.message||error));
+  }
+}
+document.addEventListener('click',(event)=>{
+  const clear=event.target.closest('[data-review-clear]');
+  if(clear){clearReviewFlag(clear.dataset.reviewClear,clear);return;}
+  const open=event.target.closest('[data-review-open]');
+  if(open){
+    const item=(cases||[]).find((c)=>c.id===open.dataset.reviewOpen);
+    if(item){
+      const search=document.getElementById('searchFilter');
+      search.value=(item.customer&&(item.customer.phone||item.customer.name))||'';
+      render();
+      document.getElementById('board').scrollIntoView({behavior:'smooth'});
+    }
+  }
+});
 function render(){
   updateSmsCaseOptions();
+  renderReviewList();
   const ops=operationalMetrics(cases);
   const overviewList=opsFilterKey&&Array.isArray(ops[opsFilterKey])?ops[opsFilterKey]:(ops.doNow.length?ops.doNow:ops.notClosed);
   renderActiveOverview(overviewList);
@@ -4660,7 +4717,7 @@ if('serviceWorker' in navigator){
       }
     }else if(mode==='unclear'){
       try{
-        await api('/api/cases/'+encodeURIComponent(item.id),{method:'PATCH',body:JSON.stringify({needsSebastianReview:true,note:'Oklart ursprung — troligen chatt som blev kundkort utan bokning. Dubbelkolla innan åtgärd (svep-rensning).'})});
+        await api('/api/cases/'+encodeURIComponent(item.id),{method:'PATCH',body:JSON.stringify({workshop:{needsSebastianReview:true},note:'Oklart ursprung — troligen chatt som blev kundkort utan bokning. Dubbelkolla innan åtgärd (svep-rensning).'})});
         unclear.add(item.id);
         persistUnclear();
       }catch(error){
