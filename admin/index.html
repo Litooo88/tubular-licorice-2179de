@@ -4531,8 +4531,9 @@ if('serviceWorker' in navigator){
       <button type="button" id="swipeLeftBtn" style="flex:1;max-width:160px;background:#1a2420;color:#ffb4ab;border:1px solid #5c2b26;min-height:52px;font-weight:800">&#8592; Kvar i verkstaden</button>
       <button type="button" id="swipeRightBtn" style="flex:1;max-width:160px;background:#00c853;color:#031006;min-height:52px;font-weight:800">Klar &#8594;</button>
     </div>
-    <div style="display:flex;justify-content:center;padding-bottom:8px">
-      <button type="button" id="swipeNoShowBtn" style="max-width:340px;flex:1;background:#0d120e;color:#aeb8b0;border:1px dashed #3a463d;min-height:44px;font-weight:700">Ej inl&auml;mnad &mdash; arkivera (bokning utan inl&auml;mning, inget mejl)</button>
+    <div style="display:flex;gap:8px;justify-content:center;padding-bottom:8px;flex-wrap:wrap">
+      <button type="button" id="swipeNoShowBtn" style="max-width:220px;flex:1;background:#0d120e;color:#aeb8b0;border:1px dashed #3a463d;min-height:44px;font-weight:700;font-size:12px">Ej inl&auml;mnad &mdash; arkivera (inget mejl)</button>
+      <button type="button" id="swipeUnclearBtn" style="max-width:220px;flex:1;background:#0d120e;color:#ffd9b3;border:1px dashed #6b5226;min-height:44px;font-weight:700;font-size:12px">Oklart / chatt &mdash; dubbelkolla senare</button>
     </div>
     <div class="muted" style="text-align:center;font-size:12px;padding-bottom:6px">Svep h&ouml;ger = klart &middot; svep v&auml;nster = kvar (inget &auml;ndras) &middot; &auml;ldst f&ouml;rst</div>
   </div>
@@ -4551,9 +4552,12 @@ if('serviceWorker' in navigator){
   // dyka upp igen vid varje öppning och listan kännas som att den börjar om
   // (Sebastians buggrapport 2026-08-30). Överhoppade minns per flik/session.
   const SKIP_KEY='nemobSwipeSkipped';
-  const readSkipped=()=>{try{return new Set(JSON.parse(sessionStorage.getItem(SKIP_KEY)||'[]'))}catch{return new Set()}};
-  const skipped=readSkipped();
+  const UNCLEAR_KEY='nemobSwipeUnclear';
+  const readSet=(key)=>{try{return new Set(JSON.parse(sessionStorage.getItem(key)||'[]'))}catch{return new Set()}};
+  const skipped=readSet(SKIP_KEY);
+  const unclear=readSet(UNCLEAR_KEY);
   const persistSkipped=()=>{try{sessionStorage.setItem(SKIP_KEY,JSON.stringify([...skipped]))}catch{}};
+  const persistUnclear=()=>{try{sessionStorage.setItem(UNCLEAR_KEY,JSON.stringify([...unclear]))}catch{}};
   const statusLabel={new:'Ny',in_progress:'Pågående',waiting_parts:'Väntar delar',waiting_customer:'Väntar kund',ready:'Klar att hämta'};
   const daysOld=(item)=>Math.max(0,Math.round((Date.now()-new Date(item.createdAt||item.updatedAt||Date.now()).getTime())/86400000));
   function autoVariant(item){const d=daysOld(item);return d<=14?'recent':d<=45?'mid':'legacy'}
@@ -4579,9 +4583,15 @@ if('serviceWorker' in navigator){
     counter.textContent=queue.length?`${Math.min(index+1,queue.length)}/${queue.length}`:'';
     if(index>=queue.length){
       const antalSkippade=skipped.size;
-      stage.innerHTML=`<div style="color:#7ee2a8;text-align:center;padding-top:36%"><b style="font-size:22px">Rent! 🎉</b><div class="muted" style="margin-top:8px">Inga fler &auml;renden att svepa just nu.</div>${antalSkippade?`<div class="muted" style="margin-top:14px">${antalSkippade} &auml;renden ligger kvar i verkstaden (v&auml;nstersvepta).<br><button type="button" class="secondary" id="swipeResetSkipped" style="margin-top:8px">G&aring; igenom dem igen</button></div>`:''}</div>`;
+      const oklara=(cases||[]).filter((item)=>unclear.has(item.id));
+      stage.innerHTML=`<div style="color:#7ee2a8;text-align:center;padding-top:30%"><b style="font-size:22px">Rent! 🎉</b><div class="muted" style="margin-top:8px">Inga fler &auml;renden att svepa just nu.</div>
+        ${antalSkippade?`<div class="muted" style="margin-top:14px">${antalSkippade} &auml;renden ligger kvar i verkstaden (v&auml;nstersvepta).<br><button type="button" class="secondary" id="swipeResetSkipped" style="margin-top:8px">G&aring; igenom dem igen</button></div>`:''}
+        ${oklara.length?`<div style="margin-top:14px;color:#ffd9b3;font-size:13px"><b>${oklara.length} markerade som Oklart/chatt</b> (flaggade f&ouml;r dubbelkoll p&aring; kundkortet):<br>${oklara.slice(0,10).map((item)=>html((item.customer&&item.customer.name)||item.id)).join(' &middot; ')}<br><button type="button" class="secondary" id="swipeResetUnclear" style="margin-top:8px">G&aring; igenom oklara igen</button></div>`:''}
+      </div>`;
       const reset=document.getElementById('swipeResetSkipped');
       if(reset)reset.addEventListener('click',()=>{skipped.clear();persistSkipped();openQueue();});
+      const resetU=document.getElementById('swipeResetUnclear');
+      if(resetU)resetU.addEventListener('click',()=>{unclear.clear();persistUnclear();openQueue();});
       return;
     }
     stage.innerHTML=`<div id="swipeCard" style="position:absolute;inset:0;transition:transform .18s ease,opacity .18s ease">${cardHtml(queue[index])}</div>`;
@@ -4621,8 +4631,10 @@ if('serviceWorker' in navigator){
     const item=queue[index];
     const card=document.getElementById('swipeCard');
     if(card){
-      const dir=mode==='done'?1:mode==='skip'?-1:0;
-      card.style.transform=dir?`translateX(${dir*600}px) rotate(${dir*25}deg)`:'translateY(500px)';
+      if(mode==='done')card.style.transform='translateX(600px) rotate(25deg)';
+      else if(mode==='skip')card.style.transform='translateX(-600px) rotate(-25deg)';
+      else if(mode==='unclear')card.style.transform='translateY(-500px)';
+      else card.style.transform='translateY(500px)';
       card.style.opacity='0';
     }
     if(mode==='done'){
@@ -4646,6 +4658,15 @@ if('serviceWorker' in navigator){
         alert('Kunde inte arkivera '+((item.customer&&item.customer.name)||item.id)+': '+(error&&error.message||error));
         busy=false;render();return;
       }
+    }else if(mode==='unclear'){
+      try{
+        await api('/api/cases/'+encodeURIComponent(item.id),{method:'PATCH',body:JSON.stringify({needsSebastianReview:true,note:'Oklart ursprung — troligen chatt som blev kundkort utan bokning. Dubbelkolla innan åtgärd (svep-rensning).'})});
+        unclear.add(item.id);
+        persistUnclear();
+      }catch(error){
+        alert('Kunde inte flagga '+((item.customer&&item.customer.name)||item.id)+': '+(error&&error.message||error));
+        busy=false;render();return;
+      }
     }else if(mode==='skip'){
       skipped.add(item.id);
       persistSkipped();
@@ -4654,7 +4675,7 @@ if('serviceWorker' in navigator){
     setTimeout(render,140);
   }
   function openQueue(){
-    queue=(cases||[]).filter((item)=>!['done','archived'].includes(item.status)&&!skipped.has(item.id))
+    queue=(cases||[]).filter((item)=>!['done','archived'].includes(item.status)&&!skipped.has(item.id)&&!unclear.has(item.id))
       .sort((a,b)=>String(a.updatedAt||a.createdAt||'').localeCompare(String(b.updatedAt||b.createdAt||'')));
     index=0;
     overlay.style.display='block';
@@ -4668,6 +4689,7 @@ if('serviceWorker' in navigator){
     const item=queue[index];
     if(item&&confirm(`Arkivera ${(item.customer&&item.customer.name)||'ärendet'} som "Ej inlämnad"? Inget mejl skickas.`))commit('noshow');
   });
+  document.getElementById('swipeUnclearBtn').addEventListener('click',()=>commit('unclear'));
 })();
 </script>
 </body>
