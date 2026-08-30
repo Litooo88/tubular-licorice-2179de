@@ -32,6 +32,20 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-29 — Claude Code — KLAR (svep-rensning i admin)
+
+- **Vad:** knappen "🧹 Svep-rensning" i Kundkort-fliken öppnar Tinder-
+  mönstrad fullskärmsvy: ett aktivt ärende i taget (äldst först), svep
+  höger/Klar = status done via befintlig authad PATCH (tack-SMS +
+  recensionsfråga enligt kryssruta, förvalt PÅ), svep vänster/Kvar =
+  ingen ändring. Pointer events (touch + mus), API-fel behåller kortet.
+- **Filer:** endast admin/index.html (overlay + IIFE längst ner).
+- **Tester:** npm run build grönt; flödet verifierat i lokal preview
+  med injicerade testärenden (ordning, räknare, skip-logik) och live-
+  röktestat (knapp + overlay renderar). Höger-svepets PATCH använder
+  exakt samma form som triage-knapparnas ({status, note,
+  suppressThankYou}).
+
 ### 2026-08-29 — Claude Code — KLAR (samtalsstatistik: växeln + båda mobilloggarna, read-only)
 
 - **Vad:** Full sammanställning av alla inkommande samtal 8 maj – 29 aug,
