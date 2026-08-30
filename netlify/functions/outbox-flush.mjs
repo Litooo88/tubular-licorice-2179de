@@ -25,7 +25,7 @@ export default async () => {
       // skickat manuellt eller suppressed) släpps köposten utan utskick.
       if (caseItem?.notifications?.thankYou?.status === "queued") {
         try {
-          const thankYou = await sendThankYou(caseItem);
+          const thankYou = await sendThankYou(caseItem, entry.thankYouVariant);
           const sentAt = thankYou.sentAt || new Date().toISOString();
           await caseStore.setJSON(entry.caseId, {
             ...caseItem,
