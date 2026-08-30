@@ -32,6 +32,20 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-30 — Claude Code — KLAR (Att dubbelkolla-panelen + flaggfix)
+
+- **Vad:** panel överst i Kundkort-fliken listar ärenden med
+  workshop.needsSebastianReview (kund, senaste notering, Ring/Visa kort/
+  Utrett-knappar; döljs när tom). Fångar både svepvyns Oklart/chatt och
+  verkstadsloggar via submit_workshop_log (samma flagga).
+- **Buggfix:** svepvyns Oklart-PATCH skickade needsSebastianReview på
+  toppnivå — ignorerades tyst av normalizern (flaggan bor under
+  workshop). Nu {workshop:{needsSebastianReview:true}}. Kort flaggade
+  FÖRE fixen fick bara noteringen, inte flaggan — syns ej i panelen
+  (finns i historiken; svepvyns tomläge minns dem per session).
+- **Tester:** build grönt; panelvisning, radinnehåll, Utrett-PATCH och
+  auto-döljning verifierade i preview med stubbat api.
+
 ### 2026-08-30 — Claude Code — KLAR (svep-rensning: Oklart/chatt-valet)
 
 - **Vad:** fjärde val i svepvyn för chattar som auto-blivit kundkort utan
