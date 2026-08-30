@@ -32,6 +32,15 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-30 — Claude Code — KLAR (svep-rensning: Ej inlämnad-valet)
+
+- **Vad:** tredje val i svepvyn — "Ej inlämnad — arkivera" för spök-
+  bokningar (kund trodde det var en förfrågan, lämnade aldrig in).
+  Arkiverar med notering via samma authade PATCH, bekräftelsedialog,
+  aldrig tackmejl. commit() har nu mode done/skip/noshow.
+- **Tester:** build grönt; PATCH-payload och kortflöde verifierade i
+  lokal preview med stubbat api (archived + suppressThankYou + note).
+
 ### 2026-08-30 — Claude Code — KLAR (tackmejlets tre tonlägen efter ärendeålder)
 
 - **Vad:** sendThankYou har nu varianterna recent/mid/legacy — auto efter
