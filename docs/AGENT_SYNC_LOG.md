@@ -32,6 +32,19 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-30 — Claude Code — KLAR (tackmejlets tre tonlägen efter ärendeålder)
+
+- **Vad:** sendThankYou har nu varianterna recent/mid/legacy — auto efter
+  ärendets ålder (≤14/≤45/45+ dgr), överstyrbar via `thankYouVariant` i
+  cases-PATCH; tysta timmar-kön bär varianten till outbox-flush. Äldre
+  ärenden får ärlig "stängs i efterhand"-copy utan datumrad. Svepkortet
+  fick auto-förvalda variantchips + varning när kundens mejladress saknas
+  (tackmejlet är e-post via Resend — kunder utan mejl nås inte alls;
+  SMS-variant via utkastinkorgen är en möjlig framtida påbyggnad).
+- **Filer:** workshop-cases.mjs, outbox-flush.mjs, admin/index.html.
+- **Tester:** node --check + npm run build gröna; chipflöde och auto-val
+  verifierade i lokal preview med injicerade ärenden i tre åldersspann.
+
 ### 2026-08-29 — Claude Code — KLAR (svep-rensning i admin)
 
 - **Vad:** knappen "🧹 Svep-rensning" i Kundkort-fliken öppnar Tinder-
