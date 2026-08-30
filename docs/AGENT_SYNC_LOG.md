@@ -32,6 +32,19 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-30 — Claude Code — KLAR (svep-rensning: Oklart/chatt-valet)
+
+- **Vad:** fjärde val i svepvyn för chattar som auto-blivit kundkort utan
+  bokning: flaggar via befintlig PATCH (needsSebastianReview:true + note
+  i historik/timeline), ingen statusändring, aldrig mejl. Kortet lämnar
+  kön (eget sessionStorage-minne, bara id:n); tomläget listar oklara med
+  namn + återställningsknapp. OBS: needsSebastianReview saknar övrig
+  admin-UI — flaggade hittas via svepvyns tomläge + ärendehistoriken;
+  en synlig "dubbelkoll"-lista i kundkortsfliken är naturlig påbyggnad
+  (tangerar er triage-panel på den omergade strategic-branchen).
+- **Tester:** build grönt; PATCH-payload, köfiltrering och tomläge
+  verifierade i lokal preview med stubbat api.
+
 ### 2026-08-30 — Claude Code — KLAR (svep-rensning: minnesfix, listan börjar inte om)
 
 - **Bugg:** kön startade om efter Stäng (Sebastian kom till ~45 och fick
