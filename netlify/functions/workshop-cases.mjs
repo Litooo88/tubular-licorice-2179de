@@ -153,21 +153,51 @@ const shellHtml = (title, body) => `
 
 const couponCode = (caseItem) => `SCOOTER-${Buffer.from(caseItem.id).toString("base64url").slice(-6).toUpperCase()}`;
 
+// Tre tonlägen efter ärendets ålder (Sebastians beslut 2026-08-30):
+// "efter besöket" + dagens datum blir tondövt när ett äldre jobb stängs i
+// efterhand vid t.ex. svep-rensning. Auto-val efter ålder, överstyrbart
+// via thankYouVariant i PATCH:en.
+export const thankYouVariantFor = (caseItem, requested) => {
+  if (["recent", "mid", "legacy"].includes(requested)) return requested;
+  const created = new Date(caseItem?.createdAt || caseItem?.updatedAt || Date.now()).getTime();
+  const days = (Date.now() - created) / 86400000;
+  if (days <= 14) return "recent";
+  if (days <= 45) return "mid";
+  return "legacy";
+};
+
+const THANK_YOU_INTRO = {
+  recent: "Vi hoppas att allt k&auml;nns bra efter bes&ouml;ket.",
+  mid: "Vi st&auml;nger nu ditt service&auml;rende hos oss och hoppas att allt har rullat fint sedan bes&ouml;ket.",
+  legacy: "Vi g&aring;r igenom och st&auml;nger &auml;ldre service&auml;renden och s&aring;g att ditt arbete hos oss aldrig blev formellt avslutat i v&aring;rt system &mdash; det &auml;r nu gjort. Vi hoppas att allt har fungerat bra sedan dess!",
+};
+const THANK_YOU_INTRO_TEXT = {
+  recent: "Vi hoppas att allt kanns bra efter besoket.",
+  mid: "Vi stanger nu ditt servicearende hos oss och hoppas att allt har rullat fint sedan besoket.",
+  legacy: "Vi gar igenom och stanger aldre servicearenden och sag att ditt arbete hos oss aldrig blev formellt avslutat i vart system - det ar nu gjort. Vi hoppas att allt har fungerat bra sedan dess!",
+};
+
 // Exporteras så att outbox-flush.mjs (schemalagd) kan skicka köade tack när
 // tysta timmar är över — samma mall, samma idempotencyKey.
-export const sendThankYou = async (caseItem) => {
+export const sendThankYou = async (caseItem, variantRequested) => {
+  const variant = thankYouVariantFor(caseItem, variantRequested);
   const code = caseItem.coupon?.code || couponCode(caseItem);
   const validUntil = new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   const summary = clean(caseItem.completion?.workSummary || caseItem.workshop?.workDone || caseItem.service, 1600);
+  // Datumraden visar dagens datum bara för färska jobb — för äldre vore det
+  // missvisande, då visas inget datum alls.
+  const dateRow = variant === "recent"
+    ? `<p style="margin:0"><strong>Datum:</strong> ${new Date().toLocaleDateString("sv-SE")}</p>`
+    : "";
   const email = await resendEmail({
     to: caseItem.customer?.email ? [caseItem.customer.email] : [],
     subject: `Tack for fortroendet, ${firstName(caseItem.customer?.name)}`,
     html: shellHtml(
       `Tack f&ouml;r f&ouml;rtroendet, ${htmlEscape(firstName(caseItem.customer?.name))}`,
-      `<p>Vi hoppas att allt k&auml;nns bra efter bes&ouml;ket.</p>
+      `<p>${THANK_YOU_INTRO[variant]}</p>
        <div style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:16px;margin:18px 0">
          <p style="margin:0 0 8px"><strong>Utf&ouml;rt arbete:</strong><br>${htmlEscape(summary).replace(/\n/g, "<br>")}</p>
-         <p style="margin:0"><strong>Datum:</strong> ${new Date().toLocaleDateString("sv-SE")}</p>
+         ${dateRow}
        </div>
        <p><a href="${htmlEscape(REVIEW_LINK)}" style="display:inline-block;background:#00c853;color:#031006;text-decoration:none;border-radius:8px;padding:12px 16px;font-weight:700">L&auml;mna en recension</a></p>
        <p style="margin:18px 0 0">F&ouml;lj oss g&auml;rna f&ouml;r tips, servicebilder och erbjudanden:<br>
@@ -176,10 +206,10 @@ export const sendThankYou = async (caseItem) => {
        </p>
        <p><strong>10 % p&aring; n&auml;sta inl&auml;mning:</strong><br>Kod: <strong>${htmlEscape(code)}</strong><br>Giltig till ${htmlEscape(validUntil)}.</p>`,
     ),
-    text: `Tack for fortroendet, ${firstName(caseItem.customer?.name)}!\n\nUtfort arbete:\n${summary}\n\nLamna recension: ${REVIEW_LINK}\nFacebook: https://www.facebook.com/nordicemobility\nInstagram: https://www.instagram.com/nordicemobility\n\n10 % pa nasta inlamning: ${code}. Giltig till ${validUntil}.`,
+    text: `Tack for fortroendet, ${firstName(caseItem.customer?.name)}!\n\n${THANK_YOU_INTRO_TEXT[variant]}\n\nUtfort arbete:\n${summary}\n\nLamna recension: ${REVIEW_LINK}\nFacebook: https://www.facebook.com/nordicemobility\nInstagram: https://www.instagram.com/nordicemobility\n\n10 % pa nasta inlamning: ${code}. Giltig till ${validUntil}.`,
     idempotencyKey: `${caseItem.id}-thank-you`,
   });
-  return { email, coupon: { code, percent: 10, validUntil, used: false, caseId: caseItem.id }, sentAt: new Date().toISOString() };
+  return { email, variant, coupon: { code, percent: 10, validUntil, used: false, caseId: caseItem.id }, sentAt: new Date().toISOString() };
 };
 
 const paymentSmsText = ({ caseItem, amount }) => {
@@ -857,7 +887,7 @@ export default async (request, context) => {
       // outbox-flush-funktionen skickar kl 10:00 samma/nästa förmiddag.
       const sendAfter = nextOptimalSendAt();
       await getStore({ name: "outbox", consistency: "strong" })
-        .setJSON(`${next.id}-thank-you`, { type: "thank_you", caseId: next.id, sendAfter, queuedAt: now })
+        .setJSON(`${next.id}-thank-you`, { type: "thank_you", caseId: next.id, sendAfter, queuedAt: now, thankYouVariant: thankYouVariantFor(next, clean(body.thankYouVariant, 20)) })
         .catch(() => {});
       next.notifications = {
         ...(next.notifications || {}),
@@ -868,7 +898,7 @@ export default async (request, context) => {
       // A provider failure (Resend timeout/network) must not lose the whole
       // PATCH — the status/payment change still has to be persisted below.
       try {
-        const thankYou = await sendThankYou(next);
+        const thankYou = await sendThankYou(next, clean(body.thankYouVariant, 20));
         next.coupon = thankYou.coupon;
         next.notifications = {
           ...(next.notifications || {}),

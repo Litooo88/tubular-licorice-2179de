@@ -4546,15 +4546,23 @@ if('serviceWorker' in navigator){
   let queue=[],index=0,busy=false;
   const statusLabel={new:'Ny',in_progress:'Pågående',waiting_parts:'Väntar delar',waiting_customer:'Väntar kund',ready:'Klar att hämta'};
   const daysOld=(item)=>Math.max(0,Math.round((Date.now()-new Date(item.createdAt||item.updatedAt||Date.now()).getTime())/86400000));
+  function autoVariant(item){const d=daysOld(item);return d<=14?'recent':d<=45?'mid':'legacy'}
+  const VARIANT_LABEL={recent:'Nyare (≤14 dgr): "efter besöket" + dagens datum',mid:'Mellan (15–45 dgr): "vi stänger nu ditt ärende"',legacy:'Äldre (45+ dgr): ärligt "stängs i efterhand", inget datum'};
   function cardHtml(item){
     const c=item.customer||{};const v=item.vehicle||{};
+    const auto=autoVariant(item);
+    const chip=(key,label)=>`<button type="button" data-swipe-variant="${key}" style="flex:1;min-height:40px;font-size:12px;border-radius:8px;border:1px solid ${key===auto?'#00c853':'#2b362e'};background:${key===auto?'rgba(0,200,83,.15)':'#0d120e'};color:#fff">${label}</button>`;
     return `<div style="background:#101410;border:1px solid #2b362e;border-radius:14px;padding:20px;color:#fff;height:100%;display:flex;flex-direction:column;gap:10px;overflow:auto">
       <div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:20px">${html(c.name||'Okänd kund')}</b><span class="muted-small">${daysOld(item)} dgr</span></div>
       <div class="muted">${html(v.model||'Okänd modell')} &middot; ${html(item.service||'')}</div>
       <div><span style="border:1px solid #2b362e;border-radius:999px;padding:4px 12px;font-size:12px">${html(statusLabel[item.status]||item.status||'')}</span></div>
-      <div class="muted-small">${html(c.phone||'')}</div>
+      <div class="muted-small">${html(c.phone||'')}${c.email?'':' &middot; <b style="color:#f0a929">saknar mejl — inget tackmejl kan skickas</b>'}</div>
       ${item.problem?`<div style="font-size:14px;color:#cfd8d2;white-space:pre-wrap">${html(String(item.problem).slice(0,300))}</div>`:''}
-      <div class="muted-small" style="margin-top:auto">Svep h&ouml;ger om jobbet &auml;r klart och uppl&auml;mnat/upph&auml;mtat.</div>
+      <div style="margin-top:auto">
+        <div class="muted-small" style="margin-bottom:6px">Tackmejlets ton vid Klar (förvalt efter ålder):</div>
+        <div style="display:flex;gap:6px" data-variant-row data-selected="${auto}">${chip('recent','Nyare')}${chip('mid','Mellan')}${chip('legacy','Äldre')}</div>
+        <div class="muted-small" style="margin-top:5px" data-variant-desc>${html(VARIANT_LABEL[auto])}</div>
+      </div>
     </div>`;
   }
   function render(){
@@ -4564,7 +4572,15 @@ if('serviceWorker' in navigator){
       return;
     }
     stage.innerHTML=`<div id="swipeCard" style="position:absolute;inset:0;transition:transform .18s ease,opacity .18s ease">${cardHtml(queue[index])}</div>`;
-    attachGestures(document.getElementById('swipeCard'));
+    const card=document.getElementById('swipeCard');
+    attachGestures(card);
+    card.querySelectorAll('[data-swipe-variant]').forEach((chip)=>chip.addEventListener('click',(e)=>{
+      e.stopPropagation();
+      const row=chip.closest('[data-variant-row]');
+      row.dataset.selected=chip.dataset.swipeVariant;
+      row.querySelectorAll('[data-swipe-variant]').forEach((b)=>{const on=b===chip;b.style.borderColor=on?'#00c853':'#2b362e';b.style.background=on?'rgba(0,200,83,.15)':'#0d120e'});
+      card.querySelector('[data-variant-desc]').textContent=VARIANT_LABEL[chip.dataset.swipeVariant];
+    }));
   }
   function attachGestures(card){
     let startX=null,dx=0;
@@ -4591,7 +4607,8 @@ if('serviceWorker' in navigator){
     if(card){card.style.transform=`translateX(${done?600:-600}px) rotate(${done?25:-25}deg)`;card.style.opacity='0'}
     if(done){
       try{
-        const body={status:'done',note:'Markerad klar via svep-rensning'};
+        const row=card&&card.querySelector('[data-variant-row]');
+        const body={status:'done',note:'Markerad klar via svep-rensning',thankYouVariant:(row&&row.dataset.selected)||autoVariant(item)};
         if(!document.getElementById('swipeThankYou').checked)body.suppressThankYou=true;
         await api('/api/cases/'+encodeURIComponent(item.id),{method:'PATCH',body:JSON.stringify(body)});
       }catch(error){
