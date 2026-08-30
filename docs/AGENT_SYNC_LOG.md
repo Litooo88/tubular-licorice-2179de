@@ -32,6 +32,14 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-08-30 — Claude Code — KLAR (svep-rensning: minnesfix, listan börjar inte om)
+
+- **Bugg:** kön startade om efter Stäng (Sebastian kom till ~45 och fick
+  börja om). Fix: optimistisk lokal statusuppdatering vid lyckad PATCH
+  (done/archived) + vänstersvepta minns per flik i sessionStorage (bara
+  ärende-id:n) och filtreras ur kön; tomläget erbjuder "Gå igenom dem
+  igen". Verifierat i preview (3 kort -> vänster+höger -> omöppning -> 1).
+
 ### 2026-08-30 — Claude Code — KLAR (svep-rensning: Ej inlämnad-valet)
 
 - **Vad:** tredje val i svepvyn — "Ej inlämnad — arkivera" för spök-
