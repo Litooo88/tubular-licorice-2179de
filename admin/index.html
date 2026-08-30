@@ -4527,9 +4527,12 @@ if('serviceWorker' in navigator){
       Skicka tack-SMS + recensionsfr&aring;ga n&auml;r &auml;rende sveps som Klar
     </label>
     <div id="swipeStage" style="flex:1;position:relative;touch-action:pan-y"></div>
-    <div style="display:flex;gap:12px;justify-content:center;padding:14px 0">
-      <button type="button" id="swipeLeftBtn" style="flex:1;max-width:170px;background:#1a2420;color:#ffb4ab;border:1px solid #5c2b26;min-height:52px;font-weight:800">&#8592; Kvar i verkstaden</button>
-      <button type="button" id="swipeRightBtn" style="flex:1;max-width:170px;background:#00c853;color:#031006;min-height:52px;font-weight:800">Klar &#8594;</button>
+    <div style="display:flex;gap:10px;justify-content:center;padding:14px 0 6px">
+      <button type="button" id="swipeLeftBtn" style="flex:1;max-width:160px;background:#1a2420;color:#ffb4ab;border:1px solid #5c2b26;min-height:52px;font-weight:800">&#8592; Kvar i verkstaden</button>
+      <button type="button" id="swipeRightBtn" style="flex:1;max-width:160px;background:#00c853;color:#031006;min-height:52px;font-weight:800">Klar &#8594;</button>
+    </div>
+    <div style="display:flex;justify-content:center;padding-bottom:8px">
+      <button type="button" id="swipeNoShowBtn" style="max-width:340px;flex:1;background:#0d120e;color:#aeb8b0;border:1px dashed #3a463d;min-height:44px;font-weight:700">Ej inl&auml;mnad &mdash; arkivera (bokning utan inl&auml;mning, inget mejl)</button>
     </div>
     <div class="muted" style="text-align:center;font-size:12px;padding-bottom:6px">Svep h&ouml;ger = klart &middot; svep v&auml;nster = kvar (inget &auml;ndras) &middot; &auml;ldst f&ouml;rst</div>
   </div>
@@ -4593,19 +4596,26 @@ if('serviceWorker' in navigator){
     });
     card.addEventListener('pointerup',()=>{
       card.style.transition='transform .18s ease,opacity .18s ease';
-      if(dx>110)commit(true);
-      else if(dx<-110)commit(false);
+      if(dx>110)commit('done');
+      else if(dx<-110)commit('skip');
       else{card.style.transform='';card.style.opacity='1'}
       startX=null;dx=0;
     });
   }
-  async function commit(done){
+  async function commit(mode){
+    // mode: 'done' (klar, tackmejl enligt kryssruta/variant), 'skip' (kvar,
+    // ingen ändring), 'noshow' (bokning utan inlämning → arkiveras, aldrig
+    // mejl — status archived triggar inte tackflödet).
     if(busy||index>=queue.length)return;
     busy=true;
     const item=queue[index];
     const card=document.getElementById('swipeCard');
-    if(card){card.style.transform=`translateX(${done?600:-600}px) rotate(${done?25:-25}deg)`;card.style.opacity='0'}
-    if(done){
+    if(card){
+      const dir=mode==='done'?1:mode==='skip'?-1:0;
+      card.style.transform=dir?`translateX(${dir*600}px) rotate(${dir*25}deg)`:'translateY(500px)';
+      card.style.opacity='0';
+    }
+    if(mode==='done'){
       try{
         const row=card&&card.querySelector('[data-variant-row]');
         const body={status:'done',note:'Markerad klar via svep-rensning',thankYouVariant:(row&&row.dataset.selected)||autoVariant(item)};
@@ -4613,6 +4623,13 @@ if('serviceWorker' in navigator){
         await api('/api/cases/'+encodeURIComponent(item.id),{method:'PATCH',body:JSON.stringify(body)});
       }catch(error){
         alert('Kunde inte spara '+((item.customer&&item.customer.name)||item.id)+': '+(error&&error.message||error));
+        busy=false;render();return;
+      }
+    }else if(mode==='noshow'){
+      try{
+        await api('/api/cases/'+encodeURIComponent(item.id),{method:'PATCH',body:JSON.stringify({status:'archived',note:'Ej inlämnad — bokning utan inlämning (svep-rensning)',suppressThankYou:true})});
+      }catch(error){
+        alert('Kunde inte arkivera '+((item.customer&&item.customer.name)||item.id)+': '+(error&&error.message||error));
         busy=false;render();return;
       }
     }
@@ -4627,8 +4644,12 @@ if('serviceWorker' in navigator){
     render();
   });
   document.getElementById('swipeClose').addEventListener('click',async()=>{overlay.style.display='none';await loadCases();});
-  document.getElementById('swipeLeftBtn').addEventListener('click',()=>commit(false));
-  document.getElementById('swipeRightBtn').addEventListener('click',()=>commit(true));
+  document.getElementById('swipeLeftBtn').addEventListener('click',()=>commit('skip'));
+  document.getElementById('swipeRightBtn').addEventListener('click',()=>commit('done'));
+  document.getElementById('swipeNoShowBtn').addEventListener('click',()=>{
+    const item=queue[index];
+    if(item&&confirm(`Arkivera ${(item.customer&&item.customer.name)||'ärendet'} som "Ej inlämnad"? Inget mejl skickas.`))commit('noshow');
+  });
 })();
 </script>
 </body>
