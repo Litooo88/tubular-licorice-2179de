@@ -4547,6 +4547,13 @@ if('serviceWorker' in navigator){
   const stage=document.getElementById('swipeStage');
   const counter=document.getElementById('swipeCounter');
   let queue=[],index=0,busy=false;
+  // Vänstersvepta ("Kvar") ändrar inget i systemet — utan minne skulle de
+  // dyka upp igen vid varje öppning och listan kännas som att den börjar om
+  // (Sebastians buggrapport 2026-08-30). Överhoppade minns per flik/session.
+  const SKIP_KEY='nemobSwipeSkipped';
+  const readSkipped=()=>{try{return new Set(JSON.parse(sessionStorage.getItem(SKIP_KEY)||'[]'))}catch{return new Set()}};
+  const skipped=readSkipped();
+  const persistSkipped=()=>{try{sessionStorage.setItem(SKIP_KEY,JSON.stringify([...skipped]))}catch{}};
   const statusLabel={new:'Ny',in_progress:'Pågående',waiting_parts:'Väntar delar',waiting_customer:'Väntar kund',ready:'Klar att hämta'};
   const daysOld=(item)=>Math.max(0,Math.round((Date.now()-new Date(item.createdAt||item.updatedAt||Date.now()).getTime())/86400000));
   function autoVariant(item){const d=daysOld(item);return d<=14?'recent':d<=45?'mid':'legacy'}
@@ -4571,7 +4578,10 @@ if('serviceWorker' in navigator){
   function render(){
     counter.textContent=queue.length?`${Math.min(index+1,queue.length)}/${queue.length}`:'';
     if(index>=queue.length){
-      stage.innerHTML='<div style="color:#7ee2a8;text-align:center;padding-top:40%"><b style="font-size:22px">Rent! 🎉</b><div class="muted" style="margin-top:8px">Inga fler aktiva &auml;renden att svepa.</div></div>';
+      const antalSkippade=skipped.size;
+      stage.innerHTML=`<div style="color:#7ee2a8;text-align:center;padding-top:36%"><b style="font-size:22px">Rent! 🎉</b><div class="muted" style="margin-top:8px">Inga fler &auml;renden att svepa just nu.</div>${antalSkippade?`<div class="muted" style="margin-top:14px">${antalSkippade} &auml;renden ligger kvar i verkstaden (v&auml;nstersvepta).<br><button type="button" class="secondary" id="swipeResetSkipped" style="margin-top:8px">G&aring; igenom dem igen</button></div>`:''}</div>`;
+      const reset=document.getElementById('swipeResetSkipped');
+      if(reset)reset.addEventListener('click',()=>{skipped.clear();persistSkipped();openQueue();});
       return;
     }
     stage.innerHTML=`<div id="swipeCard" style="position:absolute;inset:0;transition:transform .18s ease,opacity .18s ease">${cardHtml(queue[index])}</div>`;
@@ -4621,6 +4631,9 @@ if('serviceWorker' in navigator){
         const body={status:'done',note:'Markerad klar via svep-rensning',thankYouVariant:(row&&row.dataset.selected)||autoVariant(item)};
         if(!document.getElementById('swipeThankYou').checked)body.suppressThankYou=true;
         await api('/api/cases/'+encodeURIComponent(item.id),{method:'PATCH',body:JSON.stringify(body)});
+        // Optimistisk lokal uppdatering: utan den kommer kortet tillbaka om
+        // vyn öppnas igen innan hela ärendelistan hunnit laddas om.
+        item.status='done';
       }catch(error){
         alert('Kunde inte spara '+((item.customer&&item.customer.name)||item.id)+': '+(error&&error.message||error));
         busy=false;render();return;
@@ -4628,21 +4641,26 @@ if('serviceWorker' in navigator){
     }else if(mode==='noshow'){
       try{
         await api('/api/cases/'+encodeURIComponent(item.id),{method:'PATCH',body:JSON.stringify({status:'archived',note:'Ej inlämnad — bokning utan inlämning (svep-rensning)',suppressThankYou:true})});
+        item.status='archived';
       }catch(error){
         alert('Kunde inte arkivera '+((item.customer&&item.customer.name)||item.id)+': '+(error&&error.message||error));
         busy=false;render();return;
       }
+    }else if(mode==='skip'){
+      skipped.add(item.id);
+      persistSkipped();
     }
     index+=1;busy=false;
     setTimeout(render,140);
   }
-  document.getElementById('openSwipeClean').addEventListener('click',()=>{
-    queue=(cases||[]).filter((item)=>!['done','archived'].includes(item.status))
+  function openQueue(){
+    queue=(cases||[]).filter((item)=>!['done','archived'].includes(item.status)&&!skipped.has(item.id))
       .sort((a,b)=>String(a.updatedAt||a.createdAt||'').localeCompare(String(b.updatedAt||b.createdAt||'')));
     index=0;
     overlay.style.display='block';
     render();
-  });
+  }
+  document.getElementById('openSwipeClean').addEventListener('click',openQueue);
   document.getElementById('swipeClose').addEventListener('click',async()=>{overlay.style.display='none';await loadCases();});
   document.getElementById('swipeLeftBtn').addEventListener('click',()=>commit('skip'));
   document.getElementById('swipeRightBtn').addEventListener('click',()=>commit('done'));
