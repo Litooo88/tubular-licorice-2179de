@@ -634,6 +634,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 
   <div class="admin-view" id="cardsView" hidden>
   <div class="toolbar">
+    <button type="button" id="openSwipeClean" style="background:#00c853;color:#031006;font-weight:800">🧹 Svep-rensning</button>
     <div class="muted" id="lastUpdated">Inte laddad &auml;nnu. Auto-refresh &auml;r avst&auml;ngd medan du jobbar.</div>
     <div class="filters">
       <div class="search-filter"><label for="searchFilter">S&ouml;k kund</label><input id="searchFilter" type="search" placeholder="Namn, telefon, modell eller e-post"></div>
@@ -4513,6 +4514,105 @@ loadPublicConfig().finally(()=>{loadCases();loadCallDashboard();});
 if('serviceWorker' in navigator){
   navigator.serviceWorker.register('/admin/service-worker.js').catch(()=>{});
 }
+</script>
+<div id="swipeOverlay" style="display:none;position:fixed;inset:0;z-index:9998;background:rgba(3,6,4,.96);padding:14px;overflow:hidden">
+  <div style="max-width:480px;margin:0 auto;height:100%;display:flex;flex-direction:column">
+    <div style="display:flex;justify-content:space-between;align-items:center;color:#fff;margin-bottom:8px">
+      <b>Svep-rensning</b>
+      <span id="swipeCounter" class="muted"></span>
+      <button type="button" class="secondary" id="swipeClose">St&auml;ng</button>
+    </div>
+    <label style="color:#aeb8b0;font-size:13px;display:flex;gap:8px;align-items:center;margin-bottom:10px">
+      <input type="checkbox" id="swipeThankYou" checked style="width:auto">
+      Skicka tack-SMS + recensionsfr&aring;ga n&auml;r &auml;rende sveps som Klar
+    </label>
+    <div id="swipeStage" style="flex:1;position:relative;touch-action:pan-y"></div>
+    <div style="display:flex;gap:12px;justify-content:center;padding:14px 0">
+      <button type="button" id="swipeLeftBtn" style="flex:1;max-width:170px;background:#1a2420;color:#ffb4ab;border:1px solid #5c2b26;min-height:52px;font-weight:800">&#8592; Kvar i verkstaden</button>
+      <button type="button" id="swipeRightBtn" style="flex:1;max-width:170px;background:#00c853;color:#031006;min-height:52px;font-weight:800">Klar &#8594;</button>
+    </div>
+    <div class="muted" style="text-align:center;font-size:12px;padding-bottom:6px">Svep h&ouml;ger = klart &middot; svep v&auml;nster = kvar (inget &auml;ndras) &middot; &auml;ldst f&ouml;rst</div>
+  </div>
+</div>
+<script>
+// Svep-rensning (Sebastians önskemål 2026-08-29): Tinder-mönster för att
+// snabbt beta av helgens avklarade jobb. Höger = status "done" via samma
+// authade PATCH som övriga admin (tack-SMS enligt kryssrutan), vänster =
+// hoppa över utan ändring. Äldsta ärendet först.
+(function(){
+  const overlay=document.getElementById('swipeOverlay');
+  const stage=document.getElementById('swipeStage');
+  const counter=document.getElementById('swipeCounter');
+  let queue=[],index=0,busy=false;
+  const statusLabel={new:'Ny',in_progress:'Pågående',waiting_parts:'Väntar delar',waiting_customer:'Väntar kund',ready:'Klar att hämta'};
+  const daysOld=(item)=>Math.max(0,Math.round((Date.now()-new Date(item.createdAt||item.updatedAt||Date.now()).getTime())/86400000));
+  function cardHtml(item){
+    const c=item.customer||{};const v=item.vehicle||{};
+    return `<div style="background:#101410;border:1px solid #2b362e;border-radius:14px;padding:20px;color:#fff;height:100%;display:flex;flex-direction:column;gap:10px;overflow:auto">
+      <div style="display:flex;justify-content:space-between;gap:8px"><b style="font-size:20px">${html(c.name||'Okänd kund')}</b><span class="muted-small">${daysOld(item)} dgr</span></div>
+      <div class="muted">${html(v.model||'Okänd modell')} &middot; ${html(item.service||'')}</div>
+      <div><span style="border:1px solid #2b362e;border-radius:999px;padding:4px 12px;font-size:12px">${html(statusLabel[item.status]||item.status||'')}</span></div>
+      <div class="muted-small">${html(c.phone||'')}</div>
+      ${item.problem?`<div style="font-size:14px;color:#cfd8d2;white-space:pre-wrap">${html(String(item.problem).slice(0,300))}</div>`:''}
+      <div class="muted-small" style="margin-top:auto">Svep h&ouml;ger om jobbet &auml;r klart och uppl&auml;mnat/upph&auml;mtat.</div>
+    </div>`;
+  }
+  function render(){
+    counter.textContent=queue.length?`${Math.min(index+1,queue.length)}/${queue.length}`:'';
+    if(index>=queue.length){
+      stage.innerHTML='<div style="color:#7ee2a8;text-align:center;padding-top:40%"><b style="font-size:22px">Rent! 🎉</b><div class="muted" style="margin-top:8px">Inga fler aktiva &auml;renden att svepa.</div></div>';
+      return;
+    }
+    stage.innerHTML=`<div id="swipeCard" style="position:absolute;inset:0;transition:transform .18s ease,opacity .18s ease">${cardHtml(queue[index])}</div>`;
+    attachGestures(document.getElementById('swipeCard'));
+  }
+  function attachGestures(card){
+    let startX=null,dx=0;
+    card.addEventListener('pointerdown',(e)=>{startX=e.clientX;card.style.transition='none';card.setPointerCapture(e.pointerId)});
+    card.addEventListener('pointermove',(e)=>{
+      if(startX===null)return;
+      dx=e.clientX-startX;
+      card.style.transform=`translateX(${dx}px) rotate(${dx/22}deg)`;
+      card.style.opacity=String(Math.max(.4,1-Math.abs(dx)/420));
+    });
+    card.addEventListener('pointerup',()=>{
+      card.style.transition='transform .18s ease,opacity .18s ease';
+      if(dx>110)commit(true);
+      else if(dx<-110)commit(false);
+      else{card.style.transform='';card.style.opacity='1'}
+      startX=null;dx=0;
+    });
+  }
+  async function commit(done){
+    if(busy||index>=queue.length)return;
+    busy=true;
+    const item=queue[index];
+    const card=document.getElementById('swipeCard');
+    if(card){card.style.transform=`translateX(${done?600:-600}px) rotate(${done?25:-25}deg)`;card.style.opacity='0'}
+    if(done){
+      try{
+        const body={status:'done',note:'Markerad klar via svep-rensning'};
+        if(!document.getElementById('swipeThankYou').checked)body.suppressThankYou=true;
+        await api('/api/cases/'+encodeURIComponent(item.id),{method:'PATCH',body:JSON.stringify(body)});
+      }catch(error){
+        alert('Kunde inte spara '+((item.customer&&item.customer.name)||item.id)+': '+(error&&error.message||error));
+        busy=false;render();return;
+      }
+    }
+    index+=1;busy=false;
+    setTimeout(render,140);
+  }
+  document.getElementById('openSwipeClean').addEventListener('click',()=>{
+    queue=(cases||[]).filter((item)=>!['done','archived'].includes(item.status))
+      .sort((a,b)=>String(a.updatedAt||a.createdAt||'').localeCompare(String(b.updatedAt||b.createdAt||'')));
+    index=0;
+    overlay.style.display='block';
+    render();
+  });
+  document.getElementById('swipeClose').addEventListener('click',async()=>{overlay.style.display='none';await loadCases();});
+  document.getElementById('swipeLeftBtn').addEventListener('click',()=>commit(false));
+  document.getElementById('swipeRightBtn').addEventListener('click',()=>commit(true));
+})();
 </script>
 </body>
 </html>
