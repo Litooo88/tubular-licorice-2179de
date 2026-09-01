@@ -188,6 +188,33 @@ const downloadElksRecording = async (recordingUrl) => {
   return buffer;
 };
 
+// Transkriberingsmodellen får en domänprompt för att stava verkstadsorden rätt.
+// Priset: på tyst ljud hittar modellen inget tal och ekar i stället tillbaka
+// prompten eller vår egen hälsningsfras — det blev "sammanfattningar" som
+// beskrev vårt eget telesvar i stället för kundens ärende (3 av 8 i augusti).
+// Ekot filtreras bort här och behandlas som "inget tal", vilket är sanningen.
+const TRANSCRIPTION_PROMPT =
+  "Svenskt telesvar till en elscooterverkstad. Vanliga ord: Nordic E-Mobility, elscooter, batteri, BMS, däck, broms, laddare, bokning och Örebro.";
+
+const OUR_OWN_VOICE_PATTERNS = [
+  /du har kommit till nordic/i,
+  /elscooterverkstad(en)? i örebro/i,
+  /lämna ett meddelande efter pipet/i,
+  /du hör en automatisk röst/i,
+  /utanför våra öppettider/i,
+  /tryck fyrkant när du är klar/i,
+];
+
+const compare = (value) => clean(value, 8000).toLowerCase().replace(/[^a-zåäö0-9]+/g, " ").trim();
+
+export const isTranscriptEcho = (text) => {
+  const normalized = compare(text);
+  if (!normalized) return false;
+  const prompt = compare(TRANSCRIPTION_PROMPT);
+  if (normalized === prompt || prompt.startsWith(normalized) || normalized.startsWith(prompt)) return true;
+  return OUR_OWN_VOICE_PATTERNS.some((pattern) => pattern.test(clean(text, 8000)));
+};
+
 const transcribeVoicemail = async (audioBuffer) => {
   const apiKey = clean(env("OPENAI_API_KEY"), 300);
   if (!apiKey) return { status: "not_configured", text: "", model: "" };
@@ -197,7 +224,7 @@ const transcribeVoicemail = async (audioBuffer) => {
   form.set("model", model);
   form.set("language", "sv");
   form.set("response_format", "json");
-  form.set("prompt", "Svenskt telesvar till en elscooterverkstad. Vanliga ord: Nordic E-Mobility, elscooter, batteri, BMS, däck, broms, laddare, bokning och Örebro.");
+  form.set("prompt", TRANSCRIPTION_PROMPT);
   try {
     const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
       method: "POST",
@@ -208,6 +235,7 @@ const transcribeVoicemail = async (audioBuffer) => {
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(`transcription_http_${response.status}`);
     const text = clean(body.text, 8000);
+    if (isTranscriptEcho(text)) return { status: "no_speech", text: "", model, echo: true };
     return { status: text ? "complete" : "no_speech", text, model };
   } catch (error) {
     return { status: "failed", text: "", model, error: clean(error?.message, 180) };
@@ -264,10 +292,16 @@ export const processVoicemailAnalysis = async ({ payload = {}, source = "worksho
 
   const customerMatch = await findCustomerMatch(caller);
   let transcription;
-  try {
-    transcription = await transcribeVoicemail(await downloadElksRecording(recordingUrl));
-  } catch (error) {
-    transcription = { status: "failed", text: "", model: "", error: clean(error?.message, 180) };
+  // Under 2 sekunder finns inget meddelande att transkribera — kunden la på i
+  // hälsningen. Att fråga modellen ändå kostar pengar och ger bara hallucination.
+  if (base.durationSeconds > 0 && base.durationSeconds < 2) {
+    transcription = { status: "no_speech", text: "", model: "", tooShort: true };
+  } else {
+    try {
+      transcription = await transcribeVoicemail(await downloadElksRecording(recordingUrl));
+    } catch (error) {
+      transcription = { status: "failed", text: "", model: "", error: clean(error?.message, 180) };
+    }
   }
 
   if (["not_configured", "failed"].includes(transcription.status)) {
@@ -286,7 +320,9 @@ export const processVoicemailAnalysis = async ({ payload = {}, source = "worksho
     return { status: transcription.status, item: failed };
   }
 
-  const summary = summarizeVoicemail(transcription.text);
+  const summary = transcription.status === "no_speech"
+    ? "Inget meddelande lämnades — bara tystnad spelades in. Numret finns: ring upp."
+    : summarizeVoicemail(transcription.text);
   const classification = classifyVoicemail({ transcript: transcription.text, customerMatch });
   // Sebastians krav (spec punkt 7): BARA VIKTIGT ger internt SMS. ÅTGÄRD och
   // LÅG landar enbart i admininkorgen.

@@ -168,7 +168,7 @@ export default async (request, context) => {
   // annars direkt till telefonsvararen.
   if (step === "fallback") {
     const fallback = clean(env("VOICE_FALLBACK_NUMBER"), 40);
-    if (!fallback) return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record", caller) });
+    if (!fallback) return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "beep", caller) });
     const action = { connect: fallback, timeout, next: selfUrl(origin, auth, "voicemail", caller) };
     if (auth.configured) action.whenhangup = callbackUrl(origin, auth);
     return json(action);
@@ -176,7 +176,15 @@ export default async (request, context) => {
 
   // Steg 3: inte heller fallback-numret svarade → telefonsvararens prompt.
   if (step === "voicemail") {
-    return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record", caller) });
+    return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "beep", caller) });
+  }
+
+  // Steg 3b: pipet. Bada talpromptarna lovar "lamna ett meddelande efter
+  // pipet", men 46elks record-action spelar inget pip sjalv — kunden fick
+  // tystnad och visste inte nar den skulle borja prata. 46elks inbyggda
+  // "sound/beep" kostar inget extra steg i talet.
+  if (step === "beep") {
+    return json({ play: "sound/beep", next: selfUrl(origin, auth, "record", caller) });
   }
 
   // Steg 4: spela in meddelandet (max 90 s, samma gräns som gamla växeln).
@@ -226,7 +234,7 @@ export default async (request, context) => {
 
   // Utanför telefontid → gamla televäxelns besked, sedan telefonsvararen.
   if (!isOfficeHours(now)) {
-    return json({ play: closedPrompt, next: selfUrl(origin, auth, "record", caller) });
+    return json({ play: closedPrompt, next: selfUrl(origin, auth, "beep", caller) });
   }
 
   const sebastian = clean(

@@ -100,7 +100,7 @@ test("plays the outside-hours prompt and then records a voicemail when closed", 
     assert.equal(response.status, 200);
     const action = await response.json();
     assert.equal(action.play, "https://www.nordicemobility.se/audio/outside-hours-prompt.mp3");
-    assert.match(action.next, /voice-simple\?step=record&caller=%2B46700000000$/);
+    assert.match(action.next, /voice-simple\?step=beep&caller=%2B46700000000$/);
   });
 });
 
@@ -123,15 +123,26 @@ test("fallback step goes straight to voicemail when no fallback number is config
     assert.equal(response.status, 200);
     const action = await response.json();
     assert.equal(action.play, "https://www.nordicemobility.se/audio/voicemail-prompt.mp3");
-    assert.match(action.next, /voice-simple\?step=record&caller=%2B46700000000$/);
+    assert.match(action.next, /voice-simple\?step=beep&caller=%2B46700000000$/);
   });
 });
 
-test("voicemail step plays the prompt and continues to recording", async () => {
+test("voicemail step plays the prompt and continues to the beep", async () => {
   await withEnv({ VOICE_PRIMARY_NUMBER: "+46700000001", VOICE_TEST_NOW: OPEN_NOW }, async () => {
     const response = await voiceSimple(request("?step=voicemail"));
     const action = await response.json();
     assert.equal(action.play, "https://www.nordicemobility.se/audio/voicemail-prompt.mp3");
+    assert.match(action.next, /voice-simple\?step=beep&caller=%2B46700000000$/);
+  });
+});
+
+// Talpromptarna lovar "lamna ett meddelande efter pipet". Utan detta steg kom
+// inget pip alls och uppringaren mottogs av tystnad.
+test("beep step plays 46elks built-in beep before recording", async () => {
+  await withEnv({ VOICE_PRIMARY_NUMBER: "+46700000001", VOICE_TEST_NOW: OPEN_NOW }, async () => {
+    const response = await voiceSimple(request("?step=beep"));
+    const action = await response.json();
+    assert.equal(action.play, "sound/beep");
     assert.match(action.next, /voice-simple\?step=record&caller=%2B46700000000$/);
   });
 });
