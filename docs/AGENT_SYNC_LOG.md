@@ -2418,3 +2418,10 @@ AI-telesvarsanalys blir det gemensamma efterbearbetningslagret. Konkret:
 - Seedat: 156 watch-poster (alla återkontaktade) + 15 heta (ringt igen utan att nås); info-SMS skickat till 11, skippat för 4 som nyss fått personligt SMS (Simon, Adam E, Malin) — allt via API, loggat per post.
 - Fix i samma pass: GET /api/ring-list batchar blob-läsning parallellt (sekventiellt timeoutade vid 150+).
 - Bakgrund/data: 46 ringde tillbaka efter återkontakt, endast 18 nåddes; 15 oräddade. Mobilexporter (Motorola+Samsung) inlagda i samtalsrapporten; rotorsak juli = Comviq samtalsspärr 25 jun–14 aug (PTS).
+
+### 2026-09-01 — Claude Code — KLAR — Repair Intelligence steg 1–2 live + veckoplan igång
+- NYA FUNKTIONER (namn reserverade): `case-similar.mjs` (/api/case-similar, /api/repair-canon, /api/repair-stats) och `_shared/repair-index.mjs` (ROOT_CAUSES, brand-normalisering, repair-index-blob). workshop-cases: completion + rootCause/laborMinutes/symptom + indexskrivning; workshop-vyn steg 5 med fälten + Liknande fall (egna fall + kanon). Mergad till main (8ae8af7), deploy verifierad, kanon v1.3.1 (53 poster) synkad till blob repair-canon.
+- Kampanj: RING20 skickad till 16 av 21 aldrig kontaktade nummer; 4 väntar — 46elks-SALDOT ÄR SLUT (29 kr). Sebastian påmind (kalender). OBS för alla agenter: SMS kan misslyckas med Forbidden tills saldot fylls på.
+- Kanon batch 4 klar som FÖRSLAG (10 nya + 2 stärkta, 0 bekräftad, källpoolen i princip uttömd): kanon/diagnostik-kanon-v1.4-batch4-FORSLAG.json + BATCHRAPPORT-4.md. Rör ej före granskning.
+- NEMOB OS autostartar nu via Windows-schemalagd aktivitet "NEMOB OS Server". Kalender: 2 dagliga påminnelser (ringlista 11:30, avslutfält 16:45) + friktionskoll 3/9, backfill 4/9, veckofacit 7/9.
+- Kvar dag 2: prisintervall i quick-price, backfill-förslag (30 senaste), diagnosförslag vid intag.
