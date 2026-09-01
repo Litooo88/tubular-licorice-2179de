@@ -34,7 +34,7 @@ löpande "konversation".
 
 ### 2026-09-01 — Claude Code — KLAR (telesvaret: pipet saknades + AI:n hittade på)
 
-- **Branch:** `fix/telesvar-pip` (ej mergad). Sebastian rapporterade: "det
+- **Branch:** `fix/telesvar-pip` → PR #136, mergad till `main`. Sebastian rapporterade: "det
   kommer aldrig ett pip".
 - **Rotorsak 1 — inget pip:** båda talpromptarna säger "lämna ett meddelande
   efter pipet", men 46elks `record`-action spelar inget pip. Kunden mötte
@@ -58,6 +58,34 @@ löpande "konversation".
 - **Varning:** rör inte steg-kedjan utan att köra `test:voice` — `caller`
   måste följa med i varje `next`, annars faller AI-grenen tyst tillbaka till
   legacy-SMS (incidenten 28/8).
+
+### 2026-09-01 — Claude Code — KLAR (privatlinjen 076 mäts — additivt spår i call-dashboard)
+
+- **Branch:** `feat/privatlinjen-matning` → PR #135, mergad till `main`.
+- **Problem:** `call-dashboard` filtrerade raderna hårt på `call.to ===
+  "+46101385498"`, så all trafik till privatlinjen sedan 8 aug var osynlig.
+- **Lösning:** `privateLineNumber()` (env `PRIVATE_LINE_NUMBER` →
+  `ELKS_SMS_NUMBER` → default 076) och ett eget `privateLine`-objekt i GET-
+  svaret: total/besvarade/röst/missade, samtal idag, unika nummer, byDay och
+  senaste 100 raderna. Växelnumret läses nu ur `ELKS_NUMBER` i stället för
+  hårdkodat.
+- **Medvetet val:** privatlinjens rader ligger UTANFÖR `rows`. Leads,
+  kampanj-SMS, `stats`, `totals` och `baselineStats` beskriver fortsatt bara
+  växeln — annars hade personliga samtal hamnat i kampanjutskicken och
+  förorenat svarsgrads-KPI:n. Inget publikt kontrakt ändrat, bara utökat.
+- **Admin:** ny panel "Privatlinjen 076 — egen mätning" i Telefoni-fliken
+  (`renderPrivateLine`) + rad i sammanfattningsremsan. Nollställs korrekt när
+  samtalskällan saknas.
+- **Tester:** `node --check` på funktionen ✅, syntaxkontroll av admins tre
+  inline-script ✅, DOM-stubbat rökt test av `renderPrivateLine` (3 lägen) ✅,
+  `npm run build` ✅, `npm run verify:checkout-products` ✅,
+  `nemob-callflow npm run check` ✅.
+- **Kvar:** siffrorna för 076 är overifierade tills branchen är deployad —
+  ingen lokal väg finns till 46elks-datan. Verifiera direkt efter merge:
+  GET /api/call-dashboard → `privateLine.total > 0`.
+- **Varning:** rör inte `rows`-filtret igen utan att först läsa kampanj-
+  byggaren i `admin/index.html` — den grupperar på ALLA rader, inte bara
+  `eligibleLostLead`.
 
 ### 2026-08-30 — Claude Code — KLAR (Att dubbelkolla-panelen + flaggfix)
 
