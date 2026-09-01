@@ -210,7 +210,32 @@ export const sendThankYou = async (caseItem, variantRequested) => {
     text: `Tack for fortroendet, ${firstName(caseItem.customer?.name)}!\n\n${THANK_YOU_INTRO_TEXT[variant]}\n\nUtfort arbete:\n${summary}\n\nLamna recension: ${REVIEW_LINK}\nFacebook: https://www.facebook.com/nordicemobility\nInstagram: https://www.instagram.com/nordicemobility\n\n10 % pa nasta inlamning: ${code}. Giltig till ${validUntil}.`,
     idempotencyKey: `${caseItem.id}-thank-you`,
   });
-  return { email, variant, coupon: { code, percent: 10, validUntil, used: false, caseId: caseItem.id }, sentAt: new Date().toISOString() };
+
+  // Recensionsfrågan som SMS (Sebastians beslut 2026-09-01): mejl konverterar
+  // svagt till recensioner och många kunder saknar mejladress. Kort SMS med
+  // /recension-kortlänken. Skickas aldrig till optout-nummer, aldrig dubbelt
+  // (kollar notifications.thankYou.reviewSms), och går via samma tysta
+  // timmar-kö som mejlet eftersom hela sendThankYou köas nattetid.
+  let reviewSms = { status: "skipped", reason: "no_phone" };
+  const reviewTo = clean(caseItem.customer?.phone, 40);
+  const alreadySent = caseItem.notifications?.thankYou?.reviewSms?.status === "sent";
+  if (reviewTo && !alreadySent) {
+    const optout = await getStore({ name: "sms-optout", consistency: "strong" })
+      .get(reviewTo.replace(/[^\d+]/g, "").replace(/^0/, "+46"), { type: "json" })
+      .catch(() => null);
+    if (optout) {
+      reviewSms = { status: "skipped", reason: "optout" };
+    } else {
+      reviewSms = await postSms({
+        to: reviewTo,
+        message: `Tack för att du valde Nordic E-Mobility, ${firstName(caseItem.customer?.name)}! Om du är nöjd betyder en Google-recension jättemycket för oss – den tar 30 sekunder: https://www.nordicemobility.se/recension\nRabattkod till nästa besök: ${code} (10 %). /Sebastian`,
+      });
+    }
+  } else if (alreadySent) {
+    reviewSms = { status: "skipped", reason: "already_sent" };
+  }
+
+  return { email, reviewSms, variant, coupon: { code, percent: 10, validUntil, used: false, caseId: caseItem.id }, sentAt: new Date().toISOString() };
 };
 
 const paymentSmsText = ({ caseItem, amount }) => {
