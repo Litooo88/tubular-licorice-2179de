@@ -32,6 +32,25 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-01 — Claude Code — KLAR (recensionsmotorn: SMS-fråga + /recension + QR-skylt + title-pass sida 1)
+
+- **Konkurrentbaseline Örebro (kartpaketet):** Nordic 4,7★ (15 rec) —
+  högst betyg, näst minst volym. Örebro MC Service 4,3 (96), KeBe 4,3
+  (184), Elcykelpunkten 4,5 (28), POWER 4,3 (436). Nordic syns i
+  paketet på alla fyra måltermerna (OBS: mätt i Sebastians inloggade
+  Chrome — neutral verifiering återstår). Mål: 28 → 50 → 96.
+- **sendThankYou skickar nu recensions-SMS** (kort, /recension-länken,
+  aldrig optout, aldrig dubbelt via notifications-koll, följer tysta
+  timmar via befintlig kö). Mejlets recensionsknapp kvar.
+- **/recension** = 302 i netlify.toml → Googles skrivformulär.
+  VIKTIGT FYND: _redirects-filen kopieras inte till dist och är DÖD
+  sedan allowlist-bygget — alla levande redirects bor i netlify.toml.
+  Filen är markerad som historik; städa eller aktivera medvetet.
+- **Title-pass sida 1/N:** /elscooter-reparation-orebro/ (pris + samma
+  dag + auktorisationer). En sida i taget; nästa efter ~2 veckors
+  GSC-mätning.
+- **QR-skylt A5** (tryckfärdig PDF) levererad till Sebastian.
+
 ### 2026-09-01 — Claude Code — KLAR (telesvaret: pipet saknades + AI:n hittade på)
 
 - **Branch:** `fix/telesvar-pip` → PR #136, mergad till `main`. Sebastian rapporterade: "det
