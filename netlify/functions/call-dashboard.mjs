@@ -78,6 +78,7 @@ const emptyCallDashboard = (error) => {
       newLeadsToday: 0,
     },
     stats: null,
+    privateLine: null,
   };
 };
 
@@ -199,6 +200,16 @@ const ownNumbers = () => {
     }
   }
   return set;
+};
+
+// Våra två inkommande linjer. Växeln (010) är huvudlinjen och äger leads,
+// kampanj-SMS och KPI:erna. Privatlinjen (076, live 8 aug) mättes inte alls
+// tidigare eftersom samtalsraderna filtrerades hårt på växelnumret — dess
+// trafik redovisas separat och matar medvetet INGA automatiska utskick.
+const vaxelNumber = () => normalizePhone(env("ELKS_NUMBER") || "+46101385498");
+const privateLineNumber = () => {
+  const number = normalizePhone(env("PRIVATE_LINE_NUMBER") || env("ELKS_SMS_NUMBER") || "+46766867131");
+  return number && number !== vaxelNumber() ? number : "";
 };
 
 const staffVoiceNumbers = () => ({
@@ -378,7 +389,7 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
   ]);
 
   const rows = calls
-    .filter((call) => call.direction === "incoming" && call.to === "+46101385498")
+    .filter((call) => call.direction === "incoming" && normalizePhone(call.to) === vaxelNumber())
     .map((call) => {
       const created = new Date(call.created || call.start || Date.now());
       const date = stockholmDateKey(created);
@@ -591,7 +602,61 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     .sort((a, b) => String(b.createdAt || "").localeCompare(String(a.createdAt || "")))
     .slice(0, 50);
 
-  return { rows, todayRows, activeLeadRows, totals, stats, baselineStats, account, inboundSms, ringUnhandled, optoutPhones, ownNumbers: [...ownNumbers()], campaignSent, voicemailAnalyses, readOnly: !syncLeads };
+  // Privatlinjen 076 — separat mätspår. Raderna hålls utanför `rows` med flit:
+  // leads, kampanj-SMS och svarsgrads-KPI:n ska fortsätta beskriva växeln, och
+  // ingen som ringt Sebastians personliga linje ska hamna i ett automatiskt
+  // utskick.
+  const privateNumber = privateLineNumber();
+  const privateRows = privateNumber
+    ? calls
+        .filter((call) => call.direction === "incoming" && normalizePhone(call.to) === privateNumber)
+        .map((call) => {
+          const created = new Date(call.created || call.start || Date.now());
+          const phone = normalizePhone(call.from);
+          const matchedCases = phone ? caseByPhone.get(phone) || [] : [];
+          const answer = answeredBy(call);
+          return {
+            id: clean(call.id, 140),
+            line: "privat",
+            date: stockholmDateKey(created),
+            time: stockholmTime(created),
+            timestamp: created.toISOString(),
+            phone: phone || "okänt/skyddat",
+            duration: Number(call.duration || 0),
+            answeredBy: answer.key,
+            answeredByLabel: answer.label,
+            hasCase: matchedCases.length > 0,
+            customerName: clean(matchedCases[0]?.customer?.name || matchedCases[0]?.customerName, 160),
+          };
+        })
+        .sort((a, b) => String(b.timestamp).localeCompare(String(a.timestamp)))
+    : [];
+  const privateAnswered = privateRows.filter((row) => ["workshop", "sebastian", "other"].includes(row.answeredBy)).length;
+  const privateVoicemail = privateRows.filter((row) => row.answeredBy === "voicemail").length;
+  const privateByDay = new Map();
+  for (const row of privateRows) {
+    if (!privateByDay.has(row.date)) privateByDay.set(row.date, { date: row.date, total: 0, answered: 0, voicemail: 0, missed: 0 });
+    const bucket = privateByDay.get(row.date);
+    bucket.total += 1;
+    if (["workshop", "sebastian", "other"].includes(row.answeredBy)) bucket.answered += 1;
+    else if (row.answeredBy === "voicemail") bucket.voicemail += 1;
+    else bucket.missed += 1;
+  }
+  const privateLine = {
+    configured: Boolean(privateNumber),
+    number: privateNumber,
+    windowDays: CALL_WINDOW_DAYS,
+    total: privateRows.length,
+    answered: privateAnswered,
+    voicemail: privateVoicemail,
+    missed: privateRows.length - privateAnswered - privateVoicemail,
+    callsToday: privateRows.filter((row) => row.date === today).length,
+    uniqueCallers: new Set(privateRows.map((row) => row.phone).filter((phone) => phone.startsWith("+"))).size,
+    byDay: [...privateByDay.values()].sort((a, b) => b.date.localeCompare(a.date)),
+    rows: privateRows.slice(0, 100),
+  };
+
+  return { rows, todayRows, activeLeadRows, totals, stats, baselineStats, privateLine, account, inboundSms, ringUnhandled, optoutPhones, ownNumbers: [...ownNumbers()], campaignSent, voicemailAnalyses, readOnly: !syncLeads };
 };
 
 export default async (request) => {
