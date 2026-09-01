@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { ROOT_CAUSES, normalizeBrand, shouldIndex, upsertRepairIndex } from "./_shared/repair-index.mjs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
 import {
   reserveServiceNumber,
@@ -656,6 +657,18 @@ export default async (request, context) => {
         body.totalCost === undefined ? current.completion?.totalCost ?? null : numberOrNull(body.totalCost),
       workSummary:
         body.workSummary === undefined ? current.completion?.workSummary || "" : clean(body.workSummary, 3000),
+      // Repair Intelligence: grundorsak + arbetstid + symptom — samma
+      // valideringsmönster som jobType. Okänd nyckel behåller föregående värde.
+      rootCause:
+        body.rootCause === undefined
+          ? current.completion?.rootCause || ""
+          : ROOT_CAUSES[clean(body.rootCause, 40)] ? clean(body.rootCause, 40) : current.completion?.rootCause || "",
+      rootCauseNote:
+        body.rootCauseNote === undefined ? current.completion?.rootCauseNote || "" : clean(body.rootCauseNote, 500),
+      laborMinutes:
+        body.laborMinutes === undefined ? current.completion?.laborMinutes ?? null : numberOrNull(body.laborMinutes),
+      symptom:
+        body.symptom === undefined ? current.completion?.symptom || "" : clean(body.symptom, 300),
       invoiceText:
         body.invoiceText === undefined ? current.completion?.invoiceText || "" : clean(body.invoiceText, 5000),
       pickupSummary:
@@ -786,6 +799,9 @@ export default async (request, context) => {
       vehicle: {
         ...(current.vehicle || {}),
         model: body.vehicleModel === undefined ? current.vehicle?.model : clean(body.vehicleModel, 180),
+        brand:
+          current.vehicle?.brand ||
+          normalizeBrand(body.vehicleModel === undefined ? current.vehicle?.model : body.vehicleModel),
       },
       completion: nextCompletion,
       payment: nextPayment,
@@ -915,6 +931,9 @@ export default async (request, context) => {
     }
 
     await store.setJSON(id, next);
+    // Repair Intelligence: avslut med data => en rad i repair-index (idempotent,
+    // fel här får aldrig fälla PATCH:en).
+    if (shouldIndex(next)) await upsertRepairIndex(next).catch(() => {});
     return json({ ok: true, case: next });
   }
 
