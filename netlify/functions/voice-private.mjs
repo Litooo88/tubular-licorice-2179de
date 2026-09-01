@@ -186,7 +186,13 @@ export default async (request, context) => {
 
   // Obesvarat eller utanför ringtid → telefonsvarare.
   if (step === "voicemail") {
-    return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record", chainCaller) });
+    return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "beep", chainCaller) });
+  }
+
+  // Pipet: talprompten lovar ett pip, men 46elks record-action spelar inget
+  // sjalv. Utan detta steg mottas kunden av tystnad.
+  if (step === "beep") {
+    return json({ play: "sound/beep", next: selfUrl(origin, auth, "record", chainCaller) });
   }
 
   if (step === "record") {
@@ -249,11 +255,11 @@ export default async (request, context) => {
         message: `[Privatlinjen] ${stockholmTime()} Samtal utanför ringtid från ${callerLabel(caller, customer)} — kopplas till telefonsvararen.`,
       });
     }
-    return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record", caller) });
+    return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "beep", caller) });
   }
 
   const target = clean(env("VOICE_PRIMARY_NUMBER"), 40);
-  if (!target) return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "record", caller) });
+  if (!target) return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "beep", caller) });
 
   // Kunduppslags-SMS:et skickas före connect så notisen hinner fram medan
   // luren ringer — fail-open med tidsbudget så samtalet aldrig fördröjs länge.

@@ -3,6 +3,7 @@ import test from "node:test";
 
 import {
   buildVoicemailNotification,
+  isTranscriptEcho,
   classifyVoicemail,
   normalizeVoicemailPhone,
   safeElksRecordingUrl,
@@ -84,4 +85,20 @@ test("testnummer begränsar AI utan att aktivera intern-SMS", () => {
     if (previous.sms === undefined) delete process.env.VOICEMAIL_INTERNAL_SMS_ENABLED;
     else process.env.VOICEMAIL_INTERNAL_SMS_ENABLED = previous.sms;
   }
+});
+
+// Rotorsak till de tre oanvandbara sammanfattningarna i augusti: pa tyst ljud
+// ekade transkriberingsmodellen tillbaka domanprompten eller vart eget telesvar.
+test("ekad domanprompt och egen halsningsfras raknas inte som kundens meddelande", () => {
+  assert.equal(isTranscriptEcho("Svenskt telesvar till en elscooterverkstad."), true);
+  assert.equal(isTranscriptEcho("Svenskt telesvar till en elscooterverkstad. Vanliga ord: Nordic E-Mobility, elscooter."), true);
+  assert.equal(isTranscriptEcho("Hej, du har kommit till Nordic E-Mobilitys elscooterverkstad i Örebro."), true);
+  assert.equal(isTranscriptEcho("Du hör en automatisk röst från Nordic E-Mobility."), true);
+});
+
+test("riktiga kundmeddelanden slipper igenom eko-vakten", () => {
+  assert.equal(isTranscriptEcho("Hej, jag heter Anna och min elscooter startar inte. Ring gärna upp."), false);
+  assert.equal(isTranscriptEcho("Batteriet är väldigt varmt och ryker."), false);
+  assert.equal(isTranscriptEcho("Jag vill boka service för min elscooter i Örebro."), false);
+  assert.equal(isTranscriptEcho(""), false);
 });
