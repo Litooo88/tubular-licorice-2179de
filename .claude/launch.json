@@ -3,6 +3,11 @@
   "configurations": [
     {
       "name": "nemob-os",
+      "url": "http://localhost:4572",
+      "port": 4572
+    },
+    {
+      "name": "nemob-os-egen-process",
       "runtimeExecutable": "node",
       "runtimeArgs": ["nemob-os/server.mjs"],
       "port": 4572
