@@ -53,8 +53,11 @@ löpande "konversation".
 - **Tester:** 20/20 (`npm run test:voice`) — tre befintliga kedjetester
   uppdaterade till pip-steget, nytt pip-test, två nya tester för eko-vakten.
   `npm run build` ✅, `verify:checkout-products` ✅, `nemob-callflow check` ✅.
-- **Kvar:** verifiera med ett riktigt testsamtal efter deploy (pipet ska höras
-  efter prompten). Talpromptarnas MP3 behöver INTE göras om.
+- **Kvar:** verifiera med ett riktigt testsamtal (pipet ska höras efter
+  prompten) — kräver en människa med telefon. Talpromptarnas MP3 behöver INTE
+  göras om. Deployen är verifierad så långt det går utan samtal: båda
+  voice-funktionerna svarar 401 på `?step=beep` utan secret (dvs. de laddar
+  och auth-spärren håller).
 - **Varning:** rör inte steg-kedjan utan att köra `test:voice` — `caller`
   måste följa med i varje `next`, annars faller AI-grenen tyst tillbaka till
   legacy-SMS (incidenten 28/8).
@@ -80,9 +83,11 @@ löpande "konversation".
   inline-script ✅, DOM-stubbat rökt test av `renderPrivateLine` (3 lägen) ✅,
   `npm run build` ✅, `npm run verify:checkout-products` ✅,
   `nemob-callflow npm run check` ✅.
-- **Kvar:** siffrorna för 076 är overifierade tills branchen är deployad —
-  ingen lokal väg finns till 46elks-datan. Verifiera direkt efter merge:
-  GET /api/call-dashboard → `privateLine.total > 0`.
+- **Verifierat i produktion 1/9 efter merge:** `privateLine` finns i GET-svaret
+  och växelns `rows` är oförändrade (656 rader). **Facit: bara 2 samtal till
+  076 på 60 dagar** — ett röstmeddelande 29/8 från Sebastians eget nummer
+  (test) och ett missat 23/8. Privatlinjen är alltså INTE där de saknade
+  kundsamtalen finns; den hypotesen är avfärdad med data.
 - **Varning:** rör inte `rows`-filtret igen utan att först läsa kampanj-
   byggaren i `admin/index.html` — den grupperar på ALLA rader, inte bara
   `eligibleLostLead`.
