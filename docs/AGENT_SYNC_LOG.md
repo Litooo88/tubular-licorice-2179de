@@ -32,6 +32,33 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-01 — Claude Code — KLAR (telesvaret: pipet saknades + AI:n hittade på)
+
+- **Branch:** `fix/telesvar-pip` (ej mergad). Sebastian rapporterade: "det
+  kommer aldrig ett pip".
+- **Rotorsak 1 — inget pip:** båda talpromptarna säger "lämna ett meddelande
+  efter pipet", men 46elks `record`-action spelar inget pip. Kunden mötte
+  tystnad och visste inte när den skulle prata. Fix: nytt `beep`-steg som
+  spelar 46elks inbyggda `sound/beep` mellan prompt och inspelning, i BÅDA
+  linjerna (`voice-simple.mjs` alla tre promptvägar, `voice-private.mjs`).
+  Uppringarens nummer bärs vidare genom det nya steget (samma kedjekrav som
+  fixen 28/8).
+- **Rotorsak 2 — påhittade sammanfattningar:** transkriberingen skickar en
+  domänprompt till OpenAI. På tyst ljud ekar modellen tillbaka prompten eller
+  vår egen hälsningsfras, vilket blev "sammanfattningar" som beskrev vårt eget
+  telesvar (3 av 8 poster i augusti). Fix: `isTranscriptEcho()` filtrerar ekot
+  → status `no_speech` och texten "Inget meddelande lämnades — bara tystnad
+  spelades in. Numret finns: ring upp." Dessutom hoppas API-anropet över helt
+  för inspelningar under 2 sekunder.
+- **Tester:** 20/20 (`npm run test:voice`) — tre befintliga kedjetester
+  uppdaterade till pip-steget, nytt pip-test, två nya tester för eko-vakten.
+  `npm run build` ✅, `verify:checkout-products` ✅, `nemob-callflow check` ✅.
+- **Kvar:** verifiera med ett riktigt testsamtal efter deploy (pipet ska höras
+  efter prompten). Talpromptarnas MP3 behöver INTE göras om.
+- **Varning:** rör inte steg-kedjan utan att köra `test:voice` — `caller`
+  måste följa med i varje `next`, annars faller AI-grenen tyst tillbaka till
+  legacy-SMS (incidenten 28/8).
+
 ### 2026-08-30 — Claude Code — KLAR (Att dubbelkolla-panelen + flaggfix)
 
 - **Vad:** panel överst i Kundkort-fliken listar ärenden med
