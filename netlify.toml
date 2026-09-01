@@ -39,6 +39,15 @@ to = "https://www.nordicemobility.se/:splat"
 status = 301
 force = true
 
+# Kortlänk för recensioner: QR-skylten vid disken + recensions-SMS:et pekar
+# hit så att mål-URL:en kan bytas utan att trycka om skyltar. 302 (inte 301)
+# så webbläsare inte cachar om Google-länken ändras.
+[[redirects]]
+  from = "/recension"
+  to = "https://search.google.com/local/writereview?placeid=ChIJKf677IQVXEYRQ2PpQIs1Gx4"
+  status = 302
+  force = true
+
 [[redirects]]
   from = "/nordic-emobility-site"
   to = "/"

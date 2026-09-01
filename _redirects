@@ -1,7 +1,6 @@
-# Kortlänk för recensioner: QR-skylt vid disken + SMS pekar hit så att
-# mål-URL:en kan bytas utan att trycka om skyltar. 302 (inte 301) så
-# webbläsare inte cachar för evigt om Google-länken ändras.
-/recension  https://search.google.com/local/writereview?placeid=ChIJKf677IQVXEYRQ2PpQIs1Gx4  302
+# OBS: denna fil kopieras INTE till dist (saknas i build-dist PUBLIC_FILES)
+# och är därmed INAKTIV sedan allowlist-bygget — aktiva redirects bor i
+# netlify.toml. Behållen som historik tills reglerna städats.
 
 # Clean URLs and legacy Wix-style paths
 /nordic-emobility-site  /  301!
