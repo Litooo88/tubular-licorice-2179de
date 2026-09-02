@@ -32,6 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-02 — Codex — KLAR (privatlinjens ringtid 10–19 i produktion)
+
+- **Driftändring:** Netlify production-env `PRIVATE_LINE_START=10` och
+  `PRIVATE_LINE_END=19`. Övriga telefoniinställningar lämnades oförändrade.
+- **Deploy:** ny produktiondeploy från oförändrad `main` blev `ready` 10:49.
+  46elks-kopplingen behöver inte ändras; `voice-private` läser tiderna från
+  miljön vid anrop.
+- **Verifiering:** båda värdena sattes via Netlify CLI och deployen blev grön.
+  Manuellt testsamtal av Sebastian återstår.
+
 ### 2026-09-01 — Claude Code — KLAR (recensionsmotorn: SMS-fråga + /recension + QR-skylt + title-pass sida 1)
 
 - **Konkurrentbaseline Örebro (kartpaketet):** Nordic 4,7★ (15 rec) —
