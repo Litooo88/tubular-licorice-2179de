@@ -32,6 +32,19 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-02 — Codex — KLAR (operatörens mobilsvar hann före AI-telesvaret)
+
+- **Skarpt fynd:** testsamtalet till privatlinjen 12:25 nådde `connect` och
+  avslutades som `success` efter 32 sekunder. Ingen `play`/`record` följde;
+  mobiloperatörens mobilsvar hade svarat och 46elks betraktade därför
+  vidarekopplingen som besvarad.
+- **Driftfix:** Netlify production-env `VOICE_TIMEOUT_SECONDS=15` (tidigare
+  kodstandard 25) så 46elks går vidare till eget telesvar innan operatörens
+  mobilsvar hinner svara. Variabeln delas av 076- och 010-linjen.
+- **Verifiering:** ny produktiondeploy `ready` 12:29 och värdet återläst som 15.
+  Manuellt testsamtal återstår: cirka 15 sekunders ringning, därefter egen
+  hälsning, pip och inspelning.
+
 ### 2026-09-02 — Codex — KLAR (privatlinjens ringtid 10–19 i produktion)
 
 - **Driftändring:** Netlify production-env `PRIVATE_LINE_START=10` och
