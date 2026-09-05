@@ -32,6 +32,46 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-05 — Claude Code — KLAR (SMS-kostnaden, 10 s ringtid, kampanjhygien)
+
+- **Branch:** `fix/sms-kostnad-ringtid` → PR. Utlöst av att 100 kr saldo tog
+  slut på ett kampanjutskick.
+- **Kostnaden förklarad, mätt på 1 209 skickade SMS i 46elks-arkivet:** 46elks
+  tar **0,52 kr per SMS-DEL**. Kampanjmeddelandet är 415 tecken och innehåller
+  ETT tankstreck (–, U+2013) som inte finns i GSM-7. Ett enda sådant tecken
+  tvingar hela meddelandet till UCS-2: 67 tecken per del i stället för 153 →
+  **7 delar = 3,64 kr per mottagare**. Vågen 5/9 (25 nummer) kostade därför
+  ~91 kr. Med vanligt bindestreck: 3 delar = 1,56 kr → ~39 kr. Samma text.
+- **Fixat:** tankstrecket utbytt, `smsCost()`/`smsCostLabel()` räknar delar och
+  kronor, och kostnaden visas nu BÅDE i statusraden när listan byggs och i
+  bekräftelsedialogen innan utskick. Utländska nummer (+44/+45/+47 fanns i
+  listan 5/9 — robotsamtal) filtreras bort ur mottagarlistan och redovisas.
+- **Ringtid 25 → 10 s** som kodstandard i båda voice-funktionerna. Mätningen
+  3–5 sep: 21 missade samtal, ALLA la på inom 15 s, dvs. innan telefonsvararen
+  hann starta. OBS: Netlify-env `VOICE_TIMEOUT_SECONDS=15` (satt av Codex 2/9)
+  **vinner över koden** — den måste ändras till 10 i Netlify för att detta ska
+  få effekt.
+- **Tester:** 24/24 `test:voice` (uppdaterat timeout-test + nytt klamptest),
+  fristående test av smsCost mot de faktiska arkivkostnaderna (8 kontroller),
+  syntaxkontroll av admins tre script-block, `npm run build` ✅,
+  `verify:checkout-products` ✅.
+- **INCIDENT (mitt fel):** jag körde `git reset --hard origin/main` och raderade
+  en annan sessions ocommitterade loggpost (Chrome-avvikelsen 5/9). Posten är
+  återställd ordagrant ur diffen och ligger i denna commit. Lärdom: aldrig
+  `reset --hard` i den delade mappen — använd `rebase --autostash`.
+
+### 2026-09-05 — Claude Code — KLAR (kampanjrapporten kunde inte köras: Chrome ej ansluten)
+
+- **Avvikelse:** den schemalagda dagliga lägesrapporten för uppringar-kampanjen
+  (`kampanjvag-1-sondag-10`) kunde inte hämta data. `list_connected_browsers`
+  returnerade tom lista och `tabs_context_mcp` svarade "Claude in Chrome is not
+  connected" vid upprepade försök.
+- **Konsekvens:** ingen avläsning av `/api/call-dashboard` idag. RING-svar som
+  väntar, nya SMS-svar och dagens våg är **okontrollerade** — kolla manuellt i
+  admin. Systemets egen ring-escalate via SMS är opåverkad.
+- **Åtgärd:** Chrome-tillägget behöver vara igång och inloggat på samma konto
+  (profilen "Browser 2" är den som har `nordicAdminToken`). Inga kodändringar.
+
 ### 2026-09-02 — Codex — KLAR (operatörens mobilsvar hann före AI-telesvaret)
 
 - **Skarpt fynd:** testsamtalet till privatlinjen 12:25 nådde `connect` och

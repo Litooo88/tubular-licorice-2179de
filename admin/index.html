@@ -3017,7 +3017,32 @@ function campaignDefaultMessage(){
   // OBS: ingen "Svara RING/STOPP"-rad — avsändaren NordicEMob och 010-numret
   // kan inte ta emot SMS. Återinför svarsalternativen när ett SMS-kapabelt
   // 46elks-mobilnummer är allokerat och ELKS_NUMBER uppdaterad.
-  return `Hej! Du sökte Nordic E-Mobility nyligen – ursäkta att vi inte kunde svara, ett tekniskt fel i vår telefonväxel stoppade många inkommande samtal och är nu åtgärdat. Som tack får du 20 % rabatt på valfri service med koden RING20, giltig t.o.m. ${until}. Boka på nordicemobility.se/book-online eller ring 010-138 54 98 vardagar 9-18. Vill du inte ha fler sms? Mejla info@nordicemobility.se. /Nordic E-Mobility`;
+  return `Hej! Du sökte Nordic E-Mobility nyligen - ursäkta att vi inte kunde svara, ett tekniskt fel i vår telefonväxel stoppade många inkommande samtal och är nu åtgärdat. Som tack får du 20 % rabatt på valfri service med koden RING20, giltig t.o.m. ${until}. Boka på nordicemobility.se/book-online eller ring 010-138 54 98 vardagar 9-18. Vill du inte ha fler sms? Mejla info@nordicemobility.se. /Nordic E-Mobility`;
+}
+// SMS-kostnad. 46elks tar 0,52 kr per SMS-DEL (uppmätt på 1 209 skickade SMS).
+// Ett meddelande med bara GSM-7-tecken får 153 tecken per del; ETT enda tecken
+// utanför alfabetet (t.ex. tankstreck) tvingar hela meddelandet till UCS-2 med
+// 67 tecken per del. Det var därför utskicket 5/9 kostade 3,64 kr per mottagare
+// i stället för 1,56 kr.
+const SMS_PART_COST_SEK=0.52;
+const GSM7='@£$¥èéùìòÇØøÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !"#¤%&\'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿ abcdefghijklmnopqrstuvwxyzäöñüà'+String.fromCharCode(10,13);
+const GSM7_EXT='^{}\\[~]|€';
+function smsCost(message){
+  const text=String(message||'');
+  const outside=[...new Set([...text])].filter((c)=>!GSM7.includes(c)&&!GSM7_EXT.includes(c));
+  if(outside.length){
+    const parts=Math.max(1,Math.ceil(text.length/67));
+    return {parts,unicode:true,outside,perRecipient:parts*SMS_PART_COST_SEK};
+  }
+  const length=[...text].reduce((n,c)=>n+(GSM7_EXT.includes(c)?2:1),0);
+  const parts=length<=160?1:Math.ceil(length/153);
+  return {parts,unicode:false,outside:[],perRecipient:parts*SMS_PART_COST_SEK};
+}
+function smsCostLabel(message,recipients){
+  const cost=smsCost(message);
+  const total=(cost.perRecipient*recipients).toFixed(0);
+  const warning=cost.unicode?' OBS: tecknet '+cost.outside.map((c)=>'"'+c+'"').join(' ')+' finns inte i SMS-alfabetet och mer an dubblar priset - byt ut det.':'';
+  return cost.parts+' SMS-delar x '+recipients+' mottagare = ca '+total+' kr ('+cost.perRecipient.toFixed(2)+' kr/st).'+warning;
 }
 function showCampaignStatus(message,bad=false){
   const el=document.getElementById('campaignStatus');
@@ -3069,7 +3094,10 @@ async function buildCampaignList(){
       if(['converted','ignored'].includes(String(row.leadStatus||'')))group.blocked=true;
       groups.set(row.phone,group);
     });
-    const all=[...groups.values()].filter((g)=>!g.blocked&&!optouts.has(g.phone)&&!own.has(g.phone));
+    // Utlandska nummer ar i praktiken robotsamtal (+44/+45/+47 fanns i listan 5/9)
+    // - de kan aldrig bli kunder i Orebro och kostar mer per SMS.
+    const foreign=[...groups.values()].filter((g)=>!String(g.phone).startsWith('+46')).length;
+    const all=[...groups.values()].filter((g)=>!g.blocked&&!optouts.has(g.phone)&&!own.has(g.phone)&&String(g.phone).startsWith('+46'));
     const excludedCase=includeCase?0:all.filter((g)=>g.hasCase&&!g.sentAt).length;
     const excludedReached=all.filter((g)=>g.reached&&!g.sentAt&&(includeCase||!g.hasCase)).length;
     const pool=all.filter((g)=>(includeCase||!g.hasCase));
@@ -3085,7 +3113,7 @@ async function buildCampaignList(){
         <td>${index>=0?index+1:''}</td><td>${html(g.phone)}</td><td>${g.count}</td><td>${html(String(g.latest.timestamp).slice(0,10))}</td><td>${g.score||''}</td><td>${status}</td></tr>`;
     };
     document.getElementById('campaignPreview').innerHTML=(campaignRecipients.length||contacted.length)
-      ?`<div class="muted" style="margin-bottom:8px"><strong style="color:#fff">${campaignRecipients.length} ej kontaktade</strong> · ${contacted.length} redan kontaktade &#10003; · ${excludedCase} exkluderade (har kundkort) · ${excludedReached} exkluderade (har nåtts på telefon) · ${optouts.size} STOPP-spärrade</div>
+      ?`<div class="muted" style="margin-bottom:8px"><strong style="color:#fff">${campaignRecipients.length} ej kontaktade</strong> · ${contacted.length} redan kontaktade &#10003; · ${excludedCase} exkluderade (har kundkort) · ${excludedReached} exkluderade (har nåtts på telefon) · ${optouts.size} STOPP-spärrade · ${foreign} utländska nummer exkluderade</div>
         <table class="active-table"><thead><tr><th>#</th><th>Nummer</th><th>Samtal</th><th>Senast</th><th>Poäng</th><th>Status</th></tr></thead>
         <tbody>${campaignRecipients.map((g,i)=>rowHtml(g,i)).join('')}${contacted.map((g)=>rowHtml(g,-1)).join('')}</tbody></table>`
       :'<div class="muted">Inga mottagare kvar efter filtrering.</div>';
@@ -3093,7 +3121,7 @@ async function buildCampaignList(){
     const waveCount=Math.min(waveSize,campaignRecipients.length);
     sendButton.textContent=`Skicka dagens våg: ${waveCount} SMS (livesändning)`;
     sendButton.disabled=!waveCount;
-    showCampaignStatus(`Lista klar ${new Date().toLocaleTimeString('sv-SE')} — topp ${waveCount} är dagens våg. Granska innan du skickar.`);
+    showCampaignStatus(`Lista klar ${new Date().toLocaleTimeString('sv-SE')} — topp ${waveCount} är dagens våg. Kostnad: ${smsCostLabel(String(document.getElementById('campaignMessage').value||''),waveCount)} Granska innan du skickar.`);
   }catch(error){
     showCampaignStatus(error.message,true);
   }finally{
@@ -3111,7 +3139,9 @@ async function sendCampaign(){
   const waveSize=Math.max(1,Math.floor(Number(document.getElementById('campaignWaveSize').value)||campaignRecipients.length));
   const wave=campaignRecipients.slice(0,waveSize);
   const remaining=campaignRecipients.length-wave.length;
-  if(!confirm(`Skicka RIKTIGT kampanj-SMS via 46elks till ${wave.length} av ${campaignRecipients.length} unika nummer?${remaining?`\n\n${remaining} nummer sparas till nästa våg (bygg om listan i morgon).`:''}\n\nDetta kan inte ångras. Varje utskick loggas per nummer.`))return;
+  if(!confirm(`Skicka RIKTIGT kampanj-SMS via 46elks till ${wave.length} av ${campaignRecipients.length} unika nummer?
+
+KOSTNAD: ${smsCostLabel(message,wave.length)}${remaining?`\n\n${remaining} nummer sparas till nästa våg (bygg om listan i morgon).`:''}\n\nDetta kan inte ångras. Varje utskick loggas per nummer.`))return;
   const code=(message.match(/koden\s+([A-ZÅÄÖ0-9-]+)/i)||[])[1]||'RING20';
   button.disabled=true;
   let ok=0;const failed=[];

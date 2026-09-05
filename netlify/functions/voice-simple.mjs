@@ -152,8 +152,10 @@ export default async (request, context) => {
   // som inte är pålitligt i recording-callbacks.
   const payload = await parseForm(request);
   const caller = clean(requestUrl.searchParams.get("caller"), 40) || clean(payload.from, 40);
-  // 46elks tillåter 10-60 sekunder för connect-timeout.
-  const timeout = Math.min(Math.max(Number(env("VOICE_TIMEOUT_SECONDS")) || 25, 10), 60);
+  // 46elks tillåter 10-60 sekunder för connect-timeout. 10 s är golvet och
+  // numera standard: mätningen 3-5 sep visade att ALLA missade uppringare
+  // la på inom 15 s, dvs. innan telefonsvararen ens hann starta.
+  const timeout = Math.min(Math.max(Number(env("VOICE_TIMEOUT_SECONDS")) || 10, 10), 60);
   const siteUrl = (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
   const closedPrompt = clean(env("VOICE_CLOSED_MP3_URL"), 400) || `${siteUrl}/audio/outside-hours-prompt.mp3`;
   const voicemailPrompt = clean(env("VOICE_VOICEMAIL_MP3_URL"), 400) || `${siteUrl}/audio/voicemail-prompt.mp3`;
