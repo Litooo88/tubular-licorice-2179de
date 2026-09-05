@@ -32,6 +32,14 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-07 — Claude Code — PÅGÅR (query mining ur GSC:s 877 sökfrågor)
+
+- **Vad:** hämtar hela sökfrågelistan ur Google Search Console (Chrome) och
+  destillerar den till en prioriterad lista över nästa innehålls-/sidinsatser.
+  Rör inga delade kodfiler — bara läsning + ev. dokumentation.
+- **Även:** löste merge-konflikten i denna logg (båda 5/9-posterna behållna i
+  ordning, enligt protokollet ovan).
+
 ### 2026-09-05 — Claude Code — KLAR (SMS-kostnaden, 10 s ringtid, kampanjhygien)
 
 - **Branch:** `fix/sms-kostnad-ringtid` → PR. Utlöst av att 100 kr saldo tog
