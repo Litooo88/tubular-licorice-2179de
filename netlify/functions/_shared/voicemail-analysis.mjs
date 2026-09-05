@@ -49,11 +49,23 @@ const ACTION_RULES = [
 
 const LOW_VALUE_PATTERN = /^(hej|hall[åo]|tjena|test|ingenting|fel nummer|ringde fel|tack)[.!?\s]*$/i;
 
+// Sammanfattningen är raden Sebastian skummar i inkorgen och det som går ut i
+// internnotisen. Första meningen räcker inte: "Hej, Sabina." dolde att ärendet
+// var bakdäck på en Kugerin G2 Pro plus återuppringningsnummer. Vi fyller
+// därför på med hela meningar tills utrymmet är slut.
 export const summarizeVoicemail = (transcript, max = 240) => {
   const normalized = clean(transcript, 4000).replace(/\s+/g, " ");
   if (!normalized) return "Ingen tydlig talad information kunde transkriberas.";
-  const sentence = normalized.match(/^.{1,320}?(?:[.!?](?:\s|$)|$)/)?.[0] || normalized;
-  return sentence.length <= max ? sentence : `${sentence.slice(0, Math.max(0, max - 1)).trimEnd()}…`;
+  const sentences = normalized.match(/[^.!?]+(?:[.!?]+|$)/g) || [normalized];
+  let summary = "";
+  for (const sentence of sentences) {
+    const next = `${summary}${sentence}`.trim();
+    if (next.length > max) break;
+    summary = `${next} `;
+  }
+  summary = summary.trim();
+  if (summary) return summary;
+  return `${normalized.slice(0, Math.max(0, max - 1)).trimEnd()}…`;
 };
 
 export const classifyVoicemail = ({ transcript, customerMatch = null } = {}) => {
@@ -211,7 +223,11 @@ export const isTranscriptEcho = (text) => {
   const normalized = compare(text);
   if (!normalized) return false;
   const prompt = compare(TRANSCRIPTION_PROMPT);
-  if (normalized === prompt || prompt.startsWith(normalized) || normalized.startsWith(prompt)) return true;
+  // Modellen ekar ibland bara ordlistan ur prompten ("Nordic E-Mobility,
+  // elscooter, batteri, BMS, ...") — den varianten slank igenom den första
+  // versionen av vakten och hamnade i inkorgen 2/9 och 3/9. Allt som ryms inuti
+  // prompten är vårt eget, inte kundens.
+  if (normalized === prompt || prompt.includes(normalized) || normalized.startsWith(prompt)) return true;
   return OUR_OWN_VOICE_PATTERNS.some((pattern) => pattern.test(clean(text, 8000)));
 };
 
@@ -292,9 +308,10 @@ export const processVoicemailAnalysis = async ({ payload = {}, source = "worksho
 
   const customerMatch = await findCustomerMatch(caller);
   let transcription;
-  // Under 2 sekunder finns inget meddelande att transkribera — kunden la på i
-  // hälsningen. Att fråga modellen ändå kostar pengar och ger bara hallucination.
-  if (base.durationSeconds > 0 && base.durationSeconds < 2) {
+  // Under 4 sekunder finns inget meddelande att transkribera — kunden la på i
+  // hälsningen. Att fråga modellen ändå kostar pengar och ger bara
+  // hallucination: de två ekade posterna 2/9 och 3/9 var 4 respektive 2 sekunder.
+  if (base.durationSeconds > 0 && base.durationSeconds < 4) {
     transcription = { status: "no_speech", text: "", model: "", tooShort: true };
   } else {
     try {
