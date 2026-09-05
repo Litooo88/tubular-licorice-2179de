@@ -5,6 +5,11 @@ import {
   reserveServiceNumber,
   serviceNumberForCase,
 } from "./_shared/service-number.mjs";
+import {
+  requiresVehicleIdentity,
+  validateVehicleIdentity,
+  vehicleIdentityLabel,
+} from "./_shared/vehicle-identity.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -321,7 +326,7 @@ const workshopSmsMessage = (caseItem) => {
   return [
     `Ny bokning #${shortCaseId(caseItem.id)}`,
     `Kund: ${caseItem.customer.name} - ${caseItem.customer.phone}`,
-    `Modell: ${caseItem.vehicle.model || "Ej angiven"}`,
+    `Fordon: ${vehicleIdentityLabel(caseItem.vehicle) || "Ej angivet"}`,
     `Felbeskrivning: ${description || "Saknas"}`,
     `Inlamning: ${formatPreferredDateOnlyForSms(caseItem)}`,
     `Arende: ${caseItem.service}`,
@@ -617,6 +622,7 @@ const caseSummaryText = (caseItem) => [
   `Telefon: ${caseItem.customer.phone}`,
   caseItem.customer.email ? `E-post: ${caseItem.customer.email}` : "",
   `Tjanst: ${caseItem.service}`,
+  caseItem.vehicle.brand ? `Fabrikat: ${caseItem.vehicle.brand}` : "",
   caseItem.vehicle.model ? `Modell: ${caseItem.vehicle.model}` : "",
   caseItem.preferredDate ? `${preferredTimeLabel(caseItem)}: ${caseItem.preferredDate}` : "",
   caseItem.preferredContactTime ? `Passar bast: ${caseItem.preferredContactTime}` : "",
@@ -660,7 +666,7 @@ const customerEmailHtml = (caseItem) => `
           <p style="margin:0 0 8px"><strong>${preferredTimeHtmlLabel(caseItem)}:</strong> ${htmlEscape(formatPreferredDateForEmail(caseItem.preferredDate))}</p>
           <p style="margin:0 0 8px"><strong>Plats:</strong> ${htmlEscape(WORKSHOP_ADDRESS)}</p>
           <p style="margin:0 0 8px"><strong>Logistik:</strong> ${htmlEscape(logisticsLabel(caseItem.logistics))}</p>
-          <p style="margin:0 0 8px"><strong>Fordon:</strong> ${htmlEscape(caseItem.vehicle.model || "Inte angivet")}</p>
+          <p style="margin:0 0 8px"><strong>Fordon:</strong> ${htmlEscape(vehicleIdentityLabel(caseItem.vehicle) || "Inte angivet")}</p>
           ${caseItem.discountCode ? `<p style="margin:0 0 8px"><strong>Rabattkod:</strong> ${htmlEscape(caseItem.discountCode)}</p>` : ""}
           ${addonSummaryHtml(caseItem.addons)}
           <p style="margin:0"><strong>Startansvar:</strong> ${htmlEscape(caseItem.assignedTo.name)}</p>
@@ -927,7 +933,7 @@ const createCalendarEvent = async (caseItem) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        summary: `${isReadyPickup(caseItem) ? "Upphamtning fardig scooter" : "Ny verkstadsforfragan"}: ${caseItem.customer.name}`,
+        summary: `${isReadyPickup(caseItem) ? "Upphamtning fardig scooter" : "Ny verkstadsforfragan"}: ${caseItem.customer.name}${vehicleIdentityLabel(caseItem.vehicle) ? ` - ${vehicleIdentityLabel(caseItem.vehicle)}` : ""}`,
         location: WORKSHOP_LOCATION,
         description: caseSummaryText(caseItem),
         start: window.start,
@@ -980,6 +986,17 @@ const isRateLimited = (key, { limit = 4, windowMs = 10 * 60 * 1000 } = {}) => {
 const hasHoneypotValue = (body = {}) =>
   Boolean(clean(body["bot-field"] || body.botField || body.website || body.company, 240));
 
+const vehicleBrandFromBody = (body = {}) =>
+  clean(body.brand || body.vehicleBrand || body.manufacturer || body.vehicle?.brand, 120);
+
+const vehicleModelFromBody = (body = {}) =>
+  clean(
+    body.scooter ||
+      body.vehicleModel ||
+      (typeof body.vehicle === "string" ? body.vehicle : body.vehicle?.model),
+    240,
+  );
+
 // Servervalidering av önskad tid: klienten kan inte litas på (lokal tidszon,
 // gammal flik, manipulerad request). Reglerna speglar bokningsformuläret:
 // tisdag-lördag, 15:00-18:00 i halvtimmessteg, aldrig i dåtid (Europe/Stockholm).
@@ -1017,7 +1034,8 @@ const bookingIdempotencyKey = (request, body = {}) => {
     phone: normalizePhone(body.phone),
     preferredDate: clean(body.preferredDate, 120),
     service: clean(body.service, 240).toLowerCase(),
-    vehicle: clean(body.scooter || body.vehicle, 240).toLowerCase(),
+    vehicleBrand: vehicleBrandFromBody(body).toLowerCase(),
+    vehicleModel: vehicleModelFromBody(body).toLowerCase(),
     pickupCaseId: clean(body.pickupCaseId, 180),
   };
   return `booking_${createHash("sha256").update(JSON.stringify(fingerprint)).digest("hex").slice(0, 48)}`;
@@ -1075,7 +1093,8 @@ export default async (request, context) => {
         email: clean(body.email),
       },
       vehicle: {
-        model: clean(body.scooter || body.vehicle),
+        brand: vehicleBrandFromBody(body),
+        model: vehicleModelFromBody(body),
       },
       service,
       addons,
@@ -1115,6 +1134,13 @@ export default async (request, context) => {
     const preferredDateError = validatePreferredDate(caseItem.preferredDate);
     if (preferredDateError) {
       return json({ error: preferredDateError }, 400);
+    }
+    const vehicleIdentityError = validateVehicleIdentity({
+      ...caseItem.vehicle,
+      required: requiresVehicleIdentity({ service, logistics: caseItem.logistics }),
+    });
+    if (vehicleIdentityError) {
+      return json({ error: vehicleIdentityError }, 400);
     }
     // Ägarintyget gäller inlämnade fordon — vid beställning av ny produkt
     // finns inget fordon att intyga för.
@@ -1205,6 +1231,7 @@ export default async (request, context) => {
       phone: normalizePhone(body.phone),
       preferredDate: caseItem.preferredDate,
       service: caseItem.service,
+      vehicleBrand: caseItem.vehicle.brand,
       vehicle: caseItem.vehicle.model,
     }).catch((error) => {
       console.warn("booking_idempotency_write_failed", {

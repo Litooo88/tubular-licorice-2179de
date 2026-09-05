@@ -35,7 +35,7 @@ Index på normaliserat telefonnummer och e-post.
 - `customer_id uuid references customers`
 - `status text`
 - `source`, `channel`, `priority`
-- `service_type`, `vehicle_model`, `problem_description`
+- `service_type`, `vehicle_brand`, `vehicle_model`, `problem_description`
 - `assigned_to`, `preferred_date`, `intake_at`, `promised_at`
 - `estimated_value`, `approved_amount`, `final_amount`
 - `created_at`, `updated_at`, `closed_at`

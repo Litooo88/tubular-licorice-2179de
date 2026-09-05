@@ -69,12 +69,20 @@ Minsta request:
   "email": "kund@example.se",
   "service": "Punktering / däck",
   "preferredDate": "2026-06-16T10:00:00+02:00",
-  "vehicle": "Xiaomi Pro 2",
+  "brand": "Xiaomi",
+  "scooter": "Pro 2",
   "message": "Bakdäcket är platt",
   "ownershipConfirm": "yes",
   "termsConfirm": "yes"
 }
 ```
+
+`brand` (fabrikat) och `scooter` (exakt modellbeteckning) är obligatoriska
+för service- och inlämningsbokningar. Ett generiskt värde eller bara ett
+varumärke som modell avvisas. Produktbeställningar (`Beställning av ...`) och
+upphämtning av ett redan färdigt fordon (`logistics: pickup-ready`) är undantagna.
+I det skapade ärendet lagras värdena bakåtkompatibelt som
+`vehicle.brand` respektive `vehicle.model`.
 
 Response `201`: `{ "ok": true, "id": "...", "case": { ... } }`.
 
