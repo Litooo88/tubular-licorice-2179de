@@ -102,3 +102,28 @@ test("riktiga kundmeddelanden slipper igenom eko-vakten", () => {
   assert.equal(isTranscriptEcho("Jag vill boka service för min elscooter i Örebro."), false);
   assert.equal(isTranscriptEcho(""), false);
 });
+
+// Produktionsfynd 2/9 och 3/9: modellen ekade bara ordlistan ur prompten, inte
+// hela meningen — den varianten slank igenom forsta versionen av vakten.
+test("eko av enbart ordlistan ur prompten fangas ocksa", () => {
+  assert.equal(isTranscriptEcho("Nordic E-Mobility, elscooter, batteri, BMS, däck, broms, laddare, bokning och Örebro."), true);
+  assert.equal(isTranscriptEcho("elscooter, batteri, BMS, däck"), true);
+  assert.equal(isTranscriptEcho("Jag har en elscooter med trasigt batteri och vill boka tid i Örebro."), false);
+});
+
+// "Hej, Sabina." var hela sammanfattningen 4/9 — sjalva arendet (bakdack pa en
+// Kugerin G2 Pro) och aterunppringningsnumret lag i mening tva och tre.
+test("sammanfattningen tar med hela arendet, inte bara forsta meningen", () => {
+  const transcript = "Hej, Sabina. Ring mig på 0735-140494. Jag undrar om ni kan byta ett bakdäck på en Kugerin G2 Pro. Tack.";
+  const summary = summarizeVoicemail(transcript);
+  assert.match(summary, /0735-140494/);
+  assert.match(summary, /bakdäck/);
+  assert.ok(summary.length <= 240, "far inte spranga 240 tecken");
+});
+
+test("lang transkribering kapas utan att spranga gransen", () => {
+  const long = "Hej det är Anders. ".repeat(40);
+  const summary = summarizeVoicemail(long);
+  assert.ok(summary.length <= 240, `for lang: ${summary.length}`);
+  assert.ok(summary.startsWith("Hej det är Anders."));
+});
