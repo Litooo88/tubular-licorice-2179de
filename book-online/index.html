@@ -360,7 +360,11 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <option value="pickup-question">Fr&aring;ga om h&auml;mtning/l&auml;mning</option>
             <option value="not-sure">Vet inte &auml;n</option>
           </select></div>
-          <div class="form-group full"><label for="scooter">Scooter / elcykelmodell</label><input id="scooter" name="scooter" placeholder="T.ex. Xiaomi Pro 2, NAVEE ST3, Ninebot Max, Dualtron..."></div>
+          <div class="form-group"><label for="brand">Fabrikat / m&auml;rke</label><input id="brand" name="brand" required autocomplete="off" list="vehicleBrands" placeholder="T.ex. NAVEE"></div>
+          <div class="form-group"><label for="scooter">Exakt modellbeteckning</label><input id="scooter" name="scooter" required autocomplete="off" aria-describedby="vehicleIdentityHelp" placeholder="T.ex. N65i eller ST3 Pro"><small id="vehicleIdentityHelp" style="color:#8d9a91;line-height:1.45">St&aring;r oftast p&aring; etiketten under ramen eller p&aring; sidan av fotplattan. Skriv inte bara m&auml;rket.</small></div>
+          <datalist id="vehicleBrands">
+            <option value="NAVEE"><option value="Xiaomi"><option value="Ninebot / Segway"><option value="KuKirin"><option value="Dualtron"><option value="VSETT"><option value="Teverun"><option value="Halo Knight"><option value="iScooter"><option value="E-Wheels">
+          </datalist>
         </div>
       </div>
 
@@ -429,6 +433,43 @@ const heroHeading=document.querySelector('.hero h1');
 const heroLead=document.querySelector('.hero .lead');
 const panelHeading=document.querySelector('.panel-title h2');
 const panelLead=document.querySelector('.panel-title p');
+const brandInput=document.getElementById('brand');
+const scooterInput=document.getElementById('scooter');
+
+const GENERIC_VEHICLE_VALUES=new Set(['annat','elcykel','elscooter','ej angiven','ingen aning','modell saknas','n a','okand','osaker','scooter','vet ej','vet inte']);
+const BRAND_ONLY_MODEL_VALUES=new Set(['augment','dualtron','emove','e wheels','ewheels','halo knight','inokim','iscooter','kugoo','kukirin','navee','ninebot','rawbike','segway','teverun','vsett','xiaomi']);
+function normalizeVehicleValue(value){
+  return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,' ').trim();
+}
+function isOrderRequest(){
+  const service=selectedService();
+  return /^best[aä]llning av\s+/i.test((service&&service.value)||'');
+}
+function requiresVehicleIdentity(){
+  return !isOrderRequest()&&(!logisticsSelect||logisticsSelect.value!=='pickup-ready');
+}
+function syncVehicleIdentityRequirement(){
+  const required=requiresVehicleIdentity();
+  if(brandInput)brandInput.required=required;
+  if(scooterInput)scooterInput.required=required;
+}
+function validateVehicleIdentity(){
+  if(brandInput)brandInput.setCustomValidity('');
+  if(scooterInput)scooterInput.setCustomValidity('');
+  if(!requiresVehicleIdentity())return true;
+
+  const brand=normalizeVehicleValue(brandInput&&brandInput.value);
+  const model=normalizeVehicleValue(scooterInput&&scooterInput.value);
+  if(!brand||GENERIC_VEHICLE_VALUES.has(brand)){
+    if(brandInput){brandInput.setCustomValidity('Ange fordonets fabrikat eller märke, till exempel NAVEE.');brandInput.reportValidity();brandInput.focus();}
+    return false;
+  }
+  if(!model||GENERIC_VEHICLE_VALUES.has(model)||BRAND_ONLY_MODEL_VALUES.has(model)||model===brand){
+    if(scooterInput){scooterInput.setCustomValidity('Skriv den exakta modellbeteckningen, till exempel N65i eller ST3 Pro – inte bara märket.');scooterInput.reportValidity();scooterInput.focus();}
+    return false;
+  }
+  return true;
+}
 
 function pad(number){return String(number).padStart(2,'0');}
 // Dagar och tider räknas alltid i Europe/Stockholm — inte i besökarens lokala
@@ -489,6 +530,7 @@ function setServiceFromChoice(value){
   const option=[...serviceSelect.options].find((entry)=>entry.value===value);
   if(option)serviceSelect.value=option.value;
   syncServiceChoiceFromSelect();
+  syncVehicleIdentityRequirement();
   updateSummary();
 }
 function ownerFor(service,message){
@@ -524,11 +566,13 @@ function updateSummary(){
 }
 function syncPickupService(){
   if(!logisticsSelect||!serviceSelect)return;
-  if(logisticsSelect.value!=='pickup-ready')return;
-  const pickupOption=[...serviceSelect.options].find(option=>option.value==='Upphamtning av fardig scooter');
-  if(pickupOption)serviceSelect.value=pickupOption.value;
-  syncServiceChoiceFromSelect();
-  updateSummary();
+  if(logisticsSelect.value==='pickup-ready'){
+    const pickupOption=[...serviceSelect.options].find(option=>option.value==='Upphamtning av fardig scooter');
+    if(pickupOption)serviceSelect.value=pickupOption.value;
+    syncServiceChoiceFromSelect();
+    updateSummary();
+  }
+  syncVehicleIdentityRequirement();
 }
 function setSelectValue(select,value){
   if(!select||!value)return;
@@ -558,6 +602,7 @@ function applyPrefillFromUrl(){
   const service=params.get('service');
   const model=readableModel(params.get('modell')||params.get('model'));
   const scooter=readableModel(params.get('scooter'))||model;
+  const brand=readableModel(params.get('fabrikat')||params.get('brand')||params.get('manufacturer'));
   const message=params.get('message');
   const caseId=params.get('caseId');
   if(logistics) setSelectValue(logisticsSelect,logistics);
@@ -586,9 +631,9 @@ function applyPrefillFromUrl(){
     if(submitButton) submitButton.textContent='Skicka beställningsförfrågan';
   }
   if(scooter){
-    const scooterInput=document.getElementById('scooter');
     if(scooterInput) scooterInput.value=scooter;
   }
+  if(brand&&brandInput)brandInput.value=brand;
   if(service&&service.toLowerCase()==='bestallning'&&model&&messageInput&&!messageInput.value){
     messageInput.value=`Jag vill beställa ${model}. Kontakta mig med leveranstid och nästa steg.`;
   }
@@ -602,17 +647,21 @@ function applyPrefillFromUrl(){
     if(panelLead) panelLead.textContent='Välj en upphämtningstid som passar. Vi använder uppgifterna för att hålla utlämningen snabb, tydlig och säker.';
     syncPickupService();
   }
+  syncVehicleIdentityRequirement();
 }
 fillDayOptions();
 fillTimeOptions();
 applyPrefillFromUrl();
-if(serviceSelect)serviceSelect.addEventListener('change',()=>{syncServiceChoiceFromSelect();updateSummary();});
+if(serviceSelect)serviceSelect.addEventListener('change',()=>{syncServiceChoiceFromSelect();syncVehicleIdentityRequirement();updateSummary();});
 serviceChoiceInputs.forEach((input)=>input.addEventListener('change',()=>setServiceFromChoice(input.value)));
 if(logisticsSelect)logisticsSelect.addEventListener('change',syncPickupService);
 if(preferredDay)preferredDay.addEventListener('change',fillTimeOptions);
 addonInputs.forEach((input)=>input.addEventListener('change',updateSummary));
 messageInput.addEventListener('input',updateSummary);
 if(smsConsent) smsConsent.addEventListener('change',updateSummary);
+if(brandInput)brandInput.addEventListener('input',()=>brandInput.setCustomValidity(''));
+if(scooterInput)scooterInput.addEventListener('input',()=>scooterInput.setCustomValidity(''));
+syncVehicleIdentityRequirement();
 updateSummary();
 
 async function submitNetlifyBackup(data){
@@ -645,6 +694,11 @@ if(bookingForm){
   bookingForm.addEventListener('submit',async(event)=>{
     event.preventDefault();
     const service=selectedService();
+    if(!validateVehicleIdentity()){
+      bookingStatus.className='status err';
+      bookingStatus.textContent='Fyll i både fabrikat och exakt modellbeteckning så att vi kan märka upp rätt fordon.';
+      return;
+    }
     const preferredDate=buildPreferredDate();
     if(!preferredDate){
       bookingStatus.className='status err';
@@ -688,6 +742,7 @@ if(bookingForm){
       bookingStatus.className='status ok';
       bookingStatus.textContent=customerStatusMessage(result);
       bookingForm.reset();
+      syncVehicleIdentityRequirement();
       updateSummary();
     }catch(error){
       bookingStatus.className='status err';

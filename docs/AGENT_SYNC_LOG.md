@@ -2467,3 +2467,20 @@ AI-telesvarsanalys blir det gemensamma efterbearbetningslagret. Konkret:
 - Kanon batch 4 klar som FÖRSLAG (10 nya + 2 stärkta, 0 bekräftad, källpoolen i princip uttömd): kanon/diagnostik-kanon-v1.4-batch4-FORSLAG.json + BATCHRAPPORT-4.md. Rör ej före granskning.
 - NEMOB OS autostartar nu via Windows-schemalagd aktivitet "NEMOB OS Server". Kalender: 2 dagliga påminnelser (ringlista 11:30, avslutfält 16:45) + friktionskoll 3/9, backfill 4/9, veckofacit 7/9.
 - Kvar dag 2: prisintervall i quick-price, backfill-förslag (30 senaste), diagnosförslag vid intag.
+
+### 2026-09-04 ~23:29Z — Codex — KLAR
+
+- **Branch:** `fix/require-booking-vehicle-identity`
+- **Gjorde:** Gjorde fabrikat och exakt modell obligatoriska i publik bokning samt
+  speglar valideringen server-side så generiska märkesvärden inte accepteras.
+- **Filer/områden:** `book-online/index.html`, `netlify/functions/booking.mjs`,
+  `_shared/vehicle-identity.mjs`, test och API/datamodellsdokumentation. Märke
+  och modell syns separat i ärendet och tillsammans i kalender/SMS/e-post.
+- **Tester:** `npm run test:status` ✅ (11/11), `npm run
+  verify:checkout-products` ✅, `npm run generate:products` ✅, `npm run
+  build:dist` ✅, `node --check` för ändrade MJS-filer ✅, inline-JS syntax ✅,
+  `git diff --check` ✅. Full `npm run build` stoppades endast av att rena
+  klonen saknar installerat `@netlify/blobs`; `nemob-callflow npm run check`
+  stoppades av saknad lokal `tsc`.
+- **Nästa / överlämning:** Granska/merga branchen och låt Netlify deploya.
+- **Varning:** Inga SMS/mejl eller production-data skrevs i detta arbete.
