@@ -63,7 +63,9 @@ test("routes calls when the shared secret has not been configured yet", async ()
     assert.equal(response.status, 200);
     const action = await response.json();
     assert.equal(action.connect, "+46700000001");
-    assert.equal(action.timeout, 25);
+    // 10 s ringtid ar standard sedan 5/9: matningen 3-5 sep visade att varenda
+    // missad uppringare la pa inom 15 s, alltsa innan telefonsvararen startade.
+    assert.equal(action.timeout, 10);
     assert.match(action.next, /voice-simple\?step=fallback&caller=%2B46700000000$/);
   });
 });
@@ -170,4 +172,15 @@ test("isOfficeHours: helgdagar och helger är stängda, vardagar 9-18 öppna", (
   assert.equal(isOfficeHours(new Date("2026-07-20T18:00:00+02:00")), false); // efter stängning
   assert.equal(isOfficeHours(new Date("2026-07-18T12:00:00+02:00")), false); // lördag
   assert.equal(isOfficeHours(new Date("2026-12-24T12:00:00+01:00")), false); // julafton
+});
+
+test("VOICE_TIMEOUT_SECONDS overrides the default and stays inside 46elks 10-60 s", async () => {
+  await withEnv({ VOICE_PRIMARY_NUMBER: "+46700000001", VOICE_TEST_NOW: OPEN_NOW, VOICE_TIMEOUT_SECONDS: "20" }, async () => {
+    const action = await (await voiceSimple(request())).json();
+    assert.equal(action.timeout, 20);
+  });
+  await withEnv({ VOICE_PRIMARY_NUMBER: "+46700000001", VOICE_TEST_NOW: OPEN_NOW, VOICE_TIMEOUT_SECONDS: "3" }, async () => {
+    const action = await (await voiceSimple(request())).json();
+    assert.equal(action.timeout, 10, "under golvet ska klampas till 10");
+  });
 });
