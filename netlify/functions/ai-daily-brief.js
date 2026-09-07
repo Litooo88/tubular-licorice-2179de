@@ -28,7 +28,13 @@ const valueFor = (item) =>
 const isActive = (item) => !CLOSED_STATUSES.has(String(item?.status || ""));
 const customerName = (item) => item?.customer?.name || item?.customerName || "Okand kund";
 const modelName = (item) => item?.vehicle?.model || item?.model || "Modell saknas";
-const missingModel = (item) => !clean(modelName(item), 120) || /^okand|^okänd|^test$/i.test(clean(modelName(item), 120));
+// modelName() returnerar "Modell saknas" när modellen är tom — utan den sista
+// jämförelsen kände regeln alltså inte igen sitt eget tomvärde, och ärenden
+// helt utan modell flaggades aldrig.
+const missingModel = (item) => {
+  const name = clean(modelName(item), 120);
+  return !name || name === "Modell saknas" || /^okand|^okänd|^test$/i.test(name);
+};
 const isStale = (item) => {
   const time = new Date(item?.updatedAt || item?.createdAt || 0).getTime();
   return Number.isFinite(time) && time > 0 && Date.now() - time > 48 * 60 * 60 * 1000;
@@ -47,8 +53,10 @@ const paymentStatus = (item) => clean(item?.payment?.status || "unpaid", 80) || 
 const hasPaymentAmount = (item) => {
   const paymentAmount = item?.payment?.amount;
   const completionAmount = item?.completion?.totalCost;
-  return paymentAmount !== undefined && paymentAmount !== null && paymentAmount !== "" ||
-    completionAmount !== undefined && completionAmount !== null && completionAmount !== "";
+  // Beloppet 0 är inte ett fastställt belopp — ett ärende utan pris är ingen
+  // faktura och ska inte räknas som "klar att fakturera".
+  const positive = (value) => Number.isFinite(Number(value)) && Number(value) > 0;
+  return positive(paymentAmount) || positive(completionAmount);
 };
 const completionNotified = (item) => Boolean(item?.completion?.customerNotifiedAt);
 const isRiskText = (item) => /batteri|bms|reklamation|missnojd|missnöjd|garanti|jurid|brand|kortslut/i.test([
@@ -212,12 +220,16 @@ const buildBrief = ({ body, cases, calls, drafts, parts, warnings, sources }) =>
       return { item, reasons, risk: { ...risk, reasons } };
     })
     .filter(({ item, reasons }) => reasons.some((reason) => /Risk|Statt|Saknar modell/i.test(reason)) || item.priority === "urgent");
-  const priority = active
+  // Hela urvalet räknas FÖRE presentationens topplista. Tidigare kapades
+  // listan till tio innan totalen mättes, så metrics.doNow visade alltid
+  // "10" så snart minst tio ärenden krävde åtgärd — oavsett om det var 10
+  // eller 60 (produktion visade exakt 10 den 2026-09-07).
+  const prioritySelection = active
     .map((item) => ({ item, reasons: reasonsFor(item, matchedMissedCallIds) }))
     .filter(({ reasons }) => reasons.length)
     .sort((a, b) => priorityScore(b.reasons) - priorityScore(a.reasons) || String(b.item.updatedAt || b.item.createdAt).localeCompare(String(a.item.updatedAt || a.item.createdAt)))
-    .slice(0, 10)
     .map(({ item, reasons }) => caseSummary(item, reasons.join(", ")));
+  const priority = prioritySelection.slice(0, 10);
   const unansweredSms = drafts.filter((item) => ["received", "unanswered", "requires_reply"].includes(item.status));
   const openPartNeeds = parts.filter((item) => !["received", "installed", "cancelled"].includes(item.status));
   const waitingParts = active.filter((item) => item.status === "waiting_parts" || openPartNeeds.some((part) => part.caseId === item.id));
@@ -237,7 +249,8 @@ const buildBrief = ({ body, cases, calls, drafts, parts, warnings, sources }) =>
     generatedAt: new Date().toISOString(),
     aiMode: env("OPENAI_API_KEY") ? "deterministic_rules" : "deterministic_dry_run",
     metrics: {
-      doNow: priority.length,
+      doNow: prioritySelection.length,
+      doNowShown: priority.length,
       active: active.length,
       missedCalls: missedCalls.length,
       unansweredSms: unansweredSms.length,
@@ -245,7 +258,7 @@ const buildBrief = ({ body, cases, calls, drafts, parts, warnings, sources }) =>
       waitingParts: waitingParts.length,
       readyInvoice: readyInvoice.length,
       riskCases: riskRows.length,
-      possibleRevenueToday: priority.reduce((sum, item) => sum + item.value, 0),
+      possibleRevenueToday: prioritySelection.reduce((sum, item) => sum + item.value, 0),
     },
     priority,
     missedCalls: missedCalls.slice(0, 10),
@@ -258,7 +271,7 @@ const buildBrief = ({ body, cases, calls, drafts, parts, warnings, sources }) =>
   };
   return {
     ok: true,
-    summary: `${priority.length} arenden kraver atgard nu. ${waitingCustomer.length} vantar kund, ${waitingParts.length} vantar del och ${readyInvoice.length} ar klara for betalning/faktura.`,
+    summary: `${prioritySelection.length} arenden kraver atgard nu. ${waitingCustomer.length} vantar kund, ${waitingParts.length} vantar del och ${readyInvoice.length} ar klara for betalning/faktura.`,
     topPriorities: priority,
     cashToday: readyInvoice.reduce((sum, item) => sum + valueFor(item), 0),
     riskCases: brief.riskCases,
