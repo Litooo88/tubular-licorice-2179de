@@ -54,6 +54,45 @@ const notifyEmail = async (count) => {
   }
 };
 
+// Storen "sms-drafts" innehåller TVÅ format: det äldre från
+// /.netlify/functions/sms-drafts (nyckel = genererat draft-id, fält id/status/
+// requiresApproval, INGET meta) och det här inkorgsformatet (nyckel = caseId,
+// fält meta/category). Admin läser d.meta.namn rakt av, så en enda gammal post
+// kastade och dolde HELA inkorgen bakom ett tyst catch. Normalisera i stället
+// här, så att blandad lagring alltid går att visa.
+const ageInDays = (value) => {
+  const time = new Date(value || 0).getTime();
+  if (!Number.isFinite(time) || time <= 0) return 0;
+  return Math.max(0, Math.floor((Date.now() - time) / (24 * 60 * 60 * 1000)));
+};
+
+export const normalizeDraft = (item, key) => {
+  if (!item || typeof item !== "object") return null;
+  const message = clean(item.message, 1600);
+  if (!message) return null;
+  const source = item.meta && typeof item.meta === "object" ? item.meta : {};
+  const isLegacy = !item.meta || typeof item.meta !== "object";
+  return {
+    ...item,
+    // caseId är den nyckel admin skickar tillbaka till approve/skip och måste
+    // därför vara blob-nyckeln, inte ett eventuellt avvikande fält i posten.
+    caseId: clean(key, 200) || clean(item.caseId, 200),
+    linkedCaseId: clean(item.caseId, 200) || clean(key, 200),
+    format: isLegacy ? "legacy" : "inbox",
+    message,
+    category: ["A", "B", "C"].includes(item.category) ? item.category : "C",
+    meta: {
+      namn: clean(source.namn, 140),
+      telefon: clean(source.telefon, 40) || clean(item.to, 40),
+      tjanst: clean(source.tjanst, 140) || clean(item.intent || item.eventType, 140),
+      alderDagar: Number(source.alderDagar) || ageInDays(item.createdAt),
+      ursprung: clean(source.ursprung, 300),
+      missedCalls: Number(source.missedCalls) || 0,
+      lastCallDate: clean(source.lastCallDate, 20),
+    },
+  };
+};
+
 export default async (request, context) => {
   const auth = requireAdminToken(request, json, "ADMIN_TOKEN saknas i Netlify miljovariabler.");
   if (!auth.ok) return auth.response;
@@ -67,7 +106,8 @@ export default async (request, context) => {
     const items = [];
     for (const blob of blobs) {
       const item = await drafts.get(blob.key, { type: "json" }).catch(() => null);
-      if (item) items.push(item);
+      const normalized = normalizeDraft(item, blob.key);
+      if (normalized) items.push(normalized);
     }
     // Sebastians prioriteringsregel: poäng (samtal/recency/intention/kr-per-min) desc, sedan färskast först.
     items.sort((a, b) => (b.closeProbability ?? -1) - (a.closeProbability ?? -1) || (b.priority ?? -1) - (a.priority ?? -1) || (a.meta?.alderDagar ?? 0) - (b.meta?.alderDagar ?? 0));
@@ -123,7 +163,11 @@ export default async (request, context) => {
     const message = clean(body.message || draft.message, 1600);
 
     const cases = getStore({ name: "workshop-cases", consistency: "strong" });
-    const item = await cases.get(id, { type: "json" });
+    // Nya utkast har blob-nyckeln = caseId. Äldre poster har ett eget draft-id
+    // som nyckel och ärendet i fältet caseId — utan fallbacken går de aldrig
+    // att godkänna.
+    const caseKey = clean(draft.caseId, 200) || id;
+    const item = await cases.get(caseKey, { type: "json" });
     if (!item) return json({ error: "Ärendet finns inte längre." }, 404);
     const phone = normalizePhone(item?.customer?.phone);
     if (!phone) return json({ error: "Kundtelefon saknas på ärendet." }, 400);
@@ -152,9 +196,9 @@ export default async (request, context) => {
       ],
       updatedAt: now,
     };
-    await cases.setJSON(id, next);
+    await cases.setJSON(caseKey, next);
     await drafts.delete(id);
-    return json({ status: "sent", caseId: id, newStatus: next.status });
+    return json({ status: "sent", caseId: caseKey, newStatus: next.status });
   }
 
   return json({ error: "Not found" }, 404);
