@@ -19,19 +19,31 @@
     });
   }
 
+  // Namn, telefon och modell sparas ALDRIG i localStorage — det är kunddata på
+  // en enhet som kan vara delad, utan förfallotid (CLAUDE.md: ingen kunddata i
+  // localStorage). Bara ämne och fritext sparas, så att ett halvskrivet
+  // meddelande överlever en oavsiktlig omladdning, och bara ett dygn.
+  var DRAFT_TTL_MS = 24 * 60 * 60 * 1000;
+
   function saveDraft() {
     var data = {
       topic: topicInput.value,
       message: messageInput.value,
-      name: nameInput.value,
-      phone: phoneInput.value,
-      model: modelInput.value,
+      savedAt: Date.now(),
     };
     try { localStorage.setItem(storageKey, JSON.stringify(data)); } catch (error) {}
   }
 
   function loadDraft() {
-    try { return JSON.parse(localStorage.getItem(storageKey) || "{}"); } catch (error) { return {}; }
+    try {
+      var raw = JSON.parse(localStorage.getItem(storageKey) || "{}");
+      if (!raw || typeof raw !== "object") return {};
+      if (!raw.savedAt || Date.now() - Number(raw.savedAt) > DRAFT_TTL_MS) {
+        clearDraft();
+        return {};
+      }
+      return { topic: raw.topic, message: raw.message };
+    } catch (error) { return {}; }
   }
 
   function clearDraft() {
@@ -114,9 +126,7 @@
 
   topicInput.value = draft.topic || "other";
   messageInput.value = draft.message || "";
-  nameInput.value = draft.name || "";
-  phoneInput.value = draft.phone || "";
-  modelInput.value = draft.model || "";
+  // Namn, telefon och modell återställs inte — de sparas inte längre.
   Array.prototype.forEach.call(topicWrap.querySelectorAll(".nem-chat-topic"), function (item) {
     item.dataset.active = item.dataset.key === topicInput.value ? "true" : "false";
   });

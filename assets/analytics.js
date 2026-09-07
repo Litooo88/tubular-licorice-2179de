@@ -5,7 +5,33 @@
   var debugMode = Boolean(config.debugMode);
   var lastTrackedPath = "";
 
+  // Interna vyer mäts inte alls. Samma script laddas i admin och verkstaden,
+  // och där kan sökvägen/parametrarna innehålla ärende- och kundreferenser som
+  // annars hade följt med till analysleverantören efter ett tidigare samtycke.
+  var INTERNAL_ROUTE = /^\/(admin|workshop|prices|quick-price|checkout)(\/|$)/i;
+  function isInternalPath(pathname) {
+    return INTERNAL_ROUTE.test(String(pathname || ""));
+  }
+
+  // Endast kampanjparametrar skickas vidare. Allt annat (t.ex. ?case=...,
+  // ?id=..., telefonnummer i en delad länk) strippas före mätningen.
+  var ALLOWED_PARAMS = /^(utm_[a-z_]+|gclid|fbclid)$/i;
+  function safeSearch(search) {
+    try {
+      var params = new URLSearchParams(String(search || ""));
+      var kept = new URLSearchParams();
+      params.forEach(function (value, key) {
+        if (ALLOWED_PARAMS.test(key)) kept.append(key, value);
+      });
+      var out = kept.toString();
+      return out ? "?" + out : "";
+    } catch (e) {
+      return "";
+    }
+  }
+
   if (!measurementId || window.__nordicAnalyticsLoaded) return;
+  if (isInternalPath(window.location.pathname)) return;
   window.__nordicAnalyticsLoaded = true;
 
   // Samtyckesgrind (PTS/GDPR): GA4 laddas ALDRIG före aktivt samtycke.
@@ -22,13 +48,14 @@
 
   function trackPageView(path) {
     if (!analyticsStarted) return;
-    var pagePath = path || window.location.pathname + window.location.search;
+    if (isInternalPath(window.location.pathname)) return;
+    var pagePath = path || window.location.pathname + safeSearch(window.location.search);
     if (pagePath === lastTrackedPath) return;
     lastTrackedPath = pagePath;
 
     window.gtag("event", "page_view", {
       page_title: document.title,
-      page_location: window.location.href,
+      page_location: window.location.origin + window.location.pathname + safeSearch(window.location.search),
       page_path: pagePath,
       send_to: measurementId,
       debug_mode: debugMode
