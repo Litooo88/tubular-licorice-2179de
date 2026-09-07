@@ -28,6 +28,7 @@ const PUBLIC_DIRS = [
   "foretag",
   "foretag-serviceavtal",
   "garanti",
+  "laga-elsparkcykel",
   "halo-knight-service",
   "kukirin-service",
   "navee-service",
