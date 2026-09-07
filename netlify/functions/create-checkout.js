@@ -166,7 +166,11 @@ const createCheckoutSession = async ({ stripe, product, origin }) => {
   };
 
   const richSession = { ...stableSession, ...policyFields };
-  const richNoShippingSession = { ...baseStableSession, ...policyFields };
+  // Fallbacken far BARA variera frivilliga parametrar (betalsatt, rabattkoder
+  // och i sista hand villkorstexten). Frakten ar ett ekonomiskt villkor:
+  // tidigare kunde forsok 9-12 skapa en session UTAN shipping_options, sa att
+  // kunden fick fri frakt (t.ex. 699 kr) nar Stripe avvisade nagot HELT annat.
+  // Kan frakten inte satas ska vi fela kontrollerat, inte salja billigare.
   const attempts = [
     { ...richSession, payment_method_types: ["card", "klarna"], allow_promotion_codes: true },
     { ...richSession, payment_method_types: ["card", "klarna"] },
@@ -176,16 +180,24 @@ const createCheckoutSession = async ({ stripe, product, origin }) => {
     { ...stableSession, payment_method_types: ["card", "klarna"] },
     { ...stableSession, payment_method_types: ["card"], allow_promotion_codes: true },
     { ...stableSession, payment_method_types: ["card"] },
-    { ...richNoShippingSession, payment_method_types: ["card", "klarna"], allow_promotion_codes: true },
-    { ...richNoShippingSession, payment_method_types: ["card", "klarna"] },
-    { ...baseStableSession, payment_method_types: ["card"], allow_promotion_codes: true },
-    { ...baseStableSession, payment_method_types: ["card"] },
   ];
 
+  // Invariant: inget tillatet forsok far tappa frakten.
+  if (shippingOptions && attempts.some((params) => !params.shipping_options)) {
+    throw new Error("Checkout-fallback saknar shipping_options - avbryter hellre an att salja utan frakt.");
+  }
+
   let lastError;
-  for (const params of attempts) {
+  for (const [index, params] of attempts.entries()) {
     try {
-      return await stripe.checkout.sessions.create(params);
+      const session = await stripe.checkout.sessions.create(params);
+      if (index > 0) {
+        console.warn(
+          `create-checkout: fallback-forsok ${index + 1}/${attempts.length} anvandes for ${product.id || product.name}` +
+            (params.consent_collection ? "" : " (utan villkorsgodkannande)"),
+        );
+      }
+      return session;
     } catch (error) {
       lastError = error;
       const retryable = error?.code === "parameter_unknown" || error?.type === "invalid_request_error";
