@@ -32,7 +32,7 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-09-07 - Codex - PÅGÅR (full systemrevision och agentsamordning)
+### 2026-09-07 - Codex - KLAR (full systemrevision och agentsamordning)
 
 - **Utgångspunkt:** lokal `main` på `4162d63`. `git fetch origin` misslyckades
   med nätverksfel; senaste remote/production kan därför inte bekräftas.
@@ -45,6 +45,25 @@ löpande "konversation".
   checkout; inga applikationsändringar, production-writes, SMS eller mail.
 - **Filer:** endast denna logg och revisionsrapporten. Befintlig stash och
   otrackade `tmp/*` lämnas orörda.
+- **Resultat:** rapport i `8d791c0` (endast lokal commit, inte pushad),
+  18 prioriterade fynd samt sida/API-karta, KPI-definitioner och PR-ordning
+  med tydligt Codex/Claude-ägarskap. Ingen feature-/applikationskod ändrad.
+- **Reproducerat med syntetisk data:** publik bokningsreplay returnerar
+  intern case-data; samtidiga PATCH tappar en note; dashboard-GET kan skicka
+  saldolarm trots readOnly; legacy-draft döljer nya SMS-inkorgen; checkout-
+  fallback släpper frakt/villkor; outbox tappar retry vid failed-retur.
+  Dessutom KPI-avvikelser och missvisande dryRun-label. Inga verkliga sends.
+- **Tester:** build (24 voice + 11 status), checkout 44 produkter,
+  callflow tsc, NEMOB OS 75/75, knowledge 6/6 gröna. Syntax: 108 JS-filer,
+  136 inline-script, 166 JSON-LD-block utan fel. 11 isolerade probe-resultat
+  och 11 lokala skärmbilder finns i separata audit-worktreens audit-evidence/.
+- **Begränsning:** produktion/senaste remote ej verifierade på grund av
+  nätverksfel. Statisk lokal server stoppad. Båda stashes (`9ab992f`,
+  `15b497d`) kvar; ingen SMS/mail/production-write, ingen push/deploy.
+- **Nästa steg:** liten säkerhets-PR för publik bokningsresponse, sedan
+  sidoeffektsfri avläsning och kontraktsfixar enligt rapporten. Claude kan
+  fortsätta GSC/copy separat och granska acceptansfallen; inte parallellredigera
+  samma admin-/SMS-/case-filer. Inga nya uppgifter har skickats till Claude.
 
 ### 2026-09-07 — Claude Code — PÅGÅR (query mining ur GSC:s 877 sökfrågor)
 
