@@ -238,6 +238,32 @@ export const sendThankYou = async (caseItem, variantRequested) => {
   return { email, reviewSms, variant, coupon: { code, percent: 10, validUntil, used: false, caseId: caseItem.id }, sentAt: new Date().toISOString() };
 };
 
+// Ett providerfel returneras som { status: "failed" } - det kastar inte. Utan
+// den har utvarderingen skrevs "Tackmail skickat" i timelinen aven nar inget
+// gick ivag (15 riktiga arenden bar den falska raden 2026-09-07), och
+// outbox-flush slangde koposten som om leveransen hade lyckats.
+export const THANK_YOU_RETRYABLE_STATUSES = new Set(["failed", "not_configured"]);
+
+export const thankYouOutcome = (thankYou) => {
+  const emailStatus = clean(thankYou?.email?.status, 40) || "unknown";
+  const smsStatus = clean(thankYou?.reviewSms?.status, 40) || "unknown";
+  const emailSent = emailStatus === "sent";
+  const smsSent = smsStatus === "sent";
+  const delivered = emailSent || smsSent;
+  // Retry bara vid transienta providerfel. "not_requested" (ingen mejladress)
+  // och "skipped" (optout/redan skickat) ar deterministiska - de blir inte
+  // battre av ett omforsok och ska darfor inte hallas kvar i kon.
+  const retryable = !delivered
+    && (THANK_YOU_RETRYABLE_STATUSES.has(emailStatus) || THANK_YOU_RETRYABLE_STATUSES.has(smsStatus));
+  const channels = [emailSent ? "mejl" : "", smsSent ? "SMS" : ""].filter(Boolean).join(" + ");
+  const event = delivered
+    ? `Tackmail med rabattkod skickat (${channels}).`
+    : retryable
+      ? `Tackmail kunde inte skickas (mejl: ${emailStatus}, SMS: ${smsStatus}) - forsoker igen.`
+      : `Tackmail skickades inte (mejl: ${emailStatus}, SMS: ${smsStatus}).`;
+  return { delivered, retryable, event, emailStatus, smsStatus };
+};
+
 const paymentSmsText = ({ caseItem, amount }) => {
   const rounded = Math.round(Number(amount || 0));
   const reference = shortCaseId(caseItem.id);
@@ -940,12 +966,13 @@ export default async (request, context) => {
       // PATCH — the status/payment change still has to be persisted below.
       try {
         const thankYou = await sendThankYou(next, clean(body.thankYouVariant, 20));
+        const outcome = thankYouOutcome(thankYou);
         next.coupon = thankYou.coupon;
         next.notifications = {
           ...(next.notifications || {}),
-          thankYou: { status: thankYou.email.status, ...thankYou },
+          thankYou: { status: thankYou.email.status, ...thankYou, delivered: outcome.delivered },
         };
-        next.timeline.push({ at: thankYou.sentAt || now, event: "Tackmail med rabattkod skickat efter avslutat/betalt arende." });
+        next.timeline.push({ at: thankYou.sentAt || now, event: outcome.event });
       } catch (error) {
         next.notifications = {
           ...(next.notifications || {}),
