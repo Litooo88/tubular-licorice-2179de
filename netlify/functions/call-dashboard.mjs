@@ -547,19 +547,12 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     if (meResponse.ok && Number.isFinite(Number(me.balance))) {
       const balanceSek = Math.round(Number(me.balance) / 10000);
       const warnBelowSek = Number(env("ELKS_BALANCE_WARN_SEK")) || 100;
+      // Saldot LÄSES här, men larmet skickas inte härifrån. Dashboarden är en
+      // läsvy som admin hämtar vid varje sidladdning; att skicka SMS och skriva
+      // i ops-warnings från en GET gjorde att svaret påstod readOnly:true
+      // samtidigt som det hade sidoeffekter. Larmet bor i den schemalagda
+      // elks-balance-guard.mjs, som kör oberoende av om någon öppnar admin.
       account = { balanceSek, warnBelowSek, low: balanceSek < warnBelowSek };
-      if (account.low) {
-        const warnStore = getStore({ name: "ops-warnings", consistency: "strong" });
-        const lastWarn = await warnStore.get("elks-balance", { type: "json" }).catch(() => null);
-        if (!lastWarn?.at || Date.now() - new Date(lastWarn.at).getTime() > 24 * 60 * 60 * 1000) {
-          const warnTo = env("VOICE_NOTIFY_TO") || env("SEBASTIAN_SMS_TO") || env("WORKSHOP_SMS_TO");
-          const warnResult = await postSms({
-            to: warnTo,
-            message: `[Nordic] VARNING: 46elks-saldot är nere på ${account.balanceSek} kr (gräns ${warnBelowSek} kr). Fyll på nu - vid 0 kr slutar telefon och SMS att fungera, som 13-17 juli.`,
-          });
-          await warnStore.setJSON("elks-balance", { at: new Date().toISOString(), balanceSek, result: warnResult.status }).catch(() => {});
-        }
-      }
     }
   } catch {
     account = null;
