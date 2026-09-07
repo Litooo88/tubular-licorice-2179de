@@ -65,13 +65,26 @@ löpande "konversation".
   fortsätta GSC/copy separat och granska acceptansfallen; inte parallellredigera
   samma admin-/SMS-/case-filer. Inga nya uppgifter har skickats till Claude.
 
-### 2026-09-07 — Claude Code — PÅGÅR (query mining ur GSC:s 877 sökfrågor)
+### 2026-09-07 — Claude Code — KLAR (query mining 945 GSC-frågor + /laga-elsparkcykel/)
 
-- **Vad:** hämtar hela sökfrågelistan ur Google Search Console (Chrome) och
-  destillerar den till en prioriterad lista över nästa innehålls-/sidinsatser.
-  Rör inga delade kodfiler — bara läsning + ev. dokumentation.
+- **Query mining, 3 mån (945 frågor, 801 klick, 14,9 tn exp):** största gapet
+  är reparationssökningar UTAN stad — "laga elsparkcykel" 107 exp, "laga
+  elscooter" 78, "laga el scooter" 61, "laga elsparkcykel" + verkstad/service-
+  varianter ≈ 400 exp med ~0 klick. Övriga kluster (fallande): Kukirin
+  S1/S1 Max ≈ 420 exp 0 klick (produkt/recension saknas), e-wheels
+  (konkurrentnamn) ≈ 370 exp, Stockholm-service ≈ 165 exp, reservdelar/däck
+  ≈ 150 exp, hyra/leasing ≈ 100 exp (AFFÄRSFRÅGA — erbjuds ej i dag),
+  Kalmar 48 exp, promenadscooter ≈ 60 exp, cellanalys 18 exp.
+- **Byggt:** `feat/laga-elsparkcykel-nationell` → main. Ny nationell
+  inskickssida `/laga-elsparkcykel/` (mall = Karlstad-sidan; distinkt vinkel:
+  rikstäckande frakt-inskick). Allowlist + sitemap (prio 0.9) + intern länk
+  från `elscooter-reparation-orebro` ("Övriga Sverige"-kort).
+- **Tester:** `npm run build` ✅ (46 poster, dist-verifiering OK),
+  `verify:checkout-products` ✅ (44 produkter).
 - **Även:** löste merge-konflikten i denna logg (båda 5/9-posterna behållna i
   ordning, enligt protokollet ovan).
+- **Telefoni-avläsning:** saldo 81 kr (UNDER 100-varningen — fyll på!),
+  0 RING väntar, 2 ohanterade "VIKTIGT" är testinspelningarna 28–29/8.
 
 ### 2026-09-05 — Claude Code — KLAR (SMS-kostnaden, 10 s ringtid, kampanjhygien)
 
