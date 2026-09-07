@@ -32,6 +32,20 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-07 - Codex - PÅGÅR (full systemrevision och agentsamordning)
+
+- **Utgångspunkt:** lokal `main` på `4162d63`. `git fetch origin` misslyckades
+  med nätverksfel; senaste remote/production kan därför inte bekräftas.
+- **Omfattning:** read-only granskning av publik webb/bokning, admin/verkstad,
+  API/auth/storage, telefoni/SMS, betalning, NEMOB OS, tester och projektminne.
+- **Leverans:** `docs/FULL_SYSTEM_AUDIT_2026_09_07.md` med belagda fynd,
+  testresultat, begränsningar och avgränsad arbetsfördelning Codex/Claude Code.
+- **Samordning:** Claude Codes pågående GSC/query-mining lämnas orört.
+  Ingen branchväxling i den gemensamma mappen. Tester körs i separat lokal
+  checkout; inga applikationsändringar, production-writes, SMS eller mail.
+- **Filer:** endast denna logg och revisionsrapporten. Befintlig stash och
+  otrackade `tmp/*` lämnas orörda.
+
 ### 2026-09-07 — Claude Code — PÅGÅR (query mining ur GSC:s 877 sökfrågor)
 
 - **Vad:** hämtar hela sökfrågelistan ur Google Search Console (Chrome) och
