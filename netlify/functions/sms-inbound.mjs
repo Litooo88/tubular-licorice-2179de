@@ -68,14 +68,27 @@ const reply = (text) =>
 export default async (request) => {
   if (request.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
 
-  // Valfri delad hemlighet i webhookens URL (?secret=...). Sätts när
-  // sms_url konfigureras. Saknas env-variabeln är webhooken öppen men
-  // validerar fortfarande mottagarnummer + riktning nedan.
+  // Delad hemlighet i webhookens URL (?secret=...), fail-closed.
+  //
+  // Tidigare validerades hemligheten BARA om env-variabeln råkade vara satt —
+  // och den var inte satt i produktion (kontrollerat 2026-09-07). Endpointen
+  // tog alltså emot vad som helst från vem som helst. Avsändare, mottagare och
+  // riktning i bodyn är inget äkthetsbevis: de skrivs av den som gör anropet.
+  // Konsekvensen var påhittade kundsvar i inkorgen och — värre — att någon
+  // kunde registrera en optout som tyst stänger av SMS till ett riktigt
+  // kundnummer.
+  //
+  // 46elks sms_url bär hemligheten (sätts av elks-webhook-sync och av
+  // nummerkonfigurationen i call-dashboard), så ett äkta inkommande SMS har
+  // den alltid med sig. Saknas env-variabeln avvisar vi hellre trafiken än tar
+  // emot overifierade meddelanden — samma hållning som voice-webhookarna.
   const secret = clean(env("SMS_INBOUND_SECRET"), 240);
-  if (secret) {
-    const provided = clean(new URL(request.url).searchParams.get("secret"), 240);
-    if (!tokenMatches(secret, provided)) return new Response("Forbidden", { status: 403 });
+  if (!secret) {
+    console.error("sms-inbound: SMS_INBOUND_SECRET saknas - avvisar inkommande SMS i stallet for overifierad trafik.");
+    return new Response("Not configured", { status: 503 });
   }
+  const provided = clean(new URL(request.url).searchParams.get("secret"), 240);
+  if (!tokenMatches(secret, provided)) return new Response("Forbidden", { status: 403 });
 
   const bodyText = await request.text();
   const params = new URLSearchParams(bodyText);

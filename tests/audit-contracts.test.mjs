@@ -185,3 +185,36 @@ test("F17: fritext i repair-index redigeras", async () => {
   assert.equal(serialized.includes("@example.com"), false);
   assert.equal(row.workSummary, "Bytte BMS");
 });
+
+// --- F07: inkommande SMS-webhook ska vara fail-closed ---------------------
+
+test("F07: sms-inbound tar inte emot overifierad trafik", async () => {
+  const previous = process.env.SMS_INBOUND_SECRET;
+  const handler = (await import("../netlify/functions/sms-inbound.mjs")).default;
+  const post = (url) => new Request(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: "from=%2B46700000000&to=%2B46766867131&message=STOPP&direction=incoming",
+  });
+
+  try {
+    // Utan konfigurerad hemlighet: avvisa, skriv ingenting. Tidigare togs
+    // anropet emot och kunde registrera en optout for ett riktigt kundnummer.
+    delete process.env.SMS_INBOUND_SECRET;
+    const unconfigured = await handler(post("https://example.test/api/sms-inbound"));
+    assert.equal(unconfigured.status, 503);
+
+    process.env.SMS_INBOUND_SECRET = "hemlighet-for-test";
+    const noSecret = await handler(post("https://example.test/api/sms-inbound"));
+    assert.equal(noSecret.status, 403);
+
+    const wrongSecret = await handler(post("https://example.test/api/sms-inbound?secret=fel"));
+    assert.equal(wrongSecret.status, 403);
+
+    const wrongMethod = await handler(new Request("https://example.test/api/sms-inbound", { method: "GET" }));
+    assert.equal(wrongMethod.status, 405);
+  } finally {
+    if (previous === undefined) delete process.env.SMS_INBOUND_SECRET;
+    else process.env.SMS_INBOUND_SECRET = previous;
+  }
+});
