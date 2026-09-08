@@ -68,9 +68,14 @@ const DEFAULT_PRICE_RULES = Object.freeze([
   { id: "puncture-motor", label: "Punktering motorhjul", from: 395, min: 395, max: 795, keywords: ["punktering motorhjul", "motorhjul", "motor wheel"] },
   { id: "diagnostic-standard", label: "Standard felsökning", from: 395, min: 395, max: 995, keywords: ["felsökning", "felsokning", "diagnos", "diagnostic"] },
   { id: "diagnostic-advanced", label: "Avancerad felsökning", from: 645, min: 645, max: 1495, keywords: ["avancerad felsökning", "avancerad felsokning", "avancerad", "elsystem", "kablage"] },
-  { id: "brake-adjust", label: "Bromsjustering", from: 289, min: 289, max: 595, keywords: ["broms", "bromsjustering"] },
+  // 295, inte 289: priskatalogen och publika /priser/ har sagt 295 hela tiden,
+  // AI-reglerna var den enda källan som sa något annat (Sebastians beslut
+  // 2026-09-08).
+  { id: "brake-adjust", label: "Bromsjustering", from: 295, min: 295, max: 595, keywords: ["broms", "bromsjustering"] },
   { id: "ewheels-e16", label: "E-Wheels E16", from: 395, min: 595, max: 1995, diagnosticRequired: true, keywords: ["e-wheels e16", "ewheels e16", "e16"] },
-  { id: "battery-diagnostic", label: "Batterifelsökning", from: 495, min: 495, max: null, approvalRequired: true, keywords: ["batterifelsökning", "batterifelsokning", "batteri", "bms"] },
+  // 745 = "Batterifelsokning grund" i priskatalogen och på publika /priser/.
+  // AI-reglerna låg på 495 och kunde därför offerera under listpris.
+  { id: "battery-diagnostic", label: "Batterifelsökning", from: 745, min: 745, max: null, approvalRequired: true, keywords: ["batterifelsökning", "batterifelsokning", "batteri", "bms"] },
   { id: "controller", label: "Controllerbyte", from: 995, min: 995, max: 1995, keywords: ["controller", "styrenhet"] },
   { id: "display-throttle", label: "Display/gasreglage", from: 595, min: 595, max: 1495, keywords: ["display", "gasreglage", "gashandtag", "tumgas"] },
 ]);
