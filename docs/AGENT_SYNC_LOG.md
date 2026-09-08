@@ -32,6 +32,34 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-08 ~03:35Z — Claude Code — KLAR (revisionsfixarna mergade och deployade)
+
+- **Mergad till main** (`82ca8bb`), Netlify-deploy `ready`. Den andra agentens
+  S1 Max-guide hamnade mellan mina commits utan konflikt.
+- **Verifierat i produktion efter deploy:** `/api/sms-inbound` svarar 403 både
+  utan och med fel hemlighet (samma anrop accepterades och lagrades före
+  deployen). `price-catalog` GET returnerar `seeded:false` och skriver inget.
+  `doNow` visar nu 81 (verkligt) i stället för att stanna på 10.
+  `readyInvoice` föll från 45 till 3 — de 42 övriga var ärenden utan
+  fastställt belopp som räknades som fakturor.
+- **KVAR ATT VERIFIERA AV SEBASTIAN:** skicka ett riktigt SMS till
+  010-138 54 98. Det är det enda som bevisar att den skärpta webhooken inte
+  bryter inkommande trafik. Går det fel: peka tillbaka `sms_url` utan
+  `?secret=` hos 46elks, så fungerar det igen direkt.
+- **Prisbeslut 2026-09-08:** bromsjustering 295 och batterifelsökning 745
+  gäller (= det som redan stod i priskatalogen och på publika /priser/;
+  AI-reglerna var enda avvikande källan och är nu rättade).
+  **ÖPPET:** "Avancerad felsökning" står 645 i AI-regler OCH på publika
+  /priser/, men Sebastian har offererat 695 muntligt. Grannraderna
+  (motor-/hallsensor, controllerdiagnos) är redan 695. Beslut krävs: höj
+  publicerat pris till 695, eller offerera 645. Inget ändrat i väntan på det.
+- **Nästa gemensamma fråga (definition, inte kod):** urvalsreglerna i
+  ai-daily-brief är för breda. `doNow` = 81 av 82 aktiva och `riskCases` = 81
+  av 82. Orsak: "Risk" matchar bl.a. ordet *batteri* i fritext, och "Stått
+  stilla" träffar allt äldre än 48 h. I en elscooterverkstad betyder det
+  nästan varje ärende. Måtten är korrekt RÄKNADE nu, men urvalet måste
+  smalnas innan de säger något.
+
 ### 2026-09-07 - Claude Code - KLAR (åtgärdar P1/P2 ur Codex systemrevision)
 
 - **Branch:** `fix/audit-p1-contracts` (8 commits, EJ pushad, ingen deploy).
