@@ -218,3 +218,50 @@ test("F07: sms-inbound tar inte emot overifierad trafik", async () => {
     else process.env.SMS_INBOUND_SECRET = previous;
   }
 });
+
+// --- Riskdefinitionen: tre mått i stället för ett hopkok -------------------
+
+test("risk: karnverksamhet ar inte risk, men garanti och kortslutning ar det", () => {
+  const { isRiskText } = require("../netlify/functions/ai-daily-brief.js")._internals;
+  // "batteri" och "bms" ar vardagsmat i en elscooterverkstad — de matchade
+  // 21 av 82 aktiva arenden utan att peka pa nagot problem.
+  assert.equal(isRiskText({ service: "Batteribyte" }), false);
+  assert.equal(isRiskText({ service: "BMS-diagnos" }), false);
+  assert.equal(isRiskText({ service: "Garantiarende" }), true);
+  assert.equal(isRiskText({ message: "Kunden har lamnat en reklamation" }), true);
+  assert.equal(isRiskText({ message: "Det luktade brant, kortslutning i kablaget" }), true);
+  assert.equal(isRiskText({ message: "Missnöjd kund vill ha pengarna tillbaka" }), true);
+});
+
+test("risk: stilleståndsgransen foljer vem som vantar", () => {
+  const { stallDaysFor, isStale } = require("../netlify/functions/ai-daily-brief.js")._internals;
+  assert.equal(stallDaysFor({ status: "new" }), 1);
+  assert.equal(stallDaysFor({ status: "waiting_parts" }), 14);
+  assert.equal(stallDaysFor({ status: "nagot_okant" }), 5);
+
+  const daysAgo = (n) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
+  // Tre dygn: akut for en ny forfragan, helt normalt for en bestalld del.
+  assert.equal(isStale({ status: "new", updatedAt: daysAgo(3) }), true);
+  assert.equal(isStale({ status: "waiting_parts", updatedAt: daysAgo(3) }), false);
+  assert.equal(isStale({ status: "new", updatedAt: daysAgo(0.5) }), false);
+});
+
+test("risk: riskCases skiljs fran stalled och datakvalitet", () => {
+  const { buildBrief } = require("../netlify/functions/ai-daily-brief.js")._internals;
+  const daysAgo = (n) => new Date(Date.now() - n * 24 * 60 * 60 * 1000).toISOString();
+  const cases = [
+    { id: "a", status: "new", service: "Batteribyte", vehicle: { model: "E16" }, updatedAt: daysAgo(5) },
+    { id: "b", status: "new", service: "Garantiarende", vehicle: { model: "E16" }, updatedAt: daysAgo(5) },
+    { id: "c", status: "new", service: "Punktering", vehicle: { model: "" }, updatedAt: daysAgo(5) },
+    { id: "d", status: "waiting_parts", service: "Punktering", vehicle: { model: "E16" }, updatedAt: daysAgo(3) },
+  ];
+  const m = buildBrief({ body: {}, cases, calls: [], drafts: [], parts: [], warnings: [], sources: [] }).brief.metrics;
+
+  assert.equal(m.active, 4);
+  // Bara garantiarendet ar risk — inte batteriet, inte de stillastaende.
+  assert.equal(m.riskCases, 1);
+  // a, b, c star stilla (5 dygn, gräns 1). d gör det inte (3 dygn, gräns 14).
+  assert.equal(m.stalledCases, 3);
+  assert.equal(m.stalledByStatus.new, 3);
+  assert.equal(m.missingModelCases, 1);
+});

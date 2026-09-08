@@ -35,9 +35,29 @@ const missingModel = (item) => {
   const name = clean(modelName(item), 120);
   return !name || name === "Modell saknas" || /^okand|^okänd|^test$/i.test(name);
 };
+// Hur länge ett ärende får ligga stilla beror på VEM som väntar. Den gamla
+// gränsen var 48 timmar för allt, vilket flaggade hela verkstaden: 72 av 82
+// aktiva ärenden var 2-7 dygn gamla (mätt i produktion 2026-09-08), så
+// "stått stilla" träffade 80 av 82 och sa därmed ingenting.
+//
+// Ett ärende där KUNDEN väntar på första svar är akut efter ett dygn. Ett där
+// VI väntar på en beställd del är det inte på två veckor. Ett som är klart att
+// hämta kostar plats och pengar och får inte ligga länge.
+const STALL_DAYS_BY_STATUS = {
+  new: 1,
+  contacted: 3,
+  checked_in: 5,
+  diagnosing: 5,
+  ready: 3,
+  waiting_customer: 14,
+  waiting_parts: 14,
+};
+const DEFAULT_STALL_DAYS = 5;
+const stallDaysFor = (item) => STALL_DAYS_BY_STATUS[String(item?.status || "")] ?? DEFAULT_STALL_DAYS;
 const isStale = (item) => {
   const time = new Date(item?.updatedAt || item?.createdAt || 0).getTime();
-  return Number.isFinite(time) && time > 0 && Date.now() - time > 48 * 60 * 60 * 1000;
+  if (!Number.isFinite(time) || time <= 0) return false;
+  return Date.now() - time > stallDaysFor(item) * 24 * 60 * 60 * 1000;
 };
 const customerDeliveryStatus = (item) => {
   const notifications = item?.notifications || {};
@@ -59,7 +79,25 @@ const hasPaymentAmount = (item) => {
   return positive(paymentAmount) || positive(completionAmount);
 };
 const completionNotified = (item) => Boolean(item?.completion?.customerNotifiedAt);
-const isRiskText = (item) => /batteri|bms|reklamation|missnojd|missnöjd|garanti|jurid|brand|kortslut/i.test([
+// Risk ska betyda ekonomisk eller säkerhetsmässig exponering — något som kan
+// bli dyrt, farligt eller juridiskt. "batteri" och "bms" är BORTTAGNA: de är
+// kärnverksamhet i en elscooterverkstad, inte risk, och matchade ensamma 21 av
+// 82 aktiva ärenden (2026-09-08) utan att peka på något som helst problem.
+const RISK_WORDS = /reklamation|missnojd|missnöjd|klagom|garanti|jurid|tvist|advokat|skadest|brand|brinn|kortslut|\brök\b|överhett|overhett|smält/i;
+
+// Vilka av godkännandevaktens skäl som faktiskt betyder risk. "battery" är
+// kärnverksamhet, och "discount" matchar varje "%" i en fritext — båda hör
+// hemma i godkännandeflödet, inte i ett risklarm.
+const ECONOMIC_APPROVAL_REASONS = new Set([
+  "complaint",
+  "unhappy_customer",
+  "warranty",
+  "legal_liability",
+  "debt_or_promise",
+  "price_over_995",
+  "part_purchase_over_500",
+]);
+const isRiskText = (item) => RISK_WORDS.test([
   item?.priority,
   item?.service,
   item?.message,
@@ -219,7 +257,20 @@ const buildBrief = ({ body, cases, calls, drafts, parts, warnings, sources }) =>
       const reasons = [...new Set([...reasonsFor(item, matchedMissedCallIds), ...(risk.reasons || [])])];
       return { item, reasons, risk: { ...risk, reasons } };
     })
-    .filter(({ item, reasons }) => reasons.some((reason) => /Risk|Statt|Saknar modell/i.test(reason)) || item.priority === "urgent");
+    // Bara verklig risk. "Stått stilla" och "Saknar modell" är egna mått
+    // nedan — de är flödes- respektive datakvalitetsproblem och hörde aldrig
+    // hemma i ett risklarm.
+    //
+    // Av godkännandevakten räknas bara de EKONOMISKA skälen. Att använda hela
+    // risk.level === "high" hade släppt tillbaka "battery" bakvägen: den
+    // flaggan betyder "får inte auto-skickas utan godkännande", vilket är ett
+    // arbetsflödesskydd och inte ett larm om att något är på väg att gå fel.
+    .filter(({ item, reasons, risk }) =>
+      (risk.reasons || []).some((reason) => ECONOMIC_APPROVAL_REASONS.has(reason))
+      || reasons.some((reason) => /Risk/i.test(reason))
+      || item.priority === "urgent");
+  const stalledRows = active.filter(isStale);
+  const missingModelRows = active.filter(missingModel);
   // Hela urvalet räknas FÖRE presentationens topplista. Tidigare kapades
   // listan till tio innan totalen mättes, så metrics.doNow visade alltid
   // "10" så snart minst tio ärenden krävde åtgärd — oavsett om det var 10
@@ -258,6 +309,14 @@ const buildBrief = ({ body, cases, calls, drafts, parts, warnings, sources }) =>
       waitingParts: waitingParts.length,
       readyInvoice: readyInvoice.length,
       riskCases: riskRows.length,
+      stalledCases: stalledRows.length,
+      // Var högen ligger är mer användbart än totalen.
+      stalledByStatus: stalledRows.reduce((acc, item) => {
+        const key = item.status || "okand";
+        acc[key] = (acc[key] || 0) + 1;
+        return acc;
+      }, {}),
+      missingModelCases: missingModelRows.length,
       possibleRevenueToday: prioritySelection.reduce((sum, item) => sum + item.value, 0),
     },
     priority,
@@ -267,6 +326,8 @@ const buildBrief = ({ body, cases, calls, drafts, parts, warnings, sources }) =>
     openPartNeeds: openPartNeeds.slice(0, 10),
     readyInvoice: readyInvoice.slice(0, 10).map((item) => caseSummary(item, "Klar att fakturera/betala")),
     riskCases: riskRows.slice(0, 10).map(({ item, risk }) => ({ ...caseSummary(item, risk.reasons.join(", ")), risk })),
+    stalledCases: stalledRows.slice(0, 10).map((item) => caseSummary(item, `Stått stilla (gräns ${stallDaysFor(item)} dygn för status ${item.status || "okand"})`)),
+    missingModelCases: missingModelRows.slice(0, 10).map((item) => caseSummary(item, "Saknar modell - datakvalitet")),
     suggestedSocialPost: socialPost,
   };
   return {
@@ -364,3 +425,6 @@ exports.handler = async (event) => {
     return functionError(error, writeDryRun);
   }
 };
+
+// Exponerat för test och lokal torrkörning mot verklig data — inga sidoeffekter.
+exports._internals = { buildBrief, isStale, isRiskText, stallDaysFor, missingModel, hasPaymentAmount };
