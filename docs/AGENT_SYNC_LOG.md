@@ -65,10 +65,18 @@ löpande "konversation".
   production-writes gjordes — alla providerkall i testerna är stubbar.
 - **NAMN RESERVERADE:** `netlify/functions/elks-balance-guard.mjs` och
   `netlify/functions/_shared/public-booking.mjs`.
-- **Kvar och varför:** F07 kräver Sebastians godkännande (att sätta
-  `SMS_INBOUND_SECRET` + synka 46elks sms_url är en ändring av levande
-  telefoni — fail-closed innan webhooken är uppdaterad stoppar inkommande
-  SMS). F02 (samtidighet) är inte gjord: den är strukturellt riktig men kräver
+- **F07 ÅTGÄRDAD efter Sebastians godkännande — DRIFTÄNDRING, läs detta:**
+  `SMS_INBOUND_SECRET` är nu satt i Netlify (markerad secret, scope
+  functions+runtime, alla fyra kontexter) och 46elks `sms_url` för
+  +46766867131 bär samma hemlighet. Ordningen var env FÖRST, sedan 46elks —
+  tvärtom hade den schemalagda `elks-webhook-sync` (var 15:e min) skrivit
+  tillbaka en URL utan hemlighet inom kvarten. Den körande deployen saknar
+  ännu variabeln och ignorerar därför parametern, så inkommande SMS fungerar
+  oavbrutet före, under och efter nästa deploy. `sms-inbound.mjs` är nu
+  fail-closed: utan konfigurerad hemlighet svarar den 503 i stället för att ta
+  emot overifierad trafik. **Ta inte bort `SMS_INBOUND_SECRET`** — då slutar
+  inkommande SMS fungera (avsiktligt, men värt att veta).
+- **Kvar och varför:** F02 (samtidighet) är inte gjord: den är strukturellt riktig men kräver
   ett versionskontrakt över flera handlers. F10/F12 rör `admin/index.html` och
   lämnas till dess ägare. F11 (priskrock 289/295 och 495/745) är Sebastians
   beslut, inte en kodfix. F15/F16 orörda.
