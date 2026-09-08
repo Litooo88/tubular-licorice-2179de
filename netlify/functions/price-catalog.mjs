@@ -98,13 +98,16 @@ const normalizeItem = (item, index = 0) => {
   };
 };
 
+// En GET får inte skriva. Tidigare persisterades seed-katalogen vid första
+// läsningen, vilket gjorde /api/price-catalog till en skrivande endpoint och
+// bröt löftet om att smoke-testa systemet utan production-writes. Seeden
+// returneras nu utan att sparas; först en PUT/POST skapar en sparad katalog.
 const loadCatalog = async (store) => {
   const saved = await store.get(CATALOG_KEY, { type: "json" });
-  if (saved?.items?.length) return saved.items.map(normalizeItem);
+  if (saved?.items?.length) return { items: saved.items.map(normalizeItem), seeded: false };
   const now = new Date().toISOString();
   const items = seedItems().map((item, index) => normalizeItem({ ...item, updatedAt: now }, index));
-  await store.setJSON(CATALOG_KEY, { items, updatedAt: now });
-  return items;
+  return { items, seeded: true };
 };
 
 export default async (request) => {
@@ -114,8 +117,8 @@ export default async (request) => {
   const store = getStore({ name: "price-catalog", consistency: "strong" });
 
   if (request.method === "GET") {
-    const items = await loadCatalog(store);
-    return json({ items, updatedAt: new Date().toISOString() });
+    const { items, seeded } = await loadCatalog(store);
+    return json({ items, seeded, updatedAt: new Date().toISOString() });
   }
 
   if (request.method === "PUT" || request.method === "POST") {

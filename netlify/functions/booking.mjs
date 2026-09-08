@@ -10,6 +10,7 @@ import {
   validateVehicleIdentity,
   vehicleIdentityLabel,
 } from "./_shared/vehicle-identity.mjs";
+import { publicBookingCase } from "./_shared/public-booking.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -1159,10 +1160,11 @@ export default async (request, context) => {
     caseItem.idempotencyKey = idempotencyKey;
     const duplicate = await existingIdempotentBooking({ idempotencyStore, caseStore: store, key: idempotencyKey });
     if (duplicate) {
+      // Ärende-id och servicenummer är capabilities mot /api/case-status — de
+      // följer därför INTE med i ett upprepat svar, bara i det ursprungliga.
       return json({
         ok: true,
-        id: duplicate.caseItem.id,
-        case: duplicate.caseItem,
+        case: publicBookingCase(duplicate.caseItem),
         duplicate: true,
         idempotent: true,
       }, 200);
@@ -1253,7 +1255,7 @@ export default async (request, context) => {
       if (context?.waitUntil) context.waitUntil(retryTask);
     }
 
-    return json({ ok: true, id, case: caseItem }, 201);
+    return json({ ok: true, id, case: publicBookingCase(caseItem) }, 201);
   } catch (error) {
     console.error("booking error", error);
     return json({ error: "Kunde inte skapa verkstadsarende." }, 500);

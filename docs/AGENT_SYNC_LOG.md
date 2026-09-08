@@ -32,6 +32,59 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-07 - Claude Code - KLAR (åtgärdar P1/P2 ur Codex systemrevision)
+
+- **Branch:** `fix/audit-p1-contracts` (8 commits, EJ pushad, ingen deploy).
+  Posten skrivs i efterhand som KLAR — passet var kort och avgränsat.
+- **Produktionskontroll först (nätverket fungerade nu, till skillnad från
+  under revisionen):** `SMS_INBOUND_SECRET` finns INTE bland Netlifys
+  miljövariabler, så F07 är verklig och inte teoretisk. 15 ärenden bär den
+  falska timeline-raden "Tackmail skickat" med status `not_requested` (F06).
+  `doNow` stod på exakt 10 av 82 aktiva (F08). Utkastsstoren är tom i dag, så
+  F04 är latent. `dryRun` är false i produktion, så F09 manifesterar inte.
+  Stripe-nyckeln är secret-scopad i Netlify och maskeras för CLI:n — F05:s
+  frekvens gick därför INTE att mäta.
+- **Åtgärdat:** F01 (publik bokningswhitelist + ärlig kundkvittens),
+  F05 (frakten kan inte längre tappas i checkout-fallbacken), F06 (inget
+  falskt leveranskvitto, riktig retry i outbox), F04 (blandade utkastformat
+  normaliseras, approve hittar ärendet), F03 (saldolarmet flyttat till nya
+  schemalagda `elks-balance-guard.mjs` — dashboard-GET är sidoeffektsfri),
+  F13 (price-catalog GET seedar inte längre), F08 (räknar före top-10, 0 kr
+  är ingen faktura, "Modell saknas" känns igen), F14/F17/F18 (integritet).
+- **Filer:** `booking.mjs`, `_shared/public-booking.mjs` (NY),
+  `create-checkout.js`, `workshop-cases.mjs`, `outbox-flush.mjs`,
+  `sms-draft-inbox.mjs`, `call-dashboard.mjs`, `elks-balance-guard.mjs` (NY),
+  `price-catalog.mjs`, `ai-daily-brief.js`, `_shared/repair-index.mjs`,
+  `assets/analytics.js`, `assets/workshop-chat.js`,
+  `tests/audit-contracts.test.mjs` (NY), `package.json`.
+  **Rörde INTE `admin/index.html`** — den ligger i en annan agents worktree.
+- **Tester:** `npm run build` ✅ (voice 24/24, status 11/11, nya contracts
+  7/7, 44 produktsidor, dist 46 poster), `npm run verify:checkout-products` ✅
+  (44), `nemob-callflow npm run check` ✅, `npm run test:nemob-os` ✅ (75/75),
+  `npm run test:knowledge` ✅ (6/6). Inga SMS, mejl, betalningar eller
+  production-writes gjordes — alla providerkall i testerna är stubbar.
+- **NAMN RESERVERADE:** `netlify/functions/elks-balance-guard.mjs` och
+  `netlify/functions/_shared/public-booking.mjs`.
+- **F07 ÅTGÄRDAD efter Sebastians godkännande — DRIFTÄNDRING, läs detta:**
+  `SMS_INBOUND_SECRET` är nu satt i Netlify (markerad secret, scope
+  functions+runtime, alla fyra kontexter) och 46elks `sms_url` för
+  +46766867131 bär samma hemlighet. Ordningen var env FÖRST, sedan 46elks —
+  tvärtom hade den schemalagda `elks-webhook-sync` (var 15:e min) skrivit
+  tillbaka en URL utan hemlighet inom kvarten. Den körande deployen saknar
+  ännu variabeln och ignorerar därför parametern, så inkommande SMS fungerar
+  oavbrutet före, under och efter nästa deploy. `sms-inbound.mjs` är nu
+  fail-closed: utan konfigurerad hemlighet svarar den 503 i stället för att ta
+  emot overifierad trafik. **Ta inte bort `SMS_INBOUND_SECRET`** — då slutar
+  inkommande SMS fungera (avsiktligt, men värt att veta).
+- **Kvar och varför:** F02 (samtidighet) är inte gjord: den är strukturellt riktig men kräver
+  ett versionskontrakt över flera handlers. F10/F12 rör `admin/index.html` och
+  lämnas till dess ägare. F11 (priskrock 289/295 och 495/745) är Sebastians
+  beslut, inte en kodfix. F15/F16 orörda.
+- **Varning till andra agenter:** `notifications.thankYou` har ett nytt fält
+  `delivered`, och `/api/sms-drafts` returnerar nu även `format` och
+  `linkedCaseId`. Bokningssvarets `case` är en whitelist — bygg inget som
+  förväntar sig hela ärendet där.
+
 ### 2026-09-07 - Codex - KLAR (full systemrevision och agentsamordning)
 
 - **Utgångspunkt:** lokal `main` på `4162d63`. `git fetch origin` misslyckades

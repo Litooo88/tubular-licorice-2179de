@@ -72,6 +72,23 @@ export const shouldIndex = (caseItem) =>
     ["ready", "done", "archived"].includes(String(caseItem?.status || "")),
   );
 
+// Fritextfälten (symptom, grundorsaksnotering, delar, arbetssammanfattning)
+// skrivs av en människa i verkstaden och innehåller ibland kundens namn,
+// telefon eller mejl mitt i den tekniska texten. Whitelisten av fält räckte
+// därför inte för att kommentaren "INGEN kund-PII" skulle vara sann — här
+// redigeras uppenbar PII bort innan raden hamnar i kunskapsindexet.
+const PII_PATTERNS = [
+  [/\b[\w.+-]+@[\w-]+\.[\w.-]+\b/g, "[mejl]"],
+  // Personnummer ÅÅÅÅMMDD-XXXX / ÅÅMMDD-XXXX (även med + som skiljetecken).
+  // Måste testas FÖRE telefonmönstret, annars äter telefonregeln inledningen.
+  [/\b(?:19|20)?\d{6}[-+]\d{4}\b/g, "[personnummer]"],
+  // Svenska mobil-/fastnummer i vanliga skrivsätt, inkl. +46 och mellanslag.
+  [/(?:\+46[\s-]?|0)(?:7[\s-]?\d|\d{1,3})(?:[\s-]?\d){6,9}\b/g, "[telefon]"],
+];
+
+export const redactPii = (value) =>
+  PII_PATTERNS.reduce((text, [pattern, replacement]) => text.replace(pattern, replacement), String(value || ""));
+
 export const buildIndexRow = (caseItem, now = new Date()) => {
   const completion = caseItem.completion || {};
   const model = clean(caseItem.vehicle?.model, 160);
@@ -81,15 +98,15 @@ export const buildIndexRow = (caseItem, now = new Date()) => {
     jobType: clean(completion.jobType, 40) || "service",
     brand: clean(caseItem.vehicle?.brand, 60) || normalizeBrand(model),
     model,
-    symptom: clean(completion.symptom, 300) || clean(caseItem.service, 160),
+    symptom: redactPii(clean(completion.symptom, 300) || clean(caseItem.service, 160)),
     rootCause: ROOT_CAUSES[completion.rootCause] ? completion.rootCause : "",
-    rootCauseNote: clean(completion.rootCauseNote, 500),
+    rootCauseNote: redactPii(clean(completion.rootCauseNote, 500)),
     laborMinutes: Number.isFinite(Number(completion.laborMinutes)) && Number(completion.laborMinutes) > 0
       ? Number(completion.laborMinutes) : null,
     totalCost: Number.isFinite(Number(completion.totalCost)) && Number(completion.totalCost) > 0
       ? Number(completion.totalCost) : null,
-    parts: clean(caseItem.workshop?.partsUsed, 300),
-    workSummary: clean(completion.workSummary, 300),
+    parts: redactPii(clean(caseItem.workshop?.partsUsed, 300)),
+    workSummary: redactPii(clean(completion.workSummary, 300)),
     serviceActions: Array.isArray(completion.serviceActions) ? completion.serviceActions.slice(0, 12) : [],
     status: clean(caseItem.status, 40),
   };
