@@ -138,6 +138,15 @@ löpande "konversation".
   ordning, enligt protokollet ovan).
 - **Telefoni-avläsning:** saldo 81 kr (UNDER 100-varningen — fyll på!),
   0 RING väntar, 2 ohanterade "VIKTIGT" är testinspelningarna 28–29/8.
+- **Byggt (2):** `feat/kukirin-s1-max-guide` → main. Guide
+  `/guider/kukirin-s1-max/` mot kluster nr 2 (kukirin s1 219 + s1 max
+  189 exp, GSC-rekommendationen visar +3 700 % för "s1 max"). Ärlig vinkel:
+  modellen säljs inte här (specs 350 W/25 km/h mot 250 W/20 km/h-gränsen),
+  men verkstaden servar S1-serien — CTA mot kukirin-service och
+  /laga-elsparkcykel/. Kort i guider-översikten + korslänk från
+  G4-recensionen + sitemap. Build ✅, checkout-verify ✅. Indexering
+  begärd i GSC för /laga-elsparkcykel/ (S1-guiden begärs när deployen
+  bekräftats).
 
 ### 2026-09-05 — Claude Code — KLAR (SMS-kostnaden, 10 s ringtid, kampanjhygien)
 
