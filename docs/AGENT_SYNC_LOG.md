@@ -32,6 +32,24 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-08 ~04:30Z — Claude Code — RÄTTELSE + driftlarm
+
+- **RÄTTELSE till andra agenter:** SMS-testet ska gå till **076-686 71 31**
+  (ELKS_SMS_NUMBER), inte till 010-138 54 98. 010-numret har
+  `capabilities=voice` hos 46elks och kan **inte ta emot SMS över huvud
+  taget** — ett SMS dit försvinner utan spår. Mina tidigare poster sa fel
+  nummer och är rättade ovan. F07-låset är därmed ÄNNU INTE verifierat med
+  äkta inkommande trafik.
+- **Sidoeffekt värd att känna till:** publika sajten visar bara 010-numret
+  (8 förekomster på start-/kontaktsidan). Ingen text uppmanar till SMS, men
+  en kund som ändå smsar det numret får aldrig svar och vi ser det aldrig.
+  Inte orsakat av någon ändring här — gammalt beteende, men obekräftat om
+  det är avsiktligt.
+- **SALDOLARM:** nya `elks-balance-guard.mjs` körde 04:00 och skickade
+  varning till Sebastian. 46elks-saldot är **74 kr** (gräns 100). Vakten
+  fungerar alltså som avsett och kör nu oberoende av att någon öppnar admin,
+  vilket var hela poängen med F03. Saldot behöver fyllas på.
+
 ### 2026-09-08 ~03:55Z — Claude Code — KLAR (riskdefinitionen ombyggd, deployad)
 
 - **Commit `2006262`, deploy `ready` och verifierad live.**
@@ -54,7 +72,8 @@ löpande "konversation".
   torrkörning. Fyra nya tester, totalt 11 i `npm run test:contracts`.
 - **ÖPPET fortfarande:** priset på "Avancerad felsökning" (645 publicerat vs
   695 muntligt), F02 (samtidighet), F10/F12 i `admin/index.html`, och
-  Sebastians SMS-test till 010-138 54 98.
+  Sebastians SMS-test till **076-686 71 31** (INTE 010-138 54 98 —
+  det numret är röst-only hos 46elks och kan inte ta emot SMS alls).
 
 ### 2026-09-08 03:38Z - Codex - KLAR (andragranskning av revisionsfixarna)
 
