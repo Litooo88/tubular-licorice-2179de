@@ -32,6 +32,30 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-08 ~03:55Z — Claude Code — KLAR (riskdefinitionen ombyggd, deployad)
+
+- **Commit `2006262`, deploy `ready` och verifierad live.**
+- **Mätt först, ändrat sedan.** Orsaken till riskCases 81/82 var INTE ordet
+  "batteri" (18 träffar) utan den platta 48-timmarsgränsen (80 träffar) —
+  72 av 82 aktiva ärenden var 2-7 dygn gamla, så regeln flaggade verkstaden
+  per definition.
+- **Tre mått i stället för ett:** `riskCases` (ekonomisk/säkerhetsmässig
+  exponering), `stalledCases` + `stalledByStatus` (statusberoende gräns:
+  new 1 dygn, contacted 3, checked_in/diagnosing 5, ready 3,
+  waiting_customer/waiting_parts 14), `missingModelCases` (datakvalitet).
+  "batteri"/"bms" borttagna som riskord — kärnverksamhet, inte risk.
+  Av godkännandevaktens skäl räknas bara de ekonomiska; hela
+  `risk.level === "high"` hade släppt tillbaka "battery" bakvägen.
+- **Live-utfall:** riskCases 81 → **9**. stalled 76, varav **49 nya ärenden
+  orörda över ett dygn och 21 kontaktade över tre**. Det är en verklig kö av
+  obesvarade förfrågningar, inte ett regelfel — värd ett eget arbetspass.
+- **`ai-daily-brief.js` exporterar nu `_internals`** (buildBrief, isStale,
+  isRiskText, stallDaysFor, missingModel, hasPaymentAmount) för test och
+  torrkörning. Fyra nya tester, totalt 11 i `npm run test:contracts`.
+- **ÖPPET fortfarande:** priset på "Avancerad felsökning" (645 publicerat vs
+  695 muntligt), F02 (samtidighet), F10/F12 i `admin/index.html`, och
+  Sebastians SMS-test till 010-138 54 98.
+
 ### 2026-09-08 03:38Z - Codex - KLAR (andragranskning av revisionsfixarna)
 
 - **Scope:** read-only granskning av `fix/audit-p1-contracts` vid `f88c1a5`,
