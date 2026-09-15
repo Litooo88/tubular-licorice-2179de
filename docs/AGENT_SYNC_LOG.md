@@ -53,6 +53,8 @@ löpande "konversation".
   `npm run build` ✅, `npm run verify:checkout-products` ✅ och
   `nemob-callflow npm run check` ✅. Ringtider, nummer, SMS och kundlogik
   lämnades orörda.
+- **Deploy:** merge `95e16c4` till `main`, Netlify production `ready` 14:05.
+  Livefilens byteantal och SHA-256 matchar den verifierade lokala ljudfilen.
 - **Filer/områden:** `nemob-callflow/scripts/generate-voice-prompts.mjs`,
   `audio/voicemail-prompt.mp3`, riktad dokumentation/testning.
 
