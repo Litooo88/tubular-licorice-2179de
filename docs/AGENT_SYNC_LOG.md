@@ -32,16 +32,27 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-09-15 — Codex — PÅGÅR (privatlinjens telesvar presenterar företaget)
+### 2026-09-15 — Codex — KLAR (privatlinjens telesvar presenterar företaget)
 
 - **Branch:** `codex/voicemail-brand-intro`.
 - **Skarpt test:** Sebastian nådde rätt AI-röst och lämnade meddelandet
   "test", men `voicemail-prompt.mp3` börjar enligt källmanuset med "Hej, just
   nu kan vi inte svara" och nämner aldrig Nordic E-Mobility.
-- **Gör:** verifierar samtals-/AI-kedjan, uppdaterar bara röstbrevlådans manus
-  till en tydlig Nordic E-Mobility-presentation, regenererar endast den
-  ljudfilen, testar och deployar. Ringtider, nummer, SMS och kundlogik lämnas
-  orörda.
+- **Skarp verifiering:** testsamtalet 13:50 gick igenom `connect`, egen prompt,
+  pip och `record`; AI-posten skapades 13:50:45. Transkriptet blev dock tomt
+  och sammanfattningen "bara tystnad" — nästa test ska innehålla en hel mening
+  efter pipet, inte bara ett kort ord.
+- **Ändrat:** röstbrevlådan börjar nu "Hej, du har kommit till Nordic
+  E-Mobility i Örebro. Vi kan inte svara just nu." Resten av instruktionen och
+  90-dagarsinformationen är bevarad. Endast `voicemail-prompt.mp3`
+  regenererades (sv-SE-SofieNeural, 20,9 s); övriga ljudfiler är orörda.
+- **Skript:** kan nu ta filnamn som argument, så en prompt kan regenereras utan
+  att oavsiktligt skriva över de andra. ElevenLabs-nyckeln saknas i aktiv
+  Netlify-miljö, därför användes svensk neural reservröst för denna fil.
+- **Tester:** `node --check` ✅, `npm run test:voice` 24/24 ✅,
+  `npm run build` ✅, `npm run verify:checkout-products` ✅ och
+  `nemob-callflow npm run check` ✅. Ringtider, nummer, SMS och kundlogik
+  lämnades orörda.
 - **Filer/områden:** `nemob-callflow/scripts/generate-voice-prompts.mjs`,
   `audio/voicemail-prompt.mp3`, riktad dokumentation/testning.
 
