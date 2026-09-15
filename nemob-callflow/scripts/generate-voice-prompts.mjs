@@ -32,7 +32,8 @@ const prompts = [
   {
     file: "voicemail-prompt.mp3",
     text: [
-      "Hej, just nu kan vi inte svara.",
+      "Hej, du har kommit till Nordic E-Mobility i Örebro.",
+      "Vi kan inte svara just nu.",
       "",
       "Lämna ditt namn, ditt telefonnummer, och vad det gäller efter pipet — så hör vi av oss så snart vi kan.",
       "",
@@ -51,7 +52,18 @@ const prompts = [
   }
 ];
 
-for (const prompt of prompts) {
+const requestedFiles = new Set(process.argv.slice(2));
+const selectedPrompts = requestedFiles.size
+  ? prompts.filter((prompt) => requestedFiles.has(prompt.file))
+  : prompts;
+
+if (requestedFiles.size && selectedPrompts.length !== requestedFiles.size) {
+  const knownFiles = new Set(prompts.map((prompt) => prompt.file));
+  const unknownFiles = [...requestedFiles].filter((file) => !knownFiles.has(file));
+  throw new Error(`Unknown prompt file: ${unknownFiles.join(", ")}`);
+}
+
+for (const prompt of selectedPrompts) {
   const url = new URL(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`);
   url.searchParams.set("output_format", "mp3_44100_128");
 
