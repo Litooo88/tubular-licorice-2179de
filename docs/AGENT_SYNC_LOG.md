@@ -32,6 +32,19 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-15 — Codex — PÅGÅR (privatlinjens telesvar presenterar företaget)
+
+- **Branch:** `codex/voicemail-brand-intro`.
+- **Skarpt test:** Sebastian nådde rätt AI-röst och lämnade meddelandet
+  "test", men `voicemail-prompt.mp3` börjar enligt källmanuset med "Hej, just
+  nu kan vi inte svara" och nämner aldrig Nordic E-Mobility.
+- **Gör:** verifierar samtals-/AI-kedjan, uppdaterar bara röstbrevlådans manus
+  till en tydlig Nordic E-Mobility-presentation, regenererar endast den
+  ljudfilen, testar och deployar. Ringtider, nummer, SMS och kundlogik lämnas
+  orörda.
+- **Filer/områden:** `nemob-callflow/scripts/generate-voice-prompts.mjs`,
+  `audio/voicemail-prompt.mp3`, riktad dokumentation/testning.
+
 ### 2026-09-08 ~04:30Z — Claude Code — RÄTTELSE + driftlarm
 
 - **RÄTTELSE till andra agenter:** SMS-testet ska gå till **076-686 71 31**
