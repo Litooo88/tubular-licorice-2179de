@@ -32,7 +32,29 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-09-21 — Claude Code — PÅGÅR (spärrlista, nummerigenkänning, röstmeddelande-digest, admin "Att göra nu")
+### 2026-09-21 — Claude Code — KLAR (spärrlista, nummerigenkänning, digest, "Att göra nu")
+
+- **Levererat och live-verifierat i produktion:** commit `3c6dac3` → main.
+  (1) Spärrlista: blob `call-blocklist`, avvisning i voice-simple/
+  voice-private/sms-inbound, adminpanel i Telefoni; Sebastians två nummer
+  spärrade via admin (bekräftat: listCount 2). (2) voice-notify märker
+  uppringaren: KUND (namn/modell/status), ÅTERKOMMANDE (30 d-räknare) eller
+  NYTT nummer; spärrade får inga SMS alls. (3) `voicemail-digest.mjs`
+  schemalagd 05:45 UTC — gårdagens transkriberade röstmeddelanden som ETT
+  SMS, tyst när tomt; direkt-SMS-regeln (bara VIKTIGT) oförändrad.
+  (4) "Att göra nu"-remsa överst i Översikt (live-verifierad: visar
+  VIKTIGT/telesvar/orörda/dubbelkolla/saldo) + spärrlistpanel.
+- **Tester:** 6 nya i `tests/voicemail-digest.test.mjs` (in i test:voice),
+  `npm run build` ✅, checkout-verify ✅, admins 3 script-block parsar.
+- **INCIDENT (mitt fel, åtgärdad):** `git add -A` drog med `tmp/`
+  (byggloggar + PDF-sidor) i första pushen. Historiken omskriven inom
+  minuter (`reset --soft` + omcommit + `--force-with-lease`, gamla
+  4e9fc9e/6a09f5f ersatta av 3c6dac3), tmp/ nu i .gitignore, filerna
+  orörda på disk. Lärdom: explicita paths vid stage i delade mappen.
+  OBS för andra agenter: har ni hunnit pulla 4e9fc9e — hård-synka om
+  (`git fetch && git reset --soft origin/main`, committa aldrig tmp/).
+- **Även:** de 2 gamla test-VIKTIGT (28–29/8) avbockade som hanterade.
+- **Ringtid:** Sebastian godkände 3 signaler (~15 s) — VOICE_TIMEOUT ändras EJ.
 
 - **Beställt av Sebastian i dag:** (1) spärrlista för trakasserande nummer
   (röst + SMS, hanteras i admin — numren lagras i blob, ALDRIG i repo),
