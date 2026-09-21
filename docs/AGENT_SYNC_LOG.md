@@ -32,6 +32,29 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-21 — Claude Code — KLAR (KAABO-läget utrett: inget att publicera än, kravutkast ligger i Gmail)
+
+- **Sebastian bad om att lägga in "Kaboos" scootrar + partnerlogga.** Märket
+  är **KAABO** (Mantis/Wolf Warrior, sales@kaabo.com, kontakt Vanessa).
+  Mailgenomgång: relation sedan okt 2025; april 2026 lovades
+  reservdelsprislista (kom aldrig); 10/9 2026 erbjöd Vanessa shortlist med
+  3 modeller + priser + lager + webbmaterial via EU-lager/dropship,
+  Sebastian svarade ja samma dag — **inget underlag har levererats**.
+  Deras 10/9-mail inleddes "Hi Cyril" (massutskick — dämpa förväntningarna).
+- **Beslut: INGET publiceras** — inga modeller, priser, logotillstånd eller
+  signerat avtal finns (jfr Dualtron som har kontrakt). "KAABO-partner" på
+  sajten vore osant i dag.
+- **Gjort:** svarsutkast i Gmail (tråd "Is KAABO still relevant...") som
+  kravställer hela paketet i ett: 3-modellista med EU-dealerpris + rek.
+  utpris + lager + leveranstid + specs + CE/EU-konfig, dropshipvillkor
+  (frakt/retur/garanti), bildlicens + logopaket + skriftligt ok för
+  partnerpresentation, samt april-prislistan på reservdelar.
+  **Sebastian måste själv skicka utkastet.**
+- **När underlaget kommer:** modeller in i `data/products.json`
+  (generate:products bygger sidorna), brand "KAABO", laglighet sannolikt
+  off-road-only, partnerlogga när skriftligt ok finns. Prismarginal =
+  Sebastians beslut.
+
 ### 2026-09-21 — Claude Code — KLAR (spärrlista, nummerigenkänning, digest, "Att göra nu")
 
 - **Levererat och live-verifierat i produktion:** commit `3c6dac3` → main.
