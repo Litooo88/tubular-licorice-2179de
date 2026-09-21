@@ -32,6 +32,25 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-21 — Claude Code — VARNING: "RideFlow" (contact@rideflow.info) bedöms vara bedrägeri
+
+- **Ingen agent ska beställa, betala eller dela mer data med RideFlow /
+  "Mohamed Hasaballa" / +46 76 919 67 49.** Bedömning ~90 %+ bluff:
+  parkerad hemsida, noll webbnärvaro, inga företagsuppgifter i 10 mail,
+  endast förskottsbetalning, obesvarad fakturafråga följd av pivot till
+  "introduktion till vår leverantör" (klassiskt bete-och-byt), priser 60 %
+  under grossistnivå på "original", WhatsApp-order, US-tidszoner i headers.
+- **Utkast ligger i Gmail** (Sebastian skickar själv): faktura 14/30 dagar
+  + org-nr/VAT/adress som absolut villkor — fungerar som lackmustest.
+  Öppna inga fler bilagor från adressen på verkstadens datorer.
+- **Sebastian har redan delat** senaste orderlistan + nuvarande
+  leverantörspriser (harmlöst men stopp där).
+- **Verifierade alternativ för prisjämförelse (reservdelar):**
+  EV Delar Sverige AB / fritidsdack.se (org.nr 559514-7165, exakt rätt
+  sortiment), Voltnation DE/PL (grossistprogram, bred märkestäckning,
+  begär VAT-nr före order), samt befintliga kanaler KuKirin EU-lager och
+  Dualtron Nordic (avtal finns).
+
 ### 2026-09-21 — Claude Code — KLAR (KAABO-läget utrett: inget att publicera än, kravutkast ligger i Gmail)
 
 - **Sebastian bad om att lägga in "Kaboos" scootrar + partnerlogga.** Märket
