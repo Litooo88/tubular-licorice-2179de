@@ -32,6 +32,24 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-21 — Claude Code — KLAR (mätrunda + rättelse: S1 Max-guiden speglar sortimentet)
+
+- **FAKTAFEL RÄTTAT:** guiden `/guider/kukirin-s1-max/` (7/9) påstod att
+  S1-serien inte säljs — men `/produkt/kukirin-s1-max/` finns (4 990 kr,
+  455 exp/0 klick i GSC, pos 11,3). Hero-CTA + FAQ (schema och synligt)
+  rättade; produktsidans beslutshjälp korslänkar nu guiden.
+  Branch `fix/s1-max-guide-saljs` → main. Build ✅, checkout-verify ✅.
+- **Mätrunda GSC (14 d, 7–20/9 vs 24/8–6/9):** sajten totalt 87 klick vs
+  114 (exp ner ~22 % — säsong). Nya sidorna: `/laga-elsparkcykel/` 1 klick
+  (första!), 31 exp/3 mån, pos 31,5 (ny sida, klättrar);
+  `/guider/kukirin-s1-max/` 1 klick, pos 9,2 redan. Titel-passet på
+  `elscooter-reparation-orebro`: 2 klick vs 1 — för liten volym på 14 d för
+  slutsats, 3-mån-CTR 3,0 %; låt stå till nästa mätning.
+- **Admin-avläsning:** 46elks-saldo 93 kr (fortsatt under 100-gränsen),
+  0 RING väntar, 39 ohanterade ÅTGÄRD-röstmeddelanden (växer; var 22 den
+  7/9), 2 VIKTIGT = gamla testinspelningar. Ärendekön: 69 nya orörda
+  >1 dygn (var 49 den 8/9), 21 kontaktade >3 dygn, 60 i "Att dubbelkolla".
+
 ### 2026-09-15 — Codex — KLAR (privatlinjens telesvar presenterar företaget)
 
 - **Branch:** `codex/voicemail-brand-intro`.
