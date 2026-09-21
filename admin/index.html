@@ -398,6 +398,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   </nav>
 
   <div class="admin-view" id="overviewView">
+  <section class="panel notice" id="todayStrip"><strong>Att g&ouml;ra nu:</strong> <span id="todayStripBody" class="muted">Laddar telefonil&auml;get...</span></section>
   <section class="stats operational-kpis" id="operationalKpis">
     <button type="button" class="panel stat" data-ops-filter="doNow" title="&Ouml;ppna &auml;renden med minst en &aring;tg&auml;rdsflagga. Klicka f&ouml;r att visa exakt dessa i listan nedan."><span>G&ouml;r nu</span><b id="doNowTotal">0</b></button>
     <button type="button" class="panel stat" data-ops-filter="newUnconfirmed" title="Nya bokningar d&auml;r kundens bekr&auml;ftelse (SMS/mail) inte kunnat verifieras som levererad. Klicka f&ouml;r att visa dem."><span>Nya utan bekr&auml;ftelse</span><b id="unconfirmedTotal">0</b></button>
@@ -546,6 +547,17 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <p class="call-dashboard-note">Samtal till privatlinjen r&auml;knas separat och matar med flit inga leads, kampanj-SMS eller svarsgrads-KPI:n &mdash; de m&aring;tten beskriver v&auml;xeln. Samma 60-dagarsf&ouml;nster.</p>
     <div class="call-dashboard-grid" id="privateLineStats"></div>
     <div id="privateLineTable" class="muted">Laddar privatlinjen...</div>
+  </section>
+
+  <section class="panel" id="blocklistPanel">
+    <h2>Sp&auml;rrade nummer</h2>
+    <p class="call-dashboard-note">Sp&auml;rrade nummer avvisas direkt i b&aring;da linjerna (inga signaler, ingen r&ouml;stbrevl&aring;da) och deras SMS tas inte emot. Anv&auml;nds f&ouml;r trakasserier &mdash; inte f&ouml;r vanliga kunder.</p>
+    <div class="call-actions">
+      <input type="tel" id="blockNumberInput" placeholder="07XXXXXXXX" style="max-width:180px">
+      <input type="text" id="blockReasonInput" placeholder="Anteckning (valfri)" style="max-width:220px">
+      <button type="button" class="secondary" id="blockNumberButton">Sp&auml;rra nummer</button>
+    </div>
+    <div id="blockedNumbersList" class="muted">Laddar sp&auml;rrlistan...</div>
   </section>
 
   <section class="panel campaign-panel">
@@ -1912,6 +1924,7 @@ async function loadCases(options={}){
     const data=await api('/api/cases');
     cases=data.cases||[];
     render();
+    if(lastCallDashboardData)renderTodayStrip(lastCallDashboardData);
     focusInitialCase();
     restoreEditorState(openIds,focusedField);
     if(background) window.scrollTo(scrollX,scrollY);
@@ -2765,6 +2778,7 @@ function renderActiveOverview(active){
     </table>`;
 }
 
+let lastCallDashboardData=null;
 async function loadCallDashboard(){
   try{
     showCallStatus('Laddar samtalsdata...');
@@ -2791,6 +2805,9 @@ async function loadCallDashboard(){
     renderSmsInbox(data.inboundSms||[],data.ringUnhandled||[]);
     renderVoicemailInbox(data.voicemailAnalyses||[]);
     renderPhoneSummary(data);
+    renderBlockedNumbers(data.blockedNumbers||[]);
+    lastCallDashboardData=data;
+    renderTodayStrip(data);
     showCallStatus(`Samtal uppdaterade ${new Date().toLocaleTimeString('sv-SE')}.`);
   }catch(error){
     showCallStatus(error.message,true);
@@ -3206,6 +3223,64 @@ function renderPhoneSummary(data){
   ];
   el.innerHTML=delar.join(' &middot; ');
 }
+// "Att göra nu"-remsan i Översikt: bara det som kräver handling, klickbart
+// till rätt flik. Byggd 2026-09-21 efter Sebastians feedback att admin är
+// rörig — remsan ska vara det enda man MÅSTE läsa på ett rutinbesök.
+function renderTodayStrip(data){
+  const el=document.getElementById('todayStripBody');
+  if(!el)return;
+  const vms=(data.voicemailAnalyses||[]).filter(v=>!v.handled);
+  const viktiga=vms.filter(v=>v.classification&&v.classification.priority==='urgent').length;
+  const atgard=vms.filter(v=>v.classification&&v.classification.priority==='action').length;
+  const ringV=(data.ringUnhandled||[]).length;
+  const dygn=24*60*60*1000;
+  const nyaOrorda=cases.filter(c=>c.status==='new'&&Date.now()-new Date(c.updatedAt||c.createdAt||0).getTime()>dygn).length;
+  const dubbelkolla=cases.filter(c=>c.workshop&&c.workshop.needsSebastianReview).length;
+  const items=[];
+  if(viktiga)items.push(`<button type="button" class="secondary" data-goto-tab="phone" style="color:#ff6b5e">${viktiga} VIKTIGT-telesvar</button>`);
+  if(ringV)items.push(`<button type="button" class="secondary" data-goto-tab="phone" style="color:#ff6b5e">${ringV} RING-svar v&auml;ntar</button>`);
+  if(atgard)items.push(`<button type="button" class="secondary" data-goto-tab="phone">${atgard} telesvar att l&auml;sa</button>`);
+  if(nyaOrorda)items.push(`<button type="button" class="secondary" data-goto-tab="cards">${nyaOrorda} nya &auml;renden or&ouml;rda &gt;1 dygn</button>`);
+  if(dubbelkolla)items.push(`<button type="button" class="secondary" data-goto-tab="cards">${dubbelkolla} att dubbelkolla</button>`);
+  if(data.account&&data.account.low)items.push(`<span style="color:#ffd9b3">⚠ 46elks-saldo ${data.account.balanceSek} kr — fyll p&aring;</span>`);
+  el.innerHTML=items.length?items.join(' '):'<span style="color:#7ee2a8">Allt ikapp — inget kräver dig just nu.</span>';
+  el.querySelectorAll('[data-goto-tab]').forEach((button)=>button.addEventListener('click',()=>setAdminView(button.dataset.gotoTab)));
+}
+function renderBlockedNumbers(list){
+  const el=document.getElementById('blockedNumbersList');
+  if(!el)return;
+  if(!list.length){el.innerHTML='<div class="muted">Inga sp&auml;rrade nummer.</div>';return;}
+  el.innerHTML=`<table><thead><tr><th>Nummer</th><th>Anteckning</th><th>Sp&auml;rrat</th><th></th></tr></thead><tbody>${
+    list.map((entry)=>`<tr>
+      <td>${html(entry.number)}</td>
+      <td>${html(entry.reason||'')}</td>
+      <td>${html(dateShort(entry.at))} av ${html(entry.by||'admin')}</td>
+      <td><button type="button" class="secondary unblock-number" data-number="${html(entry.number)}">Ta bort sp&auml;rr</button></td>
+    </tr>`).join('')}</tbody></table>`;
+  el.querySelectorAll('.unblock-number').forEach((button)=>button.addEventListener('click',async()=>{
+    if(!confirm(`Ta bort sp&auml;rren f&ouml;r ${button.dataset.number}? Numret kan d&aring; ringa och SMS:a igen.`))return;
+    button.disabled=true;
+    try{
+      const result=await api('/api/call-dashboard',{method:'POST',body:JSON.stringify({action:'unblock_number',number:button.dataset.number})});
+      renderBlockedNumbers(result.blockedNumbers||[]);
+    }catch(error){alert('Kunde inte ta bort sp&auml;rren: '+(error&&error.message||error));button.disabled=false;}
+  }));
+}
+document.getElementById('blockNumberButton').addEventListener('click',async()=>{
+  const input=document.getElementById('blockNumberInput');
+  const reason=document.getElementById('blockReasonInput');
+  const number=(input.value||'').trim();
+  if(!number){alert('Ange ett nummer att sp&auml;rra.');return;}
+  if(!confirm(`Sp&auml;rra ${number}? Samtal avvisas direkt och SMS tas inte emot.`))return;
+  try{
+    const result=await api('/api/call-dashboard',{method:'POST',body:JSON.stringify({action:'block_number',number,reason:(reason.value||'').trim()})});
+    input.value='';reason.value='';
+    renderBlockedNumbers(result.blockedNumbers||[]);
+  }catch(error){alert('Kunde inte sp&auml;rra: '+(error&&error.message||error));}
+});
+// Boota telefonidatan direkt så "Att göra nu"-remsan i Översikt fylls utan
+// att Telefoni-fliken behöver öppnas först.
+if(aiAdminToken())loadCallDashboard().catch(()=>{});
 async function clickToCall(number,button){
   const target=String(number||'').trim();
   if(!target)return;

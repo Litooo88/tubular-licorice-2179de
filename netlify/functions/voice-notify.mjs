@@ -4,6 +4,8 @@
 
 import { getStore } from "@netlify/blobs";
 import { tokenMatches } from "./_shared/admin-auth.mjs";
+import { isBlockedCaller } from "./_shared/call-blocklist.mjs";
+import { findCustomerMatch } from "./_shared/voicemail-analysis.mjs";
 
 const env = (name) => {
   try {
@@ -93,6 +95,65 @@ const normalizePhone = (phone) => {
 const stockholmHour = (now = new Date()) =>
   Number(new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", hour: "2-digit", hour12: false }).format(now));
 
+// Svenska korta etiketter för ärendestatus i SMS:et. Endast GSM-7-tecken
+// (åäö ingår i GSM-7; det dyra är tecken som tankstreck, se smsCost-läxan).
+const CASE_STATUS_LABELS = {
+  new: "nytt ärende",
+  contacted: "kontaktad",
+  checked_in: "inlämnad",
+  diagnosing: "felsökning pågår",
+  ready: "klar för upphämtning",
+  waiting_customer: "väntar på kund",
+  waiting_parts: "väntar på delar",
+  done: "avslutat ärende",
+  archived: "arkiverat ärende",
+};
+
+// Räknar samtal från numret senaste 30 dagarna i 46elks-loggen (en sida om
+// 100 räcker gott för en månads volym). Fail-open: 0 vid fel.
+const recentCallCount = async (caller) => {
+  const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
+  const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
+  if (!username || !password || !caller) return 0;
+  try {
+    const response = await fetch("https://api.46elks.com/a1/calls?limit=100", {
+      headers: { Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}` },
+      signal: AbortSignal.timeout(7000),
+    });
+    if (!response.ok) return 0;
+    const data = await response.json();
+    const cutoff = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    return (data.data || []).filter(
+      (call) =>
+        normalizePhone(call.from) === caller &&
+        Date.parse(call.created || 0) > cutoff,
+    ).length;
+  } catch {
+    return 0;
+  }
+};
+
+// Vem ringer? KUND med ärende slår ÅTERKOMMANDE som slår NYTT nummer.
+const callerContextLabel = async (callerRaw) => {
+  const caller = normalizePhone(callerRaw);
+  if (!caller) return "";
+  try {
+    const match = await findCustomerMatch(caller);
+    if (match?.matched) {
+      const who = match.customerName || "kund utan namn";
+      const what = [match.model, CASE_STATUS_LABELS[match.caseStatus] || match.caseStatus]
+        .filter(Boolean)
+        .join(", ");
+      return `KUND: ${who}${what ? ` (${what})` : ""}`;
+    }
+  } catch {
+    // fortsätt till samtalsräknaren
+  }
+  const count = await recentCallCount(caller);
+  if (count > 1) return `ÅTERKOMMANDE: ${count} samtal senaste 30 d, inget ärende`;
+  return "NYTT nummer";
+};
+
 // Automatiskt SMS till uppringare som inte nådde fram: max 1 per nummer och
 // dygn, aldrig till optout-nummer, aldrig nattetid, aldrig till egna nummer.
 const notifyMissedCaller = async (callerRaw) => {
@@ -137,6 +198,14 @@ export default async (request) => {
 
   const payload = await parsePayload(request);
   const callerNo = clean(payload.from, 80) || "okant nummer";
+  // Spärrade nummer: inga interna SMS, inget "vi såg att du ringde".
+  if (payload.from && (await isBlockedCaller(payload.from))) {
+    console.log("voice_notify_blocked_caller", {});
+    return new Response(JSON.stringify({ ok: true, blocked: true }), {
+      status: 200,
+      headers: { "Content-Type": "application/json; charset=utf-8" },
+    });
+  }
   const state = clean(payload.state || payload.result, 80);
   const duration = Number(payload.duration || 0) || 0;
   const actions = typeof payload.actions === "string" ? payload.actions : JSON.stringify(payload.actions || "");
@@ -146,9 +215,11 @@ export default async (request) => {
     hour: "2-digit",
     minute: "2-digit",
   });
+  const context = await callerContextLabel(payload.from);
+  const contextPart = context ? ` - ${context}` : "";
   const message = answered
-    ? `[Nordic] ${time} Besvarat samtal fran ${callerNo} (${duration}s)`
-    : `[Nordic] ${time} MISSAT samtal fran ${callerNo}. Ring upp eller skicka SMS.`;
+    ? `[Nordic] ${time} Besvarat samtal fran ${callerNo} (${duration}s)${contextPart}`
+    : `[Nordic] ${time} MISSAT samtal fran ${callerNo}${contextPart}. Ring upp eller skicka SMS.`;
   const sms = await sendInternalSms(message);
   const callerSms = answered ? { status: "skipped", reason: "answered" } : await notifyMissedCaller(payload.from);
 

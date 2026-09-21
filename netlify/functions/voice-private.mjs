@@ -15,6 +15,7 @@
 
 import { getStore } from "@netlify/blobs";
 import { tokenMatches } from "./_shared/admin-auth.mjs";
+import { isBlockedCaller } from "./_shared/call-blocklist.mjs";
 import {
   processVoicemailAnalysis,
   voicemailAiEnabledForCaller,
@@ -177,6 +178,11 @@ export default async (request, context) => {
   const step = clean(requestUrl.searchParams.get("step"), 40);
   const formPayload = await parseForm(request);
   const chainCaller = clean(requestUrl.searchParams.get("caller"), 40) || clean(formPayload.from, 40);
+  // Spärrade nummer avvisas direkt — även på privatlinjen.
+  if (chainCaller && (await isBlockedCaller(chainCaller))) {
+    console.log("voice_blocked_caller", { line: "private" });
+    return json({ hangup: "reject" });
+  }
   const timeout = Math.min(Math.max(Number(env("VOICE_TIMEOUT_SECONDS")) || 10, 10), 60);
   const siteUrl = (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
   const voicemailPrompt = clean(env("VOICE_VOICEMAIL_MP3_URL"), 400) || `${siteUrl}/audio/voicemail-prompt.mp3`;

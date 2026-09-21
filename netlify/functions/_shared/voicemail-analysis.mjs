@@ -153,7 +153,7 @@ const readStoreItems = async (store, keys, concurrency = 25) => {
   return items;
 };
 
-const findCustomerMatch = async (callerRaw) => {
+export const findCustomerMatch = async (callerRaw) => {
   const caller = normalizeVoicemailPhone(callerRaw);
   if (!caller) return { matched: false };
   try {

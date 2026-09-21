@@ -16,3 +16,4 @@ chatgpt-export/
 conversations.json
 approved_repair_knowledge.jsonl
 reviewed_repair_knowledge.jsonl
+tmp/

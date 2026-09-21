@@ -7,6 +7,7 @@
 //      whenhangup när VOICE_WEBHOOK_SECRET är konfigurerad).
 
 import { tokenMatches } from "./_shared/admin-auth.mjs";
+import { isBlockedCaller } from "./_shared/call-blocklist.mjs";
 import {
   processVoicemailAnalysis,
   voicemailAiEnabledForCaller,
@@ -152,6 +153,11 @@ export default async (request, context) => {
   // som inte är pålitligt i recording-callbacks.
   const payload = await parseForm(request);
   const caller = clean(requestUrl.searchParams.get("caller"), 40) || clean(payload.from, 40);
+  // Spärrade nummer avvisas direkt — inga steg, ingen röstbrevlåda, inga SMS.
+  if (caller && (await isBlockedCaller(caller))) {
+    console.log("voice_blocked_caller", { line: "workshop" });
+    return json({ hangup: "reject" });
+  }
   // 46elks tillåter 10-60 sekunder för connect-timeout. 10 s är golvet och
   // numera standard: mätningen 3-5 sep visade att ALLA missade uppringare
   // la på inom 15 s, dvs. innan telefonsvararen ens hann starta.

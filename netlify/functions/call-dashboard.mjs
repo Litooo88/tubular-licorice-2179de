@@ -1,5 +1,6 @@
 import { getStore } from "@netlify/blobs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
+import { blockNumber, listBlockedNumbers, unblockNumber } from "./_shared/call-blocklist.mjs";
 import { findStaleRingReplies } from "./_shared/ring-escalation.mjs";
 
 const json = (body, status = 200) =>
@@ -649,7 +650,9 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
     rows: privateRows.slice(0, 100),
   };
 
-  return { rows, todayRows, activeLeadRows, totals, stats, baselineStats, privateLine, account, inboundSms, ringUnhandled, optoutPhones, ownNumbers: [...ownNumbers()], campaignSent, voicemailAnalyses, readOnly: !syncLeads };
+  const blockedNumbers = await listBlockedNumbers();
+
+  return { rows, todayRows, activeLeadRows, totals, stats, baselineStats, privateLine, account, inboundSms, ringUnhandled, optoutPhones, ownNumbers: [...ownNumbers()], campaignSent, voicemailAnalyses, blockedNumbers, readOnly: !syncLeads };
 };
 
 export default async (request) => {
@@ -966,6 +969,18 @@ export default async (request) => {
       if (!entry) return json({ error: "Posten hittades inte." }, 404);
       await voicemailStore.setJSON(key, { ...entry, handled: true, handledAt: new Date().toISOString(), handledBy: operatorName });
       return json({ ok: true });
+    }
+
+    if (action === "block_number") {
+      const result = await blockNumber(body.number, { reason: clean(body.reason, 200), by: operatorName });
+      if (!result.ok) return json({ error: result.error }, 400);
+      return json({ ok: true, number: result.number, blockedNumbers: await listBlockedNumbers() });
+    }
+
+    if (action === "unblock_number") {
+      const result = await unblockNumber(body.number);
+      if (!result.ok) return json({ error: result.error }, 400);
+      return json({ ok: true, number: result.number, blockedNumbers: await listBlockedNumbers() });
     }
 
     if (!["send_discount", "discount"].includes(action)) return json({ error: "Okand action." }, 400);

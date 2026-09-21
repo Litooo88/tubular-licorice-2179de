@@ -5,6 +5,7 @@
 // 46elks skickar svaret i response-body som SMS-reply till kunden.
 import { getStore } from "@netlify/blobs";
 import { tokenMatches } from "./_shared/admin-auth.mjs";
+import { isBlockedCaller } from "./_shared/call-blocklist.mjs";
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
 const env = (name) => {
@@ -98,6 +99,12 @@ export default async (request) => {
   const direction = clean(params.get("direction"), 40) || "incoming";
 
   if (!from || to !== OUR_NUMBER() || direction !== "incoming") return reply("");
+
+  // Spärrade nummer: meddelandet tas inte emot, inget autosvar skickas.
+  if (await isBlockedCaller(from)) {
+    console.log("sms_inbound_blocked_sender", {});
+    return reply("");
+  }
 
   const now = new Date().toISOString();
   const normalized = message.toLowerCase().replace(/[^a-zåäö0-9]/g, "");
