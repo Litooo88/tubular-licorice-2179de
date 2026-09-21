@@ -32,6 +32,23 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-09-21 — Claude Code — PÅGÅR (spärrlista, nummerigenkänning, röstmeddelande-digest, admin "Att göra nu")
+
+- **Beställt av Sebastian i dag:** (1) spärrlista för trakasserande nummer
+  (röst + SMS, hanteras i admin — numren lagras i blob, ALDRIG i repo),
+  (2) missat/besvarat samtal-SMS ska säga vem som ringer (KUND med ärende /
+  ÅTERKOMMANDE / NYTT nummer), (3) daglig morgondigest med gårdagens
+  transkriberade röstmeddelanden via SMS (bara VIKTIGT triggar direkt-SMS
+  precis som förut), (4) städat "Att göra nu"-läge i admin — Sebastian
+  upplever admin som rörigt/brusigt.
+- **Rör:** `_shared/call-blocklist.mjs` (ny), `_shared/voicemail-analysis.mjs`
+  (exporterar findCustomerMatch), `voice-simple/voice-private/voice-notify/
+  sms-inbound/call-dashboard`, ny `voicemail-digest.mjs` (schemalagd),
+  `admin/index.html`. Egen branch `feat/blocklist-caller-id-digest`.
+- **OBS ringtid:** Sebastian godkände 3 signaler (~15 s) — ingen ändring av
+  VOICE_TIMEOUT_SECONDS. Svarsgradskollapsen (31 % → 3 % v.35) adresseras via
+  nummerigenkänning + digest + köavbetning i stället.
+
 ### 2026-09-21 — Claude Code — KLAR (mätrunda + rättelse: S1 Max-guiden speglar sortimentet)
 
 - **FAKTAFEL RÄTTAT:** guiden `/guider/kukirin-s1-max/` (7/9) påstod att
