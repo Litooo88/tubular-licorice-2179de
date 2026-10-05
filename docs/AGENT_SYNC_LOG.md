@@ -32,6 +32,41 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-05 — Claude Code — KLAR (Swish-avstämning, rankad ringlista, eko-vakten lagad — Sebastian AFK)
+
+- **Sebastian gav fritt mandat** att åtgärda medan han var i verkstaden, och
+  bad om ringlista + rapport via mejl. Båda mejlen skickade till
+  info@nordicemobility.se.
+- **PR #140 mergad:** eko-vakten missade tre varianter som låg i AI-inkorgen
+  och såg ut som kundmeddelanden — prompten med "Hej," framför, den NYA
+  varumärkeshälsningen från 15/9, och tvåordsrester ("Nordisk mobilitet").
+  Vakten jämför nu 6-ordsfraser mot prompten OCH våra talmanus, med fyra
+  skyddstester som säkrar att riktiga bokningar inte filtreras bort
+  (ordjämförelse hade kastat "jag vill boka service för min elscooter").
+  34/34 test:voice, build + checkout-verify gröna.
+- **Ringlistan (levererad):** 50 ohanterade röstmeddelanden = 38 personer.
+  13 akuta (vi har deras egendom eller de har betalat och väntar ändå),
+  17 jobb att boka, 2 försäljning, 6 skräp. Värsta: Anna Gidmo 23 samtal /
+  20 missade efter att ha betalat 890 kr; Johan Nilsson 21/18 efter 590 kr.
+  Fem kunder har egendom hos oss utan att ha hört något; ett ärende (Tarza)
+  arkiverades utan att utföras.
+- **Swish-avstämningen:** bankens CSV har HELA numret, PDF-exporten klipper
+  efter fem siffror — använd alltid CSV. 195 724 kr in 22 maj–2 okt, varav
+  Swish 122 760 kr på 107 betalningar. 55 av 91 nummer knöts till ärende:
+  11 säkra, 40 troliga, 9 osäkra, 7 extra, **40 helt utan ärende (46 301 kr)**.
+  Av de sista har 10 betalningar (11 281 kr) ringt oss och borde bli kundkort;
+  resten är rimligen scooterförsäljning.
+- **VIKTIGT för alla agenter:** admin har 309 ärenden, 177 utförda — men bara
+  **15 markerade som betalda**. Betalningsdatan i admin går inte att använda
+  som underlag förrän avstämningen är gjord.
+- **Jag skrev INGET i admin** trots mandatet: `SAFETY_AND_APPROVAL_RULES.md`
+  förbjuder AI att markera betalning, och en övergång till `paid` triggar
+  tackmail med recensionslänk + rabattkod om `suppressThankYou` inte sätts.
+  De 7 säkra ligger klara i `swish-att-skriva.json` i scratchpad och väntar på
+  ett ja.
+- **Skript i Claude-scratchpad** (inget i repot): CSV-parser, matchare mot
+  ärenderegistret, ringlistegenerator.
+
 ### 2026-10-04 — Claude Code — KLAR (lägesavläsning + BESLUTSUNDERLAG: ingen ny RING20-våg, vinterkampanj i stället)
 
 - **Avläst live (read-only, inga writes):** 46elks-saldo **60 kr** (under
