@@ -918,14 +918,23 @@ export default async (request) => {
       const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
       const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
       if (!username || !password) return json({ error: "46elks API saknas." }, 503);
-      const response = await fetch("https://api.46elks.com/a1/recordings", {
+      // limit/start gör det möjligt att nå ÄLDRE inspelningar. Transkripten
+      // gallras efter 30 dagar men ljudet finns kvar hos 46elks, så ett
+      // röstmeddelande som aldrig blev avlyssnat kan återskapas i efterhand
+      // (Britt i Askersund, 1-2 sep). Taket 200 skyddar svarsstorleken.
+      const limit = Math.min(Math.max(Number(body.limit) || 8, 1), 200);
+      const start = clean(body.start, 40);
+      const url = new URL("https://api.46elks.com/a1/recordings");
+      url.searchParams.set("limit", String(limit));
+      if (start) url.searchParams.set("start", start);
+      const response = await fetch(url.toString(), {
         headers: { Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}` },
-        signal: AbortSignal.timeout(10000),
+        signal: AbortSignal.timeout(15000),
       });
       const bodyJson = await response.json().catch(() => ({}));
       if (!response.ok) return json({ error: `46elks HTTP ${response.status}` }, 502);
-      const items = (Array.isArray(bodyJson?.data) ? bodyJson.data : []).slice(0, 8);
-      return json({ ok: true, recordings: items });
+      const items = (Array.isArray(bodyJson?.data) ? bodyJson.data : []).slice(0, limit);
+      return json({ ok: true, recordings: items, next: clean(bodyJson?.next, 60) || null });
     }
 
     if (action === "test_voicemail_analysis") {
