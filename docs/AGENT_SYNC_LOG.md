@@ -32,6 +32,51 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-04 — Claude Code — KLAR (lägesavläsning + BESLUTSUNDERLAG: ingen ny RING20-våg, vinterkampanj i stället)
+
+- **Avläst live (read-only, inga writes):** 46elks-saldo **60 kr** (under
+  larmgränsen). 60-dagarsfönstret: 519 samtal, 69 besvarade (13 %), 118
+  röstmeddelanden, 332 missade. Senaste 10 dygnen är besvarade ~0/dag medan
+  telesvaret tar 1–6/dag. Privatlinjen: 16 samtal totalt.
+- **Flaskhalsen är kön, inte inflödet:** **50 röstmeddelanden i AI-inkorgen,
+  alla ohanterade** (22 den 7/9 → 39 den 21/9 → 50 nu). 99 ärenden i status
+  `new`, samtliga äldre än ett dygn. Inga kampanjvågor sedan 5/9.
+- **REKOMMENDATION till nästa agent/pass:** skicka INGEN ny RING20-våg förrän
+  kön är betad och saldot påfyllt. Historiken: 107 nummer, ~396 kr, 13
+  återkontakter, 1 spårbar kund — och de som ringde tillbaka möttes mest av
+  missade samtal. Rabattens motivering ("tekniskt fel i växeln") är dessutom
+  inaktuell.
+- **Vinterkampanj till befintliga kunder är förberedd men EJ skickad:** 124
+  unika tidigare kunder (utfört/betalt ärende, testposter bort), 108 med känd
+  modell. Ett 1-dels-SMS (≤160 tecken GSM-7) kostar 0,52 kr → **64 kr för hela
+  listan**. Svarsord ska vara RING (redan kopplat i sms-inbound), inte ett nytt
+  kodord. Kräver dock kod: kampanjbyggaren bygger idag bara listor ur MISSADE
+  SAMTAL och `send_discount` kräver `callId`. Väntar på Sebastians ok.
+- **Swish-avstämning utredd:** `PATCH /api/cases/:id` tar
+  `paymentStatus/paymentMethod/paymentAmount/paymentReference`, och
+  `suppressThankYou: true` krävs för gamla betalningar — annars triggar
+  övergången till paid tackmail + recensionslänk i efterhand. Datanuläget:
+  309 ärenden, 177 done/archived men bara **15 markerade som betalda**.
+- **Varning:** AI får enligt `SAFETY_AND_APPROVAL_RULES.md` inte markera
+  betalning. Avstämningen levereras som lista för Sebastians godkännande,
+  batch för batch.
+
+### 2026-09-23 ~08:04Z — Claude Code — KLAR (avbruten körning)
+
+- **Branch:** `main` (endast denna loggpost)
+- **Gjorde:** Schemalagd daglig lägesrapport för uppringar-kampanjen kunde
+  **inte köras**. Claude in Chrome svarade "not connected" på alla tre försök
+  (`select_browser`, `list_connected_browsers`, `tabs_context_mcp`), så
+  `/api/call-dashboard` gick aldrig att läsa. Admin-token finns bara i
+  Browser 2:s localStorage — ingen inloggning eller annan väg runt provades.
+- **Filer/områden:** endast `docs/AGENT_SYNC_LOG.md`. Inga SMS, inga writes.
+- **Tester:** inga (ingen kod ändrad).
+- **Nästa / överlämning:** Ingen dagsrapport för 23/9 — RING-svar, nya
+  SMS-svar och dagens våg är **inte** avstämda. Sebastian: starta Chrome med
+  Claude-tillägget inloggat (Browser 2) så tar nästa körning igen det.
+  Återkommer felet dagligen bör uppgiften pausas i Scheduled-sidofältet.
+- **Varning:** Inget att undvika — inga produktionsdata rördes.
+
 ### 2026-09-21 — Claude Code — VARNING: "RideFlow" (contact@rideflow.info) bedöms vara bedrägeri
 
 - **Ingen agent ska beställa, betala eller dela mer data med RideFlow /

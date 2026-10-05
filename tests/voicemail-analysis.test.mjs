@@ -127,3 +127,30 @@ test("lang transkribering kapas utan att spranga gransen", () => {
   assert.ok(summary.length <= 240, `for lang: ${summary.length}`);
   assert.ok(summary.startsWith("Hej det är Anders."));
 });
+
+// Tre varianter som LAG KVAR i AI-inkorgen 5/10 trots forsta eko-vakten:
+// prompten med ett "Hej," framfor, den nya varumarkeshalsningen fran 15/9,
+// och en tva-ordsrest. Alla tre sag ut som kundmeddelanden i inkorgen.
+test("eko med halsningsord framfor prompten fangas", () => {
+  assert.equal(isTranscriptEcho("Hej, Swedish telesvar till en elscooterverkstad. Vanliga ord: Nordic E-Mobility, elscooter, batteri, BMS, däck, broms, laddare, bokning och Örebro."), true);
+});
+
+test("den nya telesvarshalsningen raknas som vart eget tal", () => {
+  assert.equal(isTranscriptEcho("Hej och välkommen till Nordic E-Mobilitys telesvar. Här kan du boka service för din elscooter, beställa batterier och laddare, eller få hjälp med däck och bromsar. För att boka tid i vår verkstad i Örebro, tryck ett."), true);
+  assert.equal(isTranscriptEcho("Du hör en automatisk röst från Nordic E-Mobility. Du har ringt utanför våra öppettider, måndag till fredag klockan 9 till 18."), true);
+});
+
+test("for korta meddelanden utan telefonnummer bar ingen information", () => {
+  assert.equal(isTranscriptEcho("Nordisk mobilitet."), true);
+  assert.equal(isTranscriptEcho("Jag ringer av."), true);
+  assert.equal(isTranscriptEcho("Ring mig på 0735-140494."), false);
+});
+
+// Skyddsnatet: riktiga kundmeddelanden delar manga ORD med vara talmanus men
+// aldrig en hel fras. De far aldrig filtreras bort.
+test("kundmeddelanden som liknar halsningen slipper igenom", () => {
+  assert.equal(isTranscriptEcho("Jag vill boka service för min elscooter i Örebro."), false);
+  assert.equal(isTranscriptEcho("Hej, jag behöver hjälp med däck och bromsar på min elscooter. Ring mig."), false);
+  assert.equal(isTranscriptEcho("Hej, det var Ida här från Norrköping. Jag väntar på att bli kontaktad så att jag kan åka och lämna in en Navee till er."), false);
+  assert.equal(isTranscriptEcho("Jag skulle vilja beställa en laddare till min elscooter, ring gärna upp mig."), false);
+});

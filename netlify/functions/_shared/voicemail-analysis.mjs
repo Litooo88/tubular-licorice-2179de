@@ -215,14 +215,58 @@ const OUR_OWN_VOICE_PATTERNS = [
   /du hör en automatisk röst/i,
   /utanför våra öppettider/i,
   /tryck fyrkant när du är klar/i,
+  // Hälsningen som spelades in 15/9 (varumärkesintron) — ekades tillbaka
+  // 18/9 och låg kvar i inkorgen som ett "kundmeddelande".
+  /välkommen till nordic/i,
+  /för att boka tid i (vår|var) verkstad/i,
+  /tryck (ett|två)[ .,]/i,
 ];
+
+// Våra egna talmanus. Ekar modellen tillbaka en hel fras ur dem är det inte
+// kunden som talar. Fras- (inte ord-) jämförelse är medvetet: en kund som
+// säger "jag vill boka service för min elscooter" delar många ORD med
+// hälsningen men ingen hel fras.
+const OUR_OWN_SCRIPTS = [
+  "Du hör en automatisk röst från Nordic E-Mobility. Du har ringt utanför våra öppettider, måndag till fredag klockan 9 till 18. Lämna ett meddelande efter pipet så hör vi av oss på morgonen. Genom att lämna ett meddelande godkänner du att samtalet spelas in och lagras i 90 dagar. Tryck fyrkant när du är klar.",
+  "Hej och välkommen till Nordic E-Mobilitys telesvar. Här kan du boka service för din elscooter, beställa batterier och laddare, eller få hjälp med däck och bromsar. För att boka tid i vår verkstad i Örebro, tryck ett. För frågor om ett pågående ärende, tryck två.",
+  "Hej, du har kommit till Nordic E-Mobilitys elscooterverkstad i Örebro. Lämna ditt namn, telefonnummer och vad det gäller efter pipet.",
+];
+
+const SHINGLE = 6;
+const shingles = (value) => {
+  const ord = compare(value).split(" ").filter(Boolean);
+  const set = new Set();
+  for (let i = 0; i + SHINGLE <= ord.length; i += 1) set.add(ord.slice(i, i + SHINGLE).join(" "));
+  return set;
+};
+let referensShingles = null;
+const referens = () => {
+  if (!referensShingles) {
+    referensShingles = new Set();
+    for (const text of [TRANSCRIPTION_PROMPT, ...OUR_OWN_SCRIPTS]) {
+      for (const sh of shingles(text)) referensShingles.add(sh);
+    }
+  }
+  return referensShingles;
+};
 
 const compare = (value) => clean(value, 8000).toLowerCase().replace(/[^a-zåäö0-9]+/g, " ").trim();
 
 export const isTranscriptEcho = (text) => {
   const normalized = compare(text);
   if (!normalized) return false;
+  // Ekot kom 2/10 med ett "Hej," framför prompten, vilket slog ut den rena
+  // innehålls-jämförelsen. Hälsningsord i början räknas bort.
+  const utanHalsning = normalized.replace(/^(hej|hallo|halla|ja|god morgon|god dag)[ ,]*/i, "").trim();
+  const ord = utanHalsning.split(" ").filter((o) => o.length >= 2);
+  // Kortare än fyra ord utan ett enda siffertecken bär ingen information —
+  // "nordisk mobilitet", "jag ringer av". Inget att följa upp på.
+  if (ord.length < 4 && !/\d/.test(String(text))) return true;
+  for (const sh of shingles(utanHalsning)) {
+    if (referens().has(sh)) return true;
+  }
   const prompt = compare(TRANSCRIPTION_PROMPT);
+  if (prompt.includes(utanHalsning)) return true;
   // Modellen ekar ibland bara ordlistan ur prompten ("Nordic E-Mobility,
   // elscooter, batteri, BMS, ...") — den varianten slank igenom den första
   // versionen av vakten och hamnade i inkorgen 2/9 och 3/9. Allt som ryms inuti
