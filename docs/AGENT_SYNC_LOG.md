@@ -32,6 +32,15 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-06 - Codex - PÅGÅR (fyra kvarvarande revisionsfel)
+
+- Tar `codex/audit-four-safety-fixes`: elks-webhook-sync, sms-draft-inbox,
+  create-checkout, bokningskvittens och regressionstester. Alla fyra gamla
+  fynd kvarstår på dagens main. Kontaktlagret från Claude bevaras.
+- Endast kod och syntetiska tester. Inga production-writes, SMS/mail,
+  deployer eller stash-operationer. Kontraktstester återkopplas till build.
+
+
 ### 2026-10-06 — Claude Code — KLAR (kundkontakt nivå 1-2 byggd, 7 betalningar bokförda, Mikaela+Joshua stängda)
 
 - **PR #142 mergad — kundkontaktlagret.** `_shared/customer-contact.mjs`: nio
