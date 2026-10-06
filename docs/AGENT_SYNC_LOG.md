@@ -32,6 +32,34 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — KLAR (bokning låst till tis/tors, telefonexport genomgången, 5 utkast i kön)
+
+- **PR #143 mergad:** inlämning bara **tisdag och torsdag 10–16** (klient +
+  server + klar-mallen). Sebastians beslut: 12 mil pendling gör en utspridd
+  kalender olönsam; tis/tors är dagarna med högst inflöde i samtalsdatan.
+  Vardagsöppettiderna för TELEFON (9–18) är oförändrade — rör dem inte.
+- **Telefonen genomgången** (SMS Backup & Restore-export, 14 aug–6 okt: 1 468
+  samtal, 2 606 sms/mms, bara nummer som finns i kunddatan har lästs).
+  38 kunder vars senaste sms är obesvarat, 22 olästa. Tre är känsliga och
+  ligger hos Sebastian utan utkast: DHL-leverans med spårningsnummer
+  (+46708521548, 5/10), Linda +46736717841 nämner **ARN** (18/9), och
+  Duraids fru om 5 000 kr "enligt planeringen" (25/9).
+- **5 utkast i sms-draft-inkorgen** (Amir, Fredrik Karlsson, Omar Dele, Thomas
+  Karlsson, Lucas Malm) — alla erbjuder tis/tors-tider, inga priser. Går ut
+  först när Sebastian svarar "N ok" på digesten 08:20 eller godkänner i admin.
+- **Webbokningarna i "nytt":** 9 av 24 personer har ingen trafik alls i
+  telefonen (Eva Hallgren, Yeiser Keirala, Mathilda Hedlund, Daniel Saxin,
+  Ghada, Sparr Andreas, Ahmad Soubhan, Andreas, Fredrik K:s andra nummer) →
+  kandidater för arkivering som "ej inlämnad". Christian Bönesch Mihai och
+  Tommy Hedlund stängda på Sebastians uppgift (betalning ej registrerad).
+  Gabriel Demirel 1 500 kr bokförd på bokningen 25/5.
+- **Datakvalitet:** benchmark-rapporten (artifact SY1HP8s4QHiR1yukFGXwWf)
+  uppdaterad med avstämning mot Sebastians egen bild (per-samtal vs per-kund,
+  52 % konvertering bland riktiga samtal), walk-ins (23 betalningar, 29 330 kr)
+  och rättad formulering om webbokningarna.
+- **Varning:** telefonexporten ligger i Downloads\SMS & call och innehåller
+  privat trafik — läs aldrig mer av den än kundnumren kräver.
+
 ### 2026-10-06 - Codex - PÅGÅR (fyra kvarvarande revisionsfel)
 
 - Tar `codex/audit-four-safety-fixes`: elks-webhook-sync, sms-draft-inbox,
