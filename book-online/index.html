@@ -247,7 +247,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <strong>Inl&auml;mningstider</strong>
       Tisdag&ndash;l&ouml;rdag kl 15&ndash;18. M&aring;ndag och s&ouml;ndag &auml;r st&auml;ngt f&ouml;r inl&auml;mning. V&auml;lj dag och tid i formul&auml;ret s&aring; bekr&auml;ftar vi ditt &auml;rende via SMS och e-post.
       <div class="hours-grid">
-        <div class="hours-item"><span>Inl&auml;mning</span><b>Tis&ndash;l&ouml;r 15&ndash;18</b></div>
+        <div class="hours-item"><span>Inl&auml;mning</span><b>Tis &amp; tors 10&ndash;16</b></div>
         <div class="hours-item"><span>&Aring;terkoppling</span><b>Inom 4 timmar</b></div>
         <div class="hours-item"><span>Prioritet</span><b>Bokade &auml;renden f&ouml;rst</b></div>
       </div>
@@ -475,7 +475,10 @@ function pad(number){return String(number).padStart(2,'0');}
 // Dagar och tider räknas alltid i Europe/Stockholm — inte i besökarens lokala
 // tidszon — och passerade tider samma dag erbjuds inte. Servern validerar
 // samma regler i /api/bookings.
-const DROPOFF_TIMES=['15:00','15:30','16:00','16:30','17:00','17:30','18:00'];
+// Inlamning bara tisdag och torsdag 10-16 (Sebastians beslut 2026-10-07):
+// jobben buntas till tva verkstadsdagar sa att 12 mil pendling inte ater upp
+// halva ordervardet. Servern speglar samma regler i booking.mjs.
+const DROPOFF_TIMES=['10:00','10:30','11:00','11:30','12:00','12:30','13:00','13:30','14:00','14:30','15:00','15:30','16:00'];
 function stockholmNow(){
   const parts=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
   const value=Object.fromEntries(parts.filter((part)=>part.type!=='literal').map((part)=>[part.type,part.value]));
@@ -491,11 +494,12 @@ function fillDayOptions(){
   const now=stockholmNow();
   const lastSlot=DROPOFF_TIMES[DROPOFF_TIMES.length-1];
   const lastSlotMinutes=Number(lastSlot.slice(0,2))*60+Number(lastSlot.slice(3));
-  // Inlämning tisdag-lördag: söndag (0) och måndag (1) är stängda för inlämning.
-  for(let offset=0;offset<28;offset+=1){
+  // Inlamning bara tisdag (2) och torsdag (4). Fem veckor framat sa att det
+  // alltid finns minst tio valbara dagar.
+  for(let offset=0;offset<35;offset+=1){
     const date=new Date(Date.UTC(now.year,now.month-1,now.day+offset,12,0));
     const weekday=date.getUTCDay();
-    if(weekday===0||weekday===1)continue;
+    if(weekday!==2&&weekday!==4)continue;
     if(offset===0&&now.hour*60+now.minute>=lastSlotMinutes)continue;
     const option=document.createElement('option');
     option.value=`${date.getUTCFullYear()}-${pad(date.getUTCMonth()+1)}-${pad(date.getUTCDate())}`;
@@ -509,7 +513,7 @@ function fillTimeOptions(){
   preferredClock.innerHTML='';
   const now=stockholmNow();
   const isToday=preferredDay&&preferredDay.value===stockholmTodayIso();
-  // Inlämningstider 15:00-18:00, tisdag-lördag. Samma dag: bara framtida tider.
+  // Inlamningstider 10:00-16:00, tisdag och torsdag. Samma dag: bara framtida tider.
   DROPOFF_TIMES.forEach((time)=>{
     if(isToday&&Number(time.slice(0,2))*60+Number(time.slice(3))<=now.hour*60+now.minute)return;
     const option=document.createElement('option');
