@@ -14,8 +14,9 @@
     "knowledge:import": "node scripts/import-repair-knowledge.mjs",
     "test:knowledge": "node --test tests/chatgpt-repair-extractor.test.mjs nemob-os/test/repair-knowledge.test.mjs",
     "build:dist": "node scripts/build-dist.mjs",
-    "build": "npm run test:voice && npm run test:status && npm run test:contracts && npm run generate:products && npm run build:dist && echo Static site ready",
-    "test:contracts": "node --test tests/audit-contracts.test.mjs"
+    "build": "npm run test:voice && npm run test:status && npm run test:contact && npm run generate:products && npm run build:dist && echo Static site ready",
+    "test:contracts": "node --test tests/audit-contracts.test.mjs",
+    "test:contact": "node --test tests/customer-contact.test.mjs"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.120.0",

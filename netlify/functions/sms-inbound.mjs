@@ -5,6 +5,7 @@
 // 46elks skickar svaret i response-body som SMS-reply till kunden.
 import { getStore } from "@netlify/blobs";
 import { tokenMatches } from "./_shared/admin-auth.mjs";
+import { parseApprovalReply } from "./_shared/customer-contact.mjs";
 import { isBlockedCaller } from "./_shared/call-blocklist.mjs";
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
@@ -63,6 +64,65 @@ const shouldNotify = (phone) => {
   return true;
 };
 
+// Vara egna nummer. Ett SMS fran dem ar inte ett kundsvar utan ett
+// godkannande av ett utkast ("1 ok"), och ska aldrig hamna i svars-inkorgen.
+const staffNumbers = () => {
+  const set = new Set();
+  for (const key of ["SEBASTIAN_SMS_TO", "WORKSHOP_SMS_TO", "VOICE_PRIMARY_NUMBER", "VOICE_SEBASTIAN_PHONE"]) {
+    const nummer = normalizePhone(env(key));
+    if (nummer) set.add(nummer);
+  }
+  return set;
+};
+
+// Godkannandet gar via den BEFINTLIGA approve-rutten i sms-draft-inbox, som
+// redan kontrollerar optout, skickar, loggar pa arendet och tar bort utkastet.
+// Att anropa den over HTTP kostar en extra rundtur men duplicerar ingen logik -
+// och det ar en manniska som vantar, inte en loop.
+const kallaApprove = async (draftId, action, message) => {
+  const bas = (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
+  const token = env("ADMIN_TOKEN");
+  if (!token) return { ok: false, fel: "ADMIN_TOKEN saknas" };
+  try {
+    const response = await fetch(`${bas}/api/sms-drafts/${encodeURIComponent(draftId)}/${action}`, {
+      method: "POST",
+      headers: { "x-admin-token": token, "Content-Type": "application/json" },
+      body: JSON.stringify({ operatorName: "Sebastian via SMS", ...(message ? { message } : {}) }),
+      signal: AbortSignal.timeout(12000),
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) return { ok: false, fel: clean(data.error || `HTTP ${response.status}`, 120) };
+    return { ok: true, data };
+  } catch (error) {
+    return { ok: false, fel: clean(error?.message, 120) };
+  }
+};
+
+const hanteraGodkannande = async (kommando) => {
+  const state = getStore({ name: "contact-queue", consistency: "strong" });
+  const kon = await state.get("current", { type: "json" }).catch(() => null);
+  const items = Array.isArray(kon?.items) ? kon.items : [];
+  if (!items.length) return "Ingen ko just nu - inga utkast vantar.";
+
+  const valda = kommando.all ? items : items.filter((i) => Number(i.nr) === Number(kommando.index));
+  if (!valda.length) return `Hittade inget utkast med nummer ${kommando.index}. Kon har ${items.length} rader.`;
+
+  const resultat = [];
+  for (const rad of valda) {
+    if (kommando.kind === "nej") {
+      const svar = await kallaApprove(rad.draftId, "skip");
+      resultat.push(`${rad.nr} ${svar.ok ? "kastat" : `FEL: ${svar.fel}`}`);
+      continue;
+    }
+    const svar = await kallaApprove(rad.draftId, "approve", kommando.kind === "andra" ? kommando.text : undefined);
+    resultat.push(`${rad.nr} ${rad.namn || rad.telefon || ""} ${svar.ok ? "skickat" : `FEL: ${svar.fel}`}`.trim());
+  }
+  // Ta bort hanterade rader ur kon sa att samma nummer inte kan skickas tva ganger.
+  const kvar = items.filter((i) => !valda.some((v) => v.nr === i.nr));
+  await state.setJSON("current", { ...(kon || {}), items: kvar, uppdaterad: new Date().toISOString() }).catch(() => {});
+  return clean(resultat.join(", "), 300) + (kvar.length ? ` | ${kvar.length} kvar` : " | kon tom");
+};
+
 const reply = (text) =>
   new Response(text || "", { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } });
 
@@ -104,6 +164,17 @@ export default async (request) => {
   if (await isBlockedCaller(from)) {
     console.log("sms_inbound_blocked_sender", {});
     return reply("");
+  }
+
+  // Sebastians godkannanden gar fore all kundlogik: "1 ok", "alla ok",
+  // "2 nej", "1 andra: ny text". Ett sadant SMS ar inget kundsvar.
+  if (staffNumbers().has(from)) {
+    const kommando = parseApprovalReply(message);
+    if (kommando) {
+      const svar = await hanteraGodkannande(kommando);
+      console.log("sms_inbound_approval", { kind: kommando.kind, all: Boolean(kommando.all) });
+      return reply(svar);
+    }
   }
 
   const now = new Date().toISOString();
