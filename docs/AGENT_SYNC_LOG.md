@@ -32,6 +32,43 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-06 — Claude Code — KLAR (kundkontakt nivå 1-2 byggd, 7 betalningar bokförda, Mikaela+Joshua stängda)
+
+- **PR #142 mergad — kundkontaktlagret.** `_shared/customer-contact.mjs`: nio
+  mallar delade i nivå 1 (autoskick tillåtet) och nivå 2 (pris/batteri/fritext).
+  `requiresApproval()` tittar på TEXTEN, inte bara mallvalet — en
+  statusuppdatering som nämner garanti, batteri, rabatt eller "kostnadsfritt"
+  blir aldrig autoskick. `contact-digest.mjs` (schemalagd 08:20) skickar ett
+  kort SMS med numrerade rader + mejl med hela texterna; numreringen sparas i
+  storen `contact-queue` INNAN SMS:et går ut. `sms-inbound` tolkar svar från
+  VÅRA EGNA nummer som godkännande ("1 ok", "alla ok", "2 nej",
+  "1 ändra: ny text") och går via den befintliga approve-rutten — ingen logik
+  duplicerad. 14 nya tester, inlagda i `npm run build` (script `test:contact`).
+- **Första skarpa körningen är i morgon 08:20** med två riktiga utkast i kön:
+  Sören Persson (batteri inne sedan 22 JUNI) och Simon Karlsson (cykelbatteri
+  inne sedan 2 sept). Båda nämner batteri → kräver godkännande, som avsett.
+- **PR #141 mergad:** `list_recordings` tar `limit`/`start`. Slutsats av att
+  använda den: **46elks sparar bara de senaste dygnens ljud** (10 inspelningar
+  kvar, äldsta 3/10). Ett röstmeddelande som inte avlyssnas inom 30 dagar är
+  borta för alltid — transkriptet gallras och ljudet med det.
+- **Bokfört från bankavstämningen:** Louise Fornander 790, Lena Lissmats 349,
+  Henrik Lennström 495, Johan Nyman 349, Maths Wersén 1 685 kr. Inga mejl
+  triggades (verifierat i tidslinjen). **Stoppade med flit:** Gabriel Demirel
+  (två ärenden på exakt 1 500 kr) och Joshua (betalningen kom 13 dagar INNAN
+  ärendet skapades — 349 kr är standardpris och bevisar inget).
+- **Stängda på Sebastians uppgift:** Mikaela Kumlin (två punkteringsfria däck,
+  1 360 kr, levererad) och Joshua (349 kr). Tackmail med recensionslänk köat
+  till 10:00 i dag för båda — Joshua saknar mejladress så bara recensions-SMS
+  kan gå.
+- **Rättelse till ringlistan 5/10:** Anna Gidmo och Johan Nilsson är INTE
+  akuta. Båda betalade EFTER sitt sista samtal (22/9 resp 12/9), ärendena är
+  klara. Regeln som fattades i prioriteringen: **betalning efter sista
+  samtalet = stängt ärende.**
+- **Dubbletter i registret:** Sören har 2 ärenden för samma batteri, Simon har
+  3. Den som bygger vidare på ärendedatan bör räkna unika kunder, inte rader.
+- **Varning:** saldot är nere på **39 kr**. Vid 0 kr dör telefon och SMS, och
+  då går inga utkast ut heller.
+
 ### 2026-10-05 — Claude Code — KLAR (Swish-avstämning, rankad ringlista, eko-vakten lagad — Sebastian AFK)
 
 - **Sebastian gav fritt mandat** att åtgärda medan han var i verkstaden, och
