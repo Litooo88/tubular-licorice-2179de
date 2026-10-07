@@ -32,6 +32,32 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — KLAR (ärenderegistrering 7/10 + kostnadsanalys av företagskontot)
+
+- **Ärenden (via API, inga kodändringar):** Andrejs G2-köp till inköpspris
+  registrerat som eget ärende (`case_2026-10-07T00-55-57-908Z_7trlpu`, done,
+  betald 7 700). Leos ärende: service = G2 Master-reparation + Xiaomi-reparation.
+  Sead: `waiting_customer` med kundsynlig uppdatering (däcket är hemma, 30 %
+  rabatt på däckbytet). Nio döda webbokningar (`new` sedan aug/sep, aldrig
+  kontaktbara) arkiverade. **Incident:** Fredrik Karlssons aktiva ärende från
+  29/9 arkiverades av misstag (namnregex) och återställdes till `contacted` med
+  notering — matcha alltid på case-id, aldrig på namn, vid massåtgärder.
+- **Kostnadsanalys** av bankens transaktionsexport (591 rader, 22/5–6/10):
+  rapport som artefakt till Sebastian + kategoriserad CSV. Nyckeltal: in
+  197 092 / ut 195 790 (genomflöde, ingen buffert); privata uttag ≈ 14 400
+  kr/mån; drivmedel ≈ 4 700 kr/mån (dubbelt mot benchmarken); programvara/AI
+  ≈ 3 600 kr/mån (Apple 24 dragningar); reservdelar ≈ 20 300 kr ≈ 10 % av all
+  intäkt, ≈ 20–25 % av reparationsintäkten. Revolut 59 431 kr (30 %) och
+  hyran (bara 3 000 kr syns av 9 500/mån) är obesvarade frågor till Sebastian
+  — benchmarkens lönekalkyl ska uppdateras när de är besvarade.
+- **Bankexporten innehåller personnummer och kontonummer** och ligger bara
+  lokalt i scratchpad. Inget av det får in i repot eller i någon blob.
+- **Godkänt av Sebastian 7/10, inte påbörjat:** röstassistent dag 1–3
+  (tredjepartsplattform + våra webhooks), vinterkampanj till 124 tidigare
+  kunder, återkopplings-SMS till 92 varma, auto-arkivering av `new` > 14 dagar.
+  Tar dem i den ordningen på egna brancher. **Inte** SMS-utkasten i admin —
+  dem har Sebastian redan hanterat själv.
+
 ### 2026-10-07 — Claude Code — KLAR (bokningsombyggnad steg 0: "en bokning är en bokning" + GA4-funnel)
 
 - **Rotorsak till spökbokningarna hittad:** tre motstridiga budskap i samma
