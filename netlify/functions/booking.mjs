@@ -318,8 +318,11 @@ const statusLink = (caseItem) => {
   return `${(env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "")}/status/?${query}`;
 };
 
+// Samma budskap som tack-sidan och mejlet: tiden G\u00c4LLER, vi h\u00f6r av oss bara
+// om den m\u00e5ste flyttas. Ordet "registrerad" + "vi \u00e5terkommer" skapade kunder
+// som inte visste om de skulle komma (sp\u00f6kbokningarna, okt 2026).
 const smsMessage = (caseItem) =>
-  `Hej ${firstName(caseItem.customer.name)}! Din bokning hos Nordic E-Mobility \u00e4r registrerad.\nServicenummer: ${customerServiceNumber(caseItem)}\nTid: ${formatPreferredDateOnlyForSms(caseItem)}\nF\u00f6lj din reparation: ${statusLink(caseItem)}\nVi h\u00f6r av oss om n\u00e5got beh\u00f6ver \u00e4ndras. /Nordic E-Mobility`;
+  `Hej ${firstName(caseItem.customer.name)}! Din tid hos Nordic E-Mobility \u00e4r bokad: ${formatPreferredDateOnlyForSms(caseItem)}. Kom d\u00e5 \u2014 vi h\u00f6r av oss bara om tiden beh\u00f6ver flyttas.\nIngen reparation \u00e4r best\u00e4lld \u00e4nnu: du godk\u00e4nner alltid pris innan arbete.\nServicenummer: ${customerServiceNumber(caseItem)}\nF\u00f6lj din reparation: ${statusLink(caseItem)}\n/Nordic E-Mobility`;
 
 const workshopSmsMessage = (caseItem) => {
   const description = clean(caseItem.message, 80);
@@ -656,11 +659,11 @@ const customerEmailHtml = (caseItem) => `
     <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #dfe5dc;border-radius:8px;overflow:hidden">
       <div style="background:#061007;color:#fff;padding:22px 24px">
         <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8ff5ae;font-weight:700">Nordic E-Mobility</div>
-        <h1 style="font-size:24px;line-height:1.2;margin:8px 0 0">Din bokning &auml;r registrerad</h1>
+        <h1 style="font-size:24px;line-height:1.2;margin:8px 0 0">Din tid &auml;r bokad</h1>
       </div>
       <div style="padding:24px;line-height:1.6">
         <p>Hej ${htmlEscape(firstName(caseItem.customer.name))},</p>
-        <p>Vi har registrerat din bokning hos Nordic E-Mobility.</p>
+        <p>Din tid hos Nordic E-Mobility &auml;r bokad &mdash; kom d&aring;, s&aring; tar vi hand om resten. Vi h&ouml;r av oss <strong>bara</strong> om tiden skulle beh&ouml;va flyttas.</p>
         <div style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:16px;margin:18px 0">
           <p style="margin:0 0 8px"><strong>&Auml;rende:</strong> ${htmlEscape(customerServiceNumber(caseItem))}</p>
           <p style="margin:0 0 8px"><strong>Tj&auml;nst:</strong> ${htmlEscape(caseItem.service)}</p>
@@ -674,7 +677,7 @@ const customerEmailHtml = (caseItem) => `
         </div>
         <p><a href="${htmlEscape(statusLink(caseItem))}" style="display:inline-block;background:#00c853;color:#021307;text-decoration:none;border-radius:8px;padding:12px 16px;font-weight:700">F&ouml;lj din reparation live</a>&nbsp;&nbsp;<a href="${MAPS_LINK}" style="display:inline-block;background:#061007;color:#fff;text-decoration:none;border-radius:8px;padding:12px 16px;font-weight:700">Visa p&aring; Google Maps</a></p>
         <p style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:12px 14px;font-size:14px"><strong>Ditt servicenummer:</strong> ${htmlEscape(customerServiceNumber(caseItem))}<br>Via l&auml;nken ovan ser du exakt var i processen ditt fordon &auml;r &mdash; fr&aring;n inl&auml;mning till klar f&ouml;r h&auml;mtning &mdash; och kan beg&auml;ra en statusuppdatering med ett knapptryck. Telefonen anv&auml;nder vi i f&ouml;rsta hand f&ouml;r bokningar och nya &auml;renden.</p>
-        <p><strong>Vad h&auml;nder nu?</strong><br>Vi kontrollerar bokningen och kontaktar dig inom 24 timmar om tiden, prisbed&ouml;mningen eller underlaget beh&ouml;ver justeras. Inget arbete p&aring;b&ouml;rjas utan att du f&aring;tt en prisbed&ouml;mning f&ouml;rst.</p>
+        <p><strong>Vad h&auml;nder nu?</strong><br>Din tid g&auml;ller &mdash; du beh&ouml;ver inte v&auml;nta p&aring; n&aring;got klartecken. Vi h&ouml;r av oss bara om vi beh&ouml;ver flytta tiden. N&auml;r du l&auml;mnat in fordonet g&aring;r vi igenom problemet, och <strong>inget arbete p&aring;b&ouml;rjas utan att du godk&auml;nt priset f&ouml;rst</strong>.</p>
         <p>Efter bes&ouml;ket betyder en recension mycket f&ouml;r oss: <a href="${htmlEscape(REVIEW_LINK)}" style="color:#067a35">l&auml;mna en Google-recension</a>.</p>
         ${emailFooterHtml()}
       </div>
@@ -686,20 +689,21 @@ const sendCustomerEmail = async (caseItem) => {
   if (!caseItem.customer.email) return { status: "not_requested" };
   return resendEmail({
     to: [caseItem.customer.email],
-    subject: `Din servicef\u00f6rfr\u00e5gan hos Nordic E-Mobility - ${customerServiceNumber(caseItem)}`,
+    subject: `Din tid \u00e4r bokad - ${customerServiceNumber(caseItem)} | Nordic E-Mobility`,
     html: customerEmailHtml(caseItem),
     text: [
       "Hej " + caseItem.customer.name + ",",
       "",
-      "Din bokning hos Nordic E-Mobility ar registrerad.",
+      "Din tid hos Nordic E-Mobility ar bokad.",
       `Tid: ${formatPreferredDateOnlyForSms(caseItem)}`,
       `Plats: ${WORKSHOP_ADDRESS}`,
-      "Vi kontaktar dig inom 24 timmar om nagot behover andras och gor alltid prisbedomning innan arbete.",
+      "Kom da - vi hor av oss bara om tiden behover flyttas.",
+      "Ingen reparation ar bestalld annu: du godkanner alltid pris innan arbete.",
       `Folj din reparation live: ${statusLink(caseItem)}`,
       `Servicenummer: ${customerServiceNumber(caseItem)}`,
       `Karta: ${MAPS_LINK}`,
       "",
-      "Kalenderfilen \u00e4r prelimin\u00e4r tills tiden \u00e4r bekr\u00e4ftad.",
+      "Kalenderfilen g\u00e4ller din bokade tid.",
       "",
       "Detaljer:",
       caseSummaryText(caseItem),

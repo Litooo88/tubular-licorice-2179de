@@ -657,7 +657,13 @@ fillDayOptions();
 fillTimeOptions();
 applyPrefillFromUrl();
 if(serviceSelect)serviceSelect.addEventListener('change',()=>{syncServiceChoiceFromSelect();syncVehicleIdentityRequirement();updateSummary();});
-serviceChoiceInputs.forEach((input)=>input.addEventListener('change',()=>setServiceFromChoice(input.value)));
+// GA4-funnel (steg 0 i bokningsombyggnaden): fyra events utan persondata,
+// så vi kan räkna bokningsgrad = booking_completed / booking_view och se
+// var kunder faller bort. Baslinje mäts FÖRE flödesombyggnaden.
+function trackBooking(name,params){try{if(window.gtag)window.gtag('event',name,params||{});}catch(e){}}
+trackBooking('booking_view');
+let bookingStartedTracked=false;
+serviceChoiceInputs.forEach((input)=>input.addEventListener('change',()=>{setServiceFromChoice(input.value);trackBooking('service_selected',{service:input.value});}));
 if(logisticsSelect)logisticsSelect.addEventListener('change',syncPickupService);
 if(preferredDay)preferredDay.addEventListener('change',fillTimeOptions);
 addonInputs.forEach((input)=>input.addEventListener('change',updateSummary));
@@ -676,25 +682,35 @@ async function submitNetlifyBackup(data){
   if(!response.ok) throw new Error('backup failed');
 }
 
-function customerStatusMessage(result){
+// Ett enda budskap i hela kedjan (tack-sida, SMS, e-post): tiden G\u00c4LLER
+// direkt, vi h\u00f6r av oss bara om den m\u00e5ste flyttas. Tidigare sa tack-sidan
+// "vi \u00e5terkommer med bekr\u00e4ftad tid" medan SMS:et sa motsatsen \u2014 kunder
+// v\u00e4ntade p\u00e5 ett klartecken som aldrig kom (rotorsaken till sp\u00f6kbokningarna).
+function customerStatusMessage(result,timeLabel){
   const notifications=(result.case&&result.case.notifications)||{};
   const delivery=(result.case&&result.case.customerDelivery)||notifications.customerDelivery||{};
   const workshopNotified=notifications.staffSms&&(notifications.staffSms.status==='sent'||notifications.staffSms.status==='partial');
   const inCalendar=notifications.calendar&&notifications.calendar.status==='created';
-  const base='Din bokning \u00e4r registrerad hos Nordic E-Mobility.';
+  const base=`\u2713 Din tid \u00e4r bokad${timeLabel?`: ${timeLabel}`:''}. Kom d\u00e5 \u2014 vi h\u00f6r av oss bara om tiden beh\u00f6ver flyttas.`;
+  const promise='Du har inte best\u00e4llt n\u00e5gon reparation \u00e4nnu: du godk\u00e4nner alltid priset innan vi b\u00f6rjar.';
 
   if(delivery.status==='sent'){
-    return `${base} B\u00e5de SMS och e-postbekr\u00e4ftelse \u00e4r skickad${workshopNotified?' och verkstaden har redan f\u00e5tt avisering':''}${inCalendar?', samtidigt som \u00e4rendet ligger i verkstadskalendern':''}. Vi \u00e5terkommer med bekr\u00e4ftad tid, pris och n\u00e4sta steg.`;
+    return `${base} Bekr\u00e4ftelse \u00e4r skickad via SMS och e-post${workshopNotified?', verkstaden \u00e4r aviserad':''}${inCalendar?' och tiden ligger i verkstadskalendern':''}. ${promise}`;
   }
 
   if(delivery.status==='partial'){
-    return `${base} ${delivery.label||'En del av kundbekr\u00e4ftelsen gick iv\u00e4g'}${workshopNotified?' och verkstaden har f\u00e5tt avisering':''}. Vi f\u00f6ljer upp resten manuellt vid behov och \u00e5terkommer med bekr\u00e4ftad tid, pris och n\u00e4sta steg.`;
+    return `${base} ${delivery.label||'En del av bekr\u00e4ftelsen gick iv\u00e4g'}${workshopNotified?' och verkstaden \u00e4r aviserad':''}. ${promise}`;
   }
 
-  return `${base} Verkstaden har f\u00e5tt ditt \u00e4rende, men automatisk kundbekr\u00e4ftelse gick inte iv\u00e4g just nu. Ring verkstaden p\u00e5 010-138 54 98 s\u00e5 bekr\u00e4ftar vi direkt.`;
+  return `${base} Den automatiska bekr\u00e4ftelsen gick dock inte iv\u00e4g just nu \u2014 ring 010-138 54 98 om du vill f\u00e5 tiden bekr\u00e4ftad muntligt. ${promise}`;
 }
 
 if(bookingForm){
+  bookingForm.addEventListener('input',()=>{
+    if(bookingStartedTracked)return;
+    bookingStartedTracked=true;
+    trackBooking('booking_started');
+  });
   bookingForm.addEventListener('submit',async(event)=>{
     event.preventDefault();
     const service=selectedService();
@@ -739,12 +755,14 @@ if(bookingForm){
     // kundens uppgifter aldrig g\u00e5r f\u00f6rlorade \u2014 de f\u00e5ngas i Netlify Forms.
     submitNetlifyBackup(data).catch(()=>{});
     try{
+      const timeLabel=preferredDay&&preferredDay.value&&preferredClock&&preferredClock.value?`${preferredDay.value} kl ${preferredClock.value}`:'';
       const response=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
       const result=await response.json().catch(()=>({}));
       if(!response.ok) throw new Error(result.error||'Kunde inte skicka f\u00f6rfr\u00e5gan.');
 
+      trackBooking('booking_completed',{service:(service&&service.value)||'osaker'});
       bookingStatus.className='status ok';
-      bookingStatus.textContent=customerStatusMessage(result);
+      bookingStatus.textContent=customerStatusMessage(result,timeLabel);
       bookingForm.reset();
       syncVehicleIdentityRequirement();
       updateSummary();
