@@ -209,3 +209,14 @@ test("fallback without fallback number goes to the voice agent when configured, 
     assert.match(play.next, /voice-simple\?step=beep&caller=%2B46700000000$/);
   });
 });
+
+test("outside office hours the voice agent answers first; closed-play is the old closed prompt", async () => {
+  await withEnv({ VOICE_PRIMARY_NUMBER: "+46700000001", VOICE_AGENT_SIP: "sip:agent@example.test", VOICE_TEST_NOW: CLOSED_NOW }, async () => {
+    const first = await (await voiceSimple(request(""))).json();
+    assert.equal(first.connect, "sip:agent@example.test");
+    assert.match(first.next, /voice-simple\?step=closed-play&caller=%2B46700000000$/);
+    const closed = await (await voiceSimple(request("?step=closed-play"))).json();
+    assert.equal(closed.play, "https://www.nordicemobility.se/audio/outside-hours-prompt.mp3");
+    assert.match(closed.next, /voice-simple\?step=beep&caller=%2B46700000000$/);
+  });
+});
