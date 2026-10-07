@@ -525,6 +525,12 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 
   <div class="admin-view" id="phoneView" hidden>
   <section class="panel notice" id="phoneSummaryPanel"><strong>Telefonil&auml;get just nu:</strong> <span id="phoneSummary" class="muted">Klicka p&aring; Uppdatera i samtalspanelen nedan f&ouml;r att ladda.</span></section>
+
+  <section class="panel" id="callQueuePanel">
+    <h2>Dagens ringlista <span id="callQueueCount" style="font-size:14px;color:#9eaaa2"></span></h2>
+    <p class="call-dashboard-note">Obesvarade kundf&ouml;rfr&aring;gningar i prioritetsordning: nya f&ouml;rst (varmast &ouml;verst), sedan kontaktade utan uppf&ouml;ljning p&aring; &ouml;ver tre dygn. Optout, sp&auml;rrade och egna nummer visas aldrig. "Kontaktad" flyttar &auml;rendet ur listan; "Hoppa &ouml;ver" g&ouml;mmer det till n&auml;sta bes&ouml;k.</p>
+    <div id="callQueueList" class="muted">Laddar ringlistan...</div>
+  </section>
   <section class="panel call-dashboard">
     <h2>Live samtalsdashboard</h2>
     <p>Dagens inkommande samtal matchas mot kundregistret n&auml;r 46elks/call-log-k&auml;llan finns. Saknas k&auml;llan ska siffror inte tolkas som live.</p>
@@ -1925,6 +1931,7 @@ async function loadCases(options={}){
     cases=data.cases||[];
     render();
     if(lastCallDashboardData)renderTodayStrip(lastCallDashboardData);
+    renderCallQueue();
     focusInitialCase();
     restoreEditorState(openIds,focusedField);
     if(background) window.scrollTo(scrollX,scrollY);
@@ -2808,6 +2815,7 @@ async function loadCallDashboard(){
     renderBlockedNumbers(data.blockedNumbers||[]);
     lastCallDashboardData=data;
     renderTodayStrip(data);
+    renderCallQueue();
     showCallStatus(`Samtal uppdaterade ${new Date().toLocaleTimeString('sv-SE')}.`);
   }catch(error){
     showCallStatus(error.message,true);
@@ -3226,6 +3234,82 @@ function renderPhoneSummary(data){
 // "Att göra nu"-remsan i Översikt: bara det som kräver handling, klickbart
 // till rätt flik. Byggd 2026-09-21 efter Sebastians feedback att admin är
 // rörig — remsan ska vara det enda man MÅSTE läsa på ett rutinbesök.
+// Dagens ringlista (2026-10-07): obesvarade förfrågningar i den ordning de
+// bör ringas. Nya först med varmast (nyast) överst — färska leads
+// konverterar bäst — därefter kontaktade utan uppföljning >3 dygn, äldst
+// överst (de är på väg att kallna helt). Optout/spärrade/egna nummer
+// filtreras bort. Datakällor: cases (global) + senaste call-dashboard.
+function normalizeQueuePhone(value){
+  const compact=String(value||'').replace(/[^\d+]/g,'');
+  if(!compact)return'';
+  if(compact.startsWith('+'))return compact;
+  if(compact.startsWith('00'))return'+'+compact.slice(2);
+  if(compact.startsWith('46'))return'+'+compact;
+  if(compact.startsWith('0'))return'+46'+compact.slice(1);
+  return compact.length>=7?'+46'+compact:'';
+}
+function callQueueSkips(){
+  try{return new Set(JSON.parse(sessionStorage.getItem('nordicCallQueueSkips')||'[]'))}catch(e){return new Set()}
+}
+function renderCallQueue(){
+  const el=document.getElementById('callQueueList');
+  const countEl=document.getElementById('callQueueCount');
+  if(!el)return;
+  const dash=lastCallDashboardData||{};
+  const excluded=new Set([
+    ...(dash.optoutPhones||[]),
+    ...((dash.blockedNumbers||[]).map((entry)=>entry.number)),
+    ...(dash.ownNumbers||[]),
+  ].map(normalizeQueuePhone).filter(Boolean));
+  const skips=callQueueSkips();
+  const day=24*60*60*1000;
+  const age=(item)=>Date.now()-new Date(item.updatedAt||item.createdAt||0).getTime();
+  const phoneOf=(item)=>normalizeQueuePhone(item.customer&&item.customer.phone);
+  const eligible=(item)=>{
+    const phone=phoneOf(item);
+    return phone&&!excluded.has(phone)&&!skips.has(item.id);
+  };
+  const fresh=cases.filter((item)=>item.status==='new'&&eligible(item))
+    .sort((a,b)=>age(a)-age(b));
+  const followups=cases.filter((item)=>item.status==='contacted'&&age(item)>3*day&&eligible(item))
+    .sort((a,b)=>age(b)-age(a));
+  const queue=[...fresh,...followups];
+  if(countEl)countEl.textContent=queue.length?`— ${Math.min(queue.length,10)} visas av ${queue.length} i kön`:'';
+  if(!queue.length){el.innerHTML='<div style="color:#7ee2a8">Ringlistan är tom — alla förfrågningar är hanterade.</div>';return;}
+  el.innerHTML=`<table><thead><tr><th>#</th><th>Kund</th><th>Fordon / ärende</th><th>Ålder</th><th>Värde</th><th></th></tr></thead><tbody>${
+    queue.slice(0,10).map((item,index)=>{
+      const days=Math.floor(age(item)/day);
+      const warm=item.status==='new'&&days<=3;
+      return `<tr>
+        <td>${index+1}</td>
+        <td>${html((item.customer&&item.customer.name)||'Okänd')}<span class="muted-small">${html(phoneOf(item))}</span></td>
+        <td>${html((item.vehicle&&item.vehicle.model)||'okänd modell')}<span class="muted-small">${html(String(item.service||'').slice(0,40))} · ${item.status==='new'?(warm?'NY — varm':'NY'):'uppföljning'}</span></td>
+        <td${warm?' style="color:#7ee2a8"':(days>7?' style="color:#ff6b5e"':'')}>${days} d</td>
+        <td>${item.estimatedValue?`${item.estimatedValue} kr`:'–'}</td>
+        <td style="white-space:nowrap">
+          <button type="button" class="secondary" data-call-number="${html(phoneOf(item))}">Ring</button>
+          <button type="button" class="secondary queue-contacted" data-case-id="${html(item.id)}">Kontaktad</button>
+          <button type="button" class="secondary queue-skip" data-case-id="${html(item.id)}">Hoppa över</button>
+        </td>
+      </tr>`;
+    }).join('')}</tbody></table>`;
+  el.querySelectorAll('[data-call-number]').forEach((button)=>button.addEventListener('click',()=>clickToCall(button.dataset.callNumber,button)));
+  el.querySelectorAll('.queue-contacted').forEach((button)=>button.addEventListener('click',async()=>{
+    button.disabled=true;button.textContent='Sparar...';
+    try{
+      await api('/api/cases/'+encodeURIComponent(button.dataset.caseId),{method:'PATCH',body:JSON.stringify({status:'contacted',note:'Ringd via ringlistan.',suppressThankYou:true})});
+      const local=cases.find((item)=>item.id===button.dataset.caseId);
+      if(local){local.status='contacted';local.updatedAt=new Date().toISOString();}
+      renderCallQueue();
+    }catch(error){alert('Kunde inte uppdatera: '+(error&&error.message||error));button.disabled=false;button.textContent='Kontaktad';}
+  }));
+  el.querySelectorAll('.queue-skip').forEach((button)=>button.addEventListener('click',()=>{
+    const skipsNow=callQueueSkips();
+    skipsNow.add(button.dataset.caseId);
+    try{sessionStorage.setItem('nordicCallQueueSkips',JSON.stringify([...skipsNow]))}catch(e){}
+    renderCallQueue();
+  }));
+}
 function renderTodayStrip(data){
   const el=document.getElementById('todayStripBody');
   if(!el)return;
