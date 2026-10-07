@@ -111,6 +111,20 @@ Om kunden är arg: beklaga, lova inget, boka telefonmöte.
 torsdag 10–16, Pistolvägen i Örebro.
 ```
 
+## Läge 2026-10-07 (dag 2 påbörjad i ElevenLabs)
+
+- Agent: **Nordic Receptionist**, id `agent_7501m4a5b9d7fnftyzxeqhx7tq5s`. Svensk prompt, första
+  meddelande, språk svenska, röst Sanna Hartfield (Calm and Soothing), LLM Claude Sonnet 5.5,
+  systemverktyget "Avsluta konversation" på. Inte publicerad än.
+- Hemlighet i arbetsytan: `nordic_voice_agent_secret` (samma värde ska in i Netlify som
+  `VOICE_AGENT_SECRET`).
+- Verktyg skapade i biblioteket: `lookup` (`tool_6401m4a6akvnfv4b8etx6963zhfn`), `prices`
+  (`tool_6401m4a6edk7ehc8tt0nqt9rh3vj`). Kvar: `slots` (osparad kopia `copy_lookup`,
+  `tool_8501m4a6q11jejwveqwg8qv34msw`), `book-meeting`, koppla till agenten, publicera,
+  SIP-inbound, post-call webhook, Netlify-env.
+- OBS: webbgränssnittets "Redigera som JSON" använder ett eget schema (properties som
+  array med `id`/`required`-boolean), inte API:ts. Formuläret är pålitligare.
+
 ## Dag 2–3 (återstår)
 
 1. Skapa konto på ElevenLabs Agents, skapa en agent med prompten ovan och

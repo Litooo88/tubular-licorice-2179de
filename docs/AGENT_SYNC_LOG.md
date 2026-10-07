@@ -32,6 +32,15 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — PÅGÅR (röstassistent dag 2: ElevenLabs-konfiguration via Sebastians Chrome)
+
+- Agent `agent_7501m4a5b9d7fnftyzxeqhx7tq5s` skapad och konfigurerad (prompt, svenska, röst,
+  Sonnet 5.5). Verktygen `lookup` och `prices` skapade med hemligheten
+  `nordic_voice_agent_secret` i header. Kvar: `slots`, `book-meeting`, koppla+publicera,
+  SIP-inbound, post-call webhook, Netlify-env (`VOICE_AGENT_SECRET`, `VOICE_AGENT_SIP`).
+  Detaljer i docs/VOICE_AGENT.md. Inga kodändringar i det här passet.
+- Sebastian stoppade en webbläsaråtgärd 05:00 — fortsättningen i Chrome väntar på hans ok.
+
 ### 2026-10-07 — Claude Code — KLAR (Dagens ringlista i admin Telefoni)
 
 - **Levererat (merge `45b2517` på origin/main):** panel överst i Telefoni —
