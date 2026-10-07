@@ -30,11 +30,10 @@ import {
   normalizeMeeting,
   summarySmsToSebastian,
 } from "./_shared/voice-agent.mjs";
-import { createRequire } from "node:module";
-
-// Publika prisregler. require i stället för JSON-import med attribut: det
-// fungerar både i Node 24 lokalt och i Netlifys esbuild-bundling.
-const priceRules = createRequire(import.meta.url)("../../data/workshop/price-rules.json");
+// Publika prisregler. Statisk JSON-import så att esbuild bundlar filen in i
+// funktionen; en dynamisk require gav "Cannot find module" i produktion
+// (data/ följer inte med i funktionspaketet).
+import priceRules from "../../data/workshop/price-rules.json" with { type: "json" };
 
 const env = (name) => {
   try {
