@@ -26,20 +26,20 @@
     },
     {
       "id": "diagnostics_standard",
-      "name": "Standard felsökning",
+      "name": "Grunddiagnos",
       "category": "diagnostics",
-      "startPrice": 395,
-      "likelyMin": 395,
+      "startPrice": 495,
+      "likelyMin": 495,
       "likelyMax": 995,
       "requiresDiagnosis": true,
       "requiresApproval": false
     },
     {
       "id": "diagnostics_advanced",
-      "name": "Avancerad felsökning",
+      "name": "Avancerad diagnos",
       "category": "diagnostics",
-      "startPrice": 645,
-      "likelyMin": 645,
+      "startPrice": 795,
+      "likelyMin": 795,
       "likelyMax": 1495,
       "requiresDiagnosis": true,
       "requiresApproval": true
