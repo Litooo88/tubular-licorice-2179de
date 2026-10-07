@@ -1,6 +1,6 @@
 {
   "version": "0.1",
-  "updatedAt": "2026-06-26",
+  "updatedAt": "2026-10-07",
   "currency": "SEK",
   "approvalThreshold": 995,
   "rules": [
@@ -8,9 +8,9 @@
       "id": "puncture_standard_wheel",
       "name": "Punktering vanligt hjul",
       "category": "tires",
-      "startPrice": 349,
-      "likelyMin": 349,
-      "likelyMax": 595,
+      "startPrice": 395,
+      "likelyMin": 395,
+      "likelyMax": null,
       "requiresDiagnosis": false,
       "requiresApproval": false
     },
@@ -18,11 +18,22 @@
       "id": "puncture_motor_wheel",
       "name": "Punktering motorhjul",
       "category": "tires",
-      "startPrice": 395,
-      "likelyMin": 395,
-      "likelyMax": 795,
+      "startPrice": 445,
+      "likelyMin": 445,
+      "likelyMax": null,
       "requiresDiagnosis": false,
       "requiresApproval": false
+    },
+    {
+      "id": "solid_tire_small",
+      "name": "Punkteringsfritt däck inkl. montering (små hjul: Ninebot E2/E22/E25/E45, Xiaomi Pro 2 m.fl.)",
+      "category": "tires",
+      "startPrice": 684,
+      "likelyMin": 684,
+      "likelyMax": null,
+      "requiresDiagnosis": false,
+      "requiresApproval": false,
+      "note": "Däck 289 kr + arbete 395 kr. Rekommenderas i stället för att laga punktering på dessa modeller."
     },
     {
       "id": "diagnostics_standard",
@@ -30,7 +41,7 @@
       "category": "diagnostics",
       "startPrice": 495,
       "likelyMin": 495,
-      "likelyMax": 995,
+      "likelyMax": 795,
       "requiresDiagnosis": true,
       "requiresApproval": false
     },
@@ -71,8 +82,8 @@
       "id": "battery_diagnostics",
       "name": "Batterifelsökning",
       "category": "battery",
-      "startPrice": 495,
-      "likelyMin": 495,
+      "startPrice": 695,
+      "likelyMin": 695,
       "likelyMax": null,
       "requiresDiagnosis": true,
       "requiresApproval": true,
