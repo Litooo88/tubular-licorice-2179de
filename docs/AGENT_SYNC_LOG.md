@@ -32,6 +32,26 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — KLAR (åtta kunder registrerade från telefonen, 12 utkast, Koffe = häva köp)
+
+- **Nya ärenden från telefonens kontaktnamn + Swish** (registrerade i efterhand,
+  tyst, betalda): Per Molin 1 495, Leo 2 700, Leif 1 500, iScooter-kund 800,
+  Krille 747, Håkan Blixt 695, Mehmet 1 000 (öppet, fel kvar), Sead 495
+  (däck beställt, `waiting_parts`). Björn Åkerberg Langhé → `ready` 695 kr.
+  Leons pappa → `ready` (dödmansgreppet ej åtgärdat). Rickard Strömberg är
+  INTE politikerns pappa — rättat i anteckningen.
+- **12 utkast i sms-draft-inkorgen** väntar på "N ok": Amir, Fredrik K, Omar,
+  Thomas K, Eva/Britt, Politikerns son, Björn (leverans i morgon kväll),
+  Sead (EN, 30 % rabatt), Per Molin (GT3 3 300 kr), Leons pappa (klar),
+  Lucas (laddare åter + 20 %), Jonas Olsén (recension, privat).
+- **Koffe Karlsson, NAVEE ST5 Max, 11 900 kr:** distansköp ~15/9, aldrig
+  levererat (DHL till Västerås, hämtat på flygplatsen 30/9), kunden hävde
+  köpet 5/10 20:32 och kräver full återbetalning. Mejlutkast i Gmail-tråden
+  "Angående modellen" som bekräftar annullering + återbetalning inom 14 dagar.
+  **Sebastian skickar själv.** Scootern ska säljas om — kampanjtext levererad.
+- **Varning:** Jonas Olsén-ärendet är en offentlig recension — ingen agent
+  svarar publikt utan Sebastians godkända text.
+
 ### 2026-10-07 — Claude Code — KLAR (kundsynliga uppdateringar i statusportalen + ärendestäd)
 
 - **PR #144 mergad:** nytt PATCH-fält `customerUpdate` på `/api/cases/:id`
