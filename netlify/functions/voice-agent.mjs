@@ -22,6 +22,7 @@ import { getStore } from "@netlify/blobs";
 import { postSms } from "./_shared/sms.mjs";
 import {
   compactSlots,
+  fromElevenLabsWebhook,
   lookupByPhone,
   matchPrices,
   meetingSmsToCustomer,
@@ -29,6 +30,7 @@ import {
   normalizeCallSummary,
   normalizeMeeting,
   summarySmsToSebastian,
+  verifyElevenLabsSignature,
 } from "./_shared/voice-agent.mjs";
 // Publika prisregler. Statisk JSON-import så att esbuild bundlar filen in i
 // funktionen; en dynamisk require gav "Cannot find module" i produktion
@@ -112,7 +114,17 @@ const sendMail = async (subject, text) => {
 export default async (request) => {
   const url = new URL(request.url);
   const tool = clean(url.pathname.split("/").filter(Boolean).pop(), 40);
-  const auth = authorized(request);
+  // Post-call-webhooken kan inte sätta egna headers; ElevenLabs signerar i
+  // stället med HMAC (VOICE_AGENT_WEBHOOK_SECRET). Den delade hemligheten i
+  // header accepteras fortfarande, för tester och för andra plattformar.
+  let rawBody = "";
+  let webhookOk = false;
+  if (tool === "summary" && request.method === "POST") {
+    rawBody = await request.text().catch(() => "");
+    const webhookSecret = env("VOICE_AGENT_WEBHOOK_SECRET");
+    webhookOk = Boolean(webhookSecret) && (await verifyElevenLabsSignature(request.headers.get("elevenlabs-signature"), rawBody, webhookSecret));
+  }
+  const auth = webhookOk ? { ok: true } : authorized(request);
   if (!auth.ok) return json({ error: auth.error }, auth.status);
 
   if (request.method === "GET" && tool === "health") {
@@ -125,7 +137,9 @@ export default async (request) => {
     });
   }
   if (request.method !== "POST") return json({ error: "Method not allowed" }, 405);
-  const body = await request.json().catch(() => ({}));
+  const body = rawBody
+    ? (() => { try { return JSON.parse(rawBody); } catch { return {}; } })()
+    : await request.json().catch(() => ({}));
 
   if (tool === "lookup") {
     const cases = await loadCases();
@@ -164,7 +178,7 @@ export default async (request) => {
   }
 
   if (tool === "summary") {
-    const s = normalizeCallSummary(body);
+    const s = normalizeCallSummary(fromElevenLabsWebhook(body));
     if (!s.callId && !s.phone) return json({ ok: false, error: "missing_call" }, 400);
     const cases = s.phone ? await loadCases() : [];
     const lookup = s.phone ? lookupByPhone(cases, s.phone) : null;
