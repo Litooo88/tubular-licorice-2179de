@@ -32,6 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — KLAR (fix: röstassistenten dygnet runt + 076, PR #153)
+
+- Sebastians första testsamtal på 076 utanför ringtid gick till telefonsvararen.
+  `voice-private.mjs` saknade agentroutning och `voice-simple.mjs` gick till
+  stängt-beskedet utanför telefontid. Nu: `VOICE_AGENT_SIP` först (20 s) på båda
+  linjerna, både vid obesvarat och utanför tid; nya fallback-steg `closed-play` /
+  `voicemail-play` ger gamla beteendet om assistenten inte svarar. voice 44 tester.
+- **Telefontiderna (9–18) är orörda** — de styr bara när Sebastians mobil rings,
+  inte längre om kunden får prata med någon.
+
 ### 2026-10-07 — Claude Code — KLAR (röstassistent dag 2: ElevenLabs + Netlify konfigurerat, PR #152)
 
 - **ElevenLabs (via Sebastians Chrome):** agent `agent_7501m4a5b9d7fnftyzxeqhx7tq5s` publicerad
