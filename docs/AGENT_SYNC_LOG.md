@@ -32,6 +32,33 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — KLAR (kundsynliga uppdateringar i statusportalen + ärendestäd)
+
+- **PR #144 mergad:** nytt PATCH-fält `customerUpdate` på `/api/cases/:id`
+  → `customerUpdates[]` (max 20), SKILT från interna `notes` (som innehåller
+  betalstatus och bedömningar). Portalen `/api/case-status/:id` exponerar de
+  fem senaste som `updates[]`, statussidan visar dem under "Senaste från
+  verkstaden". Portalens hämtningstext rättad till tis/tors 10–16.
+  **Regel för alla agenter:** det kunden ska se skrivs i `customerUpdate`,
+  aldrig i `note`.
+- **Uppdaterat:** Sören Persson (22/6-ärendet aktivt, 12/7 arkiverat som
+  dubblett), Simon Karlsson (5/9 aktivt, 2/9 + 4/9 arkiverade som dubbletter),
+  Adam Egerlid (celler bytta, balanserat 4,2 V, BMS-lödning kvar, leverans
+  8/10 em; delbetalt 695 + 2 050 kr i referensen). Alla tre har status
+  `diagnosing` och en kundsynlig uppdatering.
+- **Eva Hallgren = Britt i Askersund** (0583-140 24). Mejltråd
+  NEM-A42E-9C04-90FF: två alternativ skickade 13/9, **inget svar sedan 11/9**.
+  Ärendet satt till `waiting_customer` med sammanfattning; sms-utkast till Eva
+  i kön.
+- **Nya ärenden (registrerade i efterhand från telefonen):** Leons pappa /
+  "Ölhallen" (+46762523317, G2 Master + Xiaomi, pågår, NEM-06D4-2A86-90DA) och
+  "Politikerns son" (+46724478276, E2S V2, NEM-ABFE-299F-E3B4; pappa troligen
+  Rickard Strömberg, Örebro kommun — obekräftat). Andrejs 450 kr bokförd;
+  7 500 + 200 kr 30/6 från samma nummer är obekräftat vad det avser.
+- **7 utkast i sms-draft-inkorgen** väntar på Sebastians "N ok": Amir,
+  Fredrik Karlsson, Omar Dele, Thomas Karlsson, Lucas Malm, Eva Hallgren,
+  Politikerns son.
+
 ### 2026-10-07 — Claude Code — KLAR (bokning låst till tis/tors, telefonexport genomgången, 5 utkast i kön)
 
 - **PR #143 mergad:** inlämning bara **tisdag och torsdag 10–16** (klient +
