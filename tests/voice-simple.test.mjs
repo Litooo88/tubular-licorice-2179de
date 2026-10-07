@@ -11,6 +11,7 @@ const ENV_KEYS = [
   "VOICE_PRIMARY_NUMBER",
   "VOICE_SEBASTIAN_PHONE",
   "VOICE_FALLBACK_NUMBER",
+  "VOICE_AGENT_SIP",
   "VOICE_TEST_NOW",
   "VOICE_CLOSED_MP3_URL",
   "VOICE_VOICEMAIL_MP3_URL",
@@ -182,5 +183,29 @@ test("VOICE_TIMEOUT_SECONDS overrides the default and stays inside 46elks 10-60 
   await withEnv({ VOICE_PRIMARY_NUMBER: "+46700000001", VOICE_TEST_NOW: OPEN_NOW, VOICE_TIMEOUT_SECONDS: "3" }, async () => {
     const action = await (await voiceSimple(request())).json();
     assert.equal(action.timeout, 10, "under golvet ska klampas till 10");
+  });
+});
+
+// Röstassistenten (docs/VOICE_AGENT.md): med VOICE_AGENT_SIP satt kopplas
+// samtalet till assistenten när ingen människa svarat; svarar inte den
+// heller går det vidare till den vanliga telefonsvararen. Utan variabeln
+// ska kedjan vara exakt som förut (testerna ovan).
+test("voicemail step connects the voice agent when VOICE_AGENT_SIP is configured", async () => {
+  await withEnv({ VOICE_PRIMARY_NUMBER: "+46700000001", VOICE_AGENT_SIP: "sip:agent@example.test", VOICE_TEST_NOW: OPEN_NOW }, async () => {
+    const response = await voiceSimple(request("?step=voicemail"));
+    const action = await response.json();
+    assert.equal(action.connect, "sip:agent@example.test");
+    assert.equal(action.timeout, 20);
+    assert.match(action.next, /voice-simple\?step=voicemail-play&caller=%2B46700000000$/);
+  });
+});
+
+test("fallback without fallback number goes to the voice agent when configured, and voicemail-play is the old voicemail", async () => {
+  await withEnv({ VOICE_PRIMARY_NUMBER: "+46700000001", VOICE_AGENT_SIP: "sip:agent@example.test", VOICE_TEST_NOW: OPEN_NOW }, async () => {
+    const fallback = await (await voiceSimple(request("?step=fallback"))).json();
+    assert.equal(fallback.connect, "sip:agent@example.test");
+    const play = await (await voiceSimple(request("?step=voicemail-play"))).json();
+    assert.equal(play.play, "https://www.nordicemobility.se/audio/voicemail-prompt.mp3");
+    assert.match(play.next, /voice-simple\?step=beep&caller=%2B46700000000$/);
   });
 });

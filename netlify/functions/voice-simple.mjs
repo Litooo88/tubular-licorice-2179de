@@ -172,18 +172,37 @@ export default async (request, context) => {
     console.warn("voice_simple_secret_not_configured", { route: "public_fallback" });
   }
 
+  // Röstassistenten (docs/VOICE_AGENT.md): när ingen människa svarar kopplas
+  // samtalet till assistentens SIP-adress i stället för till telefonsvararen.
+  // Env-gatat: utan VOICE_AGENT_SIP är kedjan exakt som förut. Svarar inte
+  // assistenten (plattformen nere) faller samtalet vidare till den vanliga
+  // telefonsvararen, så ingen kund möter tystnad.
+  const agentSip = clean(env("VOICE_AGENT_SIP"), 120);
+  const voicemailOrAgent = () => {
+    if (!agentSip) return { play: voicemailPrompt, next: selfUrl(origin, auth, "beep", caller) };
+    const action = { connect: agentSip, timeout: 20, next: selfUrl(origin, auth, "voicemail-play", caller) };
+    if (auth.configured) action.whenhangup = callbackUrl(origin, auth);
+    return action;
+  };
+
   // Steg 2: Sebastian svarade inte → ring fallback-numret om ett är satt,
-  // annars direkt till telefonsvararen.
+  // annars direkt till assistenten/telefonsvararen.
   if (step === "fallback") {
     const fallback = clean(env("VOICE_FALLBACK_NUMBER"), 40);
-    if (!fallback) return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "beep", caller) });
+    if (!fallback) return json(voicemailOrAgent());
     const action = { connect: fallback, timeout, next: selfUrl(origin, auth, "voicemail", caller) };
     if (auth.configured) action.whenhangup = callbackUrl(origin, auth);
     return json(action);
   }
 
-  // Steg 3: inte heller fallback-numret svarade → telefonsvararens prompt.
+  // Steg 3: inte heller fallback-numret svarade → assistenten om den är
+  // konfigurerad, annars telefonsvararens prompt.
   if (step === "voicemail") {
+    return json(voicemailOrAgent());
+  }
+
+  // Steg 3a: assistenten svarade inte heller → telefonsvararens prompt.
+  if (step === "voicemail-play") {
     return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "beep", caller) });
   }
 
