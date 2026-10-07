@@ -2,6 +2,8 @@ import { getStore } from "@netlify/blobs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
 import { blockNumber, listBlockedNumbers, unblockNumber } from "./_shared/call-blocklist.mjs";
 import { findStaleRingReplies } from "./_shared/ring-escalation.mjs";
+import { isQuietHour, nextOptimalSendAt } from "./_shared/quiet-hours.mjs";
+import { SMS_PART_COST_SEK, campaignKey, filterRecipients, isGsm7, personalize, smsParts } from "./_shared/campaign.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -990,6 +992,83 @@ export default async (request) => {
       const result = await unblockNumber(body.number);
       if (!result.ok) return json({ error: result.error }, 400);
       return json({ ok: true, number: result.number, blockedNumbers: await listBlockedNumbers() });
+    }
+
+    // Kampanj i batch: köa ett personaliserat SMS till en lista, med samma
+    // skydd som send_discount (egna nummer, optout, spärrlista, 30 dagar per
+    // nummer) plus GSM-7-kontroll så att ett tankstreck inte tredubblar
+    // kostnaden. Utan confirmLiveSms=true är anropet en torrkörning som bara
+    // räknar och förhandsvisar. Själva utskicket gör outbox-flush dagtid, i
+    // portioner. cancel_campaign tömmer kön innan den gått.
+    if (action === "queue_campaign") {
+      const tag = clean(body.tag, 40).replace(/[^a-z0-9_-]/gi, "");
+      const template = clean(body.message, 918);
+      if (!tag) return json({ error: "tag saknas (t.ex. aterkoppling-okt)." }, 400);
+      if (!template) return json({ error: "message saknas." }, 400);
+      if (!isGsm7(template) && body.allowUcs2 !== true) {
+        return json({ error: "Texten innehåller tecken utanför GSM-7 (tankstreck, typografiska citattecken …) och blir 2-3 gånger dyrare. Byt ut dem eller skicka allowUcs2=true." }, 409);
+      }
+      const recipientsRaw = Array.isArray(body.recipients) ? body.recipients.slice(0, 500) : [];
+      if (!recipientsRaw.length) return json({ error: "recipients saknas." }, 400);
+      const [{ items: optoutMap }, { items: campaignMap }, blocked] = await Promise.all([
+        loadBlobMap("sms-optout"),
+        loadBlobMap("campaign-sent"),
+        listBlockedNumbers(),
+      ]);
+      const { ok, skipped } = filterRecipients({
+        recipients: recipientsRaw,
+        ownNumbers: ownNumbers(),
+        optoutPhones: [...optoutMap.keys()],
+        blockedPhones: blocked.map((b) => (typeof b === "string" ? b : b?.phone)).filter(Boolean),
+        campaignSent: [...campaignMap.values()],
+      });
+      const messages = ok.map((r) => ({ ...r, message: personalize(template, r) }));
+      const totalParts = messages.reduce((sum, m) => sum + smsParts(m.message), 0);
+      const estimatedCost = Math.round(totalParts * SMS_PART_COST_SEK * 100) / 100;
+      const requestedAt = body.sendAt ? new Date(body.sendAt) : null;
+      const sendAfter = requestedAt && !Number.isNaN(requestedAt.getTime())
+        ? requestedAt.toISOString()
+        : isQuietHour() ? nextOptimalSendAt() : new Date().toISOString();
+      const preview = messages.slice(0, 3).map((m) => ({ phone: m.phone, message: m.message, parts: smsParts(m.message) }));
+      const summary = { tag, candidates: messages.length, skipped, totalParts, estimatedCost, sendAfter, preview };
+      if (body.confirmLiveSms !== true || body.dryRun === true) {
+        return json({ ok: true, dryRun: true, queued: 0, ...summary });
+      }
+      // Svar ska landa i sms-inbound ("svara RING"), därför SMS-kapabla numret.
+      const from = body.replyable === false ? "" : normalizePhone(env("ELKS_SMS_NUMBER") || env("ELKS_NUMBER") || "");
+      const outbox = getStore({ name: "outbox", consistency: "strong" });
+      const queuedAt = new Date().toISOString();
+      let queued = 0;
+      for (const m of messages) {
+        await outbox.setJSON(campaignKey(tag, m.phone), {
+          type: "campaign_sms",
+          tag,
+          phone: m.phone,
+          message: m.message,
+          from,
+          sendAfter,
+          queuedAt,
+          operator: operatorName,
+        });
+        queued += 1;
+      }
+      return json({ ok: true, dryRun: false, queued, ...summary });
+    }
+
+    if (action === "cancel_campaign" || action === "campaign_status") {
+      const tag = clean(body.tag, 40).replace(/[^a-z0-9_-]/gi, "");
+      if (!tag) return json({ error: "tag saknas." }, 400);
+      const outbox = getStore({ name: "outbox", consistency: "strong" });
+      const prefix = campaignKey(tag, "").replace(/-$/, "-");
+      const { blobs } = await outbox.list({ prefix }).catch(() => ({ blobs: [] }));
+      const keys = (blobs || []).map((b) => b.key);
+      if (action === "cancel_campaign") {
+        for (const key of keys) await outbox.delete(key).catch(() => {});
+        return json({ ok: true, tag, cancelled: keys.length });
+      }
+      const { items: campaignMap } = await loadBlobMap("campaign-sent");
+      const sent = [...campaignMap.values()].filter((item) => item?.lastCode === tag || (Array.isArray(item?.history) && item.history.some((h) => h?.code === tag)));
+      return json({ ok: true, tag, queued: keys.length, sent: sent.length });
     }
 
     if (!["send_discount", "discount"].includes(action)) return json({ error: "Okand action." }, 400);
