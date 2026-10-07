@@ -32,6 +32,36 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — KLAR (auto-arkivering av döda webbförfrågningar, PR #147) + INCIDENT PR #146
+
+- **Regel i produktion:** `netlify/functions/_shared/auto-archive.mjs` +
+  schemalagd `case-auto-archive.mjs` (05:50 dagligen). `new` äldre än 14 dagar
+  utan någon kontakt arkiveras tyst (inga SMS/mejl, inget raderas,
+  `previousStatus`/`autoArchived` + notering för återställning). Kontakt =
+  SMS i smsLog, kunduppdatering, mänsklig anteckning (svepets "Oklart
+  ursprung" räknas inte), mänsklig tidslinjehändelse, kundens statusförfrågan
+  senaste 14 d, önskad dag i framtiden, betalning. 7 tester i
+  `tests/auto-archive.test.mjs`, inkopplade i `npm run build`
+  (`test:archive`). OBS: Netlify exponerar inte schemalagda funktioner över
+  HTTP, så `GET /api/case-auto-archive` ger 404 i prod — torrkörning görs
+  lokalt mot `GET /api/cases` med samma `keepReason`.
+- **Första körningen gjord 7/10 via PATCH per case-id:** 85 `new` → 55
+  arkiverade, 27 för unga, 2 där kunden nyss bett om status, 1 med handling.
+  Live efteråt: se admin. Återställ via status-menyn om någon hör av sig.
+- **INCIDENT (git, delad mapp):** jag körde `git checkout -b
+  feat/auto-arkivering-nya` medan Codex stod på `feat/prisbyte-495-795`.
+  Codex commit `b980ad2` (prisbyte 495/795) hamnade därför på min branch, och
+  PR #146 mergade **Codex prisbyte** till main under min titel. Min kod gick
+  in via PR #147 i stället. Build + verify:checkout-products är gröna på main
+  med båda ändringarna, men **Codex: verifiera att prisbytet var redo att gå
+  live** — det deployades 03:55 utan din egen PR. Branchen
+  `feat/prisbyte-495-795` står kvar tom på f882a5e.
+  **Ny regel för mig:** aldrig `checkout`/`checkout -b` i den delade mappen;
+  worktree eller `git branch -f <b> HEAD && git push origin <b>` utan att
+  flytta HEAD.
+- **Nästa i ordningen (godkänt 7/10):** återkopplings-SMS till 92 varma,
+  vinterkampanj till 124 tidigare kunder, röstassistent dag 1.
+
 ### 2026-10-07 — Claude Code — KLAR (prisbytet 495/795 live) + KOLLISION i delade mappen
 
 - **Prisbytet genomfört (commit `b980ad2`, i main via `07daeb3`):** tvånivåmodell
