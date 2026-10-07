@@ -32,6 +32,26 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — KLAR (röstassistent "Nova" v3 efter första testsamtalen, PR #154 #155)
+
+- **Sebastians fynd:** för seg presentation (lät som telefonsvarare), gissade pris (595 för
+  batterifelsökning), kunde inte scooterpriser, kunde inte ta meddelande, sammanfattning på
+  engelska, samtalet bröts efter 7 min.
+- **Kod:** `prices` ger hela listan när frågan inte träffar; nya verktyg `scooters` (publika
+  fält ur products.json, costEur filtreras och testas) och `message` (SMS till Sebastian +
+  blob `voice-agent-messages`). Nya priser i `price-rules.json` (punktering 395/445,
+  punkteringsfritt 289+395, grunddiagnos 495–795, batterifelsökning 695 m. avdrag).
+- **ElevenLabs:** namn Nova, ny hälsning, prompt v3 (docs/voice-agent-prompt.md: modell och
+  slang/slanglöst vid punktering, fullständiga kontaktuppgifter, erbjud återuppringning,
+  rabattkod dubbelkollas, tidigare överenskommelser → meddelande + återuppringning), sex
+  verktyg kopplade, analysspråk svenska, max samtalslängd 1800 s, spekulativ tur på,
+  ASR-nyckelord för märkena. Publicerad.
+- **Lärdom:** ElevenLabs utkast sparas INTE mellan sidbyten utan Publicera; en separat
+  Chrome-flik tappade alla ändringar. Publicera efter varje sida. Talhastighet går inte att
+  ställa i V4 Turbo expressive.
+- **Öppet:** webben säger fortfarande "Laga punktering 349" och "Punkteringsfritt 749" på
+  startsidan — Sebastian avgör. Fråga från Sebastian om Nova som chatt på hemsidan: svar i tråden.
+
 ### 2026-10-08 — Claude Code — PÅGÅR (prisrevision: avancerad diagnos 795→695 + aktivt godkännande-löfte)
 
 - **Sebastians beslut:** Grunddiagnos 495 kvar, Avancerad diagnos (batteri
