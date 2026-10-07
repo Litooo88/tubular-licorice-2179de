@@ -32,6 +32,25 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — KLAR (kampanjkö PR #148, deploy-fix PR #149, två kampanjer köade)
+
+- **Deploy-stopp hittat och åtgärdat:** `case-auto-archive.mjs` hade både
+  `path` och `schedule`; Netlify stoppade därmed ALLA byggen från PR #147
+  (03:50) till PR #149 (04:21). Ingen schemalagd funktion får ha `path`.
+  Bokningsslots (steg 1) och kampanjkön blev live 04:21.
+- **Kampanjkö i produktion:** `queue_campaign` / `cancel_campaign` /
+  `campaign_status` i `call-dashboard.mjs`, hjälpare i `_shared/campaign.mjs`
+  (6 tester, `test:campaign` i build), utskick via `outbox-flush` typ
+  `campaign_sms`, 25 per körning, från SMS-kapabla numret så RING-svar landar
+  i `sms-inbound`. `postSms` i `_shared/sms.mjs` har valfri `from`.
+- **Köat:** `aterkoppling-okt` 79 nummer (aldrig nådda sedan 15/8, ej
+  kunder, exkl. aktiva/betalda/Britt), 41 kr, går 7/10 kl 10:00.
+  `vinter-2026` 121 tidigare kunder med {namn}/{modell}, 63 kr, går
+  **8/10 kl 10:00** — 46elks-saldo är 112 kr, Sebastian måste fylla på
+  före dess, annars `cancel_campaign` med tag `vinter-2026`.
+- **Kvar (godkänt):** röstassistent dag 1–3. Mottagarlistor och payloads
+  ligger i scratchpad, inte i repot (telefonnummer).
+
 ### 2026-10-07 — Claude Code — KLAR (bokning steg 1: lediga tider live ur verkstadskalendern)
 
 - **Levererat (branch `worktree-bokning-steg1-slots` → merge `10cb798` på
