@@ -25,10 +25,13 @@ export const normalizePhone = (phone) => {
 export const smsConfigured = () =>
   Boolean((env("ELKS_USERNAME") || env("SMS_API_USERNAME")) && (env("ELKS_PASSWORD") || env("SMS_API_PASSWORD")));
 
-export const postSms = async ({ to, message }) => {
+// `from` är valfritt: utelämnat ger avsändarnamnet (SMS_FROM, kan inte ta emot
+// svar). Kampanjer som ber kunden "svara RING" skickar i stället från det
+// SMS-kapabla numret så att svaret landar i sms-inbound.
+export const postSms = async ({ to, message, from: fromOverride }) => {
   const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
   const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
-  const from = (env("SMS_FROM") || "NordicEMob").slice(0, 11);
+  const from = clean(fromOverride, 20) || (env("SMS_FROM") || "NordicEMob").slice(0, 11);
   const normalizedTo = normalizePhone(to);
   if (!normalizedTo) return { status: "invalid_phone", to: "" };
   if (!clean(message, 2000)) return { status: "missing_message", to: normalizedTo };

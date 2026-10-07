@@ -6,6 +6,7 @@ import { getStore } from "@netlify/blobs";
 import { isQuietHour } from "./_shared/quiet-hours.mjs";
 import { sendThankYou, thankYouOutcome } from "./workshop-cases.mjs";
 import { postSms } from "./_shared/sms.mjs";
+import { CAMPAIGN_BATCH_PER_RUN } from "./_shared/campaign.mjs";
 
 // Hur många gånger en köpost får försökas innan vi ger upp och slutar ockupera
 // kön. Utan tak skulle ett permanent providerfel återkomma i all evighet.
@@ -16,9 +17,15 @@ export default async () => {
 
   const outbox = getStore({ name: "outbox", consistency: "strong" });
   const caseStore = getStore({ name: "workshop-cases", consistency: "strong" });
+  const optoutStore = getStore({ name: "sms-optout", consistency: "strong" });
+  const campaignStore = getStore({ name: "campaign-sent", consistency: "strong" });
   const { blobs } = await outbox.list().catch(() => ({ blobs: [] }));
   const now = Date.now();
   const results = [];
+  // Kampanj-SMS skickas i portioner: max CAMPAIGN_BATCH_PER_RUN per körning
+  // (var 15:e minut), så att en kö på hundra nummer tar en dryg timme i
+  // stället för att en funktion står och skickar tills den dödas.
+  let campaignSentThisRun = 0;
 
   for (const blob of blobs || []) {
     const entry = await outbox.get(blob.key, { type: "json" }).catch(() => null);
@@ -111,6 +118,41 @@ export default async () => {
           }).catch(() => {});
         }
         results.push({ key: blob.key, status: "sent" });
+      }
+    } else if (entry.type === "campaign_sms" && entry.phone && entry.message) {
+      // Köat kampanj-SMS (call-dashboard action queue_campaign). Portionerat,
+      // optout kontrolleras igen vid utskick (kan ha kommit efter köandet),
+      // och campaign-sent uppdateras så att 30-dagarsspärren gäller.
+      if (campaignSentThisRun >= CAMPAIGN_BATCH_PER_RUN) {
+        results.push({ key: blob.key, status: "deferred" });
+        continue;
+      }
+      const opted = await optoutStore.get(entry.phone, { type: "json" }).catch(() => null);
+      if (opted) {
+        results.push({ key: blob.key, status: "optout" });
+      } else {
+        campaignSentThisRun += 1;
+        const sms = await postSms({ to: entry.phone, message: entry.message, from: entry.from || undefined }).catch(() => ({ status: "failed" }));
+        const sentAt = new Date().toISOString();
+        if (sms.status !== "sent") {
+          const attempts = Number(entry.attempts || 0) + 1;
+          if (attempts < MAX_THANK_YOU_ATTEMPTS) {
+            await outbox.setJSON(blob.key, { ...entry, attempts, lastTriedAt: sentAt, lastError: sms.error || sms.status }).catch(() => {});
+            results.push({ key: blob.key, status: "retry", attempt: attempts, sms: sms.status });
+            continue;
+          }
+          results.push({ key: blob.key, status: "gave_up", sms: sms.status });
+        } else {
+          const prior = await campaignStore.get(entry.phone, { type: "json" }).catch(() => null);
+          await campaignStore.setJSON(entry.phone, {
+            phone: entry.phone,
+            lastSentAt: sentAt,
+            lastCode: entry.tag || "campaign",
+            count: (Number(prior?.count) || 0) + 1,
+            history: [...(Array.isArray(prior?.history) ? prior.history : []).slice(-19), { at: sentAt, code: entry.tag || "campaign", providerId: sms.id || "", operator: entry.operator || "" }],
+          }).catch(() => {});
+          results.push({ key: blob.key, status: "sent", tag: entry.tag });
+        }
       }
     } else {
       results.push({ key: blob.key, status: "unknown_type" });
