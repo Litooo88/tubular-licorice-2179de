@@ -32,6 +32,18 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-08 — Claude Code — PÅGÅR (prisrevision: avancerad diagnos 795→695 + aktivt godkännande-löfte)
+
+- **Sebastians beslut:** Grunddiagnos 495 kvar, Avancerad diagnos (batteri
+  och elektronik) sänks 795 → **695 kr**. Full konsistensgenomgång av ALLA
+  priser på sajten + förtydligande överallt att kunden alltid får ett
+  kostnadsförslag som AKTIVT måste godkännas innan åtgärd.
+- **Extra viktigt:** `data/workshop/price-rules.json` är röstassistentens
+  priskälla (statisk import i voice-agent.mjs) — uppdateras i samma commit,
+  och prices-verktygets policytext förtydligas med godkännandekravet.
+  OBS till röstassistent-sessionen: priserna i er agent ändras härmed.
+- **Arbetssätt:** egen worktree, plumbing-merge.
+
 ### 2026-10-07 — Claude Code — KLAR (röstassistent: SIP-transport rättad till TCP)
 
 - Testsamtalen 06:40 på 076: 4–5 signaler, sedan telefonsvarare, men ElevenLabs loggade
