@@ -873,10 +873,21 @@ export default async (request, context) => {
       next.notes = [...(current.notes || []), { at: now, text: clean(body.note) }];
     }
 
+    // Kundsynlig uppdatering. Skild från `notes` med flit: anteckningarna
+    // innehåller interna bedömningar och betalstatus som aldrig ska visas i
+    // statusportalen. Det här fältet är det ENDA som exponeras där.
+    const customerUpdate = clean(body.customerUpdate, 1200);
+    if (customerUpdate) {
+      next.customerUpdates = [...(Array.isArray(current.customerUpdates) ? current.customerUpdates : []), { at: now, text: customerUpdate }].slice(-20);
+    }
+
     const timeline = [...(current.timeline || [])];
+    if (customerUpdate) {
+      timeline.push({ at: now, event: `Kunduppdatering${operatorName ? ` av ${operatorName}` : ""}: ${clean(customerUpdate, 160)}` });
+    }
     if (body.note) {
       timeline.push({ at: now, event: `Uppdaterad${operatorName ? ` av ${operatorName}` : ""}: ${clean(body.note, 160)}` });
-    } else if (body.status !== undefined) {
+    } else if (body.status !== undefined && !customerUpdate) {
       timeline.push({ at: now, event: `Status andrad till ${next.status}${operatorName ? ` av ${operatorName}` : ""}` });
     }
 

@@ -20,6 +20,7 @@ h1{font-size:24px;line-height:1.2;margin-bottom:6px}
 .status-now{margin:18px 0;border:1px solid rgba(0,200,83,.4);background:rgba(0,200,83,.1);border-radius:8px;padding:14px 16px}
 .status-now small{display:block;color:#a7f3be;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
 .status-now b{font-size:20px}
+.updates{margin:0 0 14px;border:1px solid rgba(0,200,83,.35);background:rgba(0,200,83,.07);border-radius:8px;padding:12px 13px}.updates small{display:block;color:#a7f3be;font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}.update time{display:block;color:#9fb3a7;font-size:12px}.update p{margin:2px 0 0;color:#eafff0;font-size:14px;line-height:1.5}.update.older{margin-top:10px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}.update.older p{color:#b9c9bf}
 .note{margin:0 0 14px;border:1px solid rgba(255,189,74,.35);background:rgba(255,189,74,.09);color:#ffe0a2;border-radius:8px;padding:11px 13px;font-size:13px;line-height:1.5}
 .steps{list-style:none;margin:16px 0}
 .steps li{position:relative;padding:0 0 22px 34px;color:#8d9a91;font-size:14px}
@@ -119,6 +120,7 @@ button:disabled{opacity:.55;cursor:default}
       content.className='';
       content.innerHTML=`
         <div class="status-now"><small>Status just nu</small><b>${esc(data.statusLabel)}</b></div>
+        ${(data.updates||[]).length?`<div class="updates"><small>Senaste från verkstaden</small>${data.updates.map((u,i)=>`<div class="update${i?' older':''}"><time>${esc(u.at)}</time><p>${esc(u.text)}</p></div>`).join('')}</div>`:''}
         ${data.note?`<div class="note">${esc(data.note)}</div>`:''}
         <ul class="steps">${steps}</ul>
         <div class="updated">Senast uppdaterad: ${esc(data.updatedAt)}</div>
