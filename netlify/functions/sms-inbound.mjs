@@ -115,7 +115,8 @@ const hanteraGodkannande = async (kommando) => {
       continue;
     }
     const svar = await kallaApprove(rad.draftId, "approve", kommando.kind === "andra" ? kommando.text : undefined);
-    resultat.push(`${rad.nr} ${rad.namn || rad.telefon || ""} ${svar.ok ? "skickat" : `FEL: ${svar.fel}`}`.trim());
+    const utfall = !svar.ok ? `FEL: ${svar.fel}` : svar.data?.status === "queued" ? "koat till kl 10" : "skickat";
+    resultat.push(`${rad.nr} ${rad.namn || rad.telefon || ""} ${utfall}`.trim());
   }
   // Ta bort hanterade rader ur kon sa att samma nummer inte kan skickas tva ganger.
   const kvar = items.filter((i) => !valda.some((v) => v.nr === i.nr));

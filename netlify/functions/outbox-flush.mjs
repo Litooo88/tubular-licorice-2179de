@@ -5,6 +5,7 @@
 import { getStore } from "@netlify/blobs";
 import { isQuietHour } from "./_shared/quiet-hours.mjs";
 import { sendThankYou, thankYouOutcome } from "./workshop-cases.mjs";
+import { postSms } from "./_shared/sms.mjs";
 
 // Hur många gånger en köpost får försökas innan vi ger upp och slutar ockupera
 // kön. Utan tak skulle ett permanent providerfel återkomma i all evighet.
@@ -78,6 +79,38 @@ export default async () => {
         }
       } else {
         results.push({ key: blob.key, status: "skipped_not_queued" });
+      }
+    } else if (entry.type === "draft_sms" && entry.caseId && entry.phone && entry.message) {
+      // Kundsms som godkändes under tysta timmar (sms-draft-inbox). Samma
+      // kontrakt som approve-rutten: skicka, logga på ärendet, new→contacted.
+      const sms = await postSms({ to: entry.phone, message: entry.message }).catch(() => ({ status: "failed" }));
+      const sentAt = new Date().toISOString();
+      if (sms.status !== "sent") {
+        const attempts = Number(entry.attempts || 0) + 1;
+        if (attempts < MAX_THANK_YOU_ATTEMPTS) {
+          await outbox.setJSON(blob.key, { ...entry, attempts, lastTriedAt: sentAt, lastError: sms.error || sms.status }).catch(() => {});
+          results.push({ key: blob.key, status: "retry", attempt: attempts, sms: sms.status });
+          continue;
+        }
+        results.push({ key: blob.key, status: "gave_up", sms: sms.status });
+      } else {
+        const caseItem = await caseStore.get(entry.caseId, { type: "json" }).catch(() => null);
+        if (caseItem) {
+          await caseStore.setJSON(entry.caseId, {
+            ...caseItem,
+            status: caseItem.status === "new" ? "contacted" : caseItem.status,
+            smsLog: [
+              ...(Array.isArray(caseItem.smsLog) ? caseItem.smsLog : []),
+              { at: sentAt, kind: "draft-inbox", to: entry.phone, message: entry.message, status: "sent", providerId: sms.id || "", operator: entry.operator || "" },
+            ].slice(-50),
+            timeline: [
+              ...(Array.isArray(caseItem.timeline) ? caseItem.timeline : []),
+              { at: sentAt, event: `Köat AI-utkast (kategori ${entry.category || "C"}) skickat via SMS-API efter tysta timmar.` },
+            ],
+            updatedAt: sentAt,
+          }).catch(() => {});
+        }
+        results.push({ key: blob.key, status: "sent" });
       }
     } else {
       results.push({ key: blob.key, status: "unknown_type" });

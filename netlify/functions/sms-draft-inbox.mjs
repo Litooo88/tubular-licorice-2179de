@@ -2,6 +2,7 @@ import { getStore } from "@netlify/blobs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
 import { normalizePhone, postSms } from "./_shared/sms.mjs";
 import { scoreLead } from "./_shared/lead-priority.mjs";
+import { isQuietHour, nextOptimalSendAt } from "./_shared/quiet-hours.mjs";
 
 // SMS-utkastinkorg: AI/agent genererar utkast för obesvarade ärenden,
 // Sebastian granskar och godkänner i admin, systemet skickar spårbart.
@@ -176,6 +177,37 @@ export default async (request, context) => {
     const optout = getStore({ name: "sms-optout", consistency: "strong" });
     const opted = await optout.get(phone, { type: "json" }).catch(() => null);
     if (opted) return json({ error: "Kunden har avböjt SMS (optout) — hantera manuellt." }, 409);
+
+    // Tysta timmar (21–08 svensk tid): ett "1 ok" klockan 02:30 ska inte väcka
+    // kunden. Utskicket köas i outbox-storen och går kl 10:00, samma väg som
+    // tackmailen. Utkastet tas bort direkt så att det inte kan godkännas två
+    // gånger; ärendets tidslinje visar att det är köat.
+    if (isQuietHour()) {
+      const queuedAt = new Date().toISOString();
+      const sendAfter = nextOptimalSendAt();
+      const operatorQueued = clean(body.operatorName, 80);
+      await getStore({ name: "outbox", consistency: "strong" }).setJSON(`${caseKey}-draft-${Date.now()}`, {
+        type: "draft_sms",
+        caseId: caseKey,
+        draftId: id,
+        phone,
+        message,
+        category: draft.category || "C",
+        operator: operatorQueued,
+        sendAfter,
+        queuedAt,
+      });
+      await cases.setJSON(caseKey, {
+        ...item,
+        updatedAt: queuedAt,
+        timeline: [
+          ...(Array.isArray(item.timeline) ? item.timeline : []),
+          { at: queuedAt, event: `AI-utkast godkänt${operatorQueued ? ` av ${operatorQueued}` : ""} under tysta timmar — SMS köat till ${new Date(sendAfter).toLocaleString("sv-SE", { timeZone: "Europe/Stockholm", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}.` },
+        ],
+      });
+      await drafts.delete(id);
+      return json({ status: "queued", sendAfter, caseId: caseKey });
+    }
 
     const sms = await postSms({ to: phone, message });
     if (sms.status === "not_configured") return json({ status: "not_configured" });
