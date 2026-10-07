@@ -1036,6 +1036,101 @@ const validatePreferredDate = (value) => {
   return "";
 };
 
+// ---- Lediga tider (bokningsombyggnad steg 1, 2026-10-07) ----
+// GET /api/bookings?view=slots listar tis/tors-slots 35 dagar framåt och
+// markerar upptagna via EN freeBusy-fråga mot verkstadskalendern. Publik
+// endpoint utan persondata — den avslöjar bara ledigt/upptaget, samma
+// information som ett bokningsförsök redan ger via 409:an.
+// Fail-open: kan kalendern inte nås returneras status "unchecked" och klienten
+// visar alla tider (serverns 409-kontroll vid POST fångar ändå krockar).
+
+const SLOTS_CACHE_TTL_MS = 60 * 1000;
+let slotsCache = { at: 0, payload: null };
+
+export const buildDropoffDays = (now = localPartsFromDate(new Date())) => {
+  const nowValue = Date.UTC(now.year, now.month - 1, now.day, now.hour, now.minute);
+  const days = [];
+  for (let offset = 0; offset < 35; offset += 1) {
+    const date = new Date(Date.UTC(now.year, now.month - 1, now.day + offset, 12, 0));
+    if (!DROPOFF_WEEKDAYS.has(date.getUTCDay())) continue;
+    const dayParts = { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, day: date.getUTCDate() };
+    const slots = [];
+    for (let minute = DROPOFF_FIRST_MINUTE; minute <= DROPOFF_LAST_MINUTE; minute += 30) {
+      const parts = { ...dayParts, hour: Math.floor(minute / 60), minute: minute % 60 };
+      const localValue = Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute);
+      if (localValue <= nowValue) continue;
+      const startMs = Date.parse(localPartsToUtcIso(parts));
+      slots.push({
+        time: `${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}`,
+        startMs,
+        endMs: startMs + 30 * 60 * 1000,
+      });
+    }
+    if (slots.length) {
+      days.push({
+        date: `${dayParts.year}-${String(dayParts.month).padStart(2, "0")}-${String(dayParts.day).padStart(2, "0")}`,
+        slots,
+      });
+    }
+  }
+  return days;
+};
+
+const fetchBusyIntervals = async (days) => {
+  const calendarConfig = googleCalendarConfig();
+  if (!calendarConfig.ok || !days.length) return { busy: null, reason: calendarConfig.ok ? "empty" : "not_configured" };
+  try {
+    const token = await getGoogleAccessToken();
+    if (!token) return { busy: null, reason: "no_token" };
+    const firstSlot = days[0].slots[0];
+    const lastDay = days[days.length - 1];
+    const lastSlot = lastDay.slots[lastDay.slots.length - 1];
+    const response = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({
+        timeMin: new Date(firstSlot.startMs).toISOString(),
+        timeMax: new Date(lastSlot.endMs).toISOString(),
+        items: [{ id: calendarConfig.calendarId }],
+      }),
+      signal: AbortSignal.timeout(8000),
+    });
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) return { busy: null, reason: clean(body.error?.message || response.statusText, 120) };
+    const calendar = body.calendars?.[calendarConfig.calendarId];
+    if (calendar?.errors?.length) return { busy: null, reason: "calendar_errors" };
+    return {
+      busy: (calendar?.busy || []).map((item) => ({ start: Date.parse(item.start), end: Date.parse(item.end) }))
+        .filter((item) => Number.isFinite(item.start) && Number.isFinite(item.end)),
+      reason: "",
+    };
+  } catch (error) {
+    return { busy: null, reason: clean(error?.message, 120) };
+  }
+};
+
+export const markFreeSlots = (days, busy) =>
+  days.map((day) => ({
+    date: day.date,
+    slots: day.slots.map((slot) => ({
+      time: slot.time,
+      free: busy ? !busy.some((interval) => slot.startMs < interval.end && slot.endMs > interval.start) : true,
+    })),
+  }));
+
+const listDropoffSlots = async () => {
+  if (slotsCache.payload && Date.now() - slotsCache.at < SLOTS_CACHE_TTL_MS) return slotsCache.payload;
+  const days = buildDropoffDays();
+  const { busy, reason } = await fetchBusyIntervals(days);
+  const payload = {
+    status: busy ? "ok" : reason === "not_configured" ? "not_configured" : "unchecked",
+    generatedAt: new Date().toISOString(),
+    days: markFreeSlots(days, busy),
+  };
+  slotsCache = { at: Date.now(), payload };
+  return payload;
+};
+
 const bookingIdempotencyKey = (request, body = {}) => {
   const provided = clean(request.headers.get("idempotency-key") || request.headers.get("x-idempotency-key"), 180);
   if (provided) return `booking_header_${createHash("sha256").update(provided).digest("hex").slice(0, 48)}`;
@@ -1058,6 +1153,18 @@ const existingIdempotentBooking = async ({ idempotencyStore, caseStore, key }) =
 };
 
 export default async (request, context) => {
+  if (request.method === "GET") {
+    if (new URL(request.url).searchParams.get("view") !== "slots") {
+      return json({ error: "Method not allowed" }, 405);
+    }
+    try {
+      return json(await listDropoffSlots());
+    } catch (error) {
+      console.error("booking_slots_error", { message: clean(error?.message, 180) });
+      // Fail-open: klienten faller tillbaka på fritt dag/tid-val.
+      return json({ status: "unchecked", days: [] });
+    }
+  }
   if (request.method !== "POST") {
     return json({ error: "Method not allowed" }, 405);
   }

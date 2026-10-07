@@ -345,7 +345,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <option value="email">E-post f&ouml;rst</option>
           </select></div>
           <div class="form-group"><label for="preferredDay">Dag</label><select id="preferredDay" name="preferredDay" required></select></div>
-          <div class="form-group"><label for="preferredClock">Klockslag</label><select id="preferredClock" name="preferredClock" required></select></div>
+          <div class="form-group"><label for="preferredClock">Klockslag</label><select id="preferredClock" name="preferredClock" required></select><small id="slotSourceNote" class="muted" style="display:block;margin-top:4px"></small></div>
           <input id="preferredDate" name="preferredDate" type="hidden">
           <input id="preferred" name="preferred" type="hidden" value="">
           <div class="form-group"><label for="urgency">Prioritet</label><select id="urgency" name="urgency">
@@ -488,14 +488,51 @@ function stockholmTodayIso(){
   const now=stockholmNow();
   return `${now.year}-${pad(now.month)}-${pad(now.day)}`;
 }
+// Lediga tider hämtas live från verkstadskalendern (steg 1, 2026-10-07):
+// upptagna tider visas aldrig, så "tiden är din" är tekniskt garanterat.
+// liveSlots=null betyder att kalendern inte kunde nås — då faller vi
+// tillbaka på det fria dag/tid-valet och serverns 409-kontroll tar krockar.
+let liveSlots=null;
+async function loadLiveSlots(){
+  try{
+    const response=await fetch('/api/bookings?view=slots');
+    const data=await response.json();
+    if(response.ok&&data&&data.status==='ok'&&Array.isArray(data.days)){
+      liveSlots=new Map(data.days.map((day)=>[day.date,day.slots.filter((slot)=>slot.free).map((slot)=>slot.time)]));
+    }else{
+      liveSlots=null;
+    }
+  }catch(error){
+    liveSlots=null;
+  }
+  fillDayOptions();
+  fillTimeOptions();
+  updateSummary();
+  const note=document.getElementById('slotSourceNote');
+  if(note)note.textContent=liveSlots?'Tiderna hämtas live från verkstadskalendern — det du ser är ledigt.':'';
+}
+function dayLabel(isoDate){
+  const [y,m,d]=isoDate.split('-').map(Number);
+  return new Intl.DateTimeFormat('sv-SE',{timeZone:'UTC',weekday:'short',day:'numeric',month:'short'}).format(new Date(Date.UTC(y,m-1,d,12,0)));
+}
 function fillDayOptions(){
   if(!preferredDay)return;
+  const previous=preferredDay.value;
   preferredDay.innerHTML='';
+  if(liveSlots){
+    [...liveSlots.entries()].filter(([,times])=>times.length).forEach(([date])=>{
+      const option=document.createElement('option');
+      option.value=date;
+      option.textContent=dayLabel(date);
+      preferredDay.appendChild(option);
+    });
+    if(previous&&[...preferredDay.options].some((option)=>option.value===previous))preferredDay.value=previous;
+    return;
+  }
   const now=stockholmNow();
   const lastSlot=DROPOFF_TIMES[DROPOFF_TIMES.length-1];
   const lastSlotMinutes=Number(lastSlot.slice(0,2))*60+Number(lastSlot.slice(3));
-  // Inlamning bara tisdag (2) och torsdag (4). Fem veckor framat sa att det
-  // alltid finns minst tio valbara dagar.
+  // Fallback: inlamning bara tisdag (2) och torsdag (4), fem veckor framat.
   for(let offset=0;offset<35;offset+=1){
     const date=new Date(Date.UTC(now.year,now.month-1,now.day+offset,12,0));
     const weekday=date.getUTCDay();
@@ -511,9 +548,20 @@ function fillTimeOptions(){
   if(!preferredClock)return;
   const previous=preferredClock.value;
   preferredClock.innerHTML='';
+  if(liveSlots){
+    const times=liveSlots.get(preferredDay&&preferredDay.value)||[];
+    times.forEach((time)=>{
+      const option=document.createElement('option');
+      option.value=time;
+      option.textContent=time;
+      preferredClock.appendChild(option);
+    });
+    if(previous&&[...preferredClock.options].some((option)=>option.value===previous))preferredClock.value=previous;
+    return;
+  }
   const now=stockholmNow();
   const isToday=preferredDay&&preferredDay.value===stockholmTodayIso();
-  // Inlamningstider 10:00-16:00, tisdag och torsdag. Samma dag: bara framtida tider.
+  // Fallback: 10:00-16:00, samma dag bara framtida tider.
   DROPOFF_TIMES.forEach((time)=>{
     if(isToday&&Number(time.slice(0,2))*60+Number(time.slice(3))<=now.hour*60+now.minute)return;
     const option=document.createElement('option');
@@ -655,6 +703,7 @@ function applyPrefillFromUrl(){
 }
 fillDayOptions();
 fillTimeOptions();
+loadLiveSlots();
 applyPrefillFromUrl();
 if(serviceSelect)serviceSelect.addEventListener('change',()=>{syncServiceChoiceFromSelect();syncVehicleIdentityRequirement();updateSummary();});
 // GA4-funnel (steg 0 i bokningsombyggnaden): fyra events utan persondata,
@@ -758,6 +807,11 @@ if(bookingForm){
       const timeLabel=preferredDay&&preferredDay.value&&preferredClock&&preferredClock.value?`${preferredDay.value} kl ${preferredClock.value}`:'';
       const response=await fetch('/api/bookings',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});
       const result=await response.json().catch(()=>({}));
+      if(response.status===409){
+        // Tiden hann tas - hamta om lediga tider sa kunden ser aktuellt lage.
+        loadLiveSlots();
+        throw new Error(result.error||'Tiden hann bokas av n\u00e5gon annan. V\u00e4lj en ny tid i listan.');
+      }
       if(!response.ok) throw new Error(result.error||'Kunde inte skicka f\u00f6rfr\u00e5gan.');
 
       trackBooking('booking_completed',{service:(service&&service.value)||'osaker'});
