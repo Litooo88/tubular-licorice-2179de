@@ -74,7 +74,7 @@ const STEPS = [
 const NOTES = {
   waiting_parts: "Vi väntar på en reservdel till din reparation.",
   waiting_customer: "Vi väntar på svar från dig — kolla SMS/mail eller ring oss.",
-  ready: "Ditt fordon är klart! Hämtning tisdag–lördag kl 15–18. Betalning sker vid hämtning.",
+  ready: "Ditt fordon är klart! Hämtning tisdag eller torsdag kl 10–16. Betalning sker vid hämtning.",
 };
 
 const firstNameOf = (item) => clean(item?.customer?.name, 140).split(/\s+/).filter(Boolean)[0] || "";
@@ -156,6 +156,14 @@ export default async (request, context) => {
       steps: STEPS.map((step) => step.label),
       note: NOTES[status] || "",
       updatedAt: clean(item.updatedAt || item.createdAt, 10),
+      // Verkstadens egna ord om vad som hänt — det som gör att kunden kan följa
+      // reparationen i stället för att bara se ett steg. Bara fältet
+      // customerUpdates, aldrig interna notes.
+      updates: (Array.isArray(item.customerUpdates) ? item.customerUpdates : [])
+        .slice(-5)
+        .reverse()
+        .map((entry) => ({ at: clean(entry?.at, 10), text: clean(entry?.text, 1200) }))
+        .filter((entry) => entry.text),
       canRequestUpdate,
       serviceNumber: serviceNumberForCase(item),
     });
