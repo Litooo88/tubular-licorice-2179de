@@ -32,6 +32,28 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — KLAR (röstassistent dag 1, PR #150) — dag 2–3 väntar på plattformskonto
+
+- **I kod, env-gatat (utan `VOICE_AGENT_SECRET`/`VOICE_AGENT_SIP` är
+  telefonin oförändrad):** `netlify/functions/voice-agent.mjs` =
+  `/api/voice-agent/{lookup,prices,slots,book-meeting,summary,health}` för
+  samtalsplattformen (ElevenLabs Agents rekommenderat, Retell alternativ).
+  `_shared/voice-agent.mjs` håller gränsen för vad assistenten får säga
+  (inga priser utöver listan, ingen betalstatus, inga `notes`, bara
+  `customerUpdates`) — testat att det inte läcker. `voice-simple.mjs`: när
+  ingen människa svarar → `connect` till `VOICE_AGENT_SIP` (20 s), annars
+  vidare till vanliga telefonsvararen via nytt steg `voicemail-play`.
+  `docs/VOICE_AGENT.md` = arkitektur, env, toolkontrakt, systemprompt,
+  dag 2–3-checklista. Tester: voice 42 (varav voice-agent 6, voice-simple +2).
+- **Assistenten kan aldrig:** ändra ärende, sätta pris, markera betalning
+  eller skicka fri text till kund. Det enda den utlöser är ett internt
+  mötesärende (källa `voice-agent`), SMS till Sebastian och en nivå 1-
+  bekräftelse till kunden om telefonmötet. Sammanfattningen går till
+  Sebastian via SMS + mail.
+- **Dag 2–3 (kräver Sebastian):** konto på plattformen, agent med prompten,
+  SIP-inbound → `VOICE_AGENT_SIP`, delad hemlighet → `VOICE_AGENT_SECRET`,
+  testsamtal på 076 först. Checklistan står i docs/VOICE_AGENT.md.
+
 ### 2026-10-07 — Claude Code — KLAR (kampanjkö PR #148, deploy-fix PR #149, två kampanjer köade)
 
 - **Deploy-stopp hittat och åtgärdat:** `case-auto-archive.mjs` hade både
