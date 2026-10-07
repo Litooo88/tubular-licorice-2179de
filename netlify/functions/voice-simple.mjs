@@ -259,9 +259,17 @@ export default async (request, context) => {
     return json({});
   }
 
-  // Utanför telefontid → gamla televäxelns besked, sedan telefonsvararen.
-  if (!isOfficeHours(now)) {
+  // Utanför telefontid → assistenten om den är konfigurerad (den jobbar
+  // dygnet runt), annars gamla televäxelns besked och sedan telefonsvararen.
+  // Svarar inte assistenten faller samtalet till stängt-beskedet (closed-play).
+  if (step === "closed-play") {
     return json({ play: closedPrompt, next: selfUrl(origin, auth, "beep", caller) });
+  }
+  if (!isOfficeHours(now)) {
+    if (!agentSip) return json({ play: closedPrompt, next: selfUrl(origin, auth, "beep", caller) });
+    const action = { connect: agentSip, timeout: 20, next: selfUrl(origin, auth, "closed-play", caller) };
+    if (auth.configured) action.whenhangup = callbackUrl(origin, auth);
+    return json(action);
   }
 
   const sebastian = clean(

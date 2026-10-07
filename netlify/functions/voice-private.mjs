@@ -190,8 +190,20 @@ export default async (request, context) => {
   const testNow = clean(env("VOICE_TEST_NOW"), 60);
   const now = testNow ? new Date(testNow) : new Date();
 
-  // Obesvarat eller utanför ringtid → telefonsvarare.
+  // Röstassistenten (docs/VOICE_AGENT.md): obesvarat eller utanför ringtid
+  // kopplas till assistentens SIP-adress om VOICE_AGENT_SIP är satt; svarar
+  // inte den heller går samtalet till telefonsvararen (voicemail-play).
+  // Utan variabeln är kedjan exakt som förut.
+  const agentSip = clean(env("VOICE_AGENT_SIP"), 120);
+  const voicemailOrAgent = (who) => {
+    if (!agentSip) return { play: voicemailPrompt, next: selfUrl(origin, auth, "beep", who) };
+    return { connect: agentSip, timeout: 20, next: selfUrl(origin, auth, "voicemail-play", who) };
+  };
+
   if (step === "voicemail") {
+    return json(voicemailOrAgent(chainCaller));
+  }
+  if (step === "voicemail-play") {
     return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "beep", chainCaller) });
   }
 
@@ -258,14 +270,14 @@ export default async (request, context) => {
       const customer = await lookupCustomer(caller);
       await postSms({
         to: notifyTo,
-        message: `[Privatlinjen] ${stockholmTime()} Samtal utanför ringtid från ${callerLabel(caller, customer)} — kopplas till telefonsvararen.`,
+        message: `[Privatlinjen] ${stockholmTime()} Samtal utanför ringtid från ${callerLabel(caller, customer)} — kopplas till ${agentSip ? "röstassistenten" : "telefonsvararen"}.`,
       });
     }
-    return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "beep", caller) });
+    return json(voicemailOrAgent(caller));
   }
 
   const target = clean(env("VOICE_PRIMARY_NUMBER"), 40);
-  if (!target) return json({ play: voicemailPrompt, next: selfUrl(origin, auth, "beep", caller) });
+  if (!target) return json(voicemailOrAgent(caller));
 
   // Kunduppslags-SMS:et skickas före connect så notisen hinner fram medan
   // luren ringer — fail-open med tidsbudget så samtalet aldrig fördröjs länge.
