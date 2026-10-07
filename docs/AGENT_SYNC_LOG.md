@@ -32,6 +32,32 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — KLAR (bokningsombyggnad steg 0: "en bokning är en bokning" + GA4-funnel)
+
+- **Rotorsak till spökbokningarna hittad:** tre motstridiga budskap i samma
+  bokningskedja — SMS "registrerad, vi hör av oss om något ändras",
+  tack-sidan "vi återkommer med bekräftad tid", mejlämnet
+  "serviceförfrågan" + "kalenderfilen är preliminär". Kunder väntade på
+  klartecken som aldrig kom.
+- **Fixat (commit `8af8c55` → main):** ETT budskap i tack-sida, SMS och
+  mejl (ämne/html/text): "Din tid är bokad [tid]. Kom då — vi hör av oss
+  bara om tiden behöver flyttas. Ingen reparation är beställd: pris
+  godkänns före arbete."
+- **GA4-funnel på /book-online/:** booking_view, service_selected,
+  booking_started, booking_completed (inga persondata). Baslinje mäts
+  1–2 veckor FÖRE flödesombyggnaden.
+- **Beslutad plan (Sebastian 7/10):** steg 1 = lediga tider ur
+  Google Calendar (free/busy → riktiga slots), steg 2 = trestegsflöde med
+  5 symptomkort + märke/modell-dropdown + transport som tillval, steg 3 =
+  30-dagars jämförelse (bokningsgrad + Ej inlämnad-andel).
+- **PRISBESLUT PÅGÅR (rör ej priser):** Sebastian avser höja till
+  Grunddiagnos 495 kr / Avancerad diagnos 795 kr (löser även
+  645-vs-695-diskrepansen). Fasta jobb (däck 349, broms 295) ska INTE
+  höjas — "fr. 349 kr" är inbakat i SEO-titlar och FAQ-scheman. Bytet görs
+  som ETT atomiskt svep över ~6–8 sidor + prislista + price-history när
+  Sebastian säger till. Tester: build ✅, checkout-verify ✅,
+  JS-blocken i book-online parsar.
+
 ### 2026-10-07 — Claude Code — KLAR (åtta kunder registrerade från telefonen, 12 utkast, Koffe = häva köp)
 
 - **Nya ärenden från telefonens kontaktnamn + Swish** (registrerade i efterhand,
