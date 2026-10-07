@@ -59,7 +59,7 @@ kund värd ~900 kr (benchmarken) räcker det med två räddade samtal i månaden
 | Variabel | Vad |
 |---|---|
 | `VOICE_AGENT_SECRET` | Delad hemlighet; plattformen skickar den som `x-voice-agent-secret` (eller Bearer). Saknas → 503 `not_configured`. |
-| `VOICE_AGENT_SIP` | Assistentens SIP-adress: `sip:nordicreceptionist@sip.rtc.elevenlabs.io` (importerat SIP-trunk-nummer `phnum_2601m4a7z6eyenn8g06pztmw54hs`, agent tilldelad). Saknas → ingen routning. |
+| `VOICE_AGENT_SIP` | Assistentens SIP-adress: `sip:nordicreceptionist@sip.rtc.elevenlabs.io:5060;transport=tcp`. **TCP måste anges**: ElevenLabs tar bara emot TCP 5060/TLS 5061, och 46elks ringer UDP om inget sägs — då svarar ElevenLabs men 200 OK når aldrig fram och 46elks ger upp efter 20 s (testsamtalen 06:40). (importerat SIP-trunk-nummer `phnum_2601m4a7z6eyenn8g06pztmw54hs`, agent tilldelad). Saknas → ingen routning. |
 | `VOICE_AGENT_WEBHOOK_SECRET` | ElevenLabs post-call-webhookens HMAC-hemlighet (`wsec_…`, visas en gång vid skapandet). Webhooken "Nordic post-call summary" → `/api/voice-agent/summary`, händelse Transkript. Signaturen `ElevenLabs-Signature: t=…,v0=…` verifieras i koden. |
 | `SEBASTIAN_SMS_TO` / `WORKSHOP_SMS_TO` | Dit möte- och sammanfattnings-SMS går (finns redan). |
 | `ADMIN_TOKEN` | Används internt för att skapa mötesärendet via `/api/cases` (finns redan). |

@@ -32,6 +32,15 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — KLAR (röstassistent: SIP-transport rättad till TCP)
+
+- Testsamtalen 06:40 på 076: 4–5 signaler, sedan telefonsvarare, men ElevenLabs loggade
+  fyra 37-sekunders "Silent call"-konversationer och skickade sammanfattning. SIP-loggen
+  visade INVITE över UDP, 180 Ringing, 200 OK ×2 utan ACK. Orsak: ElevenLabs tar bara
+  emot TCP 5060 / TLS 5061; 46elks `connect` använder UDP om transport saknas.
+- Fix: `VOICE_AGENT_SIP` i Netlify = `sip:nordicreceptionist@sip.rtc.elevenlabs.io:5060;transport=tcp`
+  + ny deploy (tom commit). Ingen kodändring. 46elks whitelistar elevenlabs.io för SIP-connect.
+
 ### 2026-10-07 — Claude Code — KLAR (fix: röstassistenten dygnet runt + 076, PR #153)
 
 - Sebastians första testsamtal på 076 utanför ringtid gick till telefonsvararen.
