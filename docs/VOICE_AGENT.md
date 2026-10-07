@@ -123,7 +123,10 @@ torsdag 10–16, Pistolvägen i Örebro.
   `prices` (`tool_6401m4a6edk7ehc8tt0nqt9rh3vj`), `slots` (`tool_8501m4a6q11jejwveqwg8qv34msw`),
   `book-meeting` (`tool_7901m4a7fhyxekh9fzgp9z8bwnxt`, obligatoriskt: phone, topic). Agenten
   **publicerad** 7/10 ~05:50. SIP-trunk-nummer importerat och agent tilldelad. Post-call-webhook
-  skapad (HMAC). Kvar: Netlify-env (tre variabler) och testsamtal.
+  skapad (HMAC). Netlify-env satt 7/10 06:00 (`VOICE_AGENT_SECRET`, `VOICE_AGENT_SIP`,
+  `VOICE_AGENT_WEBHOOK_SECRET`), ny deploy e9141b0. **Röktest i prod 06:30:** health 200,
+  lookup/prices/slots svarar rätt, utan hemlighet 401. Kvar: första riktiga testsamtalet
+  (ring 076, låt det ringa ut) som också prövar book-meeting och post-call-webhooken.
 - OBS: webbgränssnittets "Redigera som JSON" använder ett eget schema (properties som
   array med `id`/`required`-boolean), inte API:ts. Formuläret är pålitligare.
 

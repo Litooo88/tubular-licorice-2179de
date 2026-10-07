@@ -32,6 +32,22 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — KLAR (röstassistent dag 2: ElevenLabs + Netlify konfigurerat, PR #152)
+
+- **ElevenLabs (via Sebastians Chrome):** agent `agent_7501m4a5b9d7fnftyzxeqhx7tq5s` publicerad
+  med fyra webhook-verktyg kopplade (lookup, prices, slots, book-meeting; hemlighet
+  `nordic_voice_agent_secret` i header). SIP-trunk-nummer `nordicreceptionist` importerat
+  med agenten tilldelad. Post-call-webhook "Nordic post-call summary" (HMAC) → `/api/voice-agent/summary`.
+- **Kod (PR #152):** summary-rutten verifierar `ElevenLabs-Signature` mot
+  `VOICE_AGENT_WEBHOOK_SECRET` och plattar ut `post_call_transcription`-payloaden. voice 43 tester.
+- **Netlify-env:** `VOICE_AGENT_SECRET`, `VOICE_AGENT_SIP=sip:nordicreceptionist@sip.rtc.elevenlabs.io`,
+  `VOICE_AGENT_WEBHOOK_SECRET` (importerade som secrets). OBS: Netlify laddar inte ny env i
+  funktioner utan ny deploy, och "Trigger deploy" i UI startade inget — tom commit e9141b0 löste det.
+- **Röktest prod 06:30:** health 200 (sms/cases/mail true), lookup/prices/slots rätt, 401 utan hemlighet.
+  **Routningen är nu LIVE:** när varken Sebastian eller fallback svarar kopplas samtalet till
+  assistenten (20 s), annars telefonsvararen som förut. Första riktiga testsamtalet gör Sebastian.
+- **Hemligheterna** ligger bara i Netlify, ElevenLabs och lokalt i scratchpad — aldrig i repot.
+
 ### 2026-10-07 — Claude Code — PÅGÅR (röstassistent dag 2: ElevenLabs-konfiguration via Sebastians Chrome)
 
 - Agent `agent_7501m4a5b9d7fnftyzxeqhx7tq5s` skapad och konfigurerad (prompt, svenska, röst,
