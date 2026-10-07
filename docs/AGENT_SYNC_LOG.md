@@ -32,7 +32,15 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-10-07 — Claude Code — PÅGÅR (Dagens ringlista i admin Telefoni)
+### 2026-10-07 — Claude Code — KLAR (Dagens ringlista i admin Telefoni)
+
+- **Levererat (merge `45b2517` på origin/main):** panel överst i Telefoni —
+  topp 10 av obesvarade förfrågningar i prioritetsordning (nya nyast
+  först, sedan kontaktade utan uppföljning >3 d äldst först), med ålder,
+  uppskattat värde, Ring (klick-till-samtal), Kontaktad (PATCH, lämnar
+  listan direkt) och Hoppa över (sessionStorage, bara case-id). Optout,
+  spärrade och egna nummer filtreras alltid. Admins 3 script-block parsar,
+  build ✅. Byggd i egen worktree, delade mappens arbetsyta orörd.
 
 - **Vad:** prioriterad ringlista (topp 10) av obesvarade ärenden — nya
   orörda först (varmast överst), sedan kontaktade utan uppföljning >3 d.
