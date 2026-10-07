@@ -152,7 +152,7 @@ force = true
     # CSP i Report-Only först (webbaudit åtgärd 25): övervaka i webbläsar-
     # konsolen/rapporter innan den görs blockerande. img-src https: krävs så
     # länge leverantörsbilder (Shopify/NAVEE m.fl.) inte är helt lokalspeglade.
-    Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
+    Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://unpkg.com https://*.elevenlabs.io; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; connect-src 'self' https://*.google-analytics.com https://analytics.google.com https://www.googletagmanager.com https://*.elevenlabs.io wss://*.elevenlabs.io https://unpkg.com; media-src 'self' blob: https://*.elevenlabs.io; frame-src https://*.elevenlabs.io; frame-ancestors 'self'; base-uri 'self'; form-action 'self'"
 
 [[headers]]
   for = "/*.png"
