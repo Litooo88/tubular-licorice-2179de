@@ -23,12 +23,16 @@ import { postSms } from "./_shared/sms.mjs";
 import {
   compactSlots,
   fromElevenLabsWebhook,
+  fullPriceList,
   lookupByPhone,
   matchPrices,
+  matchScooters,
   meetingSmsToCustomer,
   meetingSmsToSebastian,
+  messageSmsToSebastian,
   normalizeCallSummary,
   normalizeMeeting,
+  normalizeMessage,
   summarySmsToSebastian,
   verifyElevenLabsSignature,
 } from "./_shared/voice-agent.mjs";
@@ -36,6 +40,11 @@ import {
 // funktionen; en dynamisk require gav "Cannot find module" i produktion
 // (data/ följer inte med i funktionspaketet).
 import priceRules from "../../data/workshop/price-rules.json" with { type: "json" };
+// Produktlistan innehåller interna fält (costEur). matchScooters plockar
+// bara ut de publika; objektet skickas aldrig vidare som det är.
+import productsFile from "../../data/products.json" with { type: "json" };
+
+const products = Array.isArray(productsFile) ? productsFile : productsFile.products || productsFile.items || Object.values(productsFile).find(Array.isArray) || [];
 
 const env = (name) => {
   try {
@@ -130,7 +139,7 @@ export default async (request) => {
   if (request.method === "GET" && tool === "health") {
     return json({
       ok: true,
-      tools: ["lookup", "prices", "slots", "book-meeting", "summary"],
+      tools: ["lookup", "prices", "scooters", "slots", "book-meeting", "message", "summary"],
       sms: Boolean(sebastianTo()),
       cases: Boolean(env("ADMIN_TOKEN")),
       mail: Boolean(env("RESEND_API_KEY") && env("EMAIL_FROM")),
@@ -147,11 +156,36 @@ export default async (request) => {
   }
 
   if (tool === "prices") {
+    const items = matchPrices(priceRules.rules, body.query);
+    // Ingen träff → hela listan, så att assistenten läser ett riktigt pris i
+    // stället för att gissa (testsamtalet 7/10: "595" för batterifelsökning).
+    const all = items.length ? null : fullPriceList(priceRules.rules);
     return json({
       threshold: Number(priceRules.approvalThreshold) || 995,
-      items: matchPrices(priceRules.rules, body.query),
-      policy: "Säg från-pris och spann. Lova aldrig slutpris. Allt över tröskeln bekräftas av Sebastian.",
+      matched: items.length > 0,
+      items: items.length ? items : all,
+      policy: "Säg från-pris och spann exakt som i listan. Lova aldrig slutpris. Allt över tröskeln bekräftas av Sebastian. Finns tjänsten inte i listan: säg att Sebastian återkommer med pris.",
     });
+  }
+
+  if (tool === "scooters") {
+    const items = matchScooters(products, body.query);
+    return json({
+      matched: items.length > 0 && Boolean(clean(body.query, 80)),
+      items: items.length ? items : matchScooters(products, ""),
+      policy: "Priserna är inkl. moms. Leveranstiden står per modell. Beställning sker på nordicemobility.se eller via Sebastian; assistenten tar inte betalt.",
+    });
+  }
+
+  if (tool === "message") {
+    const { ok, errors, note } = normalizeMessage(body);
+    if (!ok) return json({ ok: false, error: "invalid_message", fields: errors }, 400);
+    const at = new Date().toISOString();
+    const store = getStore({ name: "voice-agent-messages", consistency: "strong" });
+    const id = `message-${at.replace(/[:.]/g, "-")}-${note.phone.replace(/\D/g, "").slice(-6)}`;
+    const staff = sebastianTo() ? await postSms({ to: sebastianTo(), message: messageSmsToSebastian(note) }) : { status: "not_configured" };
+    await store.setJSON(id, { id, at, ...note, staffSms: staff.status }).catch(() => {});
+    return json({ ok: true, id, delivered: staff.status === "sent", say: staff.status === "sent" ? "Jag har skickat meddelandet till Sebastian." : "Jag har sparat meddelandet till Sebastian." });
   }
 
   if (tool === "slots") {

@@ -114,3 +114,24 @@ test("ElevenLabs post-call-payload plattas ut till vårt format", async () => {
   assert.equal(await verifyElevenLabsSignature(`t=${t - 3600},v0=${sig}`, body, "wsec_test"), false);
   assert.equal(await verifyElevenLabsSignature("", body, "wsec_test"), false);
 });
+
+test("scootrar: bara publika fält, aldrig inköpspris, och hela listan när frågan inte träffar", async () => {
+  const { matchScooters, fullPriceList, normalizeMessage, messageSmsToSebastian } = await import("../netlify/functions/_shared/voice-agent.mjs");
+  const products = [
+    { brand: "KuKirin", name: "KuKirin G4 Special Edition", priceSek: 9950, costEur: 683, positioning: "intern", status: "i-lager", delivery: "Leverans 5 arbetsdagar.", spec: "2x1000W", short: "Vår mest valda." },
+    { brand: "NAVEE", name: "NAVEE GT3 Max", status: "forbestall", delivery: "Kommande." },
+    { brand: "NEMOB", name: "NEMOB Testorder (återbetalas)", priceSek: 100, status: "i-lager" },
+  ];
+  const r = matchScooters(products, "vad kostar en g4");
+  assert.equal(r.length, 1);
+  assert.equal(r[0].priceSek, 9950);
+  assert.doesNotMatch(JSON.stringify(r), /683|costEur|intern/);
+  assert.match(r[0].say, /KuKirin G4 Special Edition 9\s?950 kronor\. Leverans 5 arbetsdagar\./);
+  assert.equal(matchScooters(products, "").length, 2);
+  assert.equal(matchScooters(products, "xyz").length, 0);
+  assert.equal(fullPriceList([{ id: "a", name: "Bromsjustering", startPrice: 289, likelyMin: 289, likelyMax: 595 }])[0].say, "Bromsjustering från 289 kronor, oftast mellan 289 och 595 kronor.");
+  assert.deepEqual(normalizeMessage({ phone: "123", message: "" }).errors, ["phone", "message"]);
+  const m = normalizeMessage({ phone: "0760000001", name: "Anna", message: "Hälsa att jag kommer torsdag" });
+  assert.equal(m.ok, true);
+  assert.equal(messageSmsToSebastian(m.note), 'Meddelande via röstassistenten från Anna +46760000001: "Hälsa att jag kommer torsdag"');
+});
