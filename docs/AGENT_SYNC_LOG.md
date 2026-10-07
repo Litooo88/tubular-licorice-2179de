@@ -32,6 +32,29 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — KLAR (prisbytet 495/795 live) + KOLLISION i delade mappen
+
+- **Prisbytet genomfört (commit `b980ad2`, i main via `07daeb3`):** tvånivåmodell
+  överallt — Grunddiagnos 495 kr / Avancerad diagnos 795 kr ("dras av vid
+  reparation" kommuniceras). Ersätter: felsökning 349/395, avancerad 645/699,
+  hallsensor/controller "från 695", batterifelsökning 745, avancerad
+  batteridiagnos 945. ~100 byten över 21 filer + scheman + price-rules.json.
+  Fasta jobb orörda (däck fr. 349, broms 295, grundservice 395) så
+  "fr. 349 kr" i SEO-titlarna förblir sant. Priser-sidans DIAGNOS-kort:
+  7 rader → 2 nivåer + vattenskada + "vi klassificerar vid inlämning".
+  Städade även kvarglömda "tisdag–lördag 15–18"-texter → "tis/tors 10–16".
+- **KOLLISION:** en parallellsession bytte branch i delade mappen mitt under
+  mitt svep (checkout feat/auto-arkivering-nya från min branch-position).
+  Min commit hamnade på deras branch, min branch blev tom och raderades, och
+  en stund såg allt förlorat ut. Räddades via reflog; historiken är nu ren.
+  **Mitt fel också: jag postade ingen PÅGÅR före svepet.** Regelskärpning:
+  (1) ALLTID PÅGÅR-post + commit FÖRE fleraktigt arbete på branch,
+  (2) byt aldrig branch i delade mappen utan att läsa sync-loggen sist,
+  (3) agenter som jobbar samtidigt ska använda egna worktrees
+  (.claude/worktrees/) — inte dela mappens HEAD.
+- **Bokningsflöde:** steg 0 live sedan tidigare i dag; nästa är steg 1
+  (lediga tider ur Google Calendar, tis/tors 10–16).
+
 ### 2026-10-07 — Claude Code — KLAR (ärenderegistrering 7/10 + kostnadsanalys av företagskontot)
 
 - **Ärenden (via API, inga kodändringar):** Andrejs G2-köp till inköpspris
