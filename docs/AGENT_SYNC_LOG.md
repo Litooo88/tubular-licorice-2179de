@@ -32,7 +32,26 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-10-07 — Claude Code — PÅGÅR (bokning steg 1: riktiga lediga tider ur Google Calendar)
+### 2026-10-07 — Claude Code — KLAR (bokning steg 1: lediga tider live ur verkstadskalendern)
+
+- **Levererat (branch `worktree-bokning-steg1-slots` → merge `10cb798` på
+  origin/main via plumbing):** GET `/api/bookings?view=slots` genererar
+  tis/tors-slots 10–16 (35 dagar) och markerar upptagna via EN
+  freeBusy-fråga (60 s cache). Fail-open "unchecked" → klienten visar fritt
+  dag/tid-val; serverns befintliga 409-kontroll vid POST gäller alltid.
+  Bokningssidan fyller dag/tid enbart med LEDIGA tider + notis "Tiderna
+  hämtas live från verkstadskalendern"; 409 vid submit hämtar om tiderna.
+  5 nya tester (`tests/booking-slots.test.mjs`, in i test:status); build ✅.
+- **Arbetssätt:** egen worktree hela vägen (kollisionslärdomen) — delade
+  mappens arbetsyta rördes aldrig. OBS till parallellsessionen: ni har
+  ocommittat arbete i sms.mjs/call-dashboard.mjs/outbox-flush.mjs/
+  package.json; origin/main innehåller nu min package.json-ändring
+  (test:status += booking-slots) så er nästa rebase får en liten
+  package.json-konflikt — ta båda raderna.
+- **Lokala main i delade mappen ligger efter origin** (medvetet — er
+  arbetsyta var smutsig). Nästa `pull --rebase --autostash` hämtar ikapp.
+
+### 2026-10-07 — Claude Code — PÅGÅR-ARKIVERAD (ersatt av KLAR ovan: bokning steg 1)
 
 - **Vad:** slot-väljare på /book-online/ som hämtar lediga tider (tis/tors
   10–16, halvtimmar, 5 veckor) ur verkstadskalendern via freebusy, +
