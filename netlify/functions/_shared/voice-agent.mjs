@@ -100,6 +100,59 @@ export const matchPrices = (rules, query, { limit = 5 } = {}) => {
   }));
 };
 
+// Hela verkstadsprislistan, uppläsbar. Används som reserv när en fråga inte
+// matchar något (assistenten ska aldrig behöva gissa ett pris) och ligger
+// också i agentens prompt så att de vanligaste svaren inte kräver ett anrop.
+export const fullPriceList = (rules) => (Array.isArray(rules) ? rules : []).map((r) => ({
+  id: clean(r.id, 60),
+  name: clean(r.name, 80),
+  fromPrice: Number(r.startPrice) || Number(r.likelyMin) || null,
+  likelyMin: Number(r.likelyMin) || null,
+  likelyMax: Number(r.likelyMax) || null,
+  requiresDiagnosis: Boolean(r.requiresDiagnosis),
+  say: sayPrice(r),
+}));
+
+// Scootrar till försäljning: BARA publika fält. products.json innehåller även
+// inköpspris (costEur) och positionering som aldrig får nå kunden, därför
+// plockas fälten ut uttryckligen i stället för att skicka objektet vidare.
+export const matchScooters = (products, query, { limit = 6 } = {}) => {
+  const list = (Array.isArray(products) ? products : [])
+    .filter((p) => p && p.name && !/testorder/i.test(p.name) && (Number(p.priceSek) > 0 || p.status === "forbestall"));
+  const q = clean(query, 80).toLowerCase();
+  const words = q.split(/[^a-zåäö0-9+]+/).filter((w) => w.length > 1);
+  const scored = list.map((p) => {
+    const hay = `${p.brand || ""} ${p.name || ""}`.toLowerCase();
+    const score = words.reduce((s, w) => s + (hay.includes(w) ? 1 : 0), 0);
+    return { p, score };
+  }).filter((x) => !q || x.score > 0).sort((a, b) => b.score - a.score || (Number(a.p.priceSek) || 0) - (Number(b.p.priceSek) || 0));
+  return scored.slice(0, limit).map(({ p }) => ({
+    brand: clean(p.brand, 40),
+    name: clean(p.name, 80),
+    priceSek: Number(p.priceSek) || null,
+    status: p.status === "i-lager" ? "beställningsbar" : p.status === "pa-vag" ? "på väg, fråga om leveransbesked" : "kommande, förhandsintresse",
+    delivery: clean(p.delivery, 200),
+    spec: clean(p.spec, 120),
+    short: clean(p.short, 200),
+    say: `${p.name}${Number(p.priceSek) ? ` ${Number(p.priceSek).toLocaleString("sv-SE")} kronor` : ", pris ej satt än"}. ${clean(p.delivery, 160)}`,
+  }));
+};
+
+// Meddelande till Sebastian: det kunden vill att han ska veta, ordagrant
+// återgivet av assistenten. Inget svar utlovas, inget skickas till kunden.
+export const normalizeMessage = (body) => {
+  const phone = normalizePhone(body?.phone);
+  const name = clean(body?.name, 80);
+  const message = clean(body?.message, 600);
+  const errors = [];
+  if (!/^\+46\d{8,10}$/.test(phone)) errors.push("phone");
+  if (!message) errors.push("message");
+  return { ok: errors.length === 0, errors, note: { phone, name, message } };
+};
+
+export const messageSmsToSebastian = (m) =>
+  `Meddelande via röstassistenten från ${m.name || "okänt namn"} ${m.phone}: "${m.message}"`.slice(0, 480);
+
 export const sayPrice = (r) => {
   const from = Number(r.startPrice) || Number(r.likelyMin);
   const max = Number(r.likelyMax);
