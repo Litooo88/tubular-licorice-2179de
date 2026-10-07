@@ -59,7 +59,8 @@ kund värd ~900 kr (benchmarken) räcker det med två räddade samtal i månaden
 | Variabel | Vad |
 |---|---|
 | `VOICE_AGENT_SECRET` | Delad hemlighet; plattformen skickar den som `x-voice-agent-secret` (eller Bearer). Saknas → 503 `not_configured`. |
-| `VOICE_AGENT_SIP` | Assistentens SIP-adress, t.ex. `sip:xxxx@sip.rtc.elevenlabs.io`. Saknas → ingen routning. |
+| `VOICE_AGENT_SIP` | Assistentens SIP-adress: `sip:nordicreceptionist@sip.rtc.elevenlabs.io` (importerat SIP-trunk-nummer `phnum_2601m4a7z6eyenn8g06pztmw54hs`, agent tilldelad). Saknas → ingen routning. |
+| `VOICE_AGENT_WEBHOOK_SECRET` | ElevenLabs post-call-webhookens HMAC-hemlighet (`wsec_…`, visas en gång vid skapandet). Webhooken "Nordic post-call summary" → `/api/voice-agent/summary`, händelse Transkript. Signaturen `ElevenLabs-Signature: t=…,v0=…` verifieras i koden. |
 | `SEBASTIAN_SMS_TO` / `WORKSHOP_SMS_TO` | Dit möte- och sammanfattnings-SMS går (finns redan). |
 | `ADMIN_TOKEN` | Används internt för att skapa mötesärendet via `/api/cases` (finns redan). |
 | `RESEND_API_KEY`, `EMAIL_FROM`, `WORKSHOP_EMAIL` | Sammanfattningsmail (finns redan). |
@@ -118,14 +119,15 @@ torsdag 10–16, Pistolvägen i Örebro.
   systemverktyget "Avsluta konversation" på. Inte publicerad än.
 - Hemlighet i arbetsytan: `nordic_voice_agent_secret` (samma värde ska in i Netlify som
   `VOICE_AGENT_SECRET`).
-- Verktyg skapade i biblioteket: `lookup` (`tool_6401m4a6akvnfv4b8etx6963zhfn`), `prices`
-  (`tool_6401m4a6edk7ehc8tt0nqt9rh3vj`). Kvar: `slots` (osparad kopia `copy_lookup`,
-  `tool_8501m4a6q11jejwveqwg8qv34msw`), `book-meeting`, koppla till agenten, publicera,
-  SIP-inbound, post-call webhook, Netlify-env.
+- Verktyg i biblioteket och kopplade till agenten: `lookup` (`tool_6401m4a6akvnfv4b8etx6963zhfn`),
+  `prices` (`tool_6401m4a6edk7ehc8tt0nqt9rh3vj`), `slots` (`tool_8501m4a6q11jejwveqwg8qv34msw`),
+  `book-meeting` (`tool_7901m4a7fhyxekh9fzgp9z8bwnxt`, obligatoriskt: phone, topic). Agenten
+  **publicerad** 7/10 ~05:50. SIP-trunk-nummer importerat och agent tilldelad. Post-call-webhook
+  skapad (HMAC). Kvar: Netlify-env (tre variabler) och testsamtal.
 - OBS: webbgränssnittets "Redigera som JSON" använder ett eget schema (properties som
   array med `id`/`required`-boolean), inte API:ts. Formuläret är pålitligare.
 
-## Dag 2–3 (återstår)
+## Dag 2–3 (återstår: testsamtal)
 
 1. Skapa konto på ElevenLabs Agents, skapa en agent med prompten ovan och
    en svensk röst, lägg till de fem tools (URL `https://www.nordicemobility.se/api/voice-agent/<tool>`,

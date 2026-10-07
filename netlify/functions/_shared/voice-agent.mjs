@@ -149,6 +149,52 @@ export const meetingSmsToSebastian = (m) =>
 export const meetingSmsToCustomer = (m) =>
   `Hej${m.name ? ` ${m.name.split(/\s+/)[0]}` : ""}! Tack för samtalet. Sebastian på Nordic E-Mobility ringer upp dig${m.preferredTime ? ` ${m.preferredTime}` : " så snart han kan"} angående ${m.topic.slice(0, 60)}. Svara på detta SMS om något ändras.`.slice(0, 320);
 
+// ElevenLabs post-call-webhook: { type: "post_call_transcription", data: {
+// conversation_id, transcript: [{ role, message, tool_calls }], metadata: {
+// call_duration_secs, phone_call: { external_number } }, analysis: {
+// transcript_summary, call_successful } } }. Plattas ut till vårt eget
+// format så att resten av koden inte känner till leverantören.
+export const fromElevenLabsWebhook = (body) => {
+  if (!body || typeof body !== "object" || !body.data || !/^post_call/.test(String(body.type || ""))) return body;
+  const d = body.data;
+  const turns = Array.isArray(d.transcript) ? d.transcript : [];
+  const transcript = turns
+    .map((t) => `${t?.role === "agent" ? "Receptionist" : "Kund"}: ${clean(t?.message, 1000)}`)
+    .filter((line) => !/: $/.test(line))
+    .join("\n");
+  const toolNames = turns.flatMap((t) => (Array.isArray(t?.tool_calls) ? t.tool_calls : []).map((c) => clean(c?.tool_name || c?.name, 60)));
+  const phoneCall = d.metadata?.phone_call || {};
+  return {
+    callId: d.conversation_id,
+    phone: phoneCall.direction === "outbound" ? phoneCall.external_number : (phoneCall.external_number || phoneCall.from_number || ""),
+    startedAt: d.metadata?.start_time_unix_secs ? new Date(Number(d.metadata.start_time_unix_secs) * 1000).toISOString() : "",
+    durationSec: d.metadata?.call_duration_secs,
+    outcome: d.analysis?.call_successful,
+    summary: d.analysis?.transcript_summary,
+    transcript,
+    meetingBooked: toolNames.includes("book-meeting"),
+  };
+};
+
+// ElevenLabs signerar webhooken: header "ElevenLabs-Signature: t=<unix>,v0=<hex>"
+// där v0 = HMAC-SHA256(secret, `${t}.${rawBody}`). Tidsstämpeln får vara max
+// 30 minuter gammal. Returnerar true/false, kastar aldrig.
+export const verifyElevenLabsSignature = async (header, rawBody, secret, nowMs = Date.now()) => {
+  try {
+    if (!header || !secret) return false;
+    const parts = Object.fromEntries(String(header).split(",").map((p) => p.trim().split("=")));
+    const t = Number(parts.t);
+    const v0 = String(parts.v0 || "");
+    if (!t || !v0 || Math.abs(nowMs / 1000 - t) > 30 * 60) return false;
+    const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(secret), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+    const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${t}.${rawBody}`));
+    const hex = [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
+    return hex.length === v0.length && hex === v0.toLowerCase();
+  } catch {
+    return false;
+  }
+};
+
 // Sammanfattningen efter samtalet: vad som sparas och vad Sebastian får.
 export const normalizeCallSummary = (body) => ({
   callId: clean(body?.callId || body?.call_id || body?.conversation_id, 120),

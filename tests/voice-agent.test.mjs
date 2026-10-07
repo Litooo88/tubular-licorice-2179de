@@ -81,3 +81,36 @@ test("samtalssammanfattningen till Sebastian säger vem, vad och om möte bokats
   const text = summarySmsToSebastian(s, { found: true, firstName: "Sören", active: [{}] });
   assert.match(text, /^Röstassistent 2 min: Sören \+46760000001 \(kund med 1 aktivt ärende\)\. Vill ha pris på cellbyte\. Telefonmöte bokat\./);
 });
+
+test("ElevenLabs post-call-payload plattas ut till vårt format", async () => {
+  const { fromElevenLabsWebhook, verifyElevenLabsSignature } = await import("../netlify/functions/_shared/voice-agent.mjs");
+  const s = normalizeCallSummary(fromElevenLabsWebhook({
+    type: "post_call_transcription",
+    data: {
+      conversation_id: "conv_1",
+      transcript: [
+        { role: "agent", message: "Hej, vad gäller det?" },
+        { role: "user", message: "Min G4 laddar inte.", tool_calls: [] },
+        { role: "agent", message: "Då bokar jag ett samtal.", tool_calls: [{ tool_name: "book-meeting" }] },
+      ],
+      metadata: { call_duration_secs: 130, phone_call: { external_number: "+46760000001", direction: "inbound" } },
+      analysis: { transcript_summary: "Kund med G4 som inte laddar, telefonmöte bokat.", call_successful: "success" },
+    },
+  }));
+  assert.equal(s.callId, "conv_1");
+  assert.equal(s.phone, "+46760000001");
+  assert.equal(s.durationSec, 130);
+  assert.equal(s.meetingBooked, true);
+  assert.match(s.transcript, /^Receptionist: Hej, vad gäller det\?\nKund: Min G4 laddar inte\./);
+  assert.equal(fromElevenLabsWebhook({ phone: "0760000001", summary: "x" }).summary, "x");
+
+  // Signaturen: v0 = HMAC-SHA256(secret, `${t}.${body}`), max 30 min gammal.
+  const body = JSON.stringify({ type: "post_call_transcription", data: {} });
+  const t = Math.floor(Date.now() / 1000);
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode("wsec_test"), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
+  const sig = [...new Uint8Array(await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`${t}.${body}`)))].map((b) => b.toString(16).padStart(2, "0")).join("");
+  assert.equal(await verifyElevenLabsSignature(`t=${t},v0=${sig}`, body, "wsec_test"), true);
+  assert.equal(await verifyElevenLabsSignature(`t=${t},v0=${sig}`, body + " ", "wsec_test"), false);
+  assert.equal(await verifyElevenLabsSignature(`t=${t - 3600},v0=${sig}`, body, "wsec_test"), false);
+  assert.equal(await verifyElevenLabsSignature("", body, "wsec_test"), false);
+});
