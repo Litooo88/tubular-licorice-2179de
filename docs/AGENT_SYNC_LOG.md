@@ -32,6 +32,22 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — KLAR (Nova som webbchatt, PR #156) + 46elks-saldo 0
+
+- **Webbchatten:** `assets/workshop-chat.js` laddar nu ElevenLabs-widgeten för Nova
+  (samma agent som telefonen) på de 34 sidor som inkluderar skriptet; admin/status/nemob-os
+  undantas. Gamla formulärchatten ligger kvar som `workshop-chat-legacy.js`. CSP
+  (report-only) utökad för unpkg + elevenlabs.io. Verifierat i prod: skriptet serveras med
+  agent-id och widget-embed. Tillåtelselista i ElevenLabs lämnad TOM med flit:
+  "Misslyckas när Origin-header saknas" går inte att slå av via UI och skulle kunna stoppa
+  SIP-samtalen. Daglig samtalsgräns gick inte att ändra (står kvar på plan-gränsen).
+- **46elks-saldot var 0 kr 7/10 em:** återkopplingen (79 SMS kl 10) hann gå och gav 4 RING +
+  2 textsvar, men därefter faller allt som kostar: Novas bekräftelse-SMS, RING-autosvar,
+  vinterkampanjen 8/10 kl 10 (121 köade, 5 försök sedan gave_up). Sebastian fyller på.
+- **Nova går live på riktiga kunder i dag** på Sebastians beslut — routningen var redan
+  aktiv. Övervaka: ElevenLabs Konversationer (transkript), voice-agent-calls/-meetings/
+  -messages i Blobs, admin för ärenden med källa `voice-agent`.
+
 ### 2026-10-07 — Claude Code — KLAR (röstassistent "Nova" v3 efter första testsamtalen, PR #154 #155)
 
 - **Sebastians fynd:** för seg presentation (lät som telefonsvarare), gissade pris (595 för
