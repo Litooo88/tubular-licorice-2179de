@@ -32,6 +32,17 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — PÅGÅR (bokning steg 1: riktiga lediga tider ur Google Calendar)
+
+- **Vad:** slot-väljare på /book-online/ som hämtar lediga tider (tis/tors
+  10–16, halvtimmar, 5 veckor) ur verkstadskalendern via freebusy, +
+  serverkontroll att sloten fortfarande är ledig vid bokning (409 annars).
+  Fail-open: går kalendern inte att nå visas dagens fria dag+tid-val.
+- **Rör:** `netlify/functions/booking.mjs` (GET slots + validering),
+  `book-online/index.html` (tidväljaren). INTE priser, INTE auto-archive.
+- **Arbetssätt:** egen worktree (ej branch-byte i delade mappen, enligt
+  kollisionslärdomen tidigare i dag). Merge till main sist som vanligt.
+
 ### 2026-10-07 — Claude Code — KLAR (auto-arkivering av döda webbförfrågningar, PR #147) + INCIDENT PR #146
 
 - **Regel i produktion:** `netlify/functions/_shared/auto-archive.mjs` +
