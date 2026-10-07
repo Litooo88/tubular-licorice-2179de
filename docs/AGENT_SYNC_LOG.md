@@ -32,6 +32,14 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-07 — Claude Code — PÅGÅR (Dagens ringlista i admin Telefoni)
+
+- **Vad:** prioriterad ringlista (topp 10) av obesvarade ärenden — nya
+  orörda först (varmast överst), sedan kontaktade utan uppföljning >3 d.
+  Klick-för-att-ringa + "Kontaktad"-knapp (PATCH) + hoppa-över (session).
+  Exkluderar optout/spärrade/egna nummer. Bara admin/index.html.
+- **Arbetssätt:** egen worktree, merge via plumbing till origin/main.
+
 ### 2026-10-07 — Claude Code — KLAR (röstassistent dag 1, PR #150) — dag 2–3 väntar på plattformskonto
 
 - **I kod, env-gatat (utan `VOICE_AGENT_SECRET`/`VOICE_AGENT_SIP` är
