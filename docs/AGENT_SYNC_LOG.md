@@ -32,6 +32,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-08 — Claude Code — KLAR (ärendeuppdateringar efter kvällspasset 7/10 18:00–05:00)
+
+- **Verkstadspass:** Sebastian körde verkstaden 7/10 18:00 → 8/10 05:00. En (1) drop-in under
+  passet: Xiaomi, bakskärm + småsaker, ca 500 kr, 30 min efter öppning. Nytt mått att följa:
+  inlämningar per pass och tid på dygnet (kvällspass gav 1).
+- **Uppdaterat via API:** Roja/Rouya (NIU KQi3 Pro) `ready`, leverans Hallsberg, dubblett
+  arkiverad. Omar Dele (KuKirin G2) `ready`, leverans Hallsberg. Daniel Löfgren Wallén
+  (NAVEE ST3 Pro, inlämnad 7/10) `ready`. Alla tre med kundsynlig uppdatering + SMS-utkast
+  (kategori A) i admin, klara att skicka. Nytt ärende för Xiaomi-drop-in (namn/nummer saknas).
+  Sebastians två Nova-testsamtal (Mats Persson, Claes-Göran) arkiverade.
+- **Öppet:** "Henke" (E2S V2, motorbyte påbörjat, kablar lödda, testat) hittades inte som
+  ärende — kan vara "Politikerns son (E2S V2)"; Sebastian bekräftar. Dualtron (foliering,
+  motorer OK, smålack kvar) saknar ärende och ägare. NAVEE-unboxing (Sara filmade) ska ut
+  på sociala medier + till försäljning; modell/pris bekräftas (troligen ST5 Max 11 990).
+
 ### 2026-10-07 — Claude Code — KLAR (Nova som webbchatt, PR #156) + 46elks-saldo 0
 
 - **Webbchatten:** `assets/workshop-chat.js` laddar nu ElevenLabs-widgeten för Nova
