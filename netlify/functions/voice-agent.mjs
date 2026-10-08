@@ -164,7 +164,8 @@ export default async (request) => {
       threshold: Number(priceRules.approvalThreshold) || 995,
       matched: items.length > 0,
       items: items.length ? items : all,
-      policy: "Säg från-pris och spann exakt som i listan. Lova aldrig slutpris. Allt över tröskeln bekräftas av Sebastian. Finns tjänsten inte i listan: säg att Sebastian återkommer med pris.",
+      policy: "Säg från-pris och spann exakt som i listan. Lova aldrig slutpris. Säg alltid: kunden får ett kostnadsförslag som kunden själv godkänner innan någon åtgärd påbörjas, och diagnosavgiften dras av vid reparation. Allt över tröskeln bekräftas av Sebastian. Finns tjänsten inte i listan: säg att Sebastian återkommer med pris.",
+      approvalPolicy: priceRules.approvalPolicy || "",
     });
   }
 

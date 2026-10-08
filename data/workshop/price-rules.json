@@ -8,8 +8,8 @@
       "id": "puncture_standard_wheel",
       "name": "Punktering vanligt hjul",
       "category": "tires",
-      "startPrice": 395,
-      "likelyMin": 395,
+      "startPrice": 349,
+      "likelyMin": 349,
       "likelyMax": null,
       "requiresDiagnosis": false,
       "requiresApproval": false
@@ -26,14 +26,74 @@
     },
     {
       "id": "solid_tire_small",
-      "name": "Punkteringsfritt däck inkl. montering (små hjul: Ninebot E2/E22/E25/E45, Xiaomi Pro 2 m.fl.)",
+      "name": "Punkteringsfritt däck 8,5 tum + montering (495 kr arbete + 295 kr däck)",
       "category": "tires",
-      "startPrice": 684,
-      "likelyMin": 684,
-      "likelyMax": null,
+      "startPrice": 790,
+      "likelyMin": 790,
+      "likelyMax": 790,
       "requiresDiagnosis": false,
       "requiresApproval": false,
       "note": "Däck 289 kr + arbete 395 kr. Rekommenderas i stället för att laga punktering på dessa modeller."
+    },
+    {
+      "id": "tube_change_85",
+      "name": "Slangbyte 8,5 tum inkl. slang (495 kr arbete + 100 kr slang)",
+      "category": "tires",
+      "startPrice": 595,
+      "likelyMin": 595,
+      "likelyMax": 595,
+      "requiresDiagnosis": false,
+      "requiresApproval": false
+    },
+    {
+      "id": "tube_change_10",
+      "name": "Slangbyte 10 tum inkl. slang (595 kr arbete + 100 kr slang)",
+      "category": "tires",
+      "startPrice": 695,
+      "likelyMin": 695,
+      "likelyMax": 695,
+      "requiresDiagnosis": false,
+      "requiresApproval": false
+    },
+    {
+      "id": "tire_tube_10",
+      "name": "Nytt däck + slang + montering 10 tum (slangen ingår)",
+      "category": "tires",
+      "startPrice": 990,
+      "likelyMin": 990,
+      "likelyMax": 990,
+      "requiresDiagnosis": false,
+      "requiresApproval": false
+    },
+    {
+      "id": "tubeless_complete",
+      "name": "Tubeless: nytt däck + montering",
+      "category": "tires",
+      "startPrice": 1190,
+      "likelyMin": 1190,
+      "likelyMax": 1190,
+      "requiresDiagnosis": false,
+      "requiresApproval": false
+    },
+    {
+      "id": "mount_only_85",
+      "name": "Endast montering 8,5 tum, kund medtar däck",
+      "category": "tires",
+      "startPrice": 495,
+      "likelyMin": 495,
+      "likelyMax": 495,
+      "requiresDiagnosis": false,
+      "requiresApproval": false
+    },
+    {
+      "id": "mount_only_10",
+      "name": "Endast montering 10 tum, kund medtar däck",
+      "category": "tires",
+      "startPrice": 595,
+      "likelyMin": 595,
+      "likelyMax": 595,
+      "requiresDiagnosis": false,
+      "requiresApproval": false
     },
     {
       "id": "diagnostics_standard",
@@ -41,16 +101,16 @@
       "category": "diagnostics",
       "startPrice": 495,
       "likelyMin": 495,
-      "likelyMax": 795,
+      "likelyMax": 695,
       "requiresDiagnosis": true,
       "requiresApproval": false
     },
     {
       "id": "diagnostics_advanced",
-      "name": "Avancerad diagnos",
+      "name": "Avancerad diagnos (batteri och elektronik)",
       "category": "diagnostics",
-      "startPrice": 795,
-      "likelyMin": 795,
+      "startPrice": 695,
+      "likelyMin": 695,
       "likelyMax": 1495,
       "requiresDiagnosis": true,
       "requiresApproval": true
@@ -59,8 +119,8 @@
       "id": "brake_adjustment",
       "name": "Bromsjustering",
       "category": "brakes",
-      "startPrice": 289,
-      "likelyMin": 289,
+      "startPrice": 295,
+      "likelyMin": 295,
       "likelyMax": 595,
       "requiresDiagnosis": false,
       "requiresApproval": false
@@ -109,5 +169,6 @@
       "requiresDiagnosis": true,
       "requiresApproval": true
     }
-  ]
+  ],
+  "approvalPolicy": "Kunden får alltid ett skriftligt kostnadsförslag som kunden aktivt måste godkänna innan någon åtgärd påbörjas. Diagnosavgiften dras av vid reparation hos oss."
 }
