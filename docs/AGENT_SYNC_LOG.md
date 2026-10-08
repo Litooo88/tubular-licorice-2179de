@@ -83,7 +83,28 @@ löpande "konversation".
 - **Öppet:** webben säger fortfarande "Laga punktering 349" och "Punkteringsfritt 749" på
   startsidan — Sebastian avgör. Fråga från Sebastian om Nova som chatt på hemsidan: svar i tråden.
 
-### 2026-10-08 — Claude Code — PÅGÅR (prisrevision: avancerad diagnos 795→695 + aktivt godkännande-löfte)
+### 2026-10-09 — Claude Code — KLAR (prisrevision: 695 + nya däckpriser + aktivt godkännande, sajt och röstassistent i synk)
+
+- **Merge `a7a2836` på origin/main.** Avancerad diagnos (batteri och
+  elektronik) 795 → 695 kr överallt (54 byten). Nya däckpriser enligt
+  Sebastians lista 9/10: slangbyte 8,5" 595 / 10" 695, punkteringsfritt
+  8,5" + montering 790 (495 arbete + 295 däck), 10" nytt däck + slang +
+  montering 990, tubeless komplett 1 190, endast montering 495/595.
+  Priser-sidans DÄCK-kort omskrivet; borttagna rader (8,5" däck+slang 649,
+  tubeless montering 595, tubeless + vätska 695, komplett fr. 895)
+  ersätts av nya strukturen. Punktering-sidans titel rättad.
+- **`data/workshop/price-rules.json` (RÖSTASSISTENTENS priskälla) är nu
+  IDENTISK med sajten:** alla däckregler med fasta totalpriser +
+  arbets/däck-uppdelning i namnet, avancerad diagnos 695, punktering 349
+  (var 395!), bromsjustering 295 (var 289!), punkteringsfritt 790 (var
+  684!). Ny `approvalPolicy`-nyckel + prices-verktygets policytext säger
+  uttryckligen att kunden AKTIVT godkänner kostnadsförslaget före åtgärd.
+  **Röstassistent-sessionen: er agents priser ändrades — kräver er deploy
+  inget, statisk import följer main.** Behållet opåverkat: motorhjul 445,
+  E16, controller/display-spann, vattenskada från 795, 10" punkteringsfritt
+  845 (fanns ej i nya listan — Sebastian: säg till om de också ska ändras).
+- **Godkännande-löftet** förstärkt på 6 sidor ("kostnadsförslag som du
+  aktivt godkänner innan arbete"). Tester: build ✅, checkout-verify ✅.
 
 - **Sebastians beslut:** Grunddiagnos 495 kvar, Avancerad diagnos (batteri
   och elektronik) sänks 795 → **695 kr**. Full konsistensgenomgång av ALLA
