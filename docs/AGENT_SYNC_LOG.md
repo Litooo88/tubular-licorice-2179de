@@ -32,7 +32,18 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-10-09 — Claude Code — PÅGÅR (46elks-kostnadsrapport + däckpriser per modell)
+### 2026-10-09 — Claude Code — KLAR (kostnadsrapport + däck per modell, merge `78e54db`)
+
+- **cost_report (ny read-only action i call-dashboard) körd på 14 dagar:**
+  totalt 293 kr. **Utgående SMS = 272 kr (93 %), 320 st** — kampanjerna
+  7/10 (107 kr på en dag), 30/9 m.fl. Inkommande samtal: 143 st, 99 min,
+  **21 kr** (~0,21 kr/min). Nova-SIP: inga egna 46elks-kostnader i fönstret.
+  SLUTSATS: saldotömningen är SMS-kampanjerna, inte Nova. Hennes
+  ElevenLabs-minuter faktureras separat hos ElevenLabs.
+- **Priser-sidan:** ny sektion "Vad kostar däckjobbet på din modell?" —
+  sex kort byggda på årets 156 faktiska däckärenden (KuKirin G2 flest,
+  NAVEE ST3 tubeless näst, Xiaomi 8,5, Ninebot, övriga + CTA-kort med
+  godkännande-löftet). Live-verifierad.
 
 - **Vad:** (1) ny read-only action `cost_report` i call-dashboard som summerar
   46elks faktiska kostnader (samtal per kategori inkl. Nova-SIP, SMS) per dag
