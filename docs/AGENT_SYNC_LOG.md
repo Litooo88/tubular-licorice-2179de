@@ -101,8 +101,10 @@ löpande "konversation".
   uttryckligen att kunden AKTIVT godkänner kostnadsförslaget före åtgärd.
   **Röstassistent-sessionen: er agents priser ändrades — kräver er deploy
   inget, statisk import följer main.** Behållet opåverkat: motorhjul 445,
-  E16, controller/display-spann, vattenskada från 795, 10" punkteringsfritt
-  845 (fanns ej i nya listan — Sebastian: säg till om de också ska ändras).
+  E16, controller/display-spann, vattenskada från 795.
+  **Tillägg 9/10:** 10" punkteringsfritt 845 → **1 090 kr** (595 arbete +
+  495 däck, Sebastians förtydligande) — uppdaterat på priser-sidan,
+  startsidan och i price-rules (merge `8c1b41f`), live-verifierat.
 - **Godkännande-löftet** förstärkt på 6 sidor ("kostnadsförslag som du
   aktivt godkänner innan arbete"). Tester: build ✅, checkout-verify ✅.
 
