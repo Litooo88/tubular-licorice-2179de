@@ -32,6 +32,24 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-09 — Claude Code — KLAR (Novas promptpriser rättade + publicerade i ElevenLabs)
+
+- **Nova citerade gamla felpriser i skarpt samtal** (Mats Persson-samtalet
+  7/10: punktering 395, punkteringsfritt 684) — priserna var hårdkodade i
+  systemprompten. Rättat i `docs/voice-agent-prompt.md` OCH publicerat i
+  ElevenLabs UI (diff +7/−19, commit-medd. "Uppdatera prislista...").
+  Nu: lagning 349, slangbyte 595/695, punkteringsfritt 790/1 090 med
+  arbets/däck-uppdelning, 10" däck+slang 990, tubeless 1 190, grunddiagnos
+  495, avancerad 695, broms 295 + kravet att kunden AKTIVT godkänner
+  kostnadsförslag sägs vid varje prisfråga. Sajt + price-rules + prompt =
+  samma siffror överallt nu.
+- **UPPFÖLJNING KRÄVS (Sebastian):** webbchatt-kunden **Diar, 070-750 81 05**
+  (8/10 15:37) bad om uppringning "när som helst" om trasig elscooter —
+  SMS-bekräftelsen misslyckades (saldo 0). Ring honom.
+- **Nova-statistik 7 dgr (ElevenLabs):** 17 konversationer, snitt 1:43,
+  LLM-kostnad totalt $1,17. LLM är Claude Sonnet 5.5 (GPT-4.1 mini noterad
+  som snabbare alternativ med sämre svenska — inga mätningar gjorda).
+
 ### 2026-10-09 — Claude Code — KLAR (kostnadsrapport + däck per modell, merge `78e54db`)
 
 - **cost_report (ny read-only action i call-dashboard) körd på 14 dagar:**
