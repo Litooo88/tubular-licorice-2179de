@@ -32,6 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-09 — Claude Code — PÅGÅR (46elks-kostnadsrapport + däckpriser per modell)
+
+- **Vad:** (1) ny read-only action `cost_report` i call-dashboard som summerar
+  46elks faktiska kostnader (samtal per kategori inkl. Nova-SIP, SMS) per dag
+  — Sebastian undrar varför saldot töms direkt efter påfyllning. (2) Visuell
+  "Vad kostar däckjobbet på din modell?"-sektion på priser-sidan, byggd på
+  årets faktiska däckärenden per modell.
+- **Rör:** `call-dashboard.mjs` (ny GET-del/action), `priser/index.html`.
+  Egen worktree, plumbing-merge.
+
 ### 2026-10-08 — Claude Code — KLAR (ärendeuppdateringar efter kvällspasset 7/10 18:00–05:00)
 
 - **Verkstadspass:** Sebastian körde verkstaden 7/10 18:00 → 8/10 05:00. En (1) drop-in under
