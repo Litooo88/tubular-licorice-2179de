@@ -982,6 +982,81 @@ export default async (request) => {
       return json({ ok: true });
     }
 
+    if (action === "cost_report") {
+      // Var tar saldot vägen? Summerar 46elks FAKTISKA kostnadsfält
+      // (cost = 1/10000 SEK, samma enhet som /a1/me-saldot) per kategori
+      // och dag. Read-only — gör inga ändringar hos 46elks.
+      const days = Math.min(Math.max(Number(body.days) || 14, 1), 60);
+      const cutoff = Date.now() - days * 24 * 60 * 60 * 1000;
+      const agentSipHost = clean(env("VOICE_AGENT_SIP"), 120).toLowerCase().replace(/^sip:/, "");
+
+      const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
+      const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
+      const auth = `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`;
+      const fetchSmsSince = async () => {
+        const rows = [];
+        let url = "https://api.46elks.com/a1/sms?limit=100";
+        for (let page = 0; page < 30 && url; page += 1) {
+          const response = await fetch(url, { headers: { Authorization: auth }, signal: AbortSignal.timeout(12000) });
+          const data = await response.json().catch(() => ({}));
+          if (!response.ok) throw new Error(clean(data.error || response.statusText, 180));
+          const batch = Array.isArray(data.data) ? data.data : [];
+          rows.push(...batch);
+          const oldest = batch.length ? Date.parse(batch[batch.length - 1].created || 0) : 0;
+          if (!batch.length || (Number.isFinite(oldest) && oldest > 0 && oldest < cutoff)) break;
+          url = data.next ? `https://api.46elks.com/a1/sms?limit=100&start=${encodeURIComponent(data.next)}` : "";
+        }
+        return rows.filter((row) => Date.parse(row.created || 0) >= cutoff);
+      };
+
+      const calls = (await fetchCalls()).filter((call) => Date.parse(call.created || call.start || 0) >= cutoff);
+      const smsRows = await fetchSmsSince();
+
+      const callCategory = (call) => {
+        const to = String(call.to || "").toLowerCase();
+        if (to.startsWith("sip:") || (agentSipHost && to.includes(agentSipHost))) return "nova_sip";
+        if (String(call.direction || "").startsWith("out")) return "utgaende_samtal";
+        return "inkommande_samtal";
+      };
+      const byCategory = {};
+      const byDay = {};
+      const bump = (category, costRaw, seconds = 0) => {
+        const entry = (byCategory[category] = byCategory[category] || { antal: 0, sek: 0, minuter: 0 });
+        entry.antal += 1;
+        entry.sek += costRaw / 10000;
+        entry.minuter += seconds / 60;
+      };
+      for (const call of calls) {
+        const costRaw = Number(call.cost) || 0;
+        bump(callCategory(call), costRaw, Number(call.duration) || 0);
+        const dayKey = String(call.created || call.start || "").slice(0, 10);
+        (byDay[dayKey] = byDay[dayKey] || { samtalSek: 0, smsSek: 0 }).samtalSek += costRaw / 10000;
+      }
+      for (const row of smsRows) {
+        const costRaw = Number(row.cost) || 0;
+        bump(String(row.direction || "").startsWith("out") ? "sms_utgaende" : "sms_inkommande", costRaw);
+        const dayKey = String(row.created || "").slice(0, 10);
+        (byDay[dayKey] = byDay[dayKey] || { samtalSek: 0, smsSek: 0 }).smsSek += costRaw / 10000;
+      }
+      const round2 = (value) => Math.round(value * 100) / 100;
+      for (const entry of Object.values(byCategory)) {
+        entry.sek = round2(entry.sek);
+        entry.minuter = Math.round(entry.minuter);
+      }
+      const dayRows = Object.entries(byDay)
+        .sort(([a], [b]) => b.localeCompare(a))
+        .map(([day, value]) => ({ dag: day, samtalSek: round2(value.samtalSek), smsSek: round2(value.smsSek), totalSek: round2(value.samtalSek + value.smsSek) }));
+      const totalSek = round2(dayRows.reduce((sum, row) => sum + row.totalSek, 0));
+      return json({
+        ok: true,
+        dagar: days,
+        totalSek,
+        kategorier: byCategory,
+        perDag: dayRows,
+        notering: "Kostnader fran 46elks egna cost-falt (1/10000 SEK). Nova-SIP = samtalsben till rostassistenten; hennes ElevenLabs-minuter faktureras separat hos ElevenLabs och syns inte har.",
+      });
+    }
+
     if (action === "block_number") {
       const result = await blockNumber(body.number, { reason: clean(body.reason, 200), by: operatorName });
       if (!result.ok) return json({ error: result.error }, 400);
