@@ -36,6 +36,16 @@
       "note": "Däck 289 kr + arbete 395 kr. Rekommenderas i stället för att laga punktering på dessa modeller."
     },
     {
+      "id": "solid_tire_10",
+      "name": "Punkteringsfritt däck 10 tum + montering (595 kr arbete + 495 kr däck)",
+      "category": "tires",
+      "startPrice": 1090,
+      "likelyMin": 1090,
+      "likelyMax": 1090,
+      "requiresDiagnosis": false,
+      "requiresApproval": false
+    },
+    {
       "id": "tube_change_85",
       "name": "Slangbyte 8,5 tum inkl. slang (495 kr arbete + 100 kr slang)",
       "category": "tires",
