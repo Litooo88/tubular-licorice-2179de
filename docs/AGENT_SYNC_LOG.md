@@ -32,6 +32,20 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-11 — Claude Code — KLAR (ärenden 11/10, utkast för eftermiddagsrundan, vinterkampanj köad)
+
+- Roja (NIU KQi3 Pro) och Omar Dele (KuKirin G2): `done` + `paid`. Nytt ärende Henke
+  (verkstadens hyresvärd, +46765837144), E2S V2 Pro motorbyte, `done` + `paid`, tack-SMS
+  avstängt. Daniel (ST3 Pro), Erik Medin (500 kr, = drop-in 7/10; dubbletten arkiverad) och
+  Björn (E-Way) `ready`, obetalda, levereras 11/10 em efter Evas installation.
+- Fyra SMS-utkast (kat A, GSM-7) i admin: Eva + de tre leveranserna.
+- Vinterkampanjen köad till **mån 12/10 kl 10:00**: 120 mottagare, 62 kr. Avbryts med
+  `cancel_campaign` tag `vinter-2026`. Kräver ≥ 70 kr 46elks-saldo då (161 kr 11/10 07:00).
+- OBS: `POST/PATCH /api/cases` svarar med `case`, inte `item`. Netlify-anslutningen var
+  ostadig 11/10 morgon (connect timeouts); skripten behöver omförsök.
+- Sebastian: Swish-mottagaren 7144 = Henke, hyresvärden (hyran betalas via Swish privat);
+  privat Revolut = utlandsbetalningar.
+
 ### 2026-10-09 — Claude Code — KLAR (Novas promptpriser rättade + publicerade i ElevenLabs)
 
 - **Nova citerade gamla felpriser i skarpt samtal** (Mats Persson-samtalet
