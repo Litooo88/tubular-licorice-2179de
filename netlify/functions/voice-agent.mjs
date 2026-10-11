@@ -20,6 +20,7 @@
 
 import { getStore } from "@netlify/blobs";
 import { postSms } from "./_shared/sms.mjs";
+import { matchOutboundCall, outboundFirstMessage } from "./_shared/nova.mjs";
 import {
   compactSlots,
   fromElevenLabsWebhook,
@@ -59,11 +60,15 @@ const json = (body, status = 200) =>
 
 const siteBase = () => (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
 const sebastianTo = () => env("SEBASTIAN_SMS_TO") || env("WORKSHOP_SMS_TO");
+// Sebastian 2026-10-11: ett SMS per samtal drunknar. Standard är nu ett samlat
+// SMS om dagen (nova-digest.mjs) och sidan /admin/ring-upp/. Sätt
+// NOVA_INSTANT_SMS=1 för att få tillbaka omedelbara SMS.
+const instantTo = () => (env("NOVA_INSTANT_SMS") === "1" ? sebastianTo() : "");
 
 const authorized = (request) => {
   const expected = env("VOICE_AGENT_SECRET");
   if (!expected) return { ok: false, status: 503, error: "not_configured" };
-  const provided = request.headers.get("x-voice-agent-secret") || "";
+  const provided = request.headers.get("x-voice-agent-secret") || new URL(request.url).searchParams.get("s") || "";
   const bearer = (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   if (provided !== expected && bearer !== expected) return { ok: false, status: 401, error: "unauthorized" };
   return { ok: true };
@@ -139,7 +144,7 @@ export default async (request) => {
   if (request.method === "GET" && tool === "health") {
     return json({
       ok: true,
-      tools: ["lookup", "prices", "scooters", "slots", "book-meeting", "message", "summary"],
+      tools: ["lookup", "prices", "scooters", "slots", "book-meeting", "message", "summary", "init"],
       sms: Boolean(sebastianTo()),
       cases: Boolean(env("ADMIN_TOKEN")),
       mail: Boolean(env("RESEND_API_KEY") && env("EMAIL_FROM")),
@@ -149,6 +154,29 @@ export default async (request) => {
   const body = rawBody
     ? (() => { try { return JSON.parse(rawBody); } catch { return {}; } })()
     : await request.json().catch(() => ({}));
+
+  // ElevenLabs "conversation initiation client data"-webhook: körs när ett
+  // samtal startar. Är det en av Novas uppringningar (nova-outbound) byts
+  // första meningen ut, så att Nova säger varför hon ringer. Inkommande
+  // samtal får inga ändringar.
+  if (tool === "init") {
+    const callerId = body.caller_id || body.callerId || body.from || "";
+    const store = getStore({ name: "nova-outbound", consistency: "strong" });
+    const { blobs } = await store.list().catch(() => ({ blobs: [] }));
+    const entries = (await Promise.all((blobs || []).map(async (b) => {
+      const v = await store.get(b.key, { type: "json" }).catch(() => null);
+      return v ? { key: b.key, ...v } : null;
+    }))).filter((x) => x && x.key !== "_config");
+    const own = [env("ELKS_SMS_NUMBER"), env("ELKS_NUMBER"), "+46101385498"].filter(Boolean);
+    const match = matchOutboundCall(entries, callerId, { ownNumbers: own });
+    if (!match) return json({ type: "conversation_initiation_client_data", dynamic_variables: { samtalstyp: "inkommande" } });
+    await store.setJSON(match.key, { ...match, connectedAt: new Date().toISOString(), conversationCallId: clean(body.call_sid, 120) }).catch(() => {});
+    return json({
+      type: "conversation_initiation_client_data",
+      dynamic_variables: { samtalstyp: "uppringning" },
+      conversation_config_override: { agent: { first_message: outboundFirstMessage({ ...match, status: match.wasTest ? "test" : match.status }) } },
+    });
+  }
 
   if (tool === "lookup") {
     const cases = await loadCases();
@@ -184,9 +212,9 @@ export default async (request) => {
     const at = new Date().toISOString();
     const store = getStore({ name: "voice-agent-messages", consistency: "strong" });
     const id = `message-${at.replace(/[:.]/g, "-")}-${note.phone.replace(/\D/g, "").slice(-6)}`;
-    const staff = sebastianTo() ? await postSms({ to: sebastianTo(), message: messageSmsToSebastian(note) }) : { status: "not_configured" };
+    const staff = instantTo() ? await postSms({ to: instantTo(), message: messageSmsToSebastian(note) }) : { status: "digest" };
     await store.setJSON(id, { id, at, ...note, staffSms: staff.status }).catch(() => {});
-    return json({ ok: true, id, delivered: staff.status === "sent", say: staff.status === "sent" ? "Jag har skickat meddelandet till Sebastian." : "Jag har sparat meddelandet till Sebastian." });
+    return json({ ok: true, id, delivered: staff.status === "sent", say: "Jag har lämnat meddelandet till Sebastian. Han går igenom sina meddelanden varje dag." });
   }
 
   if (tool === "slots") {
@@ -206,7 +234,7 @@ export default async (request) => {
     const store = getStore({ name: "voice-agent-meetings", consistency: "strong" });
     const id = `meeting-${at.replace(/[:.]/g, "-")}-${meeting.phone.replace(/\D/g, "").slice(-6)}`;
     const caseResult = await createMeetingCase(meeting);
-    const staff = sebastianTo() ? await postSms({ to: sebastianTo(), message: meetingSmsToSebastian(meeting) }) : { status: "not_configured" };
+    const staff = instantTo() ? await postSms({ to: instantTo(), message: meetingSmsToSebastian(meeting) }) : { status: "digest" };
     const customer = await postSms({ to: meeting.phone, message: meetingSmsToCustomer(meeting) });
     await store.setJSON(id, { id, at, ...meeting, case: caseResult, staffSms: staff.status, customerSms: customer.status }).catch(() => {});
     return json({ ok: true, id, caseId: caseResult.id || "", confirmationSms: customer.status, say: `Då har jag bokat att Sebastian ringer dig${meeting.preferredTime ? ` ${meeting.preferredTime}` : " så snart han kan"}. Du får en bekräftelse på SMS.` });
@@ -221,7 +249,7 @@ export default async (request) => {
     const store = getStore({ name: "voice-agent-calls", consistency: "strong" });
     const id = s.callId || `call-${at.replace(/[:.]/g, "-")}`;
     await store.setJSON(id, { id, at, ...s, customer: lookup ? { found: lookup.found, firstName: lookup.firstName, activeCases: lookup.active.map((c) => c.serviceNumber) } : null }).catch(() => {});
-    const sms = sebastianTo() ? await postSms({ to: sebastianTo(), message: summarySmsToSebastian(s, lookup) }) : { status: "not_configured" };
+    const sms = instantTo() ? await postSms({ to: instantTo(), message: summarySmsToSebastian(s, lookup) }) : { status: "digest" };
     const mail = await sendMail(
       `Röstassistent: samtal ${s.phone || id}`,
       `${summarySmsToSebastian(s, lookup)}\n\nUtfall: ${s.outcome || "-"}\n\nTranskript:\n${s.transcript || "(saknas)"}`,
