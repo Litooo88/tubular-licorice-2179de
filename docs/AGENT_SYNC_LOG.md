@@ -32,6 +32,27 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-11 — Claude Code — KLAR (Ring upp-sidan + Nova ringer upp, PR #157; ElevenLabs init-webhook; prompt v4)
+
+- **Kod (PR #157):** `/admin/ring-upp/` (bakom personalinloggningen), `/api/nova`, `nova-digest`
+  (ett samlat SMS 10:00 UTC), `nova-outbound-run` (var 10:e min) + `nova-outbound-hook`,
+  voice-agent tool `init`. **Omedelbara SMS från Nova är AV** som standard (`NOVA_INSTANT_SMS=1`
+  slår på igen) — Sebastian vill ha en fast tid om dagen.
+- **ElevenLabs:** workspace-webhook "Konversationsinitiering" → `/api/voice-agent/init` med
+  header `x-voice-agent-secret`; agentens säkerhet: override "Första meddelandet" + "Hämta
+  initieringsklientdata" PÅ; systemverktyget Röstbrevlådedetektering PÅ. Prompt v4 publicerad
+  OVANPÅ prisrevisionen från 9/10 (priserna orörda) + LÖS SJÄLV / WEBBCHATT / UPPRINGNING och
+  TIDIGARE KONTAKT, som saknades i den publicerade versionen.
+- **Uppringningskö:** 149 nummer (aldrig nådda, ej kund, ej pratat med Nova, kallaste först).
+  Undantagna för gott: Sebastians testtelefon, Koffe, Britt/Eva, Omar. Config `enabled:false`
+  tills Sebastian testat med "Ring mig" på sidan. Callerid till Nova = kundens nummer; om 46elks
+  inte tillåter det matchar init-webhooken på den enda aktiva uppringningen.
+- **Stängt i Ring upp:** Sebastians testmöten (Claes-Göran, Mats Persson), Roja, Daniels RING.
+- **Bokföringsunderlag v2** (Documents, ej i repot): hela 2026, hyra som avtalsrader 11 900
+  inkl. moms/mån (Henke har bolag), Swish till Henke = betalning (2440), kundswish till
+  privatkontot som försäljning (25 841 kr), flikar Att identifiera / Avdrag / Saknas från dig.
+  Kontokarta: 0091 = Sebastians e-sparkonto (ej företag). Se memory `bankkonton`.
+
 ### 2026-10-11 — Claude Code — KLAR (ärenden 11/10, utkast för eftermiddagsrundan, vinterkampanj köad)
 
 - Roja (NIU KQi3 Pro) och Omar Dele (KuKirin G2): `done` + `paid`. Nytt ärende Henke
