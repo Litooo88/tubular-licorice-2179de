@@ -32,7 +32,18 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-10-12 — Claude Code — PÅGÅR (bokning steg 2 byggs i worktree — MERGAS INTE före 14/10)
+### 2026-10-12 — Claude Code — BYGGD, VÄNTAR PÅ MERGE 14/10 (bokning steg 2: trestegsflödet)
+
+- **Branch `worktree-bokning-steg2` (commit `d6098fe`) är FÄRDIG och pushad
+  men MERGAS TIDIGAST ONSDAG 14/10** — GA4-baslinjen behöver tisdag 13/10.
+  Rör inte book-online/index.html i delade mappen innan mergen.
+- Innehåll: wizard med stegindikator (1 symptomkort+tillval, 2 märke/modell/
+  beskrivning, 3 tid/transport/kontakt/villkor), samma fältnamn och API,
+  novalidate + JS-validering per steg och vid submit, GA4 booking_step_view,
+  hero/meta-priser rättade (gammal "felsökning från 395" låg kvar).
+  Visuellt verifierad i lokal dist-preview: stegväxling, blockerande
+  validering, fallback-tider. Build + checkout-verify gröna.
+- Chrome var nere → kampanj-ROI och GA4-verifiering görs när den är uppe.
 
 - **Vad:** trestegsflödet på /book-online/ enligt beslutad plan: (1) fem
   symptomkort, (2) märke-dropdown + modell med förslag + beskrivning,
