@@ -766,7 +766,17 @@ if(serviceSelect)serviceSelect.addEventListener('change',()=>{syncServiceChoiceF
 // GA4-funnel (steg 0 i bokningsombyggnaden): fyra events utan persondata,
 // så vi kan räkna bokningsgrad = booking_completed / booking_view och se
 // var kunder faller bort. Baslinje mäts FÖRE flödesombyggnaden.
-function trackBooking(name,params){try{if(window.gtag)window.gtag('event',name,params||{});}catch(e){}}
+// Standard-shim: finns inte gtag ännu (analytics.js laddar med defer) köas
+// eventet i dataLayer och processas när GA4 laddar — annars tappades
+// booking_view tyst eftersom sidskriptet kör före analytics (bugg i steg 0;
+// använd page_view som funneltopp för baslinjeperioden t.o.m. 13/10).
+function trackBooking(name,params){
+  try{
+    window.dataLayer=window.dataLayer||[];
+    const g=window.gtag||function(){window.dataLayer.push(arguments);};
+    g('event',name,params||{});
+  }catch(e){}
+}
 trackBooking('booking_view');
 let bookingStartedTracked=false;
 serviceChoiceInputs.forEach((input)=>input.addEventListener('change',()=>{setServiceFromChoice(input.value);trackBooking('service_selected',{service:input.value});}));
