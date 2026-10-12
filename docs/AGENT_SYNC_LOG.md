@@ -32,6 +32,17 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-12 — Claude Code — PÅGÅR (bokning steg 2 byggs i worktree — MERGAS INTE före 14/10)
+
+- **Vad:** trestegsflödet på /book-online/ enligt beslutad plan: (1) fem
+  symptomkort, (2) märke-dropdown + modell med förslag + beskrivning,
+  (3) tid (live-slots) + transportval + kontakt. Samma fältnamn och API —
+  inga kontraktsändringar. GA4-stegevents läggs till bredvid befintliga.
+- **VIKTIGT:** branchen `worktree-bokning-steg2` pushas men **mergas först
+  onsdag 14/10** — GA4-baslinjen behöver tisdag 13/10 (inlämningsdag) innan
+  flödet byts. Rör inte book-online/index.html i delade mappen till dess.
+- Chrome nere i dag → kampanj-ROI och GA4-verifiering tas när den är uppe.
+
 ### 2026-10-11 — Claude Code — KLAR (Ring upp-sidan + Nova ringer upp, PR #157; ElevenLabs init-webhook; prompt v4)
 
 - **Kod (PR #157):** `/admin/ring-upp/` (bakom personalinloggningen), `/api/nova`, `nova-digest`
