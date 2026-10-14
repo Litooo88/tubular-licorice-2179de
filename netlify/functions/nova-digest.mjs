@@ -1,5 +1,6 @@
-// Ett samlat SMS om dagen till Sebastian: alla som vill bli uppringda
-// (Novas telefonmöten, RING-svar, meddelanden), med länk till /admin/ring-upp/.
+// Ett samlat SMS om dagen till Sebastian: vad Nova gjorde i går (samtal,
+// utfall, uppringningar) och alla som vill bli uppringda (Novas telefonmöten,
+// RING-svar, meddelanden), med länk till /admin/ring-upp/.
 // Ersätter ett SMS per samtal (Sebastian 2026-10-11: han ringer inte direkt
 // ändå, en fast tid kring lunch fungerar bättre). Skickar inget när listan är tom.
 //
@@ -7,7 +8,7 @@
 
 import { getStore } from "@netlify/blobs";
 import { postSms } from "./_shared/sms.mjs";
-import { buildCallbackDigest } from "./_shared/nova.mjs";
+import { buildCallbackDigest, buildNovaStats, novaDayLine, ownNovaNumbers } from "./_shared/nova.mjs";
 
 const env = (n) => { try { return globalThis.Netlify?.env?.get?.(n) || process.env[n] || ""; } catch { return process.env[n] || ""; } };
 const readAll = async (name) => {
@@ -22,13 +23,17 @@ const readAll = async (name) => {
 export default async () => {
   const to = env("SEBASTIAN_SMS_TO") || env("WORKSHOP_SMS_TO");
   if (!to) return new Response("not_configured");
-  const [meetings, messages, inbound] = await Promise.all([readAll("voice-agent-meetings"), readAll("voice-agent-messages"), readAll("sms-inbound")]);
+  const [meetings, messages, inbound, calls, outbound] = await Promise.all([
+    readAll("voice-agent-meetings"), readAll("voice-agent-messages"), readAll("sms-inbound"), readAll("voice-agent-calls"), readAll("nova-outbound"),
+  ]);
+  const stats = buildNovaStats({ calls, entries: outbound, ownNumbers: ownNovaNumbers(env) });
   const base = (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
   const text = buildCallbackDigest({
     meetings: meetings.filter((m) => !m.done),
     messages: messages.filter((m) => !m.done),
     ring: inbound.filter((r) => r.type === "ring" && !r.handled),
     url: `${base}/admin/ring-upp/`,
+    summary: novaDayLine(stats.yesterday),
   });
   if (!text) return new Response("empty");
   const sms = await postSms({ to, message: text });

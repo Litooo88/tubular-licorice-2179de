@@ -13,6 +13,9 @@ import { getStore } from "@netlify/blobs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
 import { normalizePhone } from "./_shared/sms.mjs";
 import { listBlockedNumbers } from "./_shared/call-blocklist.mjs";
+import { buildNovaStats, callOutcome, classifyNovaCall, ownNovaNumbers } from "./_shared/nova.mjs";
+
+const env = (n) => { try { return globalThis.Netlify?.env?.get?.(n) || process.env[n] || ""; } catch { return process.env[n] || ""; } };
 
 const json = (body, status = 200) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json; charset=utf-8" } });
 const clean = (v, max = 400) => String(v || "").trim().slice(0, max);
@@ -54,9 +57,11 @@ export default async (request) => {
     const cfg = outbound.items.find((x) => x.key === OUTBOUND_CONFIG_KEY) || { enabled: false, maxPerRun: 1 };
     const queue = outbound.items.filter((x) => x.key !== OUTBOUND_CONFIG_KEY);
     const count = (s) => queue.filter((x) => x.status === s).length;
+    const ownNumbers = ownNovaNumbers(env);
     return json({
       generatedAt: new Date(now).toISOString(),
       days,
+      stats: buildNovaStats({ calls: calls.items, entries: queue, now, ownNumbers }),
       callbacks: {
         meetings: meetings.items.filter((m) => !m.done).sort((a, b) => String(a.at).localeCompare(String(b.at))),
         messages: messages.items.filter((m) => !m.done).sort((a, b) => String(a.at).localeCompare(String(b.at))),
@@ -64,7 +69,14 @@ export default async (request) => {
         doneRecent: [...meetings.items, ...messages.items].filter((m) => m.done && recent({ at: m.doneAt })).length,
       },
       calls: calls.items.filter(recent).sort((a, b) => String(b.at).localeCompare(String(a.at)))
-        .map((c) => ({ id: c.id, at: c.at, phone: c.phone, durationSec: c.durationSec, outcome: c.outcome, summary: c.summary, transcript: c.transcript, meetingBooked: c.meetingBooked, customer: c.customer, outbound: c.outbound || null, done: Boolean(c.done) })),
+        .map((c) => {
+          const cls = classifyNovaCall(c, queue, { ownNumbers });
+          return {
+            id: c.id, at: c.startedAt || c.at, phone: cls.phone || c.phone, durationSec: c.durationSec, outcome: c.outcome, summary: c.summary, transcript: c.transcript,
+            meetingBooked: c.meetingBooked, customer: c.customer, done: Boolean(c.done),
+            kind: cls.kind, outboundKey: cls.outboundKey, result: callOutcome(c), endReason: c.endReason || "", tools: c.tools || [],
+          };
+        }),
       outbound: {
         config: { enabled: Boolean(cfg.enabled), maxPerRun: Number(cfg.maxPerRun) || 1, updatedAt: cfg.updatedAt || null },
         counts: { queued: count("queued"), calling: count("calling"), done: count("done"), noanswer: count("noanswer"), failed: count("failed"), test: count("test") },

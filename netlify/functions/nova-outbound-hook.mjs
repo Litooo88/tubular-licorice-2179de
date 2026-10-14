@@ -20,7 +20,11 @@ export default async (request) => {
   // kommer via post-call-webhooken.
   const answered = duration >= 8 && !/fail|busy|noanswer/i.test(state);
   const status = answered ? "done" : (entry.wasTest ? "failed" : (entry.attempts || 0) >= OUTBOUND_MAX_ATTEMPTS ? "noanswer" : "queued");
-  await store.setJSON(key, { ...entry, status, result: `${state || "okänt"} ${duration}s`, durationSec: duration, endedAt: new Date().toISOString() });
+  // Ett försök per rad, för statistiken (försök/svarade/kostnad per dag).
+  // 46elks cost = 1/10000 kr, samma enhet som i call-dashboard.
+  const costSek = Number(form?.get("cost") || 0) / 10000;
+  const attempt = { at: entry.lastAttemptAt || new Date().toISOString(), result: answered ? "answered" : "noanswer", state: state.slice(0, 40), durationSec: duration, costSek };
+  await store.setJSON(key, { ...entry, status, result: `${state || "okänt"} ${duration}s`, durationSec: duration, endedAt: new Date().toISOString(), log: [...(entry.log || []), attempt].slice(-6) });
   return new Response("ok");
 };
 

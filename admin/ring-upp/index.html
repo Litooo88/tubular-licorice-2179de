@@ -24,6 +24,13 @@ input{background:#0f1512;border:1px solid var(--line);color:var(--ink);border-ra
 .grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.stat{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}.stat b{display:block;font-size:20px}
 .switch{display:flex;align-items:center;gap:10px}.on{color:var(--acc);font-weight:700}.off{color:var(--warn);font-weight:700}
 .err{color:var(--bad)}
+.tag.in{background:#13233a;color:#9cc7ff}.tag.web{background:#1f2427;color:#c9d4cf}.tag.test{background:#2a2410;color:#ffd77a}
+.tag.good{background:#123a22;color:#7ef0a6}.tag.info{background:#13233a;color:#9cc7ff}.tag.warn{background:#3a2e10;color:#ffd77a}.tag.bad{background:#3d1612;color:#ff9d90}.tag.dim{background:#1f2427;color:var(--dim)}
+table.stats{width:100%;border-collapse:collapse;font-size:14px}table.stats th,table.stats td{white-space:nowrap;padding:6px 4px;border-bottom:1px solid var(--line);text-align:right}
+table.stats th:first-child,table.stats td:first-child{text-align:left;white-space:normal}table.stats th{color:var(--dim);font-weight:600;font-size:12.5px}
+table.stats tr.sub td:first-child{padding-left:14px;color:var(--dim)}table.stats td.bad{color:var(--bad);font-weight:700}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0 4px}.chips button{padding:6px 10px;font-size:12.5px;background:#24302a;color:var(--ink)}.chips button.sel{background:var(--acc);color:#04130a}
+.att{font:13px/1.6 ui-monospace,Consolas,monospace;color:#cfe0d6;margin-top:8px}
 </style>
 </head>
 <body>
@@ -37,10 +44,13 @@ input{background:#0f1512;border:1px solid var(--line);color:var(--ink);border-ra
   </div>
   <h2>Att ringa <span class="count" id="n"></span></h2>
   <div id="list"></div>
+  <h2>Nova i siffror</h2>
+  <div id="stats"></div>
+  <h2>Novas samtal, senaste 14 dagarna</h2>
+  <div class="chips" id="filters"></div>
+  <div id="calls"></div>
   <h2>Nova ringer upp ringlistan</h2>
   <div id="out"></div>
-  <h2>Novas samtal, senaste 14 dagarna</h2>
-  <div id="calls"></div>
 </div>
 <script>
 const $=(s)=>document.querySelector(s);
@@ -49,6 +59,12 @@ const token=()=>localStorage.getItem('nordicAdminToken')||'';
 const when=(iso)=>{if(!iso)return'';const d=new Date(iso);return d.toLocaleString('sv-SE',{timeZone:'Europe/Stockholm',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})};
 const ago=(iso)=>{const h=Math.floor((Date.now()-new Date(iso).getTime())/36e5);return h<24?`${h} h sedan`:`${Math.floor(h/24)} dygn sedan`};
 const tel=(p)=>String(p||'').replace(/[^\d+]/g,'');
+const mmss=(sec)=>{sec=Math.round(Number(sec)||0);return `${Math.floor(sec/60)}:${String(sec%60).padStart(2,'0')}`};
+const KIND={inbound:['Inkommande','in'],outbound:['Uppringning','out'],web:['Webbchatt','web'],test:['Test','test']};
+const FILTERS=[['all','Alla'],['inbound','Inkommande'],['outbound','Uppringning'],['web','Webbchatt'],['problem','Misslyckat / lade på'],['test','Test']];
+let filter='all',lastCalls=[];
+const isProblem=(c)=>['failed','short','voicemail'].includes(c.result?.key);
+const ATT={answered:'Svarade',noanswer:'Svarade inte',failed:'Tekniskt fel'};
 async function api(path,body){
   const r=await fetch(path,{method:body?'POST':'GET',headers:{'x-admin-token':token(),'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
   if(r.status===401){$('#login').hidden=false;throw new Error('Fel eller saknad admin-token')}
@@ -81,14 +97,56 @@ async function load(){
    <div class="meta">Ringer vardagar 10–18, ett samtal i taget, max två försök per nummer. Säger direkt att hon är AI.</div>
    <div class="grid" style="margin-top:10px"><div class="stat"><b>${o.counts.queued}</b>i kö</div><div class="stat"><b>${o.counts.done}</b>pratat</div><div class="stat"><b>${o.counts.noanswer}</b>svarade inte</div></div>
    <p class="meta">Testa först på dig själv:</p><div class="row"><input id="tp" placeholder="Ditt mobilnummer" style="flex:1"><button class="small" id="tb">Ring mig</button></div>
-   ${o.recent.length?`<details><summary>Senaste ${o.recent.length} försöken</summary><pre>${esc(o.recent.map(x=>`${when(x.lastAttemptAt)}  ${x.phone}  ${x.status}  ${x.result||''}`).join('\n'))}</pre></details>`:''}
+   ${o.recent.length?`<details><summary>Senaste ${o.recent.length} uppringda nummer</summary><div class="att">${o.recent.map(outLine).join('<br>')}</div></details>`:''}
    ${o.next.length?`<details><summary>Nästa i kön</summary><pre>${esc(o.next.map(x=>`${x.phone}  ${x.label||''}  ${x.reason||''}`).join('\n'))}</pre></details>`:''}</div>`;
   $('#tg').onclick=async()=>{await api('/api/nova/outbound-config',{enabled:!o.config.enabled,maxPerRun:1});load()};
   $('#tb').onclick=async()=>{const r=await api('/api/nova/outbound-test',{phone:$('#tp').value});alert(r.error||r.note)};
-  $('#calls').innerHTML=d.calls.length?d.calls.map(c=>`<div class="card"><div class="row"><div><span class="tag ${c.outbound?'out':''}">${c.outbound?'Uppringning':(c.phone?'Telefon':'Webbchatt')}</span><span class="who">${esc(c.customer?.firstName||c.phone||'Okänd besökare')}</span></div><div class="meta">${esc(when(c.at))} · ${Math.round((c.durationSec||0)/60)} min</div></div>
-   <div class="what">${esc(c.summary||'Ingen sammanfattning.')}</div>${c.meetingBooked?'<div class="meta">Telefonmöte bokat</div>':''}
-   ${c.transcript?`<details><summary>Hela samtalet</summary><pre>${esc(c.transcript)}</pre></details>`:''}</div>`).join(''):'<div class="empty">Inga samtal.</div>';
+  $('#stats').innerHTML=statsTable(d.stats);
+  lastCalls=d.calls;renderCalls();
 }
+function statsTable(st){
+  if(!st)return'<div class="empty">Ingen statistik.</div>';
+  const cols=[st.today,st.yesterday,st.week];
+  const row=(label,fn,cls='')=>`<tr class="${cls}"><td>${label}</td>${cols.map(c=>{const v=fn(c);return `<td class="${cls==='warn'&&v&&v!=='0'?'bad':''}">${esc(v)}</td>`}).join('')}</tr>`;
+  const pct=(c)=>c.answerRate===null?'–':`${c.answered} (${c.answerRate} %)`;
+  return `<div class="card"><table class="stats"><tr><th></th><th>I dag</th><th>I går</th><th>7 dagar</th></tr>
+   ${row('<b>Samtal med Nova</b>',c=>String(c.conversations))}
+   ${row('inkommande',c=>String(c.inbound),'sub')}${row('uppringda som svarade',c=>String(c.outbound),'sub')}${row('webbchatt',c=>String(c.web),'sub')}
+   ${row('Snittlängd',c=>c.conversations?mmss(c.avgSec):'–')}
+   ${row('Telefonmöte bokat',c=>String(c.meetings))}${row('Meddelande lämnat',c=>String(c.messages))}${row('Nova löste frågan',c=>String(c.resolved))}
+   ${row('Misslyckat',c=>String(c.failed),'warn')}${row('Lade på direkt / röstbrevlåda',c=>String(c.short))}
+   ${row('<b>Uppringningsförsök</b>',c=>String(c.dialed))}
+   ${row('svarade',pct,'sub')}${row('svarade inte',c=>String(c.noAnswer),'sub')}${row('tekniskt fel',c=>String(c.dialFailed),'sub')}
+   ${row('kostnad 46elks',c=>c.costSek?`${c.costSek.toFixed(2).replace('.',',')} kr`:'–','sub')}
+   ${row('Testsamtal (räknas inte)',c=>String(c.tests))}
+  </table><div class="meta" style="margin-top:8px">"I dag" och "I går" är svenska kalenderdagar. Utfallet kommer från Novas egen bedömning efter samtalet; läs samtalet när det står Misslyckat.</div></div>`;
+}
+function callCard(c){
+  const [kt,kc]=KIND[c.kind]||['Okänd','web'];
+  const r=c.result||{label:'Utfall okänt',tone:'dim'};
+  const name=c.customer?.firstName||'';
+  const who=c.kind==='web'?(name||'Besökare på hemsidan'):[name,c.phone].filter(Boolean).join(' ')||'Okänt nummer';
+  const cust=c.customer?(c.customer.found?(c.customer.activeCases?.length?`Kund, aktivt ärende ${c.customer.activeCases.join(', ')}`:'Tidigare kund'):'Ny kontakt'):'';
+  const meta=[when(c.at),c.durationSec?mmss(c.durationSec):'',cust,c.endReason?`slut: ${c.endReason}`:''].filter(Boolean).join(' · ');
+  return `<div class="card"><div class="row"><div><span class="tag ${kc}">${kt}</span><span class="tag ${r.tone}">${esc(r.label)}</span></div>
+   ${c.phone&&c.kind!=='web'?`<a class="btn call" href="tel:${esc(tel(c.phone))}">Ring</a>`:''}</div>
+   <div class="who" style="margin-top:6px">${esc(who)}</div><div class="meta">${esc(meta)}</div>
+   <div class="what">${esc(c.summary||'Ingen sammanfattning.')}</div>
+   ${c.transcript?`<details><summary>Hela samtalet</summary><pre>${esc(c.transcript)}</pre></details>`:''}</div>`;
+}
+function renderCalls(){
+  const pick=(f)=>f==='all'?lastCalls.filter(c=>c.kind!=='test'):f==='problem'?lastCalls.filter(isProblem):lastCalls.filter(c=>c.kind===f);
+  $('#filters').innerHTML=FILTERS.map(([k,l])=>`<button class="${k===filter?'sel':''}" data-f="${k}">${l} (${pick(k).length})</button>`).join('');
+  const list=pick(filter);
+  $('#calls').innerHTML=list.length?list.map(callCard).join(''):'<div class="empty">Inga samtal här.</div>';
+}
+function outLine(x){
+  const att=(x.log&&x.log.length)?x.log:[{at:x.lastAttemptAt,result:x.status==='done'?'answered':x.status==='failed'?'failed':'noanswer',durationSec:x.durationSec}];
+  const last=att[att.length-1];
+  const next=x.status==='queued'?' – nytt försök senare':x.status==='noanswer'?' – ger upp (max 2 försök)':x.status==='calling'?' – ringer nu':'';
+  return esc(`${when(last.at)}  ${x.name||''} ${x.phone}  ${ATT[last.result]||x.status}${last.durationSec?` ${mmss(last.durationSec)}`:''}  (försök ${x.attempts||att.length})${next}${x.wasTest?'  [test]':''}`);
+}
+document.addEventListener('click',(e)=>{const b=e.target.closest('#filters button');if(!b)return;filter=b.dataset.f;renderCalls()});
 document.addEventListener('click',async(e)=>{const b=e.target.closest('button.done');if(!b)return;b.disabled=true;await api('/api/nova/done',{kind:b.dataset.kind,id:b.dataset.id});load()});
 $('#save').onclick=()=>{localStorage.setItem('nordicAdminToken',$('#tok').value.trim());$('#login').hidden=true;load()};
 load();

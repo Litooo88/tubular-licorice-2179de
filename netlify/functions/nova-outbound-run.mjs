@@ -59,7 +59,10 @@ export default async () => {
     }).catch((e) => ({ ok: false, status: 0, text: async () => String(e?.message || e) }));
     const text = (await res.text().catch(() => "")).slice(0, 200);
     if (!res.ok) {
-      await store.setJSON(entry.key, { ...entry, status: "failed", attempts: (entry.attempts || 0) + 1, lastAttemptAt: at, result: `46elks ${res.status} ${text}` });
+      await store.setJSON(entry.key, {
+        ...entry, status: "failed", attempts: (entry.attempts || 0) + 1, lastAttemptAt: at, wasTest: entry.status === "test", result: `46elks ${res.status} ${text}`,
+        log: [...(entry.log || []), { at, result: "failed", state: `46elks ${res.status}`, durationSec: 0, costSek: 0 }].slice(-6),
+      });
     }
     results.push({ key: entry.key, ok: res.ok, status: res.status });
   }

@@ -20,7 +20,7 @@
 
 import { getStore } from "@netlify/blobs";
 import { postSms } from "./_shared/sms.mjs";
-import { matchOutboundCall, outboundFirstMessage } from "./_shared/nova.mjs";
+import { callOutcome, classifyNovaCall, KIND_LABELS, matchOutboundCall, outboundFirstMessage, ownNovaNumbers } from "./_shared/nova.mjs";
 import {
   compactSlots,
   fromElevenLabsWebhook,
@@ -72,6 +72,15 @@ const authorized = (request) => {
   const bearer = (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
   if (provided !== expected && bearer !== expected) return { ok: false, status: 401, error: "unauthorized" };
   return { ok: true };
+};
+
+const loadOutbound = async () => {
+  const store = getStore({ name: "nova-outbound", consistency: "strong" });
+  const { blobs } = await store.list().catch(() => ({ blobs: [] }));
+  return (await Promise.all((blobs || []).map(async (b) => {
+    const v = await store.get(b.key, { type: "json" }).catch(() => null);
+    return v ? { key: b.key, ...v } : null;
+  }))).filter((x) => x && x.key !== "_config");
 };
 
 const loadCases = async () => {
@@ -162,13 +171,8 @@ export default async (request) => {
   if (tool === "init") {
     const callerId = body.caller_id || body.callerId || body.from || "";
     const store = getStore({ name: "nova-outbound", consistency: "strong" });
-    const { blobs } = await store.list().catch(() => ({ blobs: [] }));
-    const entries = (await Promise.all((blobs || []).map(async (b) => {
-      const v = await store.get(b.key, { type: "json" }).catch(() => null);
-      return v ? { key: b.key, ...v } : null;
-    }))).filter((x) => x && x.key !== "_config");
-    const own = [env("ELKS_SMS_NUMBER"), env("ELKS_NUMBER"), "+46101385498"].filter(Boolean);
-    const match = matchOutboundCall(entries, callerId, { ownNumbers: own });
+    const entries = await loadOutbound();
+    const match = matchOutboundCall(entries, callerId, { ownNumbers: ownNovaNumbers(env) });
     if (!match) return json({ type: "conversation_initiation_client_data", dynamic_variables: { samtalstyp: "inkommande" } });
     await store.setJSON(match.key, { ...match, connectedAt: new Date().toISOString(), conversationCallId: clean(body.call_sid, 120) }).catch(() => {});
     return json({
@@ -241,8 +245,13 @@ export default async (request) => {
   }
 
   if (tool === "summary") {
-    const s = normalizeCallSummary(fromElevenLabsWebhook(body));
-    if (!s.callId && !s.phone) return json({ ok: false, error: "missing_call" }, 400);
+    const parsed = normalizeCallSummary(fromElevenLabsWebhook(body));
+    if (!parsed.callId && !parsed.phone) return json({ ok: false, error: "missing_call" }, 400);
+    // Riktningen avgörs nu och sparas på samtalet, medan köposten ännu
+    // beskriver just den här uppringningen (testposter skrivs över vid nästa test).
+    const cls = classifyNovaCall(parsed, await loadOutbound(), { ownNumbers: ownNovaNumbers(env) });
+    const s = { ...parsed, kind: cls.kind, outboundKey: cls.outboundKey, phone: cls.phone || parsed.phone, rawPhone: parsed.phone };
+    const result = callOutcome(s);
     const cases = s.phone ? await loadCases() : [];
     const lookup = s.phone ? lookupByPhone(cases, s.phone) : null;
     const at = new Date().toISOString();
@@ -251,8 +260,8 @@ export default async (request) => {
     await store.setJSON(id, { id, at, ...s, customer: lookup ? { found: lookup.found, firstName: lookup.firstName, activeCases: lookup.active.map((c) => c.serviceNumber) } : null }).catch(() => {});
     const sms = instantTo() ? await postSms({ to: instantTo(), message: summarySmsToSebastian(s, lookup) }) : { status: "digest" };
     const mail = await sendMail(
-      `Röstassistent: samtal ${s.phone || id}`,
-      `${summarySmsToSebastian(s, lookup)}\n\nUtfall: ${s.outcome || "-"}\n\nTranskript:\n${s.transcript || "(saknas)"}`,
+      `Nova ${KIND_LABELS[s.kind] || ""}: ${result.label} – ${s.phone || "webbchatt"}`,
+      `${summarySmsToSebastian(s, lookup)}\n\nTyp: ${KIND_LABELS[s.kind] || "-"}\nUtfall: ${result.label}${s.endReason ? ` (${s.endReason})` : ""}\n\nTranskript:\n${s.transcript || "(saknas)"}`,
     );
     return json({ ok: true, id, staffSms: sms.status, mail: mail.status });
   }

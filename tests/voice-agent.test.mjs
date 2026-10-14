@@ -101,8 +101,17 @@ test("ElevenLabs post-call-payload plattas ut till vårt format", async () => {
   assert.equal(s.phone, "+46760000001");
   assert.equal(s.durationSec, 130);
   assert.equal(s.meetingBooked, true);
-  assert.match(s.transcript, /^Receptionist: Hej, vad gäller det\?\nKund: Min G4 laddar inte\./);
+  assert.match(s.transcript, /^Nova: Hej, vad gäller det\?\nKund: Min G4 laddar inte\./);
   assert.equal(fromElevenLabsWebhook({ phone: "0760000001", summary: "x" }).summary, "x");
+  assert.equal(s.channel, "phone");
+  assert.equal(s.direction, "inbound");
+  assert.deepEqual(s.tools, ["book-meeting"]);
+  // Webbchatten saknar phone_call; samtalstyp från init-webhooken och slutorsak följer med.
+  const web = normalizeCallSummary(fromElevenLabsWebhook({
+    type: "post_call_transcription",
+    data: { conversation_id: "conv_2", transcript: [], metadata: { call_duration_secs: 40, termination_reason: "Client disconnected" }, conversation_initiation_client_data: { dynamic_variables: { samtalstyp: "inkommande" } } },
+  }));
+  assert.deepEqual([web.channel, web.callType, web.endReason, web.phone], ["web", "inkommande", "Client disconnected", ""]);
 
   // Signaturen: v0 = HMAC-SHA256(secret, `${t}.${body}`), max 30 min gammal.
   const body = JSON.stringify({ type: "post_call_transcription", data: {} });
