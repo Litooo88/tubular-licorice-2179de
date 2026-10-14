@@ -79,15 +79,170 @@ export const matchOutboundCall = (entries, callerId, { now = Date.now(), ownNumb
 };
 
 // Det samlade SMS:et till Sebastian, en gång om dagen. Kort: namn, nummer,
-// vad det gäller. Hela listan finns på sidan.
-export const buildCallbackDigest = ({ meetings = [], messages = [], ring = [], url = "" } = {}) => {
+// vad det gäller. Hela listan finns på sidan. summary = novaDayLine(...) för
+// gårdagen; då skickas SMS:et även när ingen väntar på samtal.
+export const buildCallbackDigest = ({ meetings = [], messages = [], ring = [], url = "", summary = "" } = {}) => {
   const rows = [
     ...meetings.map((m) => ({ who: clean(m.name, 30) || "okänt namn", phone: m.phone, what: clean(m.topic, 70), when: clean(m.preferredTime, 30) })),
     ...ring.map((r) => ({ who: "RING-svar", phone: r.phone, what: clean(r.message, 40) || "vill bli uppringd", when: "" })),
     ...messages.map((m) => ({ who: clean(m.name, 30) || "okänt namn", phone: m.phone, what: `meddelande: ${clean(m.message, 60)}`, when: "" })),
   ];
-  if (!rows.length) return "";
+  const head = summary ? `${summary}\n` : "";
+  if (!rows.length) return summary ? `[Nordic] ${head}Ingen väntar på samtal.${url ? `\nAllt: ${url}` : ""}`.slice(0, 900) : "";
   const lines = rows.slice(0, 8).map((r, i) => `${i + 1}. ${r.who} ${r.phone}: ${r.what}${r.when ? ` (${r.when})` : ""}`);
   const more = rows.length > 8 ? `\n+${rows.length - 8} till.` : "";
-  return `[Nordic] Ring upp idag (${rows.length}):\n${lines.join("\n")}${more}${url ? `\nAllt: ${url}` : ""}`.slice(0, 900);
+  return `[Nordic] ${head}Ring upp idag (${rows.length}):\n${lines.join("\n")}${more}${url ? `\nAllt: ${url}` : ""}`.slice(0, 900);
 };
+
+// ---------------------------------------------------------------------------
+// Rapportering (Sebastian 2026-10-14: "rapporteras inte på ett tydligt sätt").
+// Två källor som tidigare aldrig knöts ihop:
+//   voice-agent-calls  ElevenLabs efter samtalet: vad som sades och utfall
+//   nova-outbound      46elks: att vi ringde, om kunden svarade, kostnad
+// Allt nedan är rent och testat; Netlify-funktionerna läser bara in data.
+// ---------------------------------------------------------------------------
+
+const DAY_MS = 86400000;
+const ms = (iso) => new Date(iso || 0).getTime() || 0;
+
+// Svensk kalenderdag "ÅÅÅÅ-MM-DD", så att "i dag" och "i går" följer Örebro, inte UTC.
+export const stockholmDay = (value) => new Intl.DateTimeFormat("sv-SE", { timeZone: "Europe/Stockholm", year: "numeric", month: "2-digit", day: "2-digit" }).format(new Date(value));
+
+const callTime = (call) => ms(call?.startedAt) || ms(call?.at);
+const isTestEntry = (e) => Boolean(e && (e.wasTest || e.status === "test" || String(e.key || "").startsWith("test-")));
+
+// Vilken uppringning hör ett samtal till? Kräver connectedAt, som bara sätts
+// när init-webhooken faktiskt kopplade en uppringning till Nova. Så blir en
+// kund som själv ringer tillbaka efter ett missat Nova-samtal inte felmärkt.
+export const findOutboundForCall = (call, entries, { ownNumbers = [] } = {}) => {
+  const t = callTime(call);
+  if (!t) return null;
+  const phone = normalizePhone(call?.phone);
+  // Utan nummer är det webbchatten; den kan aldrig vara en uppringning.
+  if (!phone || call?.channel === "web") return null;
+  const own = new Set(ownNumbers.map(normalizePhone).filter(Boolean));
+  const anyPhone = own.has(phone);
+  let best = null;
+  for (const e of Array.isArray(entries) ? entries : []) {
+    const c = ms(e?.connectedAt);
+    if (!c || t < c - 2 * 60 * 1000 || t > c + 45 * 60 * 1000) continue;
+    if (!anyPhone && normalizePhone(e.phone) !== phone) continue;
+    if (!best || Math.abs(t - c) < Math.abs(t - ms(best.connectedAt))) best = e;
+  }
+  return best;
+};
+
+// inbound = kunden ringde, outbound = Nova ringde upp, web = webbchatten,
+// test = Sebastians testsamtal (räknas inte i siffrorna).
+export const classifyNovaCall = (call, entries = [], opts = {}) => {
+  if (call?.kind) return { kind: call.kind, outboundKey: call.outboundKey || "", phone: call.phone || "" };
+  const declaredInbound = call?.callType === "inkommande" && call?.direction !== "outbound";
+  const match = declaredInbound ? null : findOutboundForCall(call, entries, opts);
+  if (match || call?.callType === "uppringning" || call?.direction === "outbound") {
+    const own = new Set((opts.ownNumbers || []).map(normalizePhone).filter(Boolean));
+    const phone = normalizePhone(call?.phone);
+    return {
+      kind: isTestEntry(match) ? "test" : "outbound",
+      outboundKey: match?.key || "",
+      // 46elks kan ha skickat vårt eget nummer som callerid; då är kundens nummer köpostens.
+      phone: match && (!phone || own.has(phone)) ? match.phone : call?.phone || "",
+    };
+  }
+  if (call?.channel === "web" || (!call?.phone && !call?.direction)) return { kind: "web", outboundKey: "", phone: "" };
+  return { kind: "inbound", outboundKey: "", phone: call?.phone || "" };
+};
+
+export const KIND_LABELS = { inbound: "Inkommande", outbound: "Uppringning", web: "Webbchatt", test: "Test" };
+
+// Ett utfall per samtal, i den ordning som betyder mest för Sebastian.
+// tone styr färgen på sidan: good / info / warn / bad / dim.
+export const callOutcome = (call) => {
+  const tools = Array.isArray(call?.tools) ? call.tools : [];
+  const dur = Number(call?.durationSec) || 0;
+  if (call?.meetingBooked || tools.includes("book-meeting")) return { key: "meeting", label: "Telefonmöte bokat", tone: "good" };
+  if (tools.includes("message")) return { key: "message", label: "Meddelande lämnat", tone: "info" };
+  if (/voicemail|röstbrevlåda|answering machine/i.test(call?.endReason || "")) return { key: "voicemail", label: "Röstbrevlåda", tone: "dim" };
+  if (dur > 0 && dur < 15) return { key: "short", label: "Lade på direkt (under 15 s)", tone: "warn" };
+  if (/fail/i.test(call?.outcome || "")) return { key: "failed", label: "Misslyckat, läs samtalet", tone: "bad" };
+  if (/success/i.test(call?.outcome || "")) return { key: "resolved", label: "Nova löste frågan", tone: "good" };
+  return { key: "unknown", label: "Utfall okänt", tone: "dim" };
+};
+
+// Uppringningsförsök (46elks) per köpost. Nya poster har en log; äldre
+// poster har bara senaste försöket, som då räknas en gång.
+export const outboundAttempts = (entries) => {
+  const out = [];
+  for (const e of Array.isArray(entries) ? entries : []) {
+    if (!e || e.key === "_config") continue;
+    const test = isTestEntry(e);
+    if (Array.isArray(e.log) && e.log.length) {
+      for (const a of e.log) out.push({ at: a.at, result: a.result, durationSec: Number(a.durationSec) || 0, costSek: Number(a.costSek) || 0, test, phone: e.phone });
+      continue;
+    }
+    if (!e.lastAttemptAt || e.status === "calling") continue;
+    const result = e.status === "done" ? "answered" : e.status === "failed" ? "failed" : "noanswer";
+    out.push({ at: e.lastAttemptAt, result, durationSec: Number(e.durationSec) || 0, costSek: 0, test, phone: e.phone });
+  }
+  return out;
+};
+
+// Siffrorna för en period. inRange(tidpunkt i ms) -> true/false.
+export const summarizeNova = ({ calls = [], entries = [], inRange, ownNumbers = [] } = {}) => {
+  const inside = (t) => Boolean(t) && inRange(t);
+  const rows = (Array.isArray(calls) ? calls : []).filter((c) => inside(callTime(c))).map((c) => ({ ...c, ...classifyNovaCall(c, entries, { ownNumbers }), result: callOutcome(c) }));
+  const real = rows.filter((r) => r.kind !== "test");
+  const count = (fn) => real.filter(fn).length;
+  const talked = real.filter((r) => (Number(r.durationSec) || 0) > 0);
+  const attempts = outboundAttempts(entries).filter((a) => !a.test && inside(ms(a.at)));
+  const answered = attempts.filter((a) => a.result === "answered").length;
+  return {
+    conversations: real.length,
+    inbound: count((r) => r.kind === "inbound"),
+    outbound: count((r) => r.kind === "outbound"),
+    web: count((r) => r.kind === "web"),
+    tests: rows.length - real.length,
+    totalSec: talked.reduce((s, r) => s + (Number(r.durationSec) || 0), 0),
+    avgSec: talked.length ? Math.round(talked.reduce((s, r) => s + (Number(r.durationSec) || 0), 0) / talked.length) : 0,
+    meetings: count((r) => r.result.key === "meeting"),
+    messages: count((r) => r.result.key === "message"),
+    resolved: count((r) => r.result.key === "resolved"),
+    failed: count((r) => r.result.key === "failed"),
+    short: count((r) => r.result.key === "short" || r.result.key === "voicemail"),
+    dialed: attempts.length,
+    answered,
+    noAnswer: attempts.filter((a) => a.result === "noanswer").length,
+    dialFailed: attempts.filter((a) => a.result === "failed").length,
+    answerRate: attempts.length ? Math.round((answered / attempts.length) * 100) : null,
+    costSek: Math.round(attempts.reduce((s, a) => s + a.costSek, 0) * 100) / 100,
+  };
+};
+
+// I dag, i går (svenska kalenderdagar) och rullande 7 dagar.
+export const buildNovaStats = ({ calls = [], entries = [], now = Date.now(), ownNumbers = [] } = {}) => {
+  const today = stockholmDay(now);
+  const yesterday = stockholmDay(now - DAY_MS);
+  const base = { calls, entries, ownNumbers };
+  return {
+    today: summarizeNova({ ...base, inRange: (t) => stockholmDay(t) === today }),
+    yesterday: summarizeNova({ ...base, inRange: (t) => stockholmDay(t) === yesterday }),
+    week: summarizeNova({ ...base, inRange: (t) => t >= now - 7 * DAY_MS && t <= now }),
+  };
+};
+
+const mmss = (sec) => `${Math.floor(sec / 60)}:${String(Math.round(sec % 60)).padStart(2, "0")}`;
+
+// En till två rader för det dagliga SMS:et. Tom sträng när Nova inte gjort något.
+export const novaDayLine = (s, label = "i går") => {
+  if (!s || (!s.conversations && !s.dialed)) return "";
+  const parts = [];
+  if (s.conversations) {
+    const split = [s.inbound && `${s.inbound} in`, s.outbound && `${s.outbound} uppringda`, s.web && `${s.web} webb`].filter(Boolean).join(", ");
+    const res = [s.meetings && `${s.meetings} möte`, s.messages && `${s.messages} meddel.`, s.resolved && `${s.resolved} löst`, s.failed && `${s.failed} MISSLYCKAT`, s.short && `${s.short} lade på`].filter(Boolean).join(", ");
+    parts.push(`${s.conversations} samtal (${split}), snitt ${mmss(s.avgSec)}${res ? `. ${res}` : ""}.`);
+  }
+  if (s.dialed) parts.push(`Uppringning: ${s.dialed} försök, ${s.answered} svarade${s.answerRate !== null ? ` (${s.answerRate} %)` : ""}${s.dialFailed ? `, ${s.dialFailed} fel` : ""}.`);
+  return `Nova ${label}: ${parts.join(" ")}`;
+};
+
+// Våra egna nummer (callerid om 46elks inte släpper igenom kundens nummer).
+export const ownNovaNumbers = (env) => [env("ELKS_SMS_NUMBER"), env("ELKS_NUMBER"), "+46101385498"].filter(Boolean);

@@ -212,11 +212,12 @@ export const fromElevenLabsWebhook = (body) => {
   const d = body.data;
   const turns = Array.isArray(d.transcript) ? d.transcript : [];
   const transcript = turns
-    .map((t) => `${t?.role === "agent" ? "Receptionist" : "Kund"}: ${clean(t?.message, 1000)}`)
+    .map((t) => `${t?.role === "agent" ? "Nova" : "Kund"}: ${clean(t?.message, 1000)}`)
     .filter((line) => !/: $/.test(line))
     .join("\n");
   const toolNames = turns.flatMap((t) => (Array.isArray(t?.tool_calls) ? t.tool_calls : []).map((c) => clean(c?.tool_name || c?.name, 60)));
   const phoneCall = d.metadata?.phone_call || {};
+  const isPhone = Boolean(phoneCall.external_number || phoneCall.from_number || phoneCall.direction || phoneCall.type);
   return {
     callId: d.conversation_id,
     phone: phoneCall.direction === "outbound" ? phoneCall.external_number : (phoneCall.external_number || phoneCall.from_number || ""),
@@ -226,6 +227,13 @@ export const fromElevenLabsWebhook = (body) => {
     summary: d.analysis?.transcript_summary,
     transcript,
     meetingBooked: toolNames.includes("book-meeting"),
+    // Webbchatten (widgeten) har ingen phone_call. samtalstyp sätts av vår
+    // init-webhook ("uppringning"/"inkommande") och följer med tillbaka.
+    channel: isPhone ? "phone" : "web",
+    direction: phoneCall.direction,
+    callType: d.conversation_initiation_client_data?.dynamic_variables?.samtalstyp,
+    endReason: d.metadata?.termination_reason,
+    tools: toolNames,
   };
 };
 
@@ -258,6 +266,13 @@ export const normalizeCallSummary = (body) => ({
   summary: clean(body?.summary, 1200),
   transcript: clean(body?.transcript, 12000),
   meetingBooked: Boolean(body?.meetingBooked),
+  // Rapporteringen (Ring upp-sidan, dagligt SMS): kanal, riktning och hur
+  // samtalet slutade. Råvärden från plattformen; tolkas i _shared/nova.mjs.
+  channel: clean(body?.channel, 10),
+  direction: clean(body?.direction, 20),
+  callType: clean(body?.callType, 20),
+  endReason: clean(body?.endReason, 120),
+  tools: [...new Set((Array.isArray(body?.tools) ? body.tools : []).map((t) => clean(t, 40)).filter(Boolean))].slice(0, 12),
 });
 
 export const summarySmsToSebastian = (s, lookup) => {
