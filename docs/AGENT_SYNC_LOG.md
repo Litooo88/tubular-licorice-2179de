@@ -32,6 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-14 — Claude Code — PÅGÅR (Novas samtalsrapportering steg 1–4)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt`
+- **Gör:** riktning (inkommande/uppringning/webbchatt/test) sparas och visas, utfall per
+  samtal, sifferrad idag/7 dgr på /admin/ring-upp/, "Nova i går"-rad i det dagliga SMS:et.
+- **Filer/områden:** `_shared/nova.mjs`, `_shared/voice-agent.mjs` (`fromElevenLabsWebhook`),
+  `voice-agent.mjs` (summary), `nova.mjs` (GET), `nova-digest.mjs`, `nova-outbound-hook.mjs`,
+  `nova-outbound-run.mjs`, `admin/ring-upp/index.html`, `tests/nova.test.mjs`.
+- **Varning:** rör inte filerna ovan förrän posten är KLAR.
+
 ### 2026-10-12 — Claude Code — BYGGD, VÄNTAR PÅ MERGE 14/10 (bokning steg 2: trestegsflödet)
 
 - **Branch `worktree-bokning-steg2` (commit `d6098fe`) är FÄRDIG och pushad
