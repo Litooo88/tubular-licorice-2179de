@@ -32,15 +32,24 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-10-14 — Claude Code — PÅGÅR (Novas samtalsrapportering steg 1–4)
+### 2026-10-14 — Claude Code — KLAR (Novas samtalsrapportering steg 1–4)
 
-- **Branch:** `ccr-5253a4c8-i1uwzt`
-- **Gör:** riktning (inkommande/uppringning/webbchatt/test) sparas och visas, utfall per
-  samtal, sifferrad idag/7 dgr på /admin/ring-upp/, "Nova i går"-rad i det dagliga SMS:et.
-- **Filer/områden:** `_shared/nova.mjs`, `_shared/voice-agent.mjs` (`fromElevenLabsWebhook`),
-  `voice-agent.mjs` (summary), `nova.mjs` (GET), `nova-digest.mjs`, `nova-outbound-hook.mjs`,
-  `nova-outbound-run.mjs`, `admin/ring-upp/index.html`, `tests/nova.test.mjs`.
-- **Varning:** rör inte filerna ovan förrän posten är KLAR.
+- **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, ej mergad).
+- **Gjorde:** riktning (inkommande/uppringning/webbchatt/test) sparas på varje samtal i
+  `voice-agent-calls` (`kind`, `outboundKey`, `rawPhone`); utfall via `callOutcome`;
+  `GET /api/nova` ger `stats` (today/yesterday/week) + `kind`/`result` per samtal;
+  /admin/ring-upp/ har sifferrad, filter och läsbara uppringningsförsök; `nova-digest`
+  inleder med "Nova i går: ..." och skickas även när ingen väntar. 46elks-försök loggas
+  i `log` på köposten (resultat, längd, `costSek`). Transkript märks "Nova:".
+- **Tester:** `npm run test:voice` 53/53, `test:status` 16/16, `test:contracts` 11/11,
+  `test:campaign` 6/6, `npm run build` OK, `verify:checkout-products` OK,
+  `nemob-callflow npm run check` OK. Sidan renderad i Chromium på 390 px med testdata.
+- **Antaganden att verifiera skarpt:** ElevenLabs skickar `conversation_initiation_client_data`
+  och `termination_reason` i post-call-webhooken; 46elks skickar `cost` i whenhangup.
+  Saknas de faller rapporten tillbaka (matchning på connectedAt resp. "–" som kostnad).
+- **Kvar (steg 5):** visa samtalets sammanfattning direkt på uppringningsraden.
+- **Varning:** `outbound-queue` nollställer attempts/log för poster som redan är `queued`
+  (gammalt beteende, ej ändrat).
 
 ### 2026-10-12 — Claude Code — BYGGD, VÄNTAR PÅ MERGE 14/10 (bokning steg 2: trestegsflödet)
 
