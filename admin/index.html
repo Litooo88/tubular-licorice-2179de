@@ -48,6 +48,7 @@ button.live-send-action:hover{filter:brightness(1.04)}
 .quote-box{border:1px solid rgba(0,200,83,.28);background:rgba(0,200,83,.06);border-radius:8px;padding:12px;margin-top:12px}
 .quote-box h4{margin:0 0 6px;font-size:15px}
 .quote-box p{margin:0 0 10px;color:#b9c3bb;font-size:13px;line-height:1.45}
+.new-case-panel{padding:18px;margin-bottom:14px}.new-case-panel details{margin:14px 0}.new-case-panel summary{cursor:pointer;font-weight:800}.new-case-panel form{margin-top:14px}.new-case-panel .edit-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr));gap:12px}.new-case-panel .full{grid-column:1/-1}.new-case-panel button{margin-top:10px}.new-case-panel p{line-height:1.5}.new-case-panel #stripeOrderPreview{white-space:pre-wrap;margin:12px 0;overflow-wrap:anywhere}
 .quote-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .quote-grid .full{grid-column:1 / -1}
 .quote-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
@@ -655,6 +656,33 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
   </div>
 
   <div class="admin-view" id="cardsView" hidden>
+  <section class="panel new-case-panel" aria-labelledby="newCaseHeading">
+    <h2 id="newCaseHeading">Nytt kundärende</h2>
+    <p>Registrera en kundkontakt eller produktbeställning. Inget mejl eller SMS skickas när du sparar.</p>
+    <details><summary>Registrera manuellt</summary>
+      <form id="newCaseForm" class="edit-grid">
+        <div><label for="newCaseName">Kundnamn</label><input id="newCaseName" required maxlength="140" autocomplete="name"></div>
+        <div><label for="newCaseEmail">E-post</label><input id="newCaseEmail" type="email" maxlength="180" autocomplete="email"></div>
+        <div><label for="newCasePhone">Telefon</label><input id="newCasePhone" type="tel" maxlength="80" autocomplete="tel"></div>
+        <div><label for="newCaseModel">Modell</label><input id="newCaseModel" maxlength="180"></div>
+        <div><label for="newCaseType">Ärendetyp</label><select id="newCaseType"><option value="service">Service / kundkontakt</option><option value="product_order">Produktbeställning</option></select></div>
+        <div><label for="newCaseAmount">Ordervärde / uppskattat belopp (kr)</label><input id="newCaseAmount" type="number" min="0" step="0.01" value="0"></div>
+        <div class="full"><label for="newCaseNote">Intern anteckning</label><textarea id="newCaseNote" maxlength="2000"></textarea></div>
+        <p>Betalning verifieras separat. Ett sparat ärende innebär inte att kunden har betalat.</p>
+        <button type="submit" id="newCaseSave">Spara kundärende utan utskick</button>
+      </form>
+    </details>
+    <details><summary>Hämta betald produktorder från Stripe</summary>
+      <form id="stripeOrderForm">
+        <label for="stripeSessionId">Checkout-session från Stripe</label><input id="stripeSessionId" required placeholder="cs_live_..." autocomplete="off">
+        <label for="stripeRecoveryNote">Intern anteckning om tidigare kontakt</label><textarea id="stripeRecoveryNote" maxlength="2000"></textarea>
+        <button type="submit" id="stripeInspect">Kontrollera order</button>
+        <div id="stripeOrderPreview" role="status" aria-live="polite"></div>
+        <button type="button" id="stripeImport" hidden>Skapa / öppna kundkort utan utskick</button>
+      </form>
+    </details>
+    <p id="newCaseStatus" role="status" aria-live="polite"></p>
+  </section>
   <div class="toolbar">
     <button type="button" id="openSwipeClean" style="background:#00c853;color:#031006;font-weight:800">🧹 Svep-rensning</button>
     <div class="muted" id="lastUpdated">Inte laddad &auml;nnu. Auto-refresh &auml;r avst&auml;ngd medan du jobbar.</div>
@@ -1710,6 +1738,65 @@ function optionsWithOperator(options={}){
     return options;
   }
 }
+let newCaseKey=null;
+let inspectedStripeSession='';
+const newCaseStatus=document.getElementById('newCaseStatus');
+async function showCreatedCase(item){
+  searchFilter.value=item.id;
+  ownerFilter.value='';statusFilter.value='';
+  await loadCases();
+  newCaseStatus.textContent=`Sparat: ${item.customer.name} — ${item.serviceNumber||item.id}. Inga kundutskick.`;
+}
+document.getElementById('newCaseForm').addEventListener('submit',async(event)=>{
+  event.preventDefault();
+  const button=document.getElementById('newCaseSave');button.disabled=true;
+  newCaseKey=newCaseKey||crypto.randomUUID();
+  try{
+    const payload={action:'create_internal',idempotencyKey:newCaseKey,
+      customerName:document.getElementById('newCaseName').value,
+      customerEmail:document.getElementById('newCaseEmail').value,
+      customerPhone:document.getElementById('newCasePhone').value,
+      vehicleModel:document.getElementById('newCaseModel').value,
+      caseType:document.getElementById('newCaseType').value,
+      totalCost:document.getElementById('newCaseAmount').value,
+      note:document.getElementById('newCaseNote').value,
+    };
+    const data=await api('/api/cases',{method:'POST',body:JSON.stringify(payload)});
+    // Reset only after confirmed persistence. A timed-out retry keeps its key.
+    event.target.reset();newCaseKey=null;
+    await showCreatedCase(data.case);
+  }catch(error){newCaseStatus.textContent=error.message;}
+  finally{button.disabled=false;}
+});
+document.getElementById('stripeSessionId').addEventListener('input',()=>{
+  inspectedStripeSession='';document.getElementById('stripeImport').hidden=true;
+  document.getElementById('stripeOrderPreview').textContent='';
+});
+document.getElementById('stripeOrderForm').addEventListener('submit',async(event)=>{
+  event.preventDefault();
+  const button=document.getElementById('stripeInspect');button.disabled=true;
+  inspectedStripeSession='';document.getElementById('stripeImport').hidden=true;
+  try{
+    const sessionId=document.getElementById('stripeSessionId').value.trim();
+    const data=await api('/api/product-orders?sessionId='+encodeURIComponent(sessionId));
+    inspectedStripeSession=sessionId;
+    const confirmation=data.notifications.orderConfirmation;
+    const label=confirmation?.status==='sent'?'accepterad av e-postleverantören (inte verifierad läst/levererad)':confirmation?.status||'okänd — frånvaro i Gmail bevisar inte att inget skickats';
+    document.getElementById('stripeOrderPreview').textContent=`${data.preview.customerName} | ${data.preview.customerEmail||'e-post saknas'} | ${data.preview.vehicleModel} | ${data.preview.totalCost} kr. Orderbekräftelse: ${label}. ${data.case?'Kundkort finns redan.':'Kundkort saknas.'}`;
+    document.getElementById('stripeImport').hidden=false;
+  }catch(error){document.getElementById('stripeOrderPreview').textContent=error.message;}
+  finally{button.disabled=false;}
+});
+document.getElementById('stripeImport').addEventListener('click',async()=>{
+  if(!inspectedStripeSession)return;
+  const button=document.getElementById('stripeImport');button.disabled=true;
+  try{
+    const data=await api('/api/product-orders',{method:'POST',body:JSON.stringify({sessionId:inspectedStripeSession,note:document.getElementById('stripeRecoveryNote').value})});
+    await showCreatedCase(data.case);
+    button.hidden=true;
+  }catch(error){newCaseStatus.textContent=error.message;}
+  finally{button.disabled=false;}
+});
 async function api(path,options={}){
   const requestOptions=optionsWithOperator(options);
   const response=await fetch(path,{...requestOptions,headers:{'Content-Type':'application/json','x-admin-token':tokenInput.value.trim(),...(requestOptions.headers||{})}});
@@ -3643,6 +3730,7 @@ function caseCard(item){
       <div class="key-date ${missingPreferred?'missing':''}"><span>${isPickupReady?'Planerad upph&auml;mtning':'Planerad inl&auml;mning'}</span><b>${missingPreferred?'Beh&ouml;ver bokas in':html(displayDate(item.preferredDate))}</b></div>
       <div class="delivery-banner ${delivery.className}"><strong>${delivery.title}</strong>${html(delivery.text)}</div>
       <div class="message-box"><strong>${html(item.service||'Annat')}</strong><br>${html(item.message||'Ingen beskrivning')}</div>
+      ${item.order?`<div class="addons-box"><strong>Produktorder ${html(item.order.reference||'')}</strong><br>${html(item.order.brand||'')} · ${html(item.payment?.providerMethod||'Stripe')}<br>${html([item.order.shipping?.name,item.order.shipping?.address?.line1,item.order.shipping?.address?.postal_code,item.order.shipping?.address?.city].filter(Boolean).join(', '))}<br>Leveransval behöver bekräftas med kunden.</div>`:''}
       ${addonHtml}
       ${completionBanner}
       <div class="facts">

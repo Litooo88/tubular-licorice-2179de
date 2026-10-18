@@ -32,6 +32,12 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-18 — Codex — PÅGÅR (kundkort och Stripe-produktorder)
+
+- Branch: `codex/customer-orders`. Adminformulär, intern ärendeskapning, verifierad Stripe-import och webhookkoppling.
+- Inga kunddata eller hemligheter i git. Bokningsflöde och telefoni lämnas orörda.
+
+
 ### 2026-10-14 — Claude Code — KLAR (Novas samtalsrapportering steg 1–4)
 
 - **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, ej mergad).

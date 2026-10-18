@@ -76,3 +76,19 @@ bakåtkompatibel mappning.
 - Betald får endast sättas efter verifierad betalning.
 - Avslutad får endast sättas när arbete, betalning och kundkommunikation är
   dokumenterade.
+
+
+## Registrera kundkort utan bokning
+
+Under Kundkort finns **Nytt kundärende**. Välj manuell registrering för
+service/kundkontakt eller produktbeställning. Inga utskick och ingen betalmarkering
+sker. Vid timeout: försök igen utan att ladda om sidan, så återanvänds samma
+registreringsnyckel.
+
+För ett betalt Stripe-köp: ange Checkout-sessionen, välj **Kontrollera order**,
+läs kund/modell/belopp och bekräftelsestatus, lägg till intern notering och välj
+**Skapa / öppna kundkort utan utskick**. En tom utskickslogg innebär okänt, inte
+att ingen bekräftelse skickats. Importen tar inga pengar och gör inga inköp.
+Framtida verifierade produktköp får kort automatiskt via webhooken; de ligger
+under Kontakt / offert tills personalen uppdaterar dem. Leveransval och
+leverantörsbeställning måste fortfarande bekräftas separat.

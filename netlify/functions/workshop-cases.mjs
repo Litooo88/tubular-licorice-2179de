@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import internalCases from "./_shared/internal-case.js";
 import { ROOT_CAUSES, normalizeBrand, shouldIndex, upsertRepairIndex } from "./_shared/repair-index.mjs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
 import {
@@ -404,6 +405,17 @@ export default async (request, context) => {
     if (id) return json({ error: "Use POST /api/cases without id." }, 400);
 
     const body = await request.json().catch(() => ({}));
+    if (body.action === "create_internal") {
+      const key = clean(body.idempotencyKey, 120);
+      if (!/^[A-Za-z0-9_-]{16,120}$/.test(key)) return json({error:"Registreringsnyckel saknas eller är ogiltig."},400);
+      try {
+        const result = await internalCases.createInternalCase({store, indexStore: serviceNumberIndex, body, key: `manual:${key}`, dryRun: body.dryRun === true});
+        return json({ok:true,...result}, result.created ? 201 : 200);
+      } catch (error) {
+        const validation = ['Kundnamn krävs.','Ogiltig e-postadress.','Belopp måste vara noll eller större.'];
+        return json({error:validation.includes(error.message)?error.message:'Ärendet kunde inte sparas. Försök igen med samma registrering.'},validation.includes(error.message)?400:503);
+      }
+    }
     const now = new Date().toISOString();
     const caseId = `case_${now.replace(/[:.]/g, "-")}_${Math.random().toString(36).slice(2, 8)}`;
     const serviceNumber = await reserveServiceNumber(serviceNumberIndex, caseId);

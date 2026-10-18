@@ -153,7 +153,7 @@ Auth: verifierad Stripe-signatur via `STRIPE_WEBHOOK_SECRET`.
 Status: finns idag för produkt-checkout. Endpointen returnerar `503` om
 `STRIPE_WEBHOOK_SECRET` saknas, `400` vid ogiltig signatur och skriver endast
 betalningspost till `payments` efter verifierad `checkout.session.completed`.
-Den skickar inga SMS eller mail.
+Den tidigare dokumentationen om inga utskick var inaktuell: webhooken försöker skicka orderbekräftelse via Resend och verkstadsavisering. Se nedan.
 
 ## Rekommenderad auth-migrering
 
@@ -178,3 +178,35 @@ deterministisk fallback utan `OPENAI_API_KEY`. Ingen av dem skickar SMS.
 `netlify/functions/_shared/business-rules.js`. Den returnerar alltid
 prisintervall/startpris, `finalPrice: null` och besked om att slutpris
 bekräftas före arbete.
+
+
+## Kundärenden och produktorder (2026-10-18)
+
+- `POST /api/cases` med `action: create_internal`, `idempotencyKey` (16–120
+  alfanumeriska tecken/bindestreck/underscore), `customerName` och valfria
+  `customerEmail`, `customerPhone`, `vehicleModel`, `caseType` (`service` eller
+  `product_order`), `totalCost`, `note`. Kräver admin-auth. Kräver ingen prisrad.
+  `dryRun: true` validerar utan skrivningar. Ger `{ok, case, created, dryRun?}`.
+  Manuell registrering sätter aldrig betalstatus till betald och skickar ingenting.
+- `GET /api/product-orders?sessionId=cs_live_...` hämtar Checkout-sessionen
+  server-side från sajtens Stripe-konto och visar preview, befintligt kort och
+  bekräftelsestatus. Betald SEK-produktorder med produktmetadata krävs.
+- `POST /api/product-orders` med `sessionId`, valfri `note`, `operatorName`
+  skapar/återanvänder verifierat orderkort. `dryRun: true` är skrivfri.
+  Återhämtning skickar ALDRIG mail/SMS. Resultat har `sentNow:false`.
+  En beständig `recovered_without_send`-reservation hindrar även senare webhook-
+  replay från att skicka en extra bekräftelse efter manuell kundkontakt.
+  Upprepad återhämtning skriver inte över personalens ändringar; anteckningen
+  sparas en gång som separat case-event. Ändrad anteckning efter första importen
+  läggs via kundkortets vanliga anteckningsfunktion.
+- Webhooken hanterar både `checkout.session.completed` och
+  `checkout.session.async_payment_succeeded`, alltid med signaturverifiering och
+  `payment_status=paid`. Samma session skapar exakt ett orderkort även vid
+  samtidiga händelser. Den utför inga leverantörsköp och avslutar inte ärendet.
+- Orderbekräftelser har en beständig create-if-absent-reservation i
+  `stripe-order-notifications`. `processing` efter avbrott kräver manuell
+  granskning; osäker leverans skickas inte om automatiskt. `sent` betyder att
+  Resend accepterade meddelandet, inte att kunden läst eller mottagit det.
+  Äldre `payments.notifications` läses som fallback. Saknad logg = okänd status.
+- Alla ovanstående admin-svar är privata (`Cache-Control: no-store` för nya
+  product-orders-routen). Kunduppgifter finns endast server-side.

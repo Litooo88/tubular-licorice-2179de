@@ -151,3 +151,28 @@ Betald status får endast sättas efter verifiering.
 - Verifiera antal, totalsummor och relationer före borttagning av gammal data.
 - Lägg alla nya integrationer i dry-run tills auth, RLS och audit-logg är
   verifierade.
+
+
+## Additiv Blob-migration: produktorder (2026-10-18)
+
+Inga befintliga dokument migreras, raderas eller byter statusvärden.
+Nya interna kort använder samma `workshop-cases`-store och befintliga fält.
+Valfritt `caseType: product_order|service` och `order` läggs till. `order` har
+provider, sessionId, reference, productId, brand och sanerad shipping.
+Verifierade Stripe-köp har befintlig `payment.status=paid`, `provider=stripe`,
+`providerMethod`, `verifiedBy`, `verifiedAt`; `paidAt` lämnas tomt om exakt
+betalningstid inte är känd. Detta är serververifiering, ingen AI-betalmarkering.
+`notifications.thankYou.status=suppressed` hindrar tackutskick före leverans.
+
+ID byggs från SHA-256 av sessionsreferens/manuell registreringsnyckel.
+Kort och servicenummerindex skrivs create-if-absent (`onlyIfNew`), vilket kräver
+@netlify/blobs 10.7.13 (versionslåst). Inga read-modify-write-räknare tillkommer.
+Separat store `stripe-order-notifications`: sessionId → processing, complete eller recovered_without_send
+med providerresultat. `case-events` används för importanteckning utan att ändra
+ett befintligt kort. Kunddata får aldrig ligga i git eller localStorage.
+
+Återgång: återställ kodändringen och deploya framåt; behåll nya Blob-poster.
+Äldre admin kan läsa korten med befintliga status-/betalningsfält och ignorera
+nya optional-fält. Efter återgång försvinner create-if-absent-skyddet för nya
+Stripe-importer; pausa sådan import tills fixen är återinförd. Kör inte gamla
+webhook-event på nytt för att återställa data.

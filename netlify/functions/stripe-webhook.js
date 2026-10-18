@@ -1,6 +1,8 @@
 const Stripe = require("stripe");
 const { clean, env, header, json } = require("./_shared/http");
-const { connectBlobs, get, put } = require("./_shared/storage");
+const { connectBlobs } = require("./_shared/storage");
+const { ensureProductOrder } = require("./_shared/product-order");
+const { getStore } = require("@netlify/blobs");
 const { resendEmail, FOOTER_HTML, FOOTER_TEXT } = require("./_shared/email");
 
 const stripe = () => Stripe(env("STRIPE_SECRET_KEY") || "sk_test_placeholder");
@@ -27,7 +29,7 @@ const checkoutPaymentRecord = (session, stripeEvent) => {
     productName: clean(metadata.product_name || metadata.productName, 240),
     productBrand: clean(metadata.brand, 120),
     customerEmail: clean(customerDetails.email || session.customer_email, 240),
-    customerName: clean(customerDetails.name, 240),
+    customerName: clean(customerDetails.name || session.collected_information?.shipping_details?.name || session.shipping_details?.name, 240),
     customerPhone: clean(customerDetails.phone, 80),
     rawCreated: session.created || null,
     paidAt: session.payment_status === "paid" ? new Date().toISOString() : "",
@@ -121,9 +123,11 @@ const workshopOrderEmail = (record, session) => ({
   html: "",
 });
 
-const sendOrderNotifications = async (record, session) => {
+const sendOrderNotifications = async (record, session, previous = {}) => {
   const results = {};
-  if (record.customerEmail) {
+  if (previous.orderConfirmation?.status === "sent") {
+    results.orderConfirmation = previous.orderConfirmation;
+  } else if (record.customerEmail) {
     const email = orderConfirmationEmail(record, session);
     results.orderConfirmation = await resendEmail({
       to: [record.customerEmail],
@@ -140,7 +144,9 @@ const sendOrderNotifications = async (record, session) => {
     .split(",")
     .map((item) => item.trim())
     .filter(Boolean);
-  if (workshopRecipients.length) {
+  if (previous.workshopNotice?.status === "sent") {
+    results.workshopNotice = previous.workshopNotice;
+  } else if (workshopRecipients.length) {
     const notice = workshopOrderEmail(record, session);
     results.workshopNotice = await resendEmail({
       to: workshopRecipients,
@@ -175,40 +181,44 @@ exports.handler = async (event) => {
   }
 
   try {
-    if (stripeEvent.type !== "checkout.session.completed") {
+    if (!["checkout.session.completed", "checkout.session.async_payment_succeeded"].includes(stripeEvent.type)) {
       return json(200, { ok: true, received: true, ignored: true, type: stripeEvent.type });
     }
 
     const session = stripeEvent.data?.object || {};
+    if (session.payment_status !== "paid") return json(200, {ok:true, received:true, pending:true});
+    if (!session.metadata?.product_id || !session.metadata?.product_name) return json(200, {ok:true, received:true, ignored:true, reason:"not_product_checkout"});
     const paymentId = `stripe_${clean(session.id, 170)}`;
-
-    // Stripe kan skicka om samma event — skicka aldrig om mejl som redan gått.
-    const existing = await get("payments", paymentId);
-    const alreadyConfirmed = existing?.notifications?.orderConfirmation?.status === "sent";
-
+    const payments = getStore({name:"payments"});
+    const deliveries = getStore({name:"stripe-order-notifications"});
+    const existing = await payments.get(paymentId,{type:"json"});
     const record = checkoutPaymentRecord(session, stripeEvent);
-    if (existing?.notifications) record.notifications = existing.notifications;
-    let payment = await put("payments", record, { id: paymentId });
-
-    if (session.payment_status === "paid" && !alreadyConfirmed) {
-      const notifications = await sendOrderNotifications(record, session);
-      payment = await put(
-        "payments",
-        { ...payment, notifications: { ...(payment.notifications || {}), ...notifications } },
-        { id: paymentId }
-      );
-      console.log("stripe_order_notifications", {
-        paymentId,
-        orderConfirmation: notifications.orderConfirmation?.status,
-        workshopNotice: notifications.workshopNotice?.status,
-      });
+    // Atomic creation prevents replay from replacing a later edited case.
+    const result = await ensureProductOrder({session,
+      store:getStore({name:"workshop-cases"}),
+      indexStore:getStore({name:"service-number-index"})});
+    let payment = {...record,id:paymentId,createdAt:new Date().toISOString(),updatedAt:new Date().toISOString(),caseId:result.case.id};
+    await payments.setJSON(paymentId,payment,{onlyIfNew:true});
+    // Claim once BEFORE sending. A crash/timeout is left for manual review,
+    // never automatically replayed days later after provider idempotency expires.
+    const claim = await deliveries.setJSON(session.id,{status:"processing",claimedAt:new Date().toISOString()}, {onlyIfNew:true});
+    if(claim.modified){
+      const previous=existing?.notifications||{};
+      const notifications = await sendOrderNotifications(record, session, previous);
+      payment = {...(existing||payment),caseId:result.case.id,notifications};
+      await payments.setJSON(paymentId,payment);
+      await deliveries.setJSON(session.id,{status:"complete",results:notifications,updatedAt:new Date().toISOString()});
+    } else {
+      const delivery=await deliveries.get(session.id,{type:"json"});
+      payment.notifications=delivery?.results||existing?.notifications||{};
     }
 
     return json(200, {
       ok: true,
       received: true,
       stored: true,
-      paymentId: payment.id,
+      paymentId,
+      caseId: result.case.id,
       type: stripeEvent.type,
       orderConfirmation: payment.notifications?.orderConfirmation?.status || "skipped",
     });
