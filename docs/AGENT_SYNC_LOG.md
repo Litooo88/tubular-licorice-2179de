@@ -32,6 +32,15 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-19 — Codex — KLAR (kod publicerad; kundregistrering väntar på admininloggning)
+
+- PR #159 mergad till main (743cbed466b86532742a9ad6565bff4453559af7). Nya formuläret verifierat synligt på live /admin/ under Kundkort.
+- Filer: admin/index.html, netlify/functions/{workshop-cases.mjs,product-orders.mjs,stripe-webhook.js,_shared/internal-case.js,_shared/product-order.js}, package.json/package-lock.json, tests/product-orders.test.mjs samt API_CONTRACTS/DATABASE_SCHEMA/ADMIN_WORKFLOW.
+- Manuella ärenden och verifierad betald Stripe-produktorder kan sparas utan mejl/SMS. Atomisk skapning förhindrar dubbletter/överskrivning; importerad order spärrar senare webhook-utskick. Framtida betalda produktorder kopplas till kundkort.
+- Verifiering: npm run build, verify:checkout-products (44), test:contracts (11), test:orders (9), node --check, git diff --check och nemob-callflow npm run check godkända.
+- Kvar: faktisk kundorder har INTE importerats. Admin-token saknas i nya webbläsarsessionen; säker inloggningsbegäran gav timeout och ingen inloggning kan verifieras. Ingen kundkommunikation skickad under detta arbete. Leverantörsorder/tracking ej verifierade.
+- Netlify-pluginens återanslutning fortfarande separat problem; GitHub-deploy fungerar. Ingen egen OAuth-app eller ny credential skapad.
+
 ### 2026-10-18 — Codex — PÅGÅR (kundkort och Stripe-produktorder)
 
 - Branch: `codex/customer-orders`. Adminformulär, intern ärendeskapning, verifierad Stripe-import och webhookkoppling.
