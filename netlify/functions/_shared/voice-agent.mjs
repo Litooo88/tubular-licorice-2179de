@@ -8,7 +8,7 @@
 // - Säger aldrig priser utöver listans "från"-pris, aldrig betalstatus,
 //   aldrig interna anteckningar, aldrig andra kunders uppgifter.
 // - Kan inte boka in verkstadsjobb själv; den bokar ett telefonmöte med
-//   Sebastian eller hänvisar till bokningssidan (tis/tors 10–16).
+//   Sebastian eller hänvisar till bokningssidan (tis/tors 15–20).
 
 import { normalizePhone } from "./sms.mjs";
 

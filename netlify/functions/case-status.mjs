@@ -74,7 +74,7 @@ const STEPS = [
 const NOTES = {
   waiting_parts: "Vi väntar på en reservdel till din reparation.",
   waiting_customer: "Vi väntar på svar från dig — kolla SMS/mail eller ring oss.",
-  ready: "Ditt fordon är klart! Hämtning tisdag eller torsdag kl 10–16. Betalning sker vid hämtning.",
+  ready: "Ditt fordon är klart! Hämtning tisdag eller torsdag kl 15–20. Betalning sker vid hämtning.",
 };
 
 const firstNameOf = (item) => clean(item?.customer?.name, 140).split(/\s+/).filter(Boolean)[0] || "";

@@ -32,6 +32,13 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-19 — Codex — KLAR LOKALT, PUBLICERING GODKÄND (bokning tis/tors 15–20)
+
+- Branch: `codex/booking-hours-15-20`. Bokningsvalidering, tidsväljare, publika öppettider och motsvarande kundmallar.
+- Enligt Sebastians instruktion: endast tisdag/torsdag 15–20; övriga tider efter personlig överenskommelse. Inga kundutskick eller ändringar av befintliga bokningar.
+- Verifiering: npm run build, verify:checkout-products, nemob-callflow npm run check, node --check och bokningssidans inline-JS godkända.
+- Användaren godkände ändringarna och publiceringen 2026-10-19. Endast tekniska ändringar och dokumentation ingår. Publicering och live-verifiering återstår.
+
 ### 2026-10-19 — Codex — KLAR (kod publicerad; kundregistrering väntar på admininloggning)
 
 - PR #159 mergad till main (743cbed466b86532742a9ad6565bff4453559af7). Nya formuläret verifierat synligt på live /admin/ under Kundkort.

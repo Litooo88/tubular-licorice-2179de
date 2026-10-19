@@ -26,6 +26,14 @@ Kunden fyller i:
 - rabattkod
 - intyg om att fordonet inte ar stoldgods
 
+### Bokningsbara tider (uppdaterat 2026-10-19)
+
+Tills vidare kan kunden boka inlämning och hämtning endast tisdagar och
+torsdagar kl. 15.00–20.00, svensk tid, i halvtimmessteg. Inga andra dagar
+eller förmiddagstider accepteras av publik bokning. Andra tider kräver
+personlig kontakt och separat överenskommelse. Befintliga bokningar ändras
+inte automatiskt.
+
 ### 2. Systemet validerar tiden
 
 Innan arendet skapas kontrolleras verkstadskalendern.

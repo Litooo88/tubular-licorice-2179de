@@ -62,7 +62,7 @@ export const CONTACT_TEMPLATES = {
   klar: {
     niva: 1,
     rubrik: "Klar för avhämtning",
-    bygg: (ctx) => `Hej${namnet(ctx)}! ${Fordonet(ctx)} är klar för avhämtning. Hämta tisdag eller torsdag 10-16, eller hör av dig om du behöver en annan tid. ${SIGN}`,
+    bygg: (ctx) => `Hej${namnet(ctx)}! ${Fordonet(ctx)} är klar för avhämtning. Hämta tisdag eller torsdag 15-20, eller hör av dig om du behöver en annan tid. ${SIGN}`,
   },
   bokad: {
     niva: 1,

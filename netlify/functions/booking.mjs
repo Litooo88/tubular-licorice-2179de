@@ -1004,12 +1004,12 @@ const vehicleModelFromBody = (body = {}) =>
 
 // Servervalidering av önskad tid: klienten kan inte litas på (lokal tidszon,
 // gammal flik, manipulerad request). Reglerna speglar bokningsformuläret:
-// tisdag och torsdag, 10:00-16:00 i halvtimmessteg, aldrig i dåtid
+// tisdag och torsdag, 15:00-20:00 i halvtimmessteg, aldrig i dåtid
 // (Europe/Stockholm). Två verkstadsdagar i veckan är ett medvetet val
-// (2026-10-07): med 12 mil pendling äter en utspridd kalender upp halva
+// (uppdaterat 2026-10-19): med 12 mil pendling äter en utspridd kalender upp halva
 // ordervärdet, så alla inlämningar buntas till tisdag och torsdag.
-const DROPOFF_FIRST_MINUTE = 10 * 60;
-const DROPOFF_LAST_MINUTE = 16 * 60;
+const DROPOFF_FIRST_MINUTE = 15 * 60;
+const DROPOFF_LAST_MINUTE = 20 * 60;
 const DROPOFF_WEEKDAYS = new Set([2, 4]);
 const MAX_BOOKING_AHEAD_DAYS = 60;
 
@@ -1018,7 +1018,7 @@ const validatePreferredDate = (value) => {
   if (!parts) return "Ogiltig inlamningstid. Valj dag och klockslag i formularet.";
   const minuteOfDay = parts.hour * 60 + parts.minute;
   if (minuteOfDay < DROPOFF_FIRST_MINUTE || minuteOfDay > DROPOFF_LAST_MINUTE || parts.minute % 30 !== 0) {
-    return "Valj en tid mellan 10:00 och 16:00 (hel- eller halvtimme).";
+    return "Valj en tid mellan 15:00 och 20:00 (hel- eller halvtimme).";
   }
   const weekday = new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay();
   if (!DROPOFF_WEEKDAYS.has(weekday)) {
