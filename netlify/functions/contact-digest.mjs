@@ -10,9 +10,12 @@
 // Skickar INGET när kön är tom — mindre brus var ett uttryckligt krav.
 
 import { getStore } from "@netlify/blobs";
-import { postSms } from "./_shared/sms.mjs";
+import { postSms as rawPostSms } from "./_shared/sms.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
 import { normalizeDraft } from "./sms-draft-inbox.mjs";
 import { buildContactDigest } from "./_shared/customer-contact.mjs";
+
+const postSms = loggedSms("contact-digest", rawPostSms);
 
 const env = (name) => {
   try {

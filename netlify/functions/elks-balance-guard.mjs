@@ -6,6 +6,7 @@
 // om ingen råkade öppna admin. Nu körs den på schema, oberoende av UI.
 
 import { getStore } from "@netlify/blobs";
+import { logSms } from "./_shared/comm-log.mjs";
 
 const env = (name) => {
   try {
@@ -47,18 +48,20 @@ export default async () => {
     headers: { "Content-Type": "application/json" },
   });
 
+  const warnText = `[Nordic] VARNING: 46elks-saldot är nere på ${balanceSek} kr (gräns ${warnBelowSek} kr). Fyll på nu - vid 0 kr slutar telefon och SMS att fungera, som 13-17 juli.`;
   const response = await fetch("https://api.46elks.com/a1/sms", {
     method: "POST",
     headers: { Authorization: authHeader, "Content-Type": "application/x-www-form-urlencoded" },
     body: new URLSearchParams({
       from: env("SMS_FROM") || "NordicEM",
       to: warnTo,
-      message: `[Nordic] VARNING: 46elks-saldot är nere på ${balanceSek} kr (gräns ${warnBelowSek} kr). Fyll på nu - vid 0 kr slutar telefon och SMS att fungera, som 13-17 juli.`,
+      message: warnText,
     }).toString(),
     signal: AbortSignal.timeout(8000),
   }).catch(() => null);
 
   const status = response?.ok ? "sent" : "failed";
+  await logSms({ source: "elks-balance-guard", to: warnTo, message: warnText, result: { status } });
   await warnStore.setJSON("elks-balance", { at: new Date().toISOString(), balanceSek, result: status }).catch(() => {});
   console.log("elks-balance-guard", JSON.stringify({ balanceSek, warnBelowSek, status }));
   return new Response(JSON.stringify({ ok: true, balanceSek, warned: true, status }), {

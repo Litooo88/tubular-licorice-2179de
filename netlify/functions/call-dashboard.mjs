@@ -4,6 +4,7 @@ import { blockNumber, listBlockedNumbers, unblockNumber } from "./_shared/call-b
 import { findStaleRingReplies } from "./_shared/ring-escalation.mjs";
 import { isQuietHour, nextOptimalSendAt } from "./_shared/quiet-hours.mjs";
 import { SMS_PART_COST_SEK, campaignKey, filterRecipients, isGsm7, personalize, smsParts } from "./_shared/campaign.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -91,7 +92,9 @@ const STAFF = {
   sebastian: { key: "sebastian", name: "Sebastian", role: "Tung felsokning, batteri och elsystem", phone: "010-138 54 98" },
 };
 
-const postSms = async ({ to, message, from: fromOverride }) => {
+// Varje utskick loggas med exakt text (_shared/comm-log.mjs).
+const postSms = (args) => loggedSms("call-dashboard", rawPostSms)(args);
+const rawPostSms = async ({ to, message, from: fromOverride }) => {
   const normalizedTo = normalizePhone(to);
   const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
   const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");

@@ -1,6 +1,9 @@
 import { getStore } from "@netlify/blobs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
-import { normalizePhone, postSms } from "./_shared/sms.mjs";
+import { normalizePhone, postSms as rawPostSms } from "./_shared/sms.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
+
+const postSms = loggedSms("ring-list", rawPostSms);
 
 // Ringlistan — "ingen varm kund missas två gånger".
 //

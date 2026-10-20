@@ -1,6 +1,9 @@
 import { getStore } from "@netlify/blobs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
-import { normalizePhone, postSms } from "./_shared/sms.mjs";
+import { normalizePhone, postSms as rawPostSms } from "./_shared/sms.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
+
+const postSms = loggedSms("case-sms", rawPostSms);
 
 // POST /api/cases/:id/sms — skickar kund-SMS via 46elks-API:t i stället för
 // telefonens sms:-länk, så att alla utskick loggas på ärendet (spårbar

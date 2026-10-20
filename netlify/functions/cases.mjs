@@ -5,6 +5,7 @@
 // (see docs/CODEBASE_RECOVERY_SUMMARY.md). Kept only as historical reference.
 import { getStore } from "@netlify/blobs";
 import { adminTokenMatches } from "./_shared/admin-auth.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -56,7 +57,9 @@ const smsConfig = () => ({
   from: (env("SMS_FROM") || "NordicEMob").slice(0, 11),
 });
 
-const postSms = async ({ to, message }) => {
+// Varje utskick loggas med exakt text (_shared/comm-log.mjs).
+const postSms = (args) => loggedSms("cases", rawPostSms)(args);
+const rawPostSms = async ({ to, message }) => {
   const normalizedTo = normalizePhone(to);
   const { username, password, from } = smsConfig();
   if (!normalizedTo) return { status: "invalid_phone", to: "" };

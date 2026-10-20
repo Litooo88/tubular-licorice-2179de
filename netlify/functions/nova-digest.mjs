@@ -7,8 +7,11 @@
 // 10:00 UTC = 12:00 sommartid, 11:00 vintertid.
 
 import { getStore } from "@netlify/blobs";
-import { postSms } from "./_shared/sms.mjs";
+import { postSms as rawPostSms } from "./_shared/sms.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
 import { buildCallbackDigest, buildNovaStats, novaDayLine, ownNovaNumbers } from "./_shared/nova.mjs";
+
+const postSms = loggedSms("nova-digest", rawPostSms);
 
 const env = (n) => { try { return globalThis.Netlify?.env?.get?.(n) || process.env[n] || ""; } catch { return process.env[n] || ""; } };
 const readAll = async (name) => {

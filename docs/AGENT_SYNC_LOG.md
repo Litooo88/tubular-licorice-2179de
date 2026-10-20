@@ -32,6 +32,26 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-20 — Claude Code — KLAR (Kommunikationsöversikt + central SMS-logg)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, ej mergad).
+- **Gjorde:** (1) `_shared/comm-log.mjs`: ALLA utgående SMS loggas i store `sms-log` med
+  exakt text, avsändande funktion (`source`), status och 46elks-id; 21 avsändare omslutna
+  (`loggedSms`/`logSms`), autosvar RING/STOPP inkluderade. Gallras efter 12 mån
+  (`comm-log-prune`, dagligen). (2) `/api/kommunikation` + `/admin/kommunikation/`:
+  Nova i dag, väntar på svar, SMS per avsändare, listor befintliga/nya/samtal/chatt/SMS,
+  "Markera som hanterad" (store `comm-handled`). Logik i `_shared/comm-overview.mjs`.
+- **Tester:** alla `test:*` gröna (204 st, nytt `test:comm` 7/7 inkl. end-to-end mot lokal
+  BlobsServer), `npm run build` OK, `verify:checkout-products` OK, callflow `check` OK.
+  Sidan renderad i Chromium 390 px, inga JS-fel.
+- **Viktigt för andra agenter:** nya SMS-avsändare MÅSTE gå via `loggedSms(source, fn)`
+  (eller `logSms`) och få en etikett i `SMS_SOURCES`, annars syns utskicket som "okänd".
+- **Begränsning:** text för SMS skickade före loggen finns bara där den sparats (ärendets
+  smsLog, call-followups, ringlistans info-SMS, Novas mötesbekräftelse). 46elks har
+  mottagare/tid men ingen text (dontlog). `_shared/operator.js` sendSms är oanvänd, ej loggad.
+- **Risk:** GET hämtar 30 dgr 46elks-historik + alla ärenden; kan närma sig funktionens
+  tidsgräns vid mycket trafik. Sidan visar varning om 46elks-hämtningen fallerar.
+
 ### 2026-10-19 — Codex — KLAR LOKALT, PUBLICERING GODKÄND (bokning tis/tors 15–20)
 
 - Branch: `codex/booking-hours-15-20`. Bokningsvalidering, tidsväljare, publika öppettider och motsvarande kundmallar.

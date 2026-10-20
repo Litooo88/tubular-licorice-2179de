@@ -13,6 +13,7 @@ import {
   voicemailAiEnabledForCaller,
   voicemailInternalSmsEnabled,
 } from "./_shared/voicemail-analysis.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
 
 const env = (name) => {
   try {
@@ -108,7 +109,9 @@ const parseForm = async (request) => {
   }
 };
 
-const postSms = async ({ to, message }) => {
+// Varje utskick loggas med exakt text (_shared/comm-log.mjs).
+const postSms = (args) => loggedSms("voice-simple", rawPostSms)(args);
+const rawPostSms = async ({ to, message }) => {
   const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
   const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
   const from = (env("SMS_FROM") || "NordicEMob").slice(0, 11);

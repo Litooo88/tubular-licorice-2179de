@@ -6,6 +6,7 @@ import { getStore } from "@netlify/blobs";
 import { isQuietHour } from "./_shared/quiet-hours.mjs";
 import { sendThankYou, thankYouOutcome } from "./workshop-cases.mjs";
 import { postSms } from "./_shared/sms.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
 import { CAMPAIGN_BATCH_PER_RUN } from "./_shared/campaign.mjs";
 
 // Hur många gånger en köpost får försökas innan vi ger upp och slutar ockupera
@@ -90,7 +91,7 @@ export default async () => {
     } else if (entry.type === "draft_sms" && entry.caseId && entry.phone && entry.message) {
       // Kundsms som godkändes under tysta timmar (sms-draft-inbox). Samma
       // kontrakt som approve-rutten: skicka, logga på ärendet, new→contacted.
-      const sms = await postSms({ to: entry.phone, message: entry.message }).catch(() => ({ status: "failed" }));
+      const sms = await loggedSms("outbox-draft", postSms)({ to: entry.phone, message: entry.message }).catch(() => ({ status: "failed" }));
       const sentAt = new Date().toISOString();
       if (sms.status !== "sent") {
         const attempts = Number(entry.attempts || 0) + 1;
@@ -132,7 +133,7 @@ export default async () => {
         results.push({ key: blob.key, status: "optout" });
       } else {
         campaignSentThisRun += 1;
-        const sms = await postSms({ to: entry.phone, message: entry.message, from: entry.from || undefined }).catch(() => ({ status: "failed" }));
+        const sms = await loggedSms(`campaign:${entry.tag || "kampanj"}`, postSms)({ to: entry.phone, message: entry.message, from: entry.from || undefined }).catch(() => ({ status: "failed" }));
         const sentAt = new Date().toISOString();
         if (sms.status !== "sent") {
           const attempts = Number(entry.attempts || 0) + 1;

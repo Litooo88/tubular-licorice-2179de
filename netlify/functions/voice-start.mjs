@@ -1,4 +1,5 @@
 import { tokenMatches } from "./_shared/admin-auth.mjs";
+import { logSms } from "./_shared/comm-log.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -121,8 +122,10 @@ const sendMissedCallSms = async ({ customerNumber, result, callid }) => {
         body: payloadFor(to),
         signal: AbortSignal.timeout(7000),
       });
+      await logSms({ source: "voice-start", to, message, from, result: { status: response.ok ? "sent" : "failed" } });
       return { to, ok: response.ok, status: response.status };
     } catch (error) {
+      await logSms({ source: "voice-start", to, message, from, result: { status: "failed", error: error?.message } });
       return { to, ok: false, error: clean(error.message, 200) };
     }
   }));

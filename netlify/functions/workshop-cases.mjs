@@ -7,6 +7,7 @@ import {
   serviceNumberForCase,
 } from "./_shared/service-number.mjs";
 import { isQuietHour, nextOptimalSendAt } from "./_shared/quiet-hours.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -49,7 +50,9 @@ const smsConfig = () => ({
   password: env("ELKS_PASSWORD") || env("SMS_API_PASSWORD"),
   from: (env("SMS_FROM") || "NordicEMob").slice(0, 11),
 });
-const postSms = async ({ to, message }) => {
+// Varje utskick loggas med exakt text (_shared/comm-log.mjs).
+const postSms = (args) => loggedSms("workshop-cases", rawPostSms)(args);
+const rawPostSms = async ({ to, message }) => {
   const normalizedTo = normalizePhone(to);
   const { username, password, from } = smsConfig();
   if (!normalizedTo) return { status: "invalid_phone", to: "" };

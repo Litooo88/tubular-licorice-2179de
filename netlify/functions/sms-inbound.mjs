@@ -7,6 +7,7 @@ import { getStore } from "@netlify/blobs";
 import { tokenMatches } from "./_shared/admin-auth.mjs";
 import { parseApprovalReply } from "./_shared/customer-contact.mjs";
 import { isBlockedCaller } from "./_shared/call-blocklist.mjs";
+import { loggedSms, logSms } from "./_shared/comm-log.mjs";
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
 const env = (name) => {
@@ -31,7 +32,9 @@ const normalizePhone = (phone) => {
 // ELKS_NUMBER för bakåtkompatibilitet tills env-varn är satt.
 const OUR_NUMBER = () => normalizePhone(env("ELKS_SMS_NUMBER") || env("ELKS_NUMBER") || "+46101385498");
 
-const postSms = async ({ to, message }) => {
+// Varje utskick loggas med exakt text (_shared/comm-log.mjs).
+const postSms = (args) => loggedSms("sms-inbound", rawPostSms)(args);
+const rawPostSms = async ({ to, message }) => {
   const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
   const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
   const from = (env("SMS_FROM") || "NordicEMob").slice(0, 11);
@@ -200,8 +203,13 @@ export default async (request) => {
     await postSms({ to: sebastianTo, message: `${label} från ${from}: "${message.slice(0, 120)}"\nSvars-inkorgen i admin har hela listan.` });
   }
 
-  if (isStop) return reply("Du är nu avregistrerad från utskick från Nordic E-Mobility.");
-  if (isRing) return reply("Tack! Vi ringer upp dig inom 24 timmar. /Nordic E-Mobility");
+  // Autosvaren skickas av 46elks som svar på webhooken, inte via postSms.
+  const autoReply = async (text) => {
+    await logSms({ source: "sms-inbound", to: from, message: text, result: { status: "sent" } });
+    return reply(text);
+  };
+  if (isStop) return autoReply("Du är nu avregistrerad från utskick från Nordic E-Mobility.");
+  if (isRing) return autoReply("Tack! Vi ringer upp dig inom 24 timmar. /Nordic E-Mobility");
   return reply("");
 };
 

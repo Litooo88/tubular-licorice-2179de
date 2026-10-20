@@ -1,7 +1,10 @@
 import { getStore } from "@netlify/blobs";
-import { normalizePhone, postSms } from "./_shared/sms.mjs";
+import { normalizePhone, postSms as rawPostSms } from "./_shared/sms.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
 import { isQuietHour } from "./_shared/quiet-hours.mjs";
 import { INFO_SMS, INFO_SMS_COOLDOWN_MS } from "./ring-list.mjs";
+
+const postSms = loggedSms("ring-list-scan", rawPostSms);
 
 // Schemalagd väktare: "ingen varm kund missas två gånger".
 //

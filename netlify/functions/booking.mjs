@@ -11,6 +11,7 @@ import {
   vehicleIdentityLabel,
 } from "./_shared/vehicle-identity.mjs";
 import { publicBookingCase } from "./_shared/public-booking.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -344,7 +345,9 @@ const smsConfig = () => ({
   from: (env("SMS_FROM") || "NordicEMob").slice(0, 11),
 });
 
-const postSms = async ({ to, message }) => {
+// Varje utskick loggas med exakt text (_shared/comm-log.mjs).
+const postSms = (args) => loggedSms("booking", rawPostSms)(args);
+const rawPostSms = async ({ to, message }) => {
   const normalizedTo = normalizePhone(to);
   const { username, password, from } = smsConfig();
 

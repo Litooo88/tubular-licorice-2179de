@@ -10,13 +10,16 @@
 // fältet `ringUnhandled`.
 
 import { getStore } from "@netlify/blobs";
-import { postSms, smsConfigured } from "./_shared/sms.mjs";
+import { postSms as rawPostSms, smsConfigured } from "./_shared/sms.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
 import {
   buildAlertMessage,
   findStaleRingReplies,
   isQuietHours,
   realertAfterHours,
 } from "./_shared/ring-escalation.mjs";
+
+const postSms = loggedSms("ring-escalate", rawPostSms);
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {

@@ -1,8 +1,11 @@
 import { getStore } from "@netlify/blobs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
-import { normalizePhone, postSms } from "./_shared/sms.mjs";
+import { normalizePhone, postSms as rawPostSms } from "./_shared/sms.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
 import { scoreLead } from "./_shared/lead-priority.mjs";
 import { isQuietHour, nextOptimalSendAt } from "./_shared/quiet-hours.mjs";
+
+const postSms = loggedSms("sms-draft", rawPostSms);
 
 // SMS-utkastinkorg: AI/agent genererar utkast för obesvarade ärenden,
 // Sebastian granskar och godkänner i admin, systemet skickar spårbart.
