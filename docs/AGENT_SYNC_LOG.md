@@ -32,6 +32,13 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-20 — Claude Code — PÅGÅR (Nova-rapport i admin)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (omstartad från main efter mergade #160)
+- **Gör:** ny statisk sida `/admin/nova-rapport/`: utskriftsvänlig rapport över allt Nova
+  gjort sedan start, byggd ur befintliga `/api/nova` och `/api/kommunikation`. Ingen ny serverkod.
+- **Filer/områden:** `admin/nova-rapport/` (ny), länk från `admin/kommunikation/`.
+
 ### 2026-10-20 — Claude Code — KLAR (Kommunikationsöversikt + central SMS-logg)
 
 - **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, ej mergad).
