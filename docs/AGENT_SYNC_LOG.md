@@ -32,6 +32,17 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-20 — Claude Code — PÅGÅR (Kommunikationsöversikt + central SMS-logg)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (omstartad från main efter mergade #158)
+- **Gör:** (1) central logg för ALLA utgående SMS med exakt text + avsändande funktion
+  (`_shared/comm-log.mjs`, store `sms-log`, 12 mån); varje SMS-avsändare loggar.
+  (2) `/api/kommunikation` + `/admin/kommunikation/`: Nova i dag, befintliga kunder med
+  aktiva ärenden, nya kontakter, samt egna listor för samtal, chatt och SMS. 30 dagar.
+- **Filer/områden:** alla funktioner som skickar SMS (en loggrad var), ny `_shared/comm-log.mjs`,
+  `_shared/elks-history.mjs`, `netlify/functions/kommunikation.mjs`, `admin/kommunikation/`.
+- **Varning:** rör inte SMS-avsändarna (`postSms`/direkta 46elks-anrop) förrän KLAR.
+
 ### 2026-10-19 — Codex — KLAR LOKALT, PUBLICERING GODKÄND (bokning tis/tors 15–20)
 
 - Branch: `codex/booking-hours-15-20`. Bokningsvalidering, tidsväljare, publika öppettider och motsvarande kundmallar.
