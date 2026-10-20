@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Kommunikation – Nordic E-Mobility</title>
+<style>
+:root{--bg:#0b0f0d;--card:#141a17;--line:#24302a;--ink:#eaf3ee;--dim:#93a39a;--acc:#00c853;--warn:#f0b429;--bad:#ff6b5a;--info:#9cc7ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.5 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:16px 16px 80px}
+h1{font-size:22px;margin:4px 0 2px}h2{font-size:15px;margin:22px 0 8px;color:var(--acc);text-transform:uppercase;letter-spacing:.06em}
+a{color:var(--info)}.sub,.meta{color:var(--dim);font-size:12.5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:10px 0}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.tabs{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;margin:10px -16px 0;padding-left:16px;padding-right:16px;position:sticky;top:0;background:var(--bg);z-index:2;border-bottom:1px solid var(--line)}
+.tabs button,.chips button{flex:0 0 auto;appearance:none;border:0;border-radius:99px;padding:8px 12px;font-weight:700;font-size:13px;background:#24302a;color:var(--ink);cursor:pointer}
+.tabs button.sel,.chips button.sel{background:var(--acc);color:#04130a}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin:2px 4px 2px 0;background:#1f2427;color:var(--dim)}
+.tag.good{background:#123a22;color:#7ef0a6}.tag.info{background:#13233a;color:var(--info)}.tag.warn{background:#3a2e10;color:#ffd77a}.tag.bad{background:#3d1612;color:#ff9d90}.tag.nova{background:#2a1430;color:#e7a6ff}
+.who{font-weight:700;font-size:16px}.wait{color:var(--bad);font-weight:700;font-size:13px}
+.btn{appearance:none;border:0;border-radius:10px;padding:8px 12px;font-weight:700;font-size:13px;cursor:pointer;text-decoration:none;display:inline-block}
+.btn.call{background:var(--acc);color:#04130a}.btn.ghost{background:#24302a;color:var(--ink)}
+.ev{border-top:1px solid var(--line);padding:8px 0}.ev:first-child{border-top:0}
+.ev .h{font-size:12.5px;color:var(--dim)}.ev .t{white-space:pre-wrap;margin-top:2px}.ev .t.unknown{color:var(--dim);font-style:italic}
+details summary{cursor:pointer;color:var(--dim);font-size:12.5px}pre{white-space:pre-wrap;font:12.5px/1.45 ui-monospace,Consolas,monospace;color:#cfe0d6;margin:6px 0 0}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:8px}.stat{background:#0f1512;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}.stat b{display:block;font-size:20px}.stat.bad b{color:var(--bad)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right}th:first-child,td:first-child{text-align:left}th{color:var(--dim);font-weight:600;font-size:12px}
+.note{border-left:3px solid var(--warn);padding:6px 10px;color:#ffd77a;font-size:13px;background:#1e1a0e;border-radius:6px;margin:8px 0}
+.empty{color:var(--dim);padding:8px 0}.err{color:var(--bad)}
+input{background:#0f1512;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:10px;font-size:14px;width:100%}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="row"><h1>Kommunikation</h1><a href="/admin/ring-upp/" class="sub">Ring upp-sidan →</a></div>
+  <div class="sub" id="stamp">Laddar…</div>
+  <div id="login" class="card" hidden>
+    <div>Klistra in admin-token en gång. Den sparas bara i den här webbläsaren.</div>
+    <p><input id="tok" type="password" placeholder="Admin-token"></p>
+    <button class="btn call" id="save">Spara</button>
+  </div>
+  <div class="tabs" id="tabs"></div>
+  <div id="view"></div>
+</div>
+<script>
+const $=(s)=>document.querySelector(s);
+const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const token=()=>{try{return localStorage.getItem('nordicAdminToken')||''}catch{return''}};
+const when=(iso)=>iso?new Date(iso).toLocaleString('sv-SE',{timeZone:'Europe/Stockholm',weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+const hm=(iso)=>iso?new Date(iso).toLocaleTimeString('sv-SE',{timeZone:'Europe/Stockholm',hour:'2-digit',minute:'2-digit'}):'';
+const mmss=(s)=>{s=Math.round(Number(s)||0);return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`};
+const kr=(n)=>`${(Number(n)||0).toFixed(2).replace('.',',')} kr`;
+const tel=(p)=>String(p||'').replace(/[^\d+]/g,'');
+const waitTxt=(h)=>h<1?'under 1 h':h<48?`${Math.round(h)} h`:`${Math.round(h/24)} dygn`;
+async function api(path,body){
+  const r=await fetch(path,{method:body?'POST':'GET',headers:{'x-admin-token':token(),'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  if(r.status===401){$('#login').hidden=false;throw new Error('Fel eller saknad admin-token')}
+  if(!r.ok)throw new Error(`Servern svarade ${r.status}`);
+  return r.json();
+}
+
+const TABS=[['overview','Översikt'],['active','Befintliga kunder'],['new','Nya kontakter'],['calls','Samtal'],['chat','Chatt'],['sms','SMS']];
+const CH={calls:'call',chat:'chat',sms:'sms'};
+const STATUS={contacted:'Kontaktad',checked_in:'Inlämnad',diagnosing:'Felsöks',repairing:'Repareras',waiting_parts:'Väntar på delar',waiting_customer:'Väntar på kund',ready:'Klar för hämtning'};
+let D=null,tab='overview',onlyWaiting=false,limit=40;
+try{tab=localStorage.getItem('commTab')||'overview'}catch{}
+const byKey=()=>new Map(D.contacts.map(c=>[c.key,c]));
+
+function renderTabs(){
+  const m=byKey();
+  const n=(k)=>{if(k==='overview')return'';const w=D.lists[k].map(x=>m.get(x)).filter(c=>c&&c.waiting).length;return ` (${D.lists[k].length}${w?` · ${w} väntar`:''})`};
+  $('#tabs').innerHTML=TABS.map(([k,l])=>`<button data-tab="${k}" class="${k===tab?'sel':''}">${l}${n(k)}</button>`).join('');
+}
+
+function evLabel(e){
+  const ch={call:'Samtal',sms:'SMS',chat:'Chatt'}[e.channel];
+  const dir=e.dir==='in'?'in':'ut';
+  return `${ch} ${dir}`;
+}
+function evRow(e,lead=''){
+  const tags=[];
+  if(e.nova)tags.push('<span class="tag nova">Nova</span>');
+  if(e.outcome)tags.push(`<span class="tag ${esc(e.outcome.tone)}">${esc(e.outcome.label)}</span>`);
+  if(e.kind==='ring')tags.push('<span class="tag warn">RING</span>');
+  if(e.kind==='stopp')tags.push('<span class="tag">STOPP</span>');
+  const meta=[when(e.atIso),evLabel(e),e.dir==='out'?`från: ${e.sourceLabel}`:'',e.channel==='call'?e.answeredBy?.label:'',e.durationSec?mmss(e.durationSec):'',e.status==='failed'?'MISSLYCKADES':''].filter(Boolean).join(' · ');
+  const text=e.channel==='sms'&&e.dir==='out'&&!e.textKnown
+    ?'<div class="t unknown">Texten sparades inte (skickat innan SMS-loggen fanns).</div>'
+    :(e.text?`<div class="t">${esc(e.text)}</div>`:'');
+  return `<div class="ev">${lead}<div class="h">${tags.join('')}${esc(meta)}</div>${text}
+   ${e.transcript?`<details><summary>Hela samtalet</summary><pre>${esc(e.transcript)}</pre></details>`:''}</div>`;
+}
+function contactCard(c,channel){
+  const evs=channel?c.events.filter(e=>e.channel===channel):c.events;
+  const tier=c.tier==='active'?`<span class="tag bad">Pågående ärende ${esc(c.cases.active.map(a=>a.serviceNumber||a.id).join(', '))}</span>`
+    :c.tier==='past'?'<span class="tag info">Tidigare kund</span>':'<span class="tag">Ny kontakt</span>';
+  const caseInfo=c.cases.active.map(a=>[a.vehicle,a.service,STATUS[a.status]||a.status].filter(Boolean).join(' · ')).join(' | ');
+  const sig=c.signals.filter(s=>s.points>0).map(s=>`<span class="tag ${esc(s.tone)}">${esc(s.label)}</span>`).join('');
+  const first=evs.slice(0,3),rest=evs.slice(3);
+  return `<div class="card"><div class="row"><div><div class="who">${esc(c.name||c.phone||'Besökare på hemsidan')}</div>
+     <div class="meta">${esc(c.name?c.phone:'')}${c.cases.paidTotal?` · betalt totalt ${Math.round(c.cases.paidTotal)} kr`:''}${caseInfo?` · ${esc(caseInfo)}`:''}</div></div>
+     <div>${c.phone?`<a class="btn call" href="tel:${esc(tel(c.phone))}">Ring</a> <a class="btn ghost" href="sms:${esc(tel(c.phone))}">SMS</a>`:''}</div></div>
+   <div style="margin-top:6px">${tier}${c.waiting?`<span class="wait">Väntar på svar ${waitTxt(c.waitingHours)}</span>`:''}</div>
+   ${sig?`<div style="margin-top:4px">${sig}</div>`:''}
+   <div class="meta" style="margin-top:4px">Relevans ${c.score}${c.handledAtIso?` · hanterad ${esc(when(c.handledAtIso))}`:''}</div>
+   <div style="margin-top:6px">${first.map(e=>evRow(e)).join('')}</div>
+   ${rest.length?`<details><summary>Visa ${rest.length} äldre</summary>${rest.map(e=>evRow(e)).join('')}</details>`:''}
+   ${c.phone&&c.waiting?`<p style="margin:8px 0 0"><button class="btn ghost" data-handled="${esc(c.phone)}">Markera som hanterad</button></p>`:''}</div>`;
+}
+function listView(k){
+  const m=byKey();
+  let list=D.lists[k].map(x=>m.get(x)).filter(Boolean);
+  const waiting=list.filter(c=>c.waiting).length;
+  if(onlyWaiting)list=list.filter(c=>c.waiting);
+  const intro={active:'Kunder med pågående ärende som hört av sig eller fått något från oss. Högst relevans först.',
+    new:'Nya kontakter och tidigare kunder utan pågående ärende.',calls:'Alla samtal in och ut, inklusive Novas.',chat:'Webbchatt med Nova och chatt på hemsidan.',
+    sms:'Alla SMS in och ut, med avsändande funktion och exakt text.'}[k];
+  return `<div class="sub" style="margin-top:8px">${intro} Ordning: relevans i det som sagts × färskhet, plus väntetid för den som väntar på svar.</div>
+   <div class="chips"><button data-wait="0" class="${onlyWaiting?'':'sel'}">Alla (${D.lists[k].length})</button><button data-wait="1" class="${onlyWaiting?'sel':''}">Väntar på svar (${waiting})</button></div>
+   ${list.length?list.slice(0,limit).map(c=>contactCard(c,CH[k])).join(''):'<div class="empty">Inget här.</div>'}
+   ${list.length>limit?`<p><button class="btn ghost" id="more">Visa fler (${list.length-limit} till)</button></p>`:''}`;
+}
+function smsTable(rows){
+  if(!rows.length)return'<div class="empty">Inga utgående SMS.</div>';
+  return `<table><tr><th>Avsändare</th><th>Till kunder</th><th>Internt</th><th>Utan text</th><th>Kostnad</th></tr>
+   ${rows.map(r=>`<tr><td>${esc(r.label)}</td><td>${r.customers}</td><td>${r.internal}</td><td>${r.unknownText}</td><td>${r.costSek?kr(r.costSek):'–'}</td></tr>`).join('')}</table>`;
+}
+function overview(){
+  const t=D.today,n=t.nova,ns=D.novaStats?.today;
+  const m=byKey();
+  const waiting=D.contacts.filter(c=>c.waiting).slice(0,6);
+  const warn=[];
+  if(D.sources.elksCalls!=='ok')warn.push(`Samtal från 46elks kunde inte hämtas (${esc(D.sources.elksCalls)}). Bara Novas samtal visas.`);
+  if(D.sources.elksSms!=='ok')warn.push(`SMS från 46elks kunde inte hämtas (${esc(D.sources.elksSms)}). Bara loggade SMS visas.`);
+  warn.push(D.sources.smsLogSince?`Exakt SMS-text loggas sedan ${esc(when(D.sources.smsLogSince))}. Äldre utskick visar mottagare och tid, men texten finns bara där den sparats på ärendet.`:'SMS-loggen har inga poster ännu. Från och med nu sparas exakt text för varje utskick.');
+  return `${warn.map(w=>`<div class="note">${w}</div>`).join('')}
+  <h2>Nova i dag</h2>
+  <div class="card"><div class="grid">
+    <div class="stat"><b>${n.callsIn}</b>samtal in</div><div class="stat"><b>${n.callsOut}</b>uppringda</div>
+    <div class="stat"><b>${n.chats}</b>webbchattar</div><div class="stat"><b>${n.smsOut}</b>SMS skickade</div>
+    <div class="stat"><b>${n.meetings}</b>möten bokade</div><div class="stat"><b>${n.messages}</b>meddelanden</div>
+    <div class="stat ${n.failed?'bad':''}"><b>${n.failed}</b>misslyckade</div>
+    <div class="stat"><b>${ns?ns.dialed:0}</b>uppringningsförsök</div>
+  </div>
+  <div class="meta" style="margin-top:8px">Uppringning av ringlistan: <b style="color:${D.novaOutbound.enabled?'var(--acc)':'var(--warn)'}">${D.novaOutbound.enabled?'PÅ':'AV'}</b> (${D.novaOutbound.queued} i kö) · 46elks-saldo: <b>${D.balanceSek===null?'okänt':kr(D.balanceSek)}</b></div>
+  ${t.novaEvents.length?`<div style="margin-top:8px">${t.novaEvents.map(e=>{const c=m.get(e.phone)||null;return evRow(e,`<div><b>${esc(hm(e.atIso))}</b> · ${esc(c?.name||e.phone||'Besökare på hemsidan')} ${e.phone&&c?.name?`<span class="meta">${esc(e.phone)}</span>`:''}</div>`)}).join('')}</div>`:'<div class="empty">Nova har inte gjort något i dag.</div>'}
+  </div>
+  <h2>Inkommande i dag</h2>
+  <div class="card"><div class="grid">
+    <div class="stat"><b>${t.inbound.calls}</b>samtal</div><div class="stat ${t.inbound.missed?'bad':''}"><b>${t.inbound.missed}</b>missade</div>
+    <div class="stat"><b>${t.inbound.sms}</b>SMS</div><div class="stat"><b>${t.inbound.chats}</b>chattar</div>
+  </div></div>
+  <h2>Väntar på svar (${D.counts.waiting})</h2>
+  <div class="card">${waiting.length?waiting.map(c=>`<div class="ev"><div class="row"><div><b>${esc(c.name||c.phone||'Besökare')}</b> <span class="meta">${esc(c.name?c.phone:'')}</span><br><span class="meta">${esc(c.reasons.join(' · '))}</span></div>${c.phone?`<a class="btn call" href="tel:${esc(tel(c.phone))}">Ring</a>`:''}</div></div>`).join(''):'<div class="empty">Ingen väntar. Snyggt.</div>'}
+   ${D.counts.waiting>waiting.length?`<div class="meta">+${D.counts.waiting-waiting.length} till i flikarna.</div>`:''}</div>
+  <h2>Utgående SMS i dag per avsändare</h2>
+  <div class="card">${smsTable(t.smsBySource)}</div>
+  <h2>Utgående SMS senaste ${D.days} dagarna</h2>
+  <div class="card">${smsTable(D.period.smsBySource)}<div class="meta" style="margin-top:6px">"Internt" = larm och notiser till dig och verkstaden. "Utan text" = skickat innan SMS-loggen fanns.</div></div>`;
+}
+function render(){
+  renderTabs();
+  $('#view').innerHTML=tab==='overview'?overview():listView(tab);
+}
+async function load(){
+  if(!token()){$('#login').hidden=false;$('#stamp').textContent='Ingen token sparad.';return}
+  $('#stamp').textContent='Hämtar samtal och SMS från 46elks…';
+  try{D=await api('/api/kommunikation?days=30')}catch(e){$('#stamp').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
+  $('#stamp').textContent=`Uppdaterad ${when(D.generatedAt)} · senaste ${D.days} dagarna · ${D.contacts.length} kontakter, ${D.counts.waiting} väntar på svar`;
+  render();
+}
+document.addEventListener('click',async(e)=>{
+  const t=e.target.closest('[data-tab]');if(t){tab=t.dataset.tab;limit=40;try{localStorage.setItem('commTab',tab)}catch{};render();window.scrollTo(0,0);return}
+  const w=e.target.closest('[data-wait]');if(w){onlyWaiting=w.dataset.wait==='1';render();return}
+  if(e.target.id==='more'){limit+=40;render();return}
+  const h=e.target.closest('[data-handled]');
+  if(h){h.disabled=true;h.textContent='Sparar…';try{await api('/api/kommunikation/handled',{phone:h.dataset.handled});await load()}catch(err){h.textContent=err.message}}
+});
+$('#save').onclick=()=>{try{localStorage.setItem('nordicAdminToken',$('#tok').value.trim())}catch{};$('#login').hidden=true;load()};
+load();
+</script>
+</body>
+</html>
