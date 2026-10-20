@@ -19,7 +19,8 @@
 // godkännande, aldrig direkt.
 
 import { getStore } from "@netlify/blobs";
-import { postSms } from "./_shared/sms.mjs";
+import { postSms as rawPostSms } from "./_shared/sms.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
 import { callOutcome, classifyNovaCall, KIND_LABELS, matchOutboundCall, outboundFirstMessage, ownNovaNumbers } from "./_shared/nova.mjs";
 import {
   compactSlots,
@@ -44,6 +45,8 @@ import priceRules from "../../data/workshop/price-rules.json" with { type: "json
 // Produktlistan innehåller interna fält (costEur). matchScooters plockar
 // bara ut de publika; objektet skickas aldrig vidare som det är.
 import productsFile from "../../data/products.json" with { type: "json" };
+
+const postSms = loggedSms("nova", rawPostSms);
 
 const products = Array.isArray(productsFile) ? productsFile : productsFile.products || productsFile.items || Object.values(productsFile).find(Array.isArray) || [];
 

@@ -6,6 +6,7 @@ import { getStore } from "@netlify/blobs";
 import { tokenMatches } from "./_shared/admin-auth.mjs";
 import { isBlockedCaller } from "./_shared/call-blocklist.mjs";
 import { findCustomerMatch } from "./_shared/voicemail-analysis.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
 
 const env = (name) => {
   try {
@@ -60,7 +61,9 @@ const smsConfig = () => ({
   to: clean(env("VOICE_NOTIFY_TO") || env("VOICE_MISSED_SMS_TO"), 40),
 });
 
-const sendSms = async (to, message) => {
+// Varje utskick loggas med exakt text (_shared/comm-log.mjs).
+const sendSms = (to, message) => loggedSms("voice-notify", (a) => rawSendSms(a.to, a.message))({ to, message });
+const rawSendSms = async (to, message) => {
   const { username, password, from } = smsConfig();
   if (!username || !password || !to) return { status: "not_configured" };
   try {

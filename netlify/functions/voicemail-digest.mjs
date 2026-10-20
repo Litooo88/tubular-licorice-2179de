@@ -10,6 +10,7 @@
 // Sebastian har uttryckligen bett om mindre brus, inte fler tomma rapporter.
 
 import { getStore } from "@netlify/blobs";
+import { logSms } from "./_shared/comm-log.mjs";
 
 const env = (name) => {
   try {
@@ -71,9 +72,11 @@ const sendInternalSms = async (message) => {
       body: new URLSearchParams({ from, to, message, dontlog: "message" }),
       signal: AbortSignal.timeout(7000),
     });
+    await logSms({ source: "voicemail-digest", to, message, from, result: { status: response.ok ? "sent" : "failed" } });
     return { status: response.ok ? "sent" : "failed", httpStatus: response.status };
   } catch (error) {
     console.error("voicemail_digest_sms_failed", { message: clean(error?.message, 180) });
+    await logSms({ source: "voicemail-digest", to, message, from, result: { status: "failed", error: error?.message } });
     return { status: "failed" };
   }
 };

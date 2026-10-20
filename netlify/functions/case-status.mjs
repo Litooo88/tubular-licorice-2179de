@@ -4,6 +4,7 @@ import {
   normalizeServiceNumber,
   serviceNumberForCase,
 } from "./_shared/service-number.mjs";
+import { loggedSms } from "./_shared/comm-log.mjs";
 
 // Publik statusportal för kunder. Ett separat slumpat servicenummer fungerar
 // som kapabilitetsnyckel och delas endast med kunden via bekräftelse-SMS/mail.
@@ -41,7 +42,9 @@ const normalizePhone = (phone) => {
   return compact.length >= 7 ? `+46${compact}` : "";
 };
 
-const postSms = async ({ to, message }) => {
+// Varje utskick loggas med exakt text (_shared/comm-log.mjs).
+const postSms = (args) => loggedSms("case-status", rawPostSms)(args);
+const rawPostSms = async ({ to, message }) => {
   const username = env("ELKS_USERNAME") || env("SMS_API_USERNAME");
   const password = env("ELKS_PASSWORD") || env("SMS_API_PASSWORD");
   const from = (env("SMS_FROM") || "NordicEMob").slice(0, 11);
