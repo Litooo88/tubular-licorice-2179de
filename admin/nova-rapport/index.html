@@ -94,9 +94,19 @@ function build(nova,comm){
   // Vad kunderna ville: signaler hos kontakter där Nova varit inblandad.
   const topics=new Map();
   for(const c of contacts.filter(c=>c.novaInvolved))for(const s of c.signals.filter(s=>s.points>0&&['safety','complaint','urgent','callback','buy'].includes(s.key))){const t=topics.get(s.label)||{label:s.label,tone:s.tone,n:0};t.n++;topics.set(s.label,t)}
-  const waiting=contacts.filter(c=>c.novaInvolved&&c.waiting);
+  // Att göra = öppna återuppringningar (Ring upp) ∪ väntande kontakter, en rad per nummer.
+  // En kontakt som bara väntar på grund av ett Nova-möte/meddelande som redan
+  // markerats "Klar, ringt" i Ring upp räknas som hanterad.
   const openCb=[...(nova.callbacks?.meetings||[]).map(m=>({type:'Telefonmöte',name:m.name,phone:m.phone,what:[m.vehicle,m.topic].filter(Boolean).join(' – '),pref:m.preferredTime,at:m.at})),
     ...(nova.callbacks?.messages||[]).map(m=>({type:'Meddelande',name:m.name,phone:m.phone,what:m.message,at:m.at}))];
+  const digits=(p)=>String(p||'').replace(/\D/g,'');
+  const openPhones=new Set(openCb.map(x=>digits(x.phone)).filter(Boolean));
+  const callbackOnly=(c)=>{const last=c.events.find(e=>e.dir==='in');return Boolean(last&&last.nova&&['meeting','message'].includes(last.outcome?.key))};
+  const waiting=contacts.filter(c=>c.novaInvolved&&c.waiting&&!(callbackOnly(c)&&!openPhones.has(digits(c.phone))));
+  const todo=new Map();
+  for(const x of openCb){const k=digits(x.phone)||`cb-${x.at}`;const t=todo.get(k)||{name:x.name,phone:x.phone,lines:[]};t.name=t.name||x.name;t.lines.push(`${x.type}: ${x.what||''}${x.pref?` (önskad tid: ${x.pref})`:''}`);todo.set(k,t)}
+  for(const c of waiting){const k=digits(c.phone)||c.key;const t=todo.get(k)||{name:c.name,phone:c.phone,lines:[]};t.name=t.name||c.name;t.lines.push(c.reasons.join(', '));todo.set(k,t)}
+  const todoList=[...todo.values()];
 
   // Per dag
   const days=new Map();
@@ -110,7 +120,7 @@ function build(nova,comm){
   if(S.total)parts.push(`Hon bokade <b>${S.meeting} telefonmöten</b> åt dig, tog emot <b>${S.message} meddelanden</b> och löste <b>${S.resolved}</b> frågor direkt i samtalet. <b>${S.failed}</b> samtal bedömdes som misslyckade och ${S.short} avbröts direkt eller gick till röstbrevlåda.`);
   parts.push(o.config?.enabled?`Uppringningen av ringlistan är <b>PÅ</b>: ${A.dialed} uppringningsförsök i underlaget, ${A.answered} svarade.`:`Uppringningen av ringlistan är <b>AV</b>${A.dialed?` (${A.dialed} försök gjordes medan den var på, ${A.answered} svarade)`:', och Nova har inte ringt upp någon kund utöver testsamtal'}.`);
   parts.push(comm?`Nova har skickat <b>${novaSms.length} SMS</b>${novaSms.length?' – bekräftelser på telefonmöten hon bokat':''}. Hon kan inte skicka egna texter.`:'SMS-uppgifterna kunde inte hämtas den här gången.');
-  if(waiting.length||openCb.length)parts.push(`<b>${Math.max(waiting.length,openCb.length)} kunder</b> som pratat med Nova väntar på att du hör av dig – se "Att göra" nedan.`);
+  if(todoList.length)parts.push(`<b>${todoList.length} kunder</b> som pratat med Nova väntar på att du hör av dig – se "Att göra" nedan.`);
 
   const callRow=(c)=>{const [kt,kc]=KIND[c.kind]||['Samtal',''];const res=c.result||{label:'Utfall okänt',tone:''};
     const who=c.kind==='web'?(c.customer?.firstName||'Besökare på hemsidan'):[c.customer?.firstName,c.phone].filter(Boolean).join(' ')||'Okänt nummer';
@@ -136,9 +146,8 @@ function build(nova,comm){
   </div></div>
 
   <h2>Att göra – kunder som väntar på dig</h2>
-  <div class="card">${(waiting.length||openCb.length)?`<ul class="todo">${
-    (waiting.length?waiting.map(c=>`<li><b>${esc(c.name||c.phone||'Besökare')}</b> ${c.name?esc(c.phone):''} – ${esc(c.reasons.join(', '))}</li>`)
-      :openCb.map(x=>`<li><b>${esc(x.name||x.phone)}</b> ${x.name?esc(x.phone):''} – ${esc(x.type)}: ${esc(x.what||'')}${x.pref?` (önskad tid: ${esc(x.pref)})`:''}</li>`)).join('')}</ul>`
+  <div class="card">${todoList.length?`<ul class="todo">${
+    todoList.map(t=>`<li><b>${esc(t.name||t.phone||'Besökare')}</b> ${t.name?esc(t.phone):''} – ${esc(t.lines.join(' · '))}</li>`).join('')}</ul>`
     :'<div class="empty">Ingen som pratat med Nova väntar på svar.</div>'}</div>
 
   <h2>Vad kunderna ville</h2>
