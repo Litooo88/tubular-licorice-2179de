@@ -91,6 +91,9 @@ function build(nova,comm){
   // SMS som Nova skickat (mötesbekräftelser), ur kommunikationsdatan.
   const contacts=comm?.contacts||[];
   const novaSms=contacts.flatMap(c=>c.events.filter(e=>e.nova&&e.channel==='sms'&&e.dir==='out').map(e=>({...e,name:c.name}))).sort((a,b)=>b.at-a.at);
+  // Ett utskick som 46elks avvisade har inte nått kunden och räknas inte som skickat.
+  const smsFailed=(e)=>/fail|reject|error/i.test(String(e.status||''));
+  const smsSent=novaSms.filter(e=>!smsFailed(e)).length, smsFail=novaSms.length-smsSent;
   // Vad kunderna ville: signaler hos kontakter där Nova varit inblandad.
   const topics=new Map();
   for(const c of contacts.filter(c=>c.novaInvolved))for(const s of c.signals.filter(s=>s.points>0&&['safety','complaint','urgent','callback','buy'].includes(s.key))){const t=topics.get(s.label)||{label:s.label,tone:s.tone,n:0};t.n++;topics.set(s.label,t)}
@@ -119,7 +122,7 @@ function build(nova,comm){
   parts.push(`Sedan <b>${esc(dateLong(first))||'start'}</b> har Nova haft <b>${S.total} samtal</b>`+(S.total?` (${S.inbound} inkommande, ${S.outbound} där hon ringde upp, ${S.web} webbchattar), totalt ${hmin(S.totalSec)} och i snitt ${mmss(S.avg)} per samtal.`:'.'));
   if(S.total)parts.push(`Hon bokade <b>${S.meeting} telefonmöten</b> åt dig, tog emot <b>${S.message} meddelanden</b> och löste <b>${S.resolved}</b> frågor direkt i samtalet. <b>${S.failed}</b> samtal bedömdes som misslyckade och ${S.short} avbröts direkt eller gick till röstbrevlåda.`);
   parts.push(o.config?.enabled?`Uppringningen av ringlistan är <b>PÅ</b>: ${A.dialed} uppringningsförsök i underlaget, ${A.answered} svarade.`:`Uppringningen av ringlistan är <b>AV</b>${A.dialed?` (${A.dialed} försök gjordes medan den var på, ${A.answered} svarade)`:', och Nova har inte ringt upp någon kund utöver testsamtal'}.`);
-  parts.push(comm?`Nova har skickat <b>${novaSms.length} SMS</b>${novaSms.length?' – bekräftelser på telefonmöten hon bokat':''}. Hon kan inte skicka egna texter.`:'SMS-uppgifterna kunde inte hämtas den här gången.');
+  parts.push(comm?`Nova har skickat <b>${smsSent} SMS</b>${smsSent?' – bekräftelser på telefonmöten hon bokat':''}${smsFail?`. <b style="color:var(--bad)">${smsFail} SMS misslyckades</b> och nådde aldrig kunden – ring dem`:''}. Hon kan inte skicka egna texter.`:'SMS-uppgifterna kunde inte hämtas den här gången.');
   if(todoList.length)parts.push(`<b>${todoList.length} kunder</b> som pratat med Nova väntar på att du hör av dig – se "Att göra" nedan.`);
 
   const callRow=(c)=>{const [kt,kc]=KIND[c.kind]||['Samtal',''];const res=c.result||{label:'Utfall okänt',tone:''};
@@ -163,8 +166,8 @@ function build(nova,comm){
    <div class="stat"><b>${A.cost?kr(A.cost):'–'}</b>kostnad 46elks</div>
   </div><div class="meta" style="margin-top:6px">Underlaget är de senaste 40 uppringda numren.</div></div>
 
-  <h2>SMS som Nova skickat (${novaSms.length})</h2>
-  <div class="card">${novaSms.length?novaSms.map(e=>`<div class="call"><div class="who">${esc(e.name||e.phone)} <span class="meta">${e.name?esc(e.phone):''}</span></div><div class="meta">${esc(when(e.atIso))}${e.costSek?` · ${kr(e.costSek)}`:''}</div><div class="t">${e.textKnown?esc(e.text):'<i class="meta">Texten sparades inte.</i>'}</div></div>`).join('')
+  <h2>SMS från Nova (${smsSent} skickade${smsFail?`, ${smsFail} misslyckade`:''})</h2>
+  <div class="card">${novaSms.length?novaSms.map(e=>`<div class="call">${smsFailed(e)?'<span class="tag bad">MISSLYCKADES – kunden fick inget SMS</span>':''}<div class="who">${esc(e.name||e.phone)} <span class="meta">${e.name?esc(e.phone):''}</span></div><div class="meta">${esc(when(e.atIso))}${e.costSek?` · ${kr(e.costSek)}`:''}</div><div class="t">${e.textKnown?esc(e.text):'<i class="meta">Texten sparades inte.</i>'}</div></div>`).join('')
     :`<div class="empty">${comm?'Nova har inte skickat några SMS.':'Kunde inte hämtas.'}</div>`}</div>
 
   <h2>Dag för dag</h2>
