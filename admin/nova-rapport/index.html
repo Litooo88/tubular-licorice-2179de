@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Nova-rapport – Nordic E-Mobility</title>
+<style>
+:root{--bg:#0b0f0d;--card:#141a17;--line:#24302a;--ink:#eaf3ee;--dim:#93a39a;--acc:#00c853;--warn:#f0b429;--bad:#ff6b5a;--info:#9cc7ff;--nova:#e7a6ff}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+.wrap{max-width:860px;margin:0 auto;padding:16px 16px 80px}
+h1{font-size:24px;margin:4px 0 2px}h2{font-size:15px;margin:26px 0 8px;color:var(--acc);text-transform:uppercase;letter-spacing:.06em}
+a{color:var(--info)}.sub,.meta{color:var(--dim);font-size:12.5px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin:10px 0}
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.lead{font-size:16px;line-height:1.6}.lead b{color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(118px,1fr));gap:8px}
+.stat{background:#0f1512;border:1px solid var(--line);border-radius:10px;padding:10px;text-align:center}.stat b{display:block;font-size:22px}.stat small{color:var(--dim)}
+.stat.good b{color:var(--acc)}.stat.bad b{color:var(--bad)}.stat.warn b{color:var(--warn)}
+.tag{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:99px;margin:2px 4px 2px 0;background:#1f2427;color:var(--dim)}
+.tag.good{background:#123a22;color:#7ef0a6}.tag.info{background:#13233a;color:var(--info)}.tag.warn{background:#3a2e10;color:#ffd77a}.tag.bad{background:#3d1612;color:#ff9d90}.tag.out{background:#2a1430;color:var(--nova)}.tag.in{background:#13233a;color:var(--info)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}th:first-child,td:first-child{text-align:left;white-space:normal}th{color:var(--dim);font-weight:600;font-size:12px}
+.call{border-top:1px solid var(--line);padding:10px 0}.call:first-child{border-top:0}
+.call .who{font-weight:700}.call .t{margin-top:2px}
+details summary{cursor:pointer;color:var(--dim);font-size:12.5px}pre{white-space:pre-wrap;font:12.5px/1.45 ui-monospace,Consolas,monospace;color:#cfe0d6;margin:6px 0 0}
+.bar{height:8px;background:#0f1512;border-radius:99px;overflow:hidden;margin-top:4px}.bar i{display:block;height:100%;background:var(--acc)}
+.note{border-left:3px solid var(--warn);padding:6px 10px;color:#ffd77a;font-size:13px;background:#1e1a0e;border-radius:6px;margin:8px 0}
+.btn{appearance:none;border:0;border-radius:10px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer;background:var(--acc);color:#04130a}
+.empty{color:var(--dim);padding:6px 0}.err{color:var(--bad)}
+input{background:#0f1512;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:10px;font-size:14px;width:100%}
+ul.todo{margin:6px 0 0;padding-left:18px}ul.todo li{margin:4px 0}
+@media print{
+  :root{--bg:#fff;--card:#fff;--line:#d9dfdb;--ink:#111;--dim:#555;--acc:#0a7d3a;--info:#1d4f91}
+  body{font-size:12px}.noprint{display:none!important}.card{break-inside:avoid;border-color:#ccc}
+  .stat{background:#f6f8f7}.tag{border:1px solid #ccc;background:#fff!important;color:#222!important}
+  details{display:block}details summary{display:none}details>pre{display:block}
+  h2{break-after:avoid}.call{break-inside:avoid}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="row"><h1>Nova – rapport</h1><span class="noprint"><a href="/admin/kommunikation/" class="sub">Kommunikation →</a></span></div>
+  <div class="sub" id="stamp">Laddar…</div>
+  <div id="login" class="card noprint" hidden>
+    <div>Klistra in admin-token en gång. Den sparas bara i den här webbläsaren.</div>
+    <p><input id="tok" type="password" placeholder="Admin-token"></p>
+    <button class="btn" id="save">Spara</button>
+  </div>
+  <p class="noprint"><button class="btn" id="print" hidden>Skriv ut / spara som PDF</button></p>
+  <div id="report"></div>
+</div>
+<script>
+const $=(s)=>document.querySelector(s);
+const esc=(v)=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const token=()=>{try{return localStorage.getItem('nordicAdminToken')||''}catch{return''}};
+const TZ='Europe/Stockholm';
+const when=(iso)=>iso?new Date(iso).toLocaleString('sv-SE',{timeZone:TZ,weekday:'short',day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+const dateLong=(iso)=>iso?new Date(iso).toLocaleDateString('sv-SE',{timeZone:TZ,day:'numeric',month:'long',year:'numeric'}):'';
+const dayKey=(iso)=>new Intl.DateTimeFormat('sv-SE',{timeZone:TZ,year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(iso));
+const dayLabel=(k)=>new Date(`${k}T12:00:00Z`).toLocaleDateString('sv-SE',{weekday:'short',day:'numeric',month:'short'});
+const mmss=(s)=>{s=Math.round(Number(s)||0);return `${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`};
+const hmin=(s)=>{s=Math.round(Number(s)||0);const h=Math.floor(s/3600),m=Math.round((s%3600)/60);return h?`${h} h ${m} min`:`${m} min`};
+const kr=(n)=>`${(Number(n)||0).toFixed(2).replace('.',',')} kr`;
+const pct=(a,b)=>b?Math.round(a/b*100):0;
+const KIND={inbound:['Inkommande samtal','in'],outbound:['Nova ringde upp','out'],web:['Webbchatt','info'],test:['Testsamtal','']};
+async function api(path){
+  const r=await fetch(path,{headers:{'x-admin-token':token()}});
+  if(r.status===401){$('#login').hidden=false;throw new Error('Fel eller saknad admin-token')}
+  if(!r.ok)throw new Error(`${path} svarade ${r.status}`);
+  return r.json();
+}
+
+function build(nova,comm){
+  const all=(nova.calls||[]).slice().sort((a,b)=>String(b.at).localeCompare(String(a.at)));
+  const calls=all.filter(c=>c.kind!=='test');
+  const tests=all.length-calls.length;
+  const first=all.length?all[all.length-1].at:null;
+  const k=(kind)=>calls.filter(c=>c.kind===kind).length;
+  const r=(key)=>calls.filter(c=>c.result?.key===key).length;
+  const talked=calls.filter(c=>Number(c.durationSec)>0);
+  const totalSec=talked.reduce((s,c)=>s+(Number(c.durationSec)||0),0);
+  const avg=talked.length?totalSec/talked.length:0;
+  const S={total:calls.length,inbound:k('inbound'),outbound:k('outbound'),web:k('web'),meeting:r('meeting'),message:r('message'),resolved:r('resolved'),failed:r('failed'),short:r('short')+r('voicemail'),unknown:r('unknown'),tests,totalSec,avg};
+
+  // Uppringning (46elks-försök). recent = senaste 40 uppringda numren.
+  const o=nova.outbound||{config:{},counts:{},recent:[]};
+  const attempts=(o.recent||[]).filter(x=>!x.wasTest&&!String(x.key||'').startsWith('test-')).flatMap(x=>(x.log&&x.log.length)?x.log:[{at:x.lastAttemptAt,result:x.status==='done'?'answered':x.status==='failed'?'failed':'noanswer'}]);
+  const A={dialed:attempts.length,answered:attempts.filter(a=>a.result==='answered').length,noanswer:attempts.filter(a=>a.result==='noanswer').length,failed:attempts.filter(a=>a.result==='failed').length,cost:attempts.reduce((s,a)=>s+(Number(a.costSek)||0),0)};
+
+  // SMS som Nova skickat (mötesbekräftelser), ur kommunikationsdatan.
+  const contacts=comm?.contacts||[];
+  const novaSms=contacts.flatMap(c=>c.events.filter(e=>e.nova&&e.channel==='sms'&&e.dir==='out').map(e=>({...e,name:c.name}))).sort((a,b)=>b.at-a.at);
+  // Ett utskick som 46elks avvisade har inte nått kunden och räknas inte som skickat.
+  const smsFailed=(e)=>/fail|reject|error/i.test(String(e.status||''));
+  const smsSent=novaSms.filter(e=>!smsFailed(e)).length, smsFail=novaSms.length-smsSent;
+  // Vad kunderna ville: signaler hos kontakter där Nova varit inblandad.
+  const topics=new Map();
+  for(const c of contacts.filter(c=>c.novaInvolved))for(const s of c.signals.filter(s=>s.points>0&&['safety','complaint','urgent','callback','buy'].includes(s.key))){const t=topics.get(s.label)||{label:s.label,tone:s.tone,n:0};t.n++;topics.set(s.label,t)}
+  // Att göra = öppna återuppringningar (Ring upp) ∪ väntande kontakter, en rad per nummer.
+  // En kontakt som bara väntar på grund av ett Nova-möte/meddelande som redan
+  // markerats "Klar, ringt" i Ring upp räknas som hanterad.
+  const openCb=[...(nova.callbacks?.meetings||[]).map(m=>({type:'Telefonmöte',name:m.name,phone:m.phone,what:[m.vehicle,m.topic].filter(Boolean).join(' – '),pref:m.preferredTime,at:m.at})),
+    ...(nova.callbacks?.messages||[]).map(m=>({type:'Meddelande',name:m.name,phone:m.phone,what:m.message,at:m.at}))];
+  const digits=(p)=>String(p||'').replace(/\D/g,'');
+  const openPhones=new Set(openCb.map(x=>digits(x.phone)).filter(Boolean));
+  const callbackOnly=(c)=>{const last=c.events.find(e=>e.dir==='in');return Boolean(last&&last.nova&&['meeting','message'].includes(last.outcome?.key))};
+  const waiting=contacts.filter(c=>c.novaInvolved&&c.waiting&&!(callbackOnly(c)&&!openPhones.has(digits(c.phone))));
+  const todo=new Map();
+  for(const x of openCb){const k=digits(x.phone)||`cb-${x.at}`;const t=todo.get(k)||{name:x.name,phone:x.phone,lines:[]};t.name=t.name||x.name;t.lines.push(`${x.type}: ${x.what||''}${x.pref?` (önskad tid: ${x.pref})`:''}`);todo.set(k,t)}
+  for(const c of waiting){const k=digits(c.phone)||c.key;const t=todo.get(k)||{name:c.name,phone:c.phone,lines:[]};t.name=t.name||c.name;t.lines.push(c.reasons.join(', '));todo.set(k,t)}
+  const todoList=[...todo.values()];
+
+  // Per dag
+  const days=new Map();
+  for(const c of calls){const d=dayKey(c.at);const x=days.get(d)||{d,n:0,in:0,out:0,web:0,meet:0,msg:0,fail:0,sec:0};x.n++;x[{inbound:'in',outbound:'out',web:'web'}[c.kind]||'in']++;if(c.result?.key==='meeting')x.meet++;if(c.result?.key==='message')x.msg++;if(c.result?.key==='failed')x.fail++;x.sec+=Number(c.durationSec)||0;days.set(d,x)}
+  const dayRows=[...days.values()].sort((a,b)=>b.d.localeCompare(a.d));
+  const maxN=Math.max(1,...dayRows.map(x=>x.n));
+
+  // Klartext-sammanfattning
+  const parts=[];
+  parts.push(`Sedan <b>${esc(dateLong(first))||'start'}</b> har Nova haft <b>${S.total} samtal</b>`+(S.total?` (${S.inbound} inkommande, ${S.outbound} där hon ringde upp, ${S.web} webbchattar), totalt ${hmin(S.totalSec)} och i snitt ${mmss(S.avg)} per samtal.`:'.'));
+  if(S.total)parts.push(`Hon bokade <b>${S.meeting} telefonmöten</b> åt dig, tog emot <b>${S.message} meddelanden</b> och löste <b>${S.resolved}</b> frågor direkt i samtalet. <b>${S.failed}</b> samtal bedömdes som misslyckade och ${S.short} avbröts direkt eller gick till röstbrevlåda.`);
+  parts.push(o.config?.enabled?`Uppringningen av ringlistan är <b>PÅ</b>: ${A.dialed} uppringningsförsök i underlaget, ${A.answered} svarade.`:`Uppringningen av ringlistan är <b>AV</b>${A.dialed?` (${A.dialed} försök gjordes medan den var på, ${A.answered} svarade)`:', och Nova har inte ringt upp någon kund utöver testsamtal'}.`);
+  parts.push(comm?`Nova har skickat <b>${smsSent} SMS</b>${smsSent?' – bekräftelser på telefonmöten hon bokat':''}${smsFail?`. <b style="color:var(--bad)">${smsFail} SMS misslyckades</b> och nådde aldrig kunden – ring dem`:''}. Hon kan inte skicka egna texter.`:'SMS-uppgifterna kunde inte hämtas den här gången.');
+  if(todoList.length)parts.push(`<b>${todoList.length} kunder</b> som pratat med Nova väntar på att du hör av dig – se "Att göra" nedan.`);
+
+  const callRow=(c)=>{const [kt,kc]=KIND[c.kind]||['Samtal',''];const res=c.result||{label:'Utfall okänt',tone:''};
+    const who=c.kind==='web'?(c.customer?.firstName||'Besökare på hemsidan'):[c.customer?.firstName,c.phone].filter(Boolean).join(' ')||'Okänt nummer';
+    const cust=c.customer?(c.customer.found?(c.customer.activeCases?.length?`kund, ärende ${c.customer.activeCases.join(', ')}`:'tidigare kund'):'ny kontakt'):'';
+    return `<div class="call"><div><span class="tag ${kc}">${kt}</span><span class="tag ${esc(res.tone)}">${esc(res.label)}</span></div>
+     <div class="who">${esc(who)}</div><div class="meta">${esc([when(c.at),c.durationSec?mmss(c.durationSec):'',cust].filter(Boolean).join(' · '))}</div>
+     <div class="t">${esc(c.summary||'Ingen sammanfattning.')}</div>
+     ${c.transcript?`<details><summary>Hela samtalet</summary><pre>${esc(c.transcript)}</pre></details>`:''}</div>`};
+
+  return `
+  <h2>Sammanfattning</h2>
+  <div class="card lead">${parts.map(p=>`<p style="margin:6px 0">${p}</p>`).join('')}</div>
+
+  <h2>Nyckeltal</h2>
+  <div class="card"><div class="grid">
+   <div class="stat"><b>${S.total}</b>samtal totalt</div><div class="stat"><b>${S.inbound}</b>inkommande</div>
+   <div class="stat"><b>${S.outbound}</b>Nova ringde upp</div><div class="stat"><b>${S.web}</b>webbchattar</div>
+   <div class="stat"><b>${hmin(S.totalSec)}</b>total samtalstid</div><div class="stat"><b>${mmss(S.avg)}</b>snittlängd</div>
+   <div class="stat good"><b>${S.meeting}</b>möten bokade</div><div class="stat"><b>${S.message}</b>meddelanden</div>
+   <div class="stat good"><b>${S.resolved}</b>löst direkt <small>(${pct(S.resolved,S.total)} %)</small></div>
+   <div class="stat ${S.failed?'bad':''}"><b>${S.failed}</b>misslyckade <small>(${pct(S.failed,S.total)} %)</small></div>
+   <div class="stat ${S.short?'warn':''}"><b>${S.short}</b>lade på direkt / röstbrevlåda</div><div class="stat"><b>${S.tests}</b>testsamtal <small>(räknas inte)</small></div>
+  </div></div>
+
+  <h2>Att göra – kunder som väntar på dig</h2>
+  <div class="card">${todoList.length?`<ul class="todo">${
+    todoList.map(t=>`<li><b>${esc(t.name||t.phone||'Besökare')}</b> ${t.name?esc(t.phone):''} – ${esc(t.lines.join(' · '))}</li>`).join('')}</ul>`
+    :'<div class="empty">Ingen som pratat med Nova väntar på svar.</div>'}</div>
+
+  <h2>Vad kunderna ville</h2>
+  <div class="card">${topics.size?[...topics.values()].sort((a,b)=>b.n-a.n).map(t=>`<div style="margin:6px 0"><div class="row"><span>${esc(t.label)}</span><b>${t.n}</b></div><div class="bar"><i style="width:${pct(t.n,Math.max(...[...topics.values()].map(x=>x.n)))}%"></i></div></div>`).join('')
+    :'<div class="empty">Inga tydliga ämnen hittades i det kunderna sa.</div>'}
+   <div class="meta" style="margin-top:6px">Räknat per kund utifrån Novas sammanfattningar och det kunderna själva sa.</div></div>
+
+  <h2>Uppringning av ringlistan</h2>
+  <div class="card"><div class="grid">
+   <div class="stat ${o.config?.enabled?'good':'warn'}"><b>${o.config?.enabled?'PÅ':'AV'}</b>status</div><div class="stat"><b>${o.counts?.queued??0}</b>i kö</div>
+   <div class="stat"><b>${A.dialed}</b>försök</div><div class="stat good"><b>${A.answered}</b>svarade <small>(${pct(A.answered,A.dialed)} %)</small></div>
+   <div class="stat"><b>${A.noanswer}</b>svarade inte</div><div class="stat ${A.failed?'bad':''}"><b>${A.failed}</b>tekniskt fel</div>
+   <div class="stat"><b>${A.cost?kr(A.cost):'–'}</b>kostnad 46elks</div>
+  </div><div class="meta" style="margin-top:6px">Underlaget är de senaste 40 uppringda numren.</div></div>
+
+  <h2>SMS från Nova (${smsSent} skickade${smsFail?`, ${smsFail} misslyckade`:''})</h2>
+  <div class="card">${novaSms.length?novaSms.map(e=>`<div class="call">${smsFailed(e)?'<span class="tag bad">MISSLYCKADES – kunden fick inget SMS</span>':''}<div class="who">${esc(e.name||e.phone)} <span class="meta">${e.name?esc(e.phone):''}</span></div><div class="meta">${esc(when(e.atIso))}${e.costSek?` · ${kr(e.costSek)}`:''}</div><div class="t">${e.textKnown?esc(e.text):'<i class="meta">Texten sparades inte.</i>'}</div></div>`).join('')
+    :`<div class="empty">${comm?'Nova har inte skickat några SMS.':'Kunde inte hämtas.'}</div>`}</div>
+
+  <h2>Dag för dag</h2>
+  <div class="card">${dayRows.length?`<table><tr><th>Dag</th><th>Samtal</th><th>In</th><th>Ut</th><th>Webb</th><th>Möten</th><th>Medd.</th><th>Missl.</th></tr>
+   ${dayRows.map(x=>`<tr><td>${esc(dayLabel(x.d))}<div class="bar"><i style="width:${pct(x.n,maxN)}%"></i></div></td><td><b>${x.n}</b></td><td>${x.in}</td><td>${x.out}</td><td>${x.web}</td><td>${x.meet}</td><td>${x.msg}</td><td>${x.fail?`<b style="color:var(--bad)">${x.fail}</b>`:0}</td></tr>`).join('')}</table>`
+   :'<div class="empty">Inga samtal ännu.</div>'}</div>
+
+  <h2>Alla samtal (${all.length})</h2>
+  <div class="card">${all.length?all.map(callRow).join(''):'<div class="empty">Inga samtal ännu.</div>'}</div>
+
+  <h2>Om rapporten</h2>
+  <div class="card meta">
+   <p>Byggd automatiskt ur Nordic E-Mobilitys egen data när sidan laddades. Inget är uppskattat eller påhittat.</p>
+   <p>"Utfall" är Novas egen bedömning efter samtalet. Läs samtalet när det står Misslyckat.</p>
+   <p>Samtal sparas sedan Nova kopplades in (7 oktober). Rapporten visar upp till 60 dagar bakåt. Exakt SMS-text sparas för alla utskick från och med 20 oktober.</p>
+  </div>`;
+}
+
+async function load(){
+  if(!token()){$('#login').hidden=false;$('#stamp').textContent='Ingen token sparad.';return}
+  $('#stamp').textContent='Hämtar Novas samtal…';
+  let nova,comm=null;
+  try{nova=await api('/api/nova?days=60')}catch(e){$('#stamp').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
+  $('#stamp').textContent='Hämtar SMS och kunddata…';
+  let note='';
+  try{comm=await api('/api/kommunikation?days=60')}catch(e){note=`<div class="note">SMS och kunduppgifter kunde inte hämtas (${esc(e.message)}). Samtalen nedan är kompletta.</div>`}
+  $('#stamp').textContent=`Skapad ${when(new Date().toISOString())}`;
+  $('#report').innerHTML=note+build(nova,comm);
+  $('#print').hidden=false;
+}
+$('#print').onclick=()=>window.print();
+$('#save').onclick=()=>{try{localStorage.setItem('nordicAdminToken',$('#tok').value.trim())}catch{};$('#login').hidden=true;load()};
+load();
+</script>
+</body>
+</html>

@@ -32,6 +32,17 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-20 — Claude Code — KLAR (Nova-rapport i admin)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main).
+- **Gjorde:** `/admin/nova-rapport/`: klartext-sammanfattning, nyckeltal, att göra, ämnen,
+  uppringning, Novas SMS, dag för dag, alla samtal. Utskrift/PDF. Bara frontend.
+- **Tester:** `test:comm` 7/7, build OK, `verify:checkout-products` OK. Renderad i Chromium
+  390 px + utskrift till PDF med testdata, inga JS-fel.
+- **Fynd:** inga Nova-samtalsmejl ("Nova …"/"Röstassistent …") finns i info@-inkorgen.
+  `sendMail` i voice-agent.mjs kräver RESEND_API_KEY + EMAIL_FROM + WORKSHOP_EMAIL/EMAIL_REPLY_TO;
+  troligen saknas någon i Netlify eller så går mejlen till annan adress. Ej åtgärdat.
+
 ### 2026-10-20 — Claude Code — KLAR (Kommunikationsöversikt + central SMS-logg)
 
 - **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, ej mergad).
