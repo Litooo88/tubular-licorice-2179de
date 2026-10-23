@@ -91,7 +91,7 @@ export default async () => {
     } else if (entry.type === "draft_sms" && entry.caseId && entry.phone && entry.message) {
       // Kundsms som godkändes under tysta timmar (sms-draft-inbox). Samma
       // kontrakt som approve-rutten: skicka, logga på ärendet, new→contacted.
-      const sms = await loggedSms("outbox-draft", postSms)({ to: entry.phone, message: entry.message }).catch(() => ({ status: "failed" }));
+      const sms = await loggedSms("outbox-draft", postSms)({ to: entry.phone, message: entry.message, approved: true }).catch(() => ({ status: "failed" }));
       const sentAt = new Date().toISOString();
       if (sms.status !== "sent") {
         const attempts = Number(entry.attempts || 0) + 1;
@@ -135,7 +135,7 @@ export default async () => {
         campaignSentThisRun += 1;
         const sms = await loggedSms(`campaign:${entry.tag || "kampanj"}`, postSms)({ to: entry.phone, message: entry.message, from: entry.from || undefined }).catch(() => ({ status: "failed" }));
         const sentAt = new Date().toISOString();
-        if (sms.status !== "sent") {
+        if (sms.status !== "sent" && sms.status !== "pending_approval") {
           const attempts = Number(entry.attempts || 0) + 1;
           if (attempts < MAX_THANK_YOU_ATTEMPTS) {
             await outbox.setJSON(blob.key, { ...entry, attempts, lastTriedAt: sentAt, lastError: sms.error || sms.status }).catch(() => {});
@@ -143,6 +143,10 @@ export default async () => {
             continue;
           }
           results.push({ key: blob.key, status: "gave_up", sms: sms.status });
+        } else if (sms.status === "pending_approval") {
+          // Ligger nu i godkännandekön på /admin/kommunikation/; 30-dagarsspärren
+          // sätts först när Sebastian godkänt och SMS:et faktiskt gått.
+          results.push({ key: blob.key, status: "pending_approval", tag: entry.tag });
         } else {
           const prior = await campaignStore.get(entry.phone, { type: "json" }).catch(() => null);
           await campaignStore.setJSON(entry.phone, {

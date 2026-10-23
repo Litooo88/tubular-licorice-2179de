@@ -7,7 +7,7 @@ import { getStore } from "@netlify/blobs";
 import { tokenMatches } from "./_shared/admin-auth.mjs";
 import { parseApprovalReply } from "./_shared/customer-contact.mjs";
 import { isBlockedCaller } from "./_shared/call-blocklist.mjs";
-import { loggedSms, logSms } from "./_shared/comm-log.mjs";
+import { loggedSms, logSms, queuePendingSms, readSmsApproval } from "./_shared/comm-log.mjs";
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
 const env = (name) => {
@@ -209,7 +209,15 @@ export default async (request) => {
     return reply(text);
   };
   if (isStop) return autoReply("Du är nu avregistrerad från utskick från Nordic E-Mobility.");
-  if (isRing) return autoReply("Tack! Vi ringer upp dig inom 24 timmar. /Nordic E-Mobility");
+  if (isRing) {
+    // Autosvaret till kunden omfattas av godkännandespärren: köas i stället
+    // för att svaras direkt. STOPP-bekräftelsen ovan går alltid (avregistrering).
+    if ((await readSmsApproval()).enabled) {
+      await queuePendingSms({ source: "sms-inbound", to: from, message: "Tack! Vi ringer upp dig inom 24 timmar. /Nordic E-Mobility" });
+      return reply("");
+    }
+    return autoReply("Tack! Vi ringer upp dig inom 24 timmar. /Nordic E-Mobility");
+  }
   return reply("");
 };
 

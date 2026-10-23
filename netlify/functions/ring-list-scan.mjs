@@ -87,10 +87,11 @@ export default async () => {
     if (!quiet && !blocked && !inCooldown && infoSent < MAX_INFO_SMS_PER_RUN) {
       const sms = await postSms({ to: phone, message: INFO_SMS });
       smsStatus = sms.status;
-      if (sms.status === "sent") {
+      // Köat för godkännande räknas som gjort, annars köas samma SMS om var 10:e minut.
+      if (sms.status === "sent" || sms.status === "pending_approval") {
         infoSent += 1;
         entry.infoSmsAt = now;
-        entry.log = [...entry.log, { at: now, event: "Info-SMS om återuppringningslistan skickat (auto)." }].slice(-30);
+        entry.log = [...entry.log, { at: now, event: sms.status === "sent" ? "Info-SMS om återuppringningslistan skickat (auto)." : "Info-SMS om återuppringningslistan väntar på godkännande i admin." }].slice(-30);
       }
     }
 

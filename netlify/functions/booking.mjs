@@ -757,6 +757,8 @@ const addNotificationTimeline = (caseItem, notifications, prefix = "") => {
   const at = new Date().toISOString();
   if (notifications.sms?.status === "sent") {
     caseItem.timeline.push({ at: notifications.sms.sentAt || at, event: `${prefix}SMS-bekraftelse skickad till kund.` });
+  } else if (notifications.sms?.status === "pending_approval") {
+    caseItem.timeline.push({ at, event: `${prefix}SMS-bekraftelse vantar pa godkannande i admin (Kommunikation).` });
   } else if (needsRetry(notifications.sms)) {
     caseItem.timeline.push({ at, event: `${prefix}SMS-bekraftelse misslyckades: ${resultError(notifications.sms)}.` });
   }

@@ -128,6 +128,10 @@ test("hjälpfunktioner: signaler, svar, avsändare, vem svarade", () => {
   assert.deepEqual(textSignals("Det luktar bränt från batteriet").map((s) => s.key), ["safety"]);
   assert.deepEqual(textSignals("STOPP"), []);
   assert.equal(sourceLabel("campaign:vinter-2026", SMS_SOURCES), "Kampanj (vinter-2026)");
+  assert.equal(sourceLabel("approved:ring-list-scan", SMS_SOURCES), "Godkänt av Sebastian: Ringlistan (automatiskt info-SMS)");
+  // Köade/avvisade loggposter blir inga "SMS ut"-händelser.
+  const evq = buildEvents({ smsLog: [{ at: h(1), to: "+46701000000", message: "x", source: "booking", status: "pending_approval" }, { at: h(1), to: "+46701000000", message: "y", source: "booking", status: "rejected" }] }, opts);
+  assert.equal(evq.length, 0);
   assert.equal(isRealReply({ dir: "out", channel: "sms", textKnown: true, source: "ring-list-scan" }), false);
   assert.equal(isRealReply({ dir: "out", channel: "sms", textKnown: true, source: "case-sms" }), true);
   assert.equal(needsReply({ dir: "in", channel: "call", answeredBy: { key: "nova" }, outcome: { key: "resolved" } }), false);

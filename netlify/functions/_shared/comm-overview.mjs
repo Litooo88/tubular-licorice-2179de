@@ -33,6 +33,7 @@ export const ACTIVE_CASE_STATUSES = new Set(["contacted", "checked_in", "diagnos
 // --------------------------------------------------------------------------
 export const sourceLabel = (source, labels = {}) => {
   const s = clean(source, 60);
+  if (s.startsWith("approved:")) return `Godkänt av Sebastian: ${sourceLabel(s.slice(9), labels)}`;
   if (s.startsWith("campaign:")) return `Kampanj (${s.slice(9)})`;
   return labels[s] || (s ? s : "Okänd avsändare");
 };
@@ -135,6 +136,8 @@ export const buildEvents = (input = {}, opts = {}) => {
   // Loggade utskick som inte syns hos 46elks (t.ex. om hämtningen misslyckades).
   known.forEach((k, i) => {
     if (used.has(i) || !k.phone || k.from === "ringlist" || k.from === "meeting") return;
+    // Köat för godkännande eller avvisat: inget har nått kunden. Kön visas för sig.
+    if (["pending_approval", "rejected"].includes(k.status)) return;
     push({ id: `log-${i}-${k.at}`, at: k.at, channel: "sms", dir: "out", phone: k.phone, text: clean(k.text, 2000), textKnown: Boolean(k.text), source: k.source, nova: k.source === "nova", status: k.status || "sent", internal: isOwn(k.phone), costSek: 0 });
   });
   // Inkommande SMS i vår egen store (RING/STOPP) som 46elks-listan saknar.
@@ -275,7 +278,7 @@ export const scoreContact = (contact, now = Date.now()) => {
 // Automatiska utskick är inget svar till kunden: kunden väntar fortfarande på
 // att någon faktiskt hör av sig.
 export const AUTO_SOURCES = new Set(["ring-list-scan", "sms-inbound", "nova", "booking", "ring-escalate", "case-status", "contact-digest", "nova-digest", "voice-start", "voice-simple", "voice-private", "voice-notify", "voicemail-digest", "elks-balance-guard"]);
-const isAutoSource = (src) => AUTO_SOURCES.has(src) || String(src || "").startsWith("campaign:");
+const isAutoSource = (src) => { const s = String(src || "").replace(/^approved:/, ""); return AUTO_SOURCES.has(s) || s.startsWith("campaign:"); };
 // Räknas som att vi faktiskt svarat kunden.
 export const isRealReply = (e) => {
   if (e.dir !== "out") return false;
