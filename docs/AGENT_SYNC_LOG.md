@@ -32,6 +32,14 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-23 — Claude Code — PÅGÅR (Godkännandespärr för alla kund-SMS)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (omstartad från main)
+- **Gör:** inga SMS till kunder skickas utan Sebastians godkännande. Spärren ligger i
+  `_shared/comm-log.mjs` (`loggedSms`), kö i store `sms-pending`, godkänn/avvisa på
+  `/admin/kommunikation/`. Interna SMS till personal går som förut.
+- **Varning:** rör inte SMS-avsändarna eller `comm-log.mjs` förrän KLAR.
+
 ### 2026-10-20 — Claude Code — KLAR (Nova-rapport i admin)
 
 - **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main).
