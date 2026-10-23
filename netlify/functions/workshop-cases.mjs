@@ -222,7 +222,7 @@ export const sendThankYou = async (caseItem, variantRequested) => {
   // timmar-kö som mejlet eftersom hela sendThankYou köas nattetid.
   let reviewSms = { status: "skipped", reason: "no_phone" };
   const reviewTo = clean(caseItem.customer?.phone, 40);
-  const alreadySent = caseItem.notifications?.thankYou?.reviewSms?.status === "sent";
+  const alreadySent = ["sent", "pending_approval"].includes(caseItem.notifications?.thankYou?.reviewSms?.status);
   if (reviewTo && !alreadySent) {
     const optout = await getStore({ name: "sms-optout", consistency: "strong" })
       .get(reviewTo.replace(/[^\d+]/g, "").replace(/^0/, "+46"), { type: "json" })
@@ -507,7 +507,7 @@ export default async (request, context) => {
     if (body.action === "send_sms") {
       const message = clean(body.message, 918);
       if (!message) return json({ error: "SMS-text saknas." }, 400);
-      const result = await postSms({ to: current.customer?.phone, message });
+      const result = await postSms({ to: current.customer?.phone, message, approved: true }); // manuell admin-åtgärd
       const entry = {
         at: result.sentAt || now,
         type: "manual_sms",
@@ -555,7 +555,7 @@ export default async (request, context) => {
       const link = `${SITE_URL}/status/?service=${encodeURIComponent(serviceNumber)}`;
       const customerFirst = firstName(current.customer?.name);
       const smsText = `Hej ${customerFirst}! Viktigt besked från Nordic E-Mobility: ett tekniskt fel i vår telefonväxel har den senaste månaden stoppat många inkommande samtal. Har du försökt ringa utan att komma fram ber vi verkligen om ursäkt - felet låg hos tekniken och är nu åtgärdat.\nDitt ärende har servicenummer ${serviceNumber}. Följ reparationen live, steg för steg: ${link}\n/Nordic E-Mobility`;
-      const smsResult = await postSms({ to: current.customer?.phone, message: smsText });
+      const smsResult = await postSms({ to: current.customer?.phone, message: smsText, approved: true }); // manuell admin-åtgärd
       const emailResult = await resendEmail({
         to: current.customer?.email ? [current.customer.email] : [],
         subject: `Vi ber om ursäkt - och ger dig full koll. Servicenummer: ${serviceNumber}`,
@@ -599,7 +599,7 @@ export default async (request, context) => {
       if (!amount || amount <= 0) return json({ error: "Prisf\u00f6rslag m\u00e5ste ha belopp." }, 400);
       if (!summary) return json({ error: "\u00c5tg\u00e4rd/sammanfattning saknas." }, 400);
       const message = quoteSmsText({ caseItem: current, amount, summary, contactOwner });
-      const result = await postSms({ to: current.customer?.phone, message });
+      const result = await postSms({ to: current.customer?.phone, message, approved: true }); // manuell admin-åtgärd
       const quote = {
         ...(current.quote || {}),
         status: result.status === "sent" ? "sent" : "failed",
@@ -641,7 +641,7 @@ export default async (request, context) => {
       if (!amount || amount <= 0) return json({ error: "Belopp saknas for betalningsinstruktion." }, 400);
       const priceRows = normalizePriceRows(body.priceRows);
       const message = clean(body.message, 918) || paymentSmsText({ caseItem: current, amount });
-      const result = await postSms({ to: current.customer?.phone, message });
+      const result = await postSms({ to: current.customer?.phone, message, approved: true }); // manuell admin-åtgärd
       const nextCompletion = {
         ...(current.completion || {}),
         totalCost: amount,

@@ -212,7 +212,7 @@ export default async (request, context) => {
       return json({ status: "queued", sendAfter, caseId: caseKey });
     }
 
-    const sms = await postSms({ to: phone, message });
+    const sms = await postSms({ to: phone, message, approved: true }); // godkänt utkast
     if (sms.status === "not_configured") return json({ status: "not_configured" });
     if (sms.status !== "sent") return json({ status: sms.status, error: sms.error || "SMS kunde inte skickas." }, 502);
 

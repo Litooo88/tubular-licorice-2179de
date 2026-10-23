@@ -244,7 +244,7 @@ export default async (request) => {
     const staff = instantTo() ? await postSms({ to: instantTo(), message: meetingSmsToSebastian(meeting) }) : { status: "digest" };
     const customer = await postSms({ to: meeting.phone, message: meetingSmsToCustomer(meeting) });
     await store.setJSON(id, { id, at, ...meeting, case: caseResult, staffSms: staff.status, customerSms: customer.status }).catch(() => {});
-    return json({ ok: true, id, caseId: caseResult.id || "", confirmationSms: customer.status, say: `Då har jag bokat att Sebastian ringer dig${meeting.preferredTime ? ` ${meeting.preferredTime}` : " så snart han kan"}. Du får en bekräftelse på SMS.` });
+    return json({ ok: true, id, caseId: caseResult.id || "", confirmationSms: customer.status, say: `Då har jag bokat att Sebastian ringer dig${meeting.preferredTime ? ` ${meeting.preferredTime}` : " så snart han kan"}${customer.status === "sent" ? ". Du får en bekräftelse på SMS." : "."}` });
   }
 
   if (tool === "summary") {

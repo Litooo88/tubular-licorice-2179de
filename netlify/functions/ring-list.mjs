@@ -49,9 +49,9 @@ export const sendInfoSmsIfAllowed = async (entry, { list, optout }) => {
     return { status: "cooldown", infoSmsAt: entry.infoSmsAt };
   }
   const sms = await postSms({ to: entry.phone, message: INFO_SMS });
-  if (sms.status !== "sent") return { status: sms.status, error: sms.error };
+  if (sms.status !== "sent" && sms.status !== "pending_approval") return { status: sms.status, error: sms.error };
   entry.infoSmsAt = new Date().toISOString();
-  entry.log = [...(entry.log || []), { at: entry.infoSmsAt, event: "Info-SMS om återuppringningslistan skickat." }].slice(-30);
+  entry.log = [...(entry.log || []), { at: entry.infoSmsAt, event: sms.status === "sent" ? "Info-SMS om återuppringningslistan skickat." : "Info-SMS om återuppringningslistan väntar på godkännande i admin." }].slice(-30);
   await list.setJSON(entry.phone, entry);
   return { status: "sent" };
 };
@@ -126,7 +126,7 @@ export default async (request, context) => {
     if (!message) return json({ error: "Meddelandetext saknas." }, 400);
     const blocked = await optout.get(id, { type: "json" }).catch(() => null);
     if (blocked) return json({ error: "Numret har avregistrerat sig (STOPP)." }, 409);
-    const sms = await postSms({ to: id, message });
+    const sms = await postSms({ to: id, message, approved: true }); // manuell knapp i admin
     if (sms.status !== "sent") return json({ status: sms.status, error: sms.error || "SMS kunde inte skickas." }, 502);
     entry.log = [...(entry.log || []), { at: new Date().toISOString(), event: `SMS skickat: "${message.slice(0, 80)}"` }].slice(-30);
     await list.setJSON(id, entry);

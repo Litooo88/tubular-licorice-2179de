@@ -29,6 +29,8 @@ details summary{cursor:pointer;color:var(--dim);font-size:12.5px}pre{white-space
 table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:6px 4px;border-bottom:1px solid var(--line);text-align:right}th:first-child,td:first-child{text-align:left}th{color:var(--dim);font-weight:600;font-size:12px}
 .note{border-left:3px solid var(--warn);padding:6px 10px;color:#ffd77a;font-size:13px;background:#1e1a0e;border-radius:6px;margin:8px 0}
 .empty{color:var(--dim);padding:8px 0}.err{color:var(--bad)}
+.pend{border:1px solid #3a2e10;background:#161a14;border-radius:10px;padding:10px;margin:8px 0}.pend .msg{white-space:pre-wrap;background:#0f1512;border-radius:8px;padding:8px;margin:6px 0;font-size:14px}
+.btn.ok{background:var(--acc);color:#04130a}.btn.no{background:#3d1612;color:#ff9d90}.on{color:var(--acc);font-weight:700}.off{color:var(--warn);font-weight:700}
 input{background:#0f1512;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:10px;font-size:14px;width:100%}
 </style>
 </head>
@@ -127,6 +129,20 @@ function smsTable(rows){
   return `<table><tr><th>Avsändare</th><th>Till kunder</th><th>Internt</th><th>Utan text</th><th>Kostnad</th></tr>
    ${rows.map(r=>`<tr><td>${esc(r.label)}</td><td>${r.customers}</td><td>${r.internal}</td><td>${r.unknownText}</td><td>${r.costSek?kr(r.costSek):'–'}</td></tr>`).join('')}</table>`;
 }
+function pendingBlock(){
+  const m=byKey();const sa=D.smsApproval||{enabled:true};const list=D.pending||[];
+  const who=(p)=>{const c=m.get(p.to);return c?.name?`${esc(c.name)} <span class="meta">${esc(p.to)}</span>`:esc(p.to)};
+  return `<h2>SMS som väntar på ditt godkännande (${list.length})</h2>
+  <div class="card"><div class="row"><div>Spärren är <span class="${sa.enabled?'on':'off'}">${sa.enabled?'PÅ':'AV'}</span>
+    <span class="meta">${sa.enabled?'– inga SMS går till kunder förrän du godkänt dem här. Larm till dig och dina egna manuella utskick går direkt.':'– SMS till kunder går ut automatiskt igen.'}</span></div>
+    <button class="btn ghost" data-toggle="${sa.enabled?'0':'1'}">${sa.enabled?'Stäng av spärren':'Slå på spärren'}</button></div>
+   ${list.length?`<p class="row" style="margin:10px 0 4px"><span class="meta">Äldst överst.</span><button class="btn ok" data-approve-all="1">Godkänn alla (${list.length})</button></p>`:''}
+   ${list.length?list.slice().reverse().map(p=>`<div class="pend"><div class="row"><div>${who(p)}</div><div class="meta">${esc(when(p.at))}</div></div>
+     <div class="meta">Från: ${esc(p.sourceLabel||p.source)}${p.lastError?` · <span class="err">senaste försöket misslyckades: ${esc(p.lastError)}</span>`:''}</div>
+     <div class="msg">${esc(p.message)}</div>
+     <div class="row"><span class="meta">${p.message.length} tecken${p.from?` · avsändare ${esc(p.from)}`:''}</span><span><button class="btn no" data-reject="${esc(p.id)}">Avvisa</button> <button class="btn ok" data-approve="${esc(p.id)}">Godkänn och skicka</button></span></div></div>`).join('')
+    :'<div class="empty">Inget väntar.</div>'}</div>`;
+}
 function overview(){
   const t=D.today,n=t.nova,ns=D.novaStats?.today;
   const m=byKey();
@@ -135,7 +151,7 @@ function overview(){
   if(D.sources.elksCalls!=='ok')warn.push(`Samtal från 46elks kunde inte hämtas (${esc(D.sources.elksCalls)}). Bara Novas samtal visas.`);
   if(D.sources.elksSms!=='ok')warn.push(`SMS från 46elks kunde inte hämtas (${esc(D.sources.elksSms)}). Bara loggade SMS visas.`);
   warn.push(D.sources.smsLogSince?`Exakt SMS-text loggas sedan ${esc(when(D.sources.smsLogSince))}. Äldre utskick visar mottagare och tid, men texten finns bara där den sparats på ärendet.`:'SMS-loggen har inga poster ännu. Från och med nu sparas exakt text för varje utskick.');
-  return `${warn.map(w=>`<div class="note">${w}</div>`).join('')}
+  return `${pendingBlock()}${warn.map(w=>`<div class="note">${w}</div>`).join('')}
   <h2>Nova i dag</h2>
   <div class="card"><div class="grid">
     <div class="stat"><b>${n.callsIn}</b>samtal in</div><div class="stat"><b>${n.callsOut}</b>uppringda</div>
@@ -168,13 +184,21 @@ async function load(){
   if(!token()){$('#login').hidden=false;$('#stamp').textContent='Ingen token sparad.';return}
   $('#stamp').textContent='Hämtar samtal och SMS från 46elks…';
   try{D=await api('/api/kommunikation?days=30')}catch(e){$('#stamp').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
-  $('#stamp').textContent=`Uppdaterad ${when(D.generatedAt)} · senaste ${D.days} dagarna · ${D.contacts.length} kontakter, ${D.counts.waiting} väntar på svar`;
+  $('#stamp').textContent=`Uppdaterad ${when(D.generatedAt)} · senaste ${D.days} dagarna · ${D.contacts.length} kontakter, ${D.counts.waiting} väntar på svar${(D.pending||[]).length?` · ${D.pending.length} SMS väntar på godkännande`:''}`;
   render();
 }
 document.addEventListener('click',async(e)=>{
   const t=e.target.closest('[data-tab]');if(t){tab=t.dataset.tab;limit=40;try{localStorage.setItem('commTab',tab)}catch{};render();window.scrollTo(0,0);return}
   const w=e.target.closest('[data-wait]');if(w){onlyWaiting=w.dataset.wait==='1';render();return}
   if(e.target.id==='more'){limit+=40;render();return}
+  const ap=e.target.closest('[data-approve]');
+  if(ap){ap.disabled=true;ap.textContent='Skickar…';try{const r=await api('/api/kommunikation/approve',{id:ap.dataset.approve});if(!r.ok)alert(`Kunde inte skicka: ${r.result?.error||r.result?.status||'okänt fel'}`);await load()}catch(err){alert(err.message);ap.disabled=false;ap.textContent='Godkänn och skicka'}return}
+  const rj=e.target.closest('[data-reject]');
+  if(rj){if(!confirm('Ta bort SMS:et utan att skicka det?'))return;rj.disabled=true;try{await api('/api/kommunikation/reject',{id:rj.dataset.reject});await load()}catch(err){alert(err.message);rj.disabled=false}return}
+  const aa=e.target.closest('[data-approve-all]');
+  if(aa){const ids=(D.pending||[]).map(p=>p.id);if(!confirm(`Skicka alla ${ids.length} SMS nu?`))return;aa.disabled=true;aa.textContent='Skickar…';try{const r=await api('/api/kommunikation/approve-all',{ids});alert(`${r.sent} av ${ids.length} skickade.`);await load()}catch(err){alert(err.message)}return}
+  const tg=e.target.closest('[data-toggle]');
+  if(tg){const on=tg.dataset.toggle==='1';if(!on&&!confirm('Stänga av spärren? Då går SMS till kunder ut automatiskt igen.'))return;tg.disabled=true;try{await api('/api/kommunikation/sms-approval',{enabled:on});await load()}catch(err){alert(err.message);tg.disabled=false}return}
   const h=e.target.closest('[data-handled]');
   if(h){h.disabled=true;h.textContent='Sparar…';try{await api('/api/kommunikation/handled',{phone:h.dataset.handled});await load()}catch(err){h.textContent=err.message}}
 });

@@ -2,19 +2,23 @@
 // chattar till och från kunder, per person, rangordnat efter relevans, plus
 // vad Nova gjort i dag och vilka funktioner som skickat SMS.
 //
-//   GET  /api/kommunikation?days=30          -> översikten
-//   POST /api/kommunikation/handled {phone}  -> markera kontakten som hanterad
+//   GET  /api/kommunikation?days=30            -> översikten + SMS som väntar på godkännande
+//   POST /api/kommunikation/handled {phone}    -> markera kontakten som hanterad
+//   POST /api/kommunikation/approve {id}       -> skicka ett köat SMS
+//   POST /api/kommunikation/approve-all {ids}  -> skicka flera köade SMS
+//   POST /api/kommunikation/reject {id}        -> ta bort ett köat SMS utan att skicka
+//   POST /api/kommunikation/sms-approval {enabled} -> spärren PÅ/AV
 //
-// Kräver admin-token. Läser bara; det enda den skriver är "hanterad".
+// Kräver admin-token. Det enda som skickas härifrån är SMS Sebastian godkänt.
 // Logik och poängsättning: _shared/comm-overview.mjs.
 
 import { getStore } from "@netlify/blobs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
-import { markHandled, readHandled, readSmsLog, SMS_SOURCES } from "./_shared/comm-log.mjs";
+import { approvePendingSms, markHandled, readHandled, readPendingSms, readSmsApproval, readSmsLog, rejectPendingSms, setSmsApproval, SMS_SOURCES } from "./_shared/comm-log.mjs";
 import { buildContacts, buildEvents, buildOverview } from "./_shared/comm-overview.mjs";
 import { fetchElksBalance, fetchElksHistory } from "./_shared/elks-history.mjs";
 import { buildNovaStats, ownNovaNumbers } from "./_shared/nova.mjs";
-import { normalizePhone } from "./_shared/sms.mjs";
+import { normalizePhone, postSms } from "./_shared/sms.mjs";
 import { meetingSmsToCustomer } from "./_shared/voice-agent.mjs";
 import { INFO_SMS } from "./ring-list.mjs";
 
@@ -63,13 +67,34 @@ export default async (request) => {
     const saved = await markHandled(phone, { note: body.note, by: "Kommunikationssidan" });
     return json({ ok: true, handled: saved });
   }
+  if (request.method === "POST" && action === "approve") {
+    const body = await request.json().catch(() => ({}));
+    const result = await approvePendingSms(String(body.id || ""), postSms, { by: "Kommunikationssidan" });
+    return json({ ok: result.status === "sent", result }, result.status === "not_found" ? 404 : 200);
+  }
+  if (request.method === "POST" && action === "approve-all") {
+    const body = await request.json().catch(() => ({}));
+    const ids = (Array.isArray(body.ids) ? body.ids : []).map(String).slice(0, 200);
+    const results = [];
+    for (const id of ids) results.push({ id, ...(await approvePendingSms(id, postSms, { by: "Kommunikationssidan" })) });
+    return json({ ok: true, sent: results.filter((r) => r.status === "sent").length, results });
+  }
+  if (request.method === "POST" && action === "reject") {
+    const body = await request.json().catch(() => ({}));
+    const result = await rejectPendingSms(String(body.id || ""), { by: "Kommunikationssidan" });
+    return json({ ok: result.status === "rejected", result }, result.status === "not_found" ? 404 : 200);
+  }
+  if (request.method === "POST" && action === "sms-approval") {
+    const body = await request.json().catch(() => ({}));
+    return json({ ok: true, smsApproval: await setSmsApproval(body.enabled === true, "Kommunikationssidan") });
+  }
   if (request.method !== "GET") return json({ error: "Method not allowed" }, 405);
 
   const days = Math.min(Math.max(Number(url.searchParams.get("days")) || 30, 1), 90);
   const now = Date.now();
   const sinceMs = now - days * 864e5;
 
-  const [calls, sms, balance, smsLog, handled, cases, novaCalls, novaMeetings, outbound, smsInbound, ringList, followups] = await Promise.all([
+  const [calls, sms, balance, smsLog, handled, cases, novaCalls, novaMeetings, outbound, smsInbound, ringList, followups, pending, smsApproval] = await Promise.all([
     fetchElksHistory("calls", sinceMs),
     fetchElksHistory("sms", sinceMs),
     fetchElksBalance(),
@@ -82,6 +107,8 @@ export default async (request) => {
     readAll("sms-inbound"),
     readAll("ring-list"),
     readAll("call-followups"),
+    readPendingSms(),
+    readSmsApproval(),
   ]);
   const queue = outbound.filter((x) => x.key !== "_config");
   const own = ownNumbers();
@@ -98,8 +125,11 @@ export default async (request) => {
   const overview = buildOverview({ events, contacts, now, days });
   const cfg = outbound.find((x) => x.key === "_config") || {};
 
+  const labelFor = (src) => SMS_SOURCES[src] || (String(src).startsWith("campaign:") ? `Kampanj (${String(src).slice(9)})` : src);
   return json({
     ...overview,
+    smsApproval,
+    pending: pending.map((x) => ({ ...x, sourceLabel: labelFor(x.source) })),
     novaStats: buildNovaStats({ calls: novaCalls, entries: queue, now, ownNumbers: ownNovaNumbers(env) }),
     novaOutbound: { enabled: Boolean(cfg.enabled), queued: queue.filter((x) => x.status === "queued").length },
     balanceSek: balance,

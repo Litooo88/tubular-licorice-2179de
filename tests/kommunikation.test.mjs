@@ -50,7 +50,7 @@ test("kommunikation: SMS loggas med exakt text och syns i översikten", async (t
   // Ett utskick via den riktiga avsändaren + loggomslutningen.
   const { postSms } = await import("../netlify/functions/_shared/sms.mjs");
   const { loggedSms, readSmsLog } = await import("../netlify/functions/_shared/comm-log.mjs");
-  const res = await loggedSms("case-sms", postSms)({ to: "0704444444", message: "Hej Erik! Din scooter är klar i morgon." });
+  const res = await loggedSms("case-sms", postSms)({ to: "0704444444", message: "Hej Erik! Din scooter är klar i morgon.", approved: true });
   assert.equal(res.status, "sent");
   assert.equal(sentSms[0].dontlog, "message"); // utskicket i sig är oförändrat
   const log = await readSmsLog(now - 3600e3);
@@ -81,4 +81,46 @@ test("kommunikation: SMS loggas med exakt text och syns i översikten", async (t
   assert.equal(h.status, 200);
   const d2 = await (await handler(new Request("https://x/api/kommunikation", { headers: { "x-admin-token": "adm" } }))).json();
   assert.equal(d2.contacts.find((c) => c.phone === "+46709999999").waiting, false);
+
+  // ---- Godkännandespärren (PÅ som standard) ----
+  const { readPendingSms, readSmsApproval } = await import("../netlify/functions/_shared/comm-log.mjs");
+  assert.equal((await readSmsApproval()).enabled, true);
+  const before = sentSms.length;
+  // Automatiskt kund-SMS (bokningsbekräftelse) stoppas: inget går till 46elks.
+  const gated = await loggedSms("booking", postSms)({ to: "0705555555", message: "Din tid är bokad tisdag 15:00." });
+  assert.equal(gated.status, "pending_approval");
+  assert.equal(sentSms.length, before);
+  // Larm till Sebastian går direkt, liksom ett manuellt utskick.
+  assert.equal((await loggedSms("ring-escalate", postSms)({ to: "+46700243319", message: "VARM KUND" })).status, "sent");
+  assert.equal((await loggedSms("workshop-cases", postSms)({ to: "0705555555", message: "Manuellt", approved: true })).status, "sent");
+  assert.equal(sentSms.length, before + 2);
+  let pend = await readPendingSms();
+  assert.equal(pend.length, 1);
+  assert.deepEqual([pend[0].to, pend[0].source, pend[0].message], ["+46705555555", "booking", "Din tid är bokad tisdag 15:00."]);
+  // Kön och spärren syns i API-svaret; köat SMS räknas inte som skickat i översikten.
+  const d3 = await (await handler(new Request("https://x/api/kommunikation", { headers: { "x-admin-token": "adm" } }))).json();
+  assert.equal(d3.smsApproval.enabled, true);
+  assert.equal(d3.pending.length, 1);
+  assert.equal(d3.pending[0].sourceLabel, "Bokningsbekräftelse");
+  const c5 = d3.contacts.find((c) => c.phone === "+46705555555");
+  assert.equal(c5.events.filter((e) => e.channel === "sms" && e.dir === "out").length, 1); // bara det manuella
+  // Avvisa: tas bort, inget skickas.
+  const rj = await handler(new Request("https://x/api/kommunikation/reject", { method: "POST", headers: { "x-admin-token": "adm", "Content-Type": "application/json" }, body: JSON.stringify({ id: pend[0].id }) }));
+  assert.equal((await rj.json()).ok, true);
+  assert.equal((await readPendingSms()).length, 0);
+  assert.equal(sentSms.length, before + 2);
+  // Godkänn: skickas exakt som köat, loggas som godkänt, försvinner ur kön.
+  await loggedSms("campaign:vinter-2026", postSms)({ to: "0706666666", message: "Vinterservice 20 %", from: "+46766867131" });
+  pend = await readPendingSms();
+  const ap = await (await handler(new Request("https://x/api/kommunikation/approve", { method: "POST", headers: { "x-admin-token": "adm", "Content-Type": "application/json" }, body: JSON.stringify({ id: pend[0].id }) }))).json();
+  assert.equal(ap.ok, true);
+  assert.deepEqual([sentSms.at(-1).to, sentSms.at(-1).message, sentSms.at(-1).from], ["+46706666666", "Vinterservice 20 %", "+46766867131"]);
+  assert.equal((await readPendingSms()).length, 0);
+  const logNow = await readSmsLog(now - 3600e3);
+  assert.ok(logNow.some((l) => l.source === "approved:campaign:vinter-2026" && l.status === "sent"));
+  assert.ok(logNow.some((l) => l.source === "booking" && l.status === "pending_approval"));
+  // Strömbrytaren AV: kund-SMS går direkt igen.
+  await handler(new Request("https://x/api/kommunikation/sms-approval", { method: "POST", headers: { "x-admin-token": "adm", "Content-Type": "application/json" }, body: JSON.stringify({ enabled: false }) }));
+  assert.equal((await loggedSms("booking", postSms)({ to: "0705555555", message: "Direkt" })).status, "sent");
+  assert.equal((await readPendingSms()).length, 0);
 });

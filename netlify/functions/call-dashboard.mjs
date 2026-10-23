@@ -1205,7 +1205,7 @@ export default async (request) => {
     const replyFrom = body.replyable === true
       ? normalizePhone(env("ELKS_SMS_NUMBER") || env("ELKS_NUMBER") || "+46101385498")
       : "";
-    const result = await postSms({ to: phone, message, from: replyFrom || undefined });
+    const result = await postSms({ to: phone, message, from: replyFrom || undefined, approved: true }); // operatören skickar själv
     const entry = {
       callId,
       phone,

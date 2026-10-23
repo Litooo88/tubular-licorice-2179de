@@ -58,7 +58,7 @@ export default async (request, context) => {
     return json({ error: "Identiskt SMS skickades nyss till detta ärende (dubblettskydd)." }, 409);
   }
 
-  const sms = await postSms({ to: phone, message });
+  const sms = await postSms({ to: phone, message, approved: true }); // manuellt från ärendet
   if (sms.status === "not_configured") return json({ status: "not_configured" });
   if (sms.status !== "sent") {
     return json({ status: sms.status, error: sms.error || "SMS kunde inte skickas." }, 502);
