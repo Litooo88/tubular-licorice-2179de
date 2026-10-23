@@ -32,13 +32,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-10-23 — Claude Code — PÅGÅR (Godkännandespärr för alla kund-SMS)
+### 2026-10-23 — Claude Code — KLAR (Godkännandespärr för alla kund-SMS)
 
-- **Branch:** `ccr-5253a4c8-i1uwzt` (omstartad från main)
-- **Gör:** inga SMS till kunder skickas utan Sebastians godkännande. Spärren ligger i
-  `_shared/comm-log.mjs` (`loggedSms`), kö i store `sms-pending`, godkänn/avvisa på
-  `/admin/kommunikation/`. Interna SMS till personal går som förut.
-- **Varning:** rör inte SMS-avsändarna eller `comm-log.mjs` förrän KLAR.
+- **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main).
+- **Gjorde:** inga SMS till kunder skickas utan godkännande. Spärr i `_shared/comm-log.mjs`
+  (`loggedSms` → `gateSms`), kö i store `sms-pending`, PÅ som standard (`comm-config/sms-approval`).
+  Godkänn/avvisa/alla + PÅ/AV på `/admin/kommunikation/` (`/api/kommunikation/approve|approve-all|
+  reject|sms-approval`). Interna SMS till personal och utskick med `approved: true` går direkt.
+- **REGEL FÖR ALLA AGENTER:** ett nytt SMS-utskick som är en manuell admin-åtgärd ska skicka
+  `approved: true`; allt annat till kunder hamnar i kön. Behandla status `pending_approval`
+  som "gjort" (inte fel), annars köas dubbletter.
+- **Tester:** alla `test:*` gröna (204; `test:comm` täcker spärr, godkänn, avvisa, AV), build OK,
+  `verify:checkout-products` OK, callflow `check` OK. Sidan renderad i Chromium 390 px.
+- **Konsekvens:** bokningsbekräftelser, ringlistans info-SMS, RING-autosvar, Novas mötes-
+  bekräftelse, tack-SMS och kampanjer går INTE ut förrän Sebastian godkänt dem på sidan.
+  Kampanjens 30-dagarsspärr sätts först vid godkänt utskick.
 
 ### 2026-10-20 — Claude Code — KLAR (Nova-rapport i admin)
 
