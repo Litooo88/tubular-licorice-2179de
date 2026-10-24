@@ -32,6 +32,17 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-24 - Codex - PÅGÅR (publika budskap och förtroende)
+
+- Egen worktree/branch `codex/site-clarity-trust`. Rättar FAQ/metadata/priser,
+  drop-in-budskap och obelagda svarslöften; lyfter befintliga omdömen och
+  presenterar Sebastian utifrån projektkontexten. Inga nya garantier/priser.
+- Claudes `worktree-bokning-steg2` är inte ancestor till main. Ingen merge
+  av den branchen och ingen ändring i dess worktree; bokningsändringar här
+  gäller endast befintliga texter, inte formulär-/API-kontrakt.
+- Inga SMS/mail, kunddata, production-writes, deployer eller stash-operationer.
+
+
 ### 2026-10-23 — Claude Code — KLAR (Godkännandespärr för alla kund-SMS)
 
 - **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main).
