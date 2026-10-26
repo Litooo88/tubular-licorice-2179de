@@ -36,7 +36,8 @@ löpande "konversation".
 
 - Implementation: `75b856c` på `codex/site-clarity-trust`. Ingen push/deploy.
 - Build, checkout-verifiering, callflow check, sex public-copy-tester och
-  syntaxkontroll godkända. Preview/mobilgranskning återstår före publicering.
+  syntaxkontroll godkända. Lokal rendering 390/1280 px utan overflow;
+  skärmbilder stickprovsgranskade. Sebastian har godkänt PR och merge.
 - Rapport: `docs/SITE_CLARITY_AND_GROWTH_ACTIONS_2026_10_26.md`.
 - Behåll rättade texter när Claudes separata bokningswizard integreras.
 

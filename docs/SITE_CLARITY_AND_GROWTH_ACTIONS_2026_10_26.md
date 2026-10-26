@@ -31,8 +31,9 @@
 - npm run verify:checkout-products: godkänd, 44 produkter.
 - nemob-callflow: npm run check: godkänd.
 - git diff --check: godkänd före avslut.
-- Ingen live-bokning eller production smoke-test utförd. Visuell kontroll i
-  mobil/desktop och preview återstår före publicering.
+- Ingen live-bokning eller production smoke-test utförd. Lokal rendering i
+  Edge vid 390 och 1280 px godkänd för alla tre sidor, utan horisontell overflow.
+  Skärmbilder stickprovsgranskade. Externa anrop blockerades; inget formulär skickades.
 
 ## Kvarvarande beslut och begränsningar
 
@@ -54,5 +55,5 @@
 Branch: codex/site-clarity-trust, separat worktree. Claudes bokningswizard har
 inte importerats eller ändrats. Behåll dessa korrigerade texter när wizardens
 separata branch integreras; granska överlapp i book-online/index.html manuellt.
-Ingen merge, push eller deploy gjord i detta arbete. Inga SMS/mail skickade,
+PR och merge godkända av Sebastian efter lokal verifiering. Inga SMS/mail skickade,
 inga kunddata eller produktionsdata ändrade och stashen inte poppad.
