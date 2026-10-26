@@ -32,6 +32,19 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-26 — Claude Code — PÅGÅR (Bokningstider: alla dagar 12–20, öppet via kalendern)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt`
+- **Gör:** Sebastians beslut 26/10: kunden ser alla dagar 12–20; ledigt = tis/tors 15–20 (kod)
+  ELLER inom "Öppet"-händelse i verkstadskalendern, minus upptagna händelser. Upptagna tider
+  visas gråa. Server avvisar tider utanför. Texter på sajt, kundmallar, Novas prompt uppdateras
+  (Nova säger i dag felaktigt "10 till 16").
+- **Filer/områden:** `booking.mjs` (validering, slots, kalenderkontroll), `book-online/index.html`,
+  `_shared/voice-agent.mjs`, `_shared/customer-contact.mjs`, `case-status.mjs`, texter i html,
+  `docs/voice-agent-prompt.md`, `docs/VOICE_AGENT.md`, `docs/booking-system-manual.md`,
+  `tests/booking-slots.test.mjs`.
+- **Varning:** rör inte bokningslogiken förrän KLAR.
+
 ### 2026-10-23 — Claude Code — KLAR (Godkännandespärr för alla kund-SMS)
 
 - **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main).
