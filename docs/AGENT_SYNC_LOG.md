@@ -32,7 +32,13 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-10-24 - Codex - PÅGÅR (publika budskap och förtroende)
+### 2026-10-26 - Codex - KLAR lokalt (publika budskap och förtroende)
+
+- Implementation: `75b856c` på `codex/site-clarity-trust`. Ingen push/deploy.
+- Build, checkout-verifiering, callflow check, sex public-copy-tester och
+  syntaxkontroll godkända. Preview/mobilgranskning återstår före publicering.
+- Rapport: `docs/SITE_CLARITY_AND_GROWTH_ACTIONS_2026_10_26.md`.
+- Behåll rättade texter när Claudes separata bokningswizard integreras.
 
 - Egen worktree/branch `codex/site-clarity-trust`. Rättar FAQ/metadata/priser,
   drop-in-budskap och obelagda svarslöften; lyfter befintliga omdömen och
