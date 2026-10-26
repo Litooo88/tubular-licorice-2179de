@@ -26,13 +26,24 @@ Kunden fyller i:
 - rabattkod
 - intyg om att fordonet inte ar stoldgods
 
-### Bokningsbara tider (uppdaterat 2026-10-19)
+### Bokningsbara tider (uppdaterat 2026-10-26)
 
-Tills vidare kan kunden boka inlämning och hämtning endast tisdagar och
-torsdagar kl. 15.00–20.00, svensk tid, i halvtimmessteg. Inga andra dagar
-eller förmiddagstider accepteras av publik bokning. Andra tider kräver
-personlig kontakt och separat överenskommelse. Befintliga bokningar ändras
-inte automatiskt.
+Kunden ser alla dagar kl. 12.00–20.00 i halvtimmessteg (svensk tid), 35 dagar
+framåt. En tid är ledig om den
+
+- ligger tisdag eller torsdag kl. 15.00–20.00 (grundtider, inbyggda i koden), **eller**
+- ligger inom en händelse i verkstadskalendern ("Nordic Verkstad - Bokningar")
+  vars titel börjar med **Öppet** (även "Oppet" eller "Open"),
+
+**och** inte överlappar någon annan händelse i kalendern som är markerad som
+upptagen. Lediga (transparenta) händelser, t.ex. påminnelser, spärrar inget.
+Heldagshändelser som är upptagna (t.ex. "Semester") stänger hela dygnet.
+
+Rutin: Sebastian lägger in "Öppet 12–20" (eller del av dag) i kalendern för
+dagar han är på plats, och "Upptagen" för tider han inte kan ta emot. Upptagna
+tider visas gråa för kunden. Servern avvisar bokningsförsök på tider som inte är
+öppna (409), även om formuläret manipulerats. Når servern inte kalendern är bara
+grundtiderna bokningsbara. Befintliga bokningar ändras inte automatiskt.
 
 ### 2. Systemet validerar tiden
 
