@@ -32,6 +32,24 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-26 - Codex - KLAR lokalt (publika budskap och förtroende)
+
+- Implementation: `75b856c` på `codex/site-clarity-trust`. Ingen push/deploy.
+- Build, checkout-verifiering, callflow check, sex public-copy-tester och
+  syntaxkontroll godkända. Lokal rendering 390/1280 px utan overflow;
+  skärmbilder stickprovsgranskade. Sebastian har godkänt PR och merge.
+- Rapport: `docs/SITE_CLARITY_AND_GROWTH_ACTIONS_2026_10_26.md`.
+- Behåll rättade texter när Claudes separata bokningswizard integreras.
+
+- Egen worktree/branch `codex/site-clarity-trust`. Rättar FAQ/metadata/priser,
+  drop-in-budskap och obelagda svarslöften; lyfter befintliga omdömen och
+  presenterar Sebastian utifrån projektkontexten. Inga nya garantier/priser.
+- Claudes `worktree-bokning-steg2` är inte ancestor till main. Ingen merge
+  av den branchen och ingen ändring i dess worktree; bokningsändringar här
+  gäller endast befintliga texter, inte formulär-/API-kontrakt.
+- Inga SMS/mail, kunddata, production-writes, deployer eller stash-operationer.
+
+
 ### 2026-10-23 — Claude Code — KLAR (Godkännandespärr för alla kund-SMS)
 
 - **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main).
