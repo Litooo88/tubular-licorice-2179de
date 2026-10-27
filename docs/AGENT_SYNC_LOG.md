@@ -32,6 +32,17 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-27 — Claude Code — PÅGÅR (Bokningsmodell: tis/tors direkt, övriga dagar förfrågan)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt`.
+- **Tar:** `netlify/functions/booking.mjs`, `workshop-cases.mjs`, ny `_shared/booking-request.mjs`,
+  ny `_shared/google-calendar.mjs`, `book-online/index.html`, `index.html`, `kontakt/index.html`,
+  `admin/index.html` (kundkort), `_shared/voice-agent.mjs`, docs/voice-agent-prompt.md,
+  docs/booking-system-manual.md, tests/booking-slots.test.mjs.
+- **Modell (Sebastians beslut 2026-10-27):** tis/tors 15–20 (och "Öppet"-händelser) = direktbokning
+  utan separat bekräftelse. Övriga tider 12–20 = förfrågan: ärendet skapas, kunden får "vänta på
+  bekräftelse", Sebastian bekräftar/avböjer i admin. Upptagna händelser spärrar fortfarande.
+
 ### 2026-10-26 — Claude Code — KLAR (Bokningstider: alla dagar 12–20, öppet via kalendern)
 
 - **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main).
