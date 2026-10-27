@@ -6,15 +6,10 @@
 // om ingen råkade öppna admin. Nu körs den på schema, oberoende av UI.
 
 import { getStore } from "@netlify/blobs";
+import { readEnv } from "./_shared/env.mjs";
 import { logSms } from "./_shared/comm-log.mjs";
 
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 
 const WARN_THROTTLE_MS = 24 * 60 * 60 * 1000;
 

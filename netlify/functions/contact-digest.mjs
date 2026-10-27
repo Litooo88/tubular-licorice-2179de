@@ -10,6 +10,7 @@
 // Skickar INGET när kön är tom — mindre brus var ett uttryckligt krav.
 
 import { getStore } from "@netlify/blobs";
+import { readEnv } from "./_shared/env.mjs";
 import { postSms as rawPostSms } from "./_shared/sms.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
 import { normalizeDraft } from "./sms-draft-inbox.mjs";
@@ -17,13 +18,7 @@ import { buildContactDigest } from "./_shared/customer-contact.mjs";
 
 const postSms = loggedSms("contact-digest", rawPostSms);
 
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 
 const clean = (value, max = 1000) => String(value || "").trim().slice(0, max);
 const json = (body, status = 200) =>

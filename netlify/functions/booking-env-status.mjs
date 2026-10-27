@@ -1,4 +1,5 @@
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
+import { readEnv } from "./_shared/env.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -6,13 +7,7 @@ const json = (body, status = 200) =>
     headers: { "Content-Type": "application/json; charset=utf-8" },
   });
 
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 
 const clean = (value, max = 5000) => String(value || "").trim().slice(0, max);
 const requireAdmin = (request) => {

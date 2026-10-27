@@ -7,6 +7,7 @@
 //      whenhangup när VOICE_WEBHOOK_SECRET är konfigurerad).
 
 import { tokenMatches } from "./_shared/admin-auth.mjs";
+import { readEnv } from "./_shared/env.mjs";
 import { isBlockedCaller } from "./_shared/call-blocklist.mjs";
 import {
   processVoicemailAnalysis,
@@ -15,13 +16,7 @@ import {
 } from "./_shared/voicemail-analysis.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
 
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 
 const clean = (value, max = 1000) => String(value || "").trim().slice(0, max);
 const EMERGENCY_PRIMARY_NUMBER = "+46700243319";

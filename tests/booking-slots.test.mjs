@@ -49,12 +49,14 @@ test("slots: inga tider i dåtid, samma dag bara framtida tider", () => {
   assert.ok(!late.some((d) => d.date === "2026-10-07"), "efter 20:00 finns inga tider kvar i dag");
 });
 
-test("markFreeSlots: utan kalender är bara grundtiderna lediga (fel-säkert)", () => {
+test("markFreeSlots: utan kalender är grundtiderna direktbokning och allt annat förfrågan", () => {
   const marked = markFreeSlots(buildDropoffDays(NOW), null);
   for (const day of marked) {
     const wd = weekdayOf(day.date);
     for (const slot of day.slots) {
-      assert.equal(slot.free, [2, 4].includes(wd) && minuteOf(slot.time) >= 900, `${day.date} ${slot.time}`);
+      const baseline = [2, 4].includes(wd) && minuteOf(slot.time) >= 900;
+      assert.equal(slot.free, true, `${day.date} ${slot.time} ska vara ledig (inget upptaget känt)`);
+      assert.equal(slot.mode, baseline ? "direct" : "request", `${day.date} ${slot.time}`);
     }
   }
 });
@@ -71,16 +73,17 @@ test("markFreeSlots: 'Öppet' öppnar andra tider, upptaget stänger även grund
   };
   const marked = markFreeSlots(days, windows);
   const fri = marked.find((d) => d.date === "2026-10-09");
-  const get = (day, time) => day.slots.find((s) => s.time === time).free;
-  assert.equal(get(fri, "12:30"), false);
-  assert.equal(get(fri, "13:00"), true);
-  assert.equal(get(fri, "15:30"), true);
-  assert.equal(get(fri, "16:00"), false, "slutet på Öppet-fönstret är exklusivt");
+  const get = (day, time) => day.slots.find((s) => s.time === time);
+  // Fredag utanför Öppet: ledig men bara som förfrågan.
+  assert.deepEqual([get(fri, "12:30").free, get(fri, "12:30").mode], [true, "request"]);
+  assert.deepEqual([get(fri, "13:00").free, get(fri, "13:00").mode], [true, "direct"]);
+  assert.deepEqual([get(fri, "15:30").free, get(fri, "15:30").mode], [true, "direct"]);
+  assert.equal(get(fri, "16:00").mode, "request", "slutet på Öppet-fönstret är exklusivt");
   const thu = marked.find((d) => d.date === "2026-10-08");
-  assert.equal(get(thu, "15:00"), false, "upptagen");
-  assert.equal(get(thu, "15:30"), false, "upptagen");
-  assert.equal(get(thu, "16:00"), true);
-  assert.equal(get(thu, "14:30"), false, "utanför grundtiderna och inget Öppet");
+  assert.equal(get(thu, "15:00").free, false, "upptagen");
+  assert.equal(get(thu, "15:30").free, false, "upptagen");
+  assert.deepEqual([get(thu, "16:00").free, get(thu, "16:00").mode], [true, "direct"]);
+  assert.deepEqual([get(thu, "14:30").free, get(thu, "14:30").mode], [true, "request"], "utanför grundtiderna och inget Öppet: förfrågan");
 });
 
 test("classifyCalendarEvents: Öppet-titlar, upptagna, lediga (transparent), heldag, avbokade", () => {

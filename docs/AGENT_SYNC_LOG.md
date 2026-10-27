@@ -32,6 +32,31 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-27 — Claude Code — KLAR (Bokningsmodell förfrågan + telefonfix pensionerat nummer)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, mergad av Claude på Sebastians order).
+- **Telefoni (akut):** `VOICE_PRIMARY_NUMBER`/`VOICE_NOTIFY_TO`/`WORKSHOP_SMS_TO` i Netlify pekar sedan
+  2026-08-02 på tillfälliga +46725751086 → alla samtal mån–fre 09–18 gick till dess mobilsvar och nådde
+  aldrig Nova; 8 larm-SMS/dag till en död telefon. Ny `_shared/env.mjs` (`readEnv`) filtrerar
+  pensionerade nummer ur personalnycklarna, fallback +46700243319; alla funktioner med lokal `env`
+  använder den. **Sebastian bör ändå rätta env i Netlify** (tre nycklarna → +46700243319) och
+  trigga deploy; koden är ett skyddsnät. comm-log/kommunikation läser rå env (eget nummer ska
+  fortsatt filtreras som internt).
+- **Bokningsmodell (Sebastians beslut):** tis/tors 15–20 + "Öppet"-händelser = direktbokning. Övriga
+  tider 12–20 = **förfrågan** (`bookingMode:"request"`, `bookingRequest.status:"pending"`): kund får
+  "INTE bokad, vänta på bekräftelse" (SMS via spärren, mail utan ICS), kalender "FÖRFRÅGAN
+  (obekräftad): …", verkstads-SMS/mail flaggar. Admin-kundkort: gul ruta Bekräfta/Avböj →
+  `workshop-cases` `confirm_booking_request`/`decline_booking_request` (kund-SMS approved, kalender
+  patch/delete via ny `_shared/google-calendar.mjs`). Upptagna händelser spärrar som förut (409).
+  Slot-API: `{time, free, mode}` (free = ej upptagen). Texter: start, kontakt, bokning, Nova
+  (`voice-agent.mjs`, docs/voice-agent-prompt.md INLÄMNING), docs/booking-system-manual.md.
+- **Tester:** build grön (orders 9, voice 53, status 25, contact 14, archive 7, campaign 6),
+  test:comm 7, verify:checkout-products OK, callflow `tsc` OK. Formuläret renderat i Chromium:
+  "– förfrågan"/"– upptaget", knapp "Skicka förfrågan" vs "Boka inlämning", förval första tis/tors.
+- **Kvar för Sebastian:** rätta env i Netlify; publicera INLÄMNING-stycket i ElevenLabs igen;
+  Google-företagsprofilens öppettider och Googles bokningssida (appointment schedule) kan Claude inte
+  ändra (inga klick-verktyg). Gamla förfrågningar finns inte: modellen gäller nya bokningar.
+
 ### 2026-10-26 — Claude Code — KLAR (Bokningstider: alla dagar 12–20, öppet via kalendern)
 
 - **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main).

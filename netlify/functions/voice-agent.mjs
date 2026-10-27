@@ -19,6 +19,7 @@
 // godkännande, aldrig direkt.
 
 import { getStore } from "@netlify/blobs";
+import { readEnv } from "./_shared/env.mjs";
 import { postSms as rawPostSms } from "./_shared/sms.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
 import { callOutcome, classifyNovaCall, KIND_LABELS, matchOutboundCall, outboundFirstMessage, ownNovaNumbers } from "./_shared/nova.mjs";
@@ -50,13 +51,7 @@ const postSms = loggedSms("nova", rawPostSms);
 
 const products = Array.isArray(productsFile) ? productsFile : productsFile.products || productsFile.items || Object.values(productsFile).find(Array.isArray) || [];
 
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 const clean = (value, max = 400) => String(value || "").trim().slice(0, max);
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json; charset=utf-8" } });

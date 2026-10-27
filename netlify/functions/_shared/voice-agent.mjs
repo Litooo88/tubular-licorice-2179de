@@ -8,7 +8,8 @@
 // - Säger aldrig priser utöver listans "från"-pris, aldrig betalstatus,
 //   aldrig interna anteckningar, aldrig andra kunders uppgifter.
 // - Kan inte boka in verkstadsjobb själv; den bokar ett telefonmöte med
-//   Sebastian eller hänvisar till bokningssidan (lediga tider 12–20).
+//   Sebastian eller hänvisar till bokningssidan (tis/tors 15–20 direkt,
+//   övriga dagar 12–20 som förfrågan).
 
 import { normalizePhone } from "./sms.mjs";
 
@@ -28,7 +29,7 @@ const STEP_BY_STATUS = {
 const STATUS_NOTE = {
   waiting_parts: "Vi väntar på en reservdel.",
   waiting_customer: "Vi väntar på svar från kunden, kolla SMS eller mail.",
-  ready: "Fordonet är klart. Hämtning bokas på en ledig tid på bokningssidan, alla dagar mellan 12 och 20; tisdag och torsdag 15 till 20 är alltid öppet. Betalning vid hämtning.",
+  ready: "Fordonet är klart. Hämtning bokas på bokningssidan: tisdag och torsdag 15 till 20 bokas direkt, övriga dagar 12 till 20 som förfrågan som Sebastian bekräftar. Betalning vid hämtning.",
 };
 export const ACTIVE_STATUSES = new Set(["contacted", "checked_in", "diagnosing", "repairing", "waiting_parts", "waiting_customer", "ready"]);
 
@@ -168,12 +169,15 @@ export const compactSlots = (payload, { maxDays = 4, maxTimes = 6 } = {}) => {
   const days = Array.isArray(payload?.days) ? payload.days : [];
   const out = [];
   for (const day of days) {
-    const free = (Array.isArray(day.slots) ? day.slots : []).filter((s) => s && s.available !== false && s.busy !== true).map((s) => clean(s.time, 5)).filter(Boolean);
+    const slots = (Array.isArray(day.slots) ? day.slots : []).filter((s) => s && s.available !== false && s.busy !== true && s.free !== false);
+    const free = slots.map((s) => clean(s.time, 5)).filter(Boolean);
     if (!free.length) continue;
-    out.push({ date: clean(day.date, 10), weekday: weekdayName(day.date), times: free.slice(0, maxTimes) });
+    // "direct" = bokas direkt, "request" = förfrågan som Sebastian bekräftar.
+    const mode = slots.some((s) => s.mode !== "request") ? "direct" : "request";
+    out.push({ date: clean(day.date, 10), weekday: weekdayName(day.date), times: free.slice(0, maxTimes), mode });
     if (out.length >= maxDays) break;
   }
-  return { status: clean(payload?.status, 20) || "ok", days: out, hours: "lediga tider alla dagar mellan klockan 12 och 20; tisdag och torsdag 15 till 20 är alltid öppet", bookingUrl: "nordicemobility.se/book-online" };
+  return { status: clean(payload?.status, 20) || "ok", days: out, hours: "tisdag och torsdag 15 till 20 bokas direkt; övriga dagar 12 till 20 skickas som förfrågan som Sebastian bekräftar", bookingUrl: "nordicemobility.se/book-online" };
 };
 
 const weekdayName = (date) => {

@@ -4,19 +4,14 @@
 // Övrigt → loggas i svars-inkorgen + notis till Sebastian, inget autosvar.
 // 46elks skickar svaret i response-body som SMS-reply till kunden.
 import { getStore } from "@netlify/blobs";
+import { readEnv } from "./_shared/env.mjs";
 import { tokenMatches } from "./_shared/admin-auth.mjs";
 import { parseApprovalReply } from "./_shared/customer-contact.mjs";
 import { isBlockedCaller } from "./_shared/call-blocklist.mjs";
 import { loggedSms, logSms, queuePendingSms, readSmsApproval } from "./_shared/comm-log.mjs";
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 const normalizePhone = (phone) => {
   const compact = clean(phone, 80).replace(/[^\d+]/g, "");
   if (!compact) return "";

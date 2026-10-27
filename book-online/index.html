@@ -5,7 +5,7 @@
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Boka elscooter service i &Ouml;rebro | Nordic E-Mobility</title>
-<meta name="description" content="Boka elscooterverkstad i &Ouml;rebro. Punktering fr&aring;n 349 kr, grunddiagnos 495 kr och avancerad diagnos 695 kr. Bokad inl&auml;mning p&aring; lediga tider alla dagar 12&ndash;20, tisdag och torsdag 15&ndash;20 alltid &ouml;ppet.">
+<meta name="description" content="Boka elscooterverkstad i &Ouml;rebro. Punktering fr&aring;n 349 kr, grunddiagnos 495 kr och avancerad diagnos 695 kr. Inl&auml;mning tisdag och torsdag 15&ndash;20 bokas direkt; &ouml;vriga dagar 12&ndash;20 skickar du en f&ouml;rfr&aring;gan som vi bekr&auml;ftar.">
 <meta name="robots" content="index, follow">
 <link rel="canonical" href="https://www.nordicemobility.se/book-online/">
 <meta property="og:type" content="website">
@@ -237,7 +237,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       Vi lagar punktering, d&auml;ck, bromsar, service och elfel p&aring; elscooter. Du binder dig inte till reparation innan vi har bekr&auml;ftat pris och n&auml;sta steg.
     </div>
     <div class="service-notice" aria-label="Aktuell serviceinformation">
-      <p><strong>Endast bokade bes&ouml;k, ingen drop-in.</strong> V&auml;lj en ledig tid i formul&auml;ret. Beh&ouml;ver du en annan tid? <a href="/kontakt/">Kontakta oss f&ouml;r en separat &ouml;verenskommelse.</a></p>
+      <p><strong>Endast bokade bes&ouml;k, ingen drop-in.</strong> Tisdag och torsdag kl 15&ndash;20 bokar du direkt. &Ouml;vriga dagar v&auml;ljer du en tid som skickas som f&ouml;rfr&aring;gan &ndash; kom inte f&ouml;rr&auml;n vi bekr&auml;ftat den.</p>
       <ul>
         <li>Vid akut batteririsk, brandlukt, svullet batteri eller vattenskada: ladda inte fordonet och kontakta oss innan inl&auml;mning.</li>
       </ul>
@@ -245,9 +245,10 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     </div>
     <div class="hours-box">
       <strong>Inl&auml;mningstider</strong>
-      Inl&auml;mning och h&auml;mtning bokas p&aring; lediga tider alla dagar kl 12.00&ndash;20.00. Tisdag och torsdag kl 15.00&ndash;20.00 &auml;r alltid &ouml;ppet; &ouml;vriga tider &ouml;ppnas l&ouml;pande och visas som lediga i formul&auml;ret. Gr&aring; tider &auml;r upptagna. Beh&ouml;ver du en annan tid? Kontakta oss i f&ouml;rv&auml;g f&ouml;r en separat &ouml;verenskommelse. Kontrollera bokningsresultatet p&aring; sk&auml;rmen efter att du skickat formul&auml;ret. Bekr&auml;ftelse via SMS kan dr&ouml;ja.
+      <b>Tisdag och torsdag kl 15.00&ndash;20.00:</b> inl&auml;mning och h&auml;mtning bokas direkt &ndash; tiden g&auml;ller n&auml;r du skickat formul&auml;ret. <b>&Ouml;vriga dagar kl 12.00&ndash;20.00:</b> du skickar en f&ouml;rfr&aring;gan p&aring; &ouml;nskad tid och v&auml;ntar p&aring; v&aring;r bekr&auml;ftelse via SMS innan du kommer. Gr&aring; tider &auml;r upptagna. Kontrollera bokningsresultatet p&aring; sk&auml;rmen efter att du skickat formul&auml;ret. Bekr&auml;ftelse via SMS kan dr&ouml;ja.
       <div class="hours-grid">
-        <div class="hours-item"><span>Inl&auml;mning &amp; h&auml;mtning</span><b>Lediga tider 12&ndash;20, alla dagar</b></div>
+        <div class="hours-item"><span>Tisdag &amp; torsdag 15&ndash;20</span><b>Boka direkt</b></div>
+        <div class="hours-item"><span>&Ouml;vriga dagar 12&ndash;20</span><b>F&ouml;rfr&aring;gan, vi bekr&auml;ftar</b></div>
         <div class="hours-item"><span>Reparationspris</span><b>Godk&auml;nns innan arbete</b></div>
         <div class="hours-item"><span>Prioritet</span><b>Bokade &auml;renden f&ouml;rst</b></div>
       </div>
@@ -475,11 +476,12 @@ function pad(number){return String(number).padStart(2,'0');}
 // Dagar och tider räknas alltid i Europe/Stockholm — inte i besökarens lokala
 // tidszon — och passerade tider samma dag erbjuds inte. Servern validerar
 // samma regler i /api/bookings.
-// Lediga tider styrs av verkstadskalendern (Sebastians beslut 2026-10-26):
-// alla dagar 12-20 visas, tisdag och torsdag 15-20 ar alltid oppet, ovriga
-// tider oppnas med "Oppet"-handelser i kalendern. Upptagna tider visas graa.
+// Bokningsmodell (Sebastians beslut 2026-10-27): alla dagar 12-20 visas.
+// Tisdag och torsdag 15-20 (och "Oppet"-handelser i kalendern) bokas DIREKT
+// (mode "direct"). Ovriga tider skickas som FORFRAGAN (mode "request") och
+// kunden maste vanta pa Sebastians bekraftelse. Upptagna tider visas graa.
 // Nar kalendern inte kan nas (liveSlots=null) faller vi tillbaka pa
-// grundtiderna tis/tors 15-20 har nedan; servern avvisar allt annat anda.
+// grundtiderna tis/tors 15-20 har nedan (direktbokning).
 const DROPOFF_TIMES=['15:00','15:30','16:00','16:30','17:00','17:30','18:00','18:30','19:00','19:30','20:00'];
 function stockholmNow(){
   const parts=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date());
@@ -500,7 +502,7 @@ async function loadLiveSlots(){
     const response=await fetch('/api/bookings?view=slots');
     const data=await response.json();
     if(response.ok&&data&&data.status==='ok'&&Array.isArray(data.days)){
-      liveSlots=new Map(data.days.map((day)=>[day.date,day.slots.map((slot)=>({time:slot.time,free:slot.free!==false}))]));
+      liveSlots=new Map(data.days.map((day)=>[day.date,day.slots.map((slot)=>({time:slot.time,free:slot.free!==false,mode:slot.mode==='request'?'request':'direct'}))]));
     }else{
       liveSlots=null;
     }
@@ -510,8 +512,27 @@ async function loadLiveSlots(){
   fillDayOptions();
   fillTimeOptions();
   updateSummary();
+  syncSlotModeUi();
+}
+// Visar om vald tid bokas direkt eller skickas som förfrågan, och byter
+// knapptext så att kunden aldrig tror att en förfrågan är en bokning.
+function selectedSlotMode(){
+  if(!liveSlots||!preferredDay||!preferredClock)return 'direct';
+  const slot=(liveSlots.get(preferredDay.value)||[]).find((entry)=>entry.time===preferredClock.value);
+  return slot&&slot.mode==='request'?'request':'direct';
+}
+function syncSlotModeUi(){
   const note=document.getElementById('slotSourceNote');
-  if(note)note.textContent=liveSlots?'Tiderna hämtas live från verkstadskalendern. Gråa tider är upptagna.':'';
+  const submitButton=bookingForm?bookingForm.querySelector('button[type="submit"]'):null;
+  const isOrder=isOrderRequest();
+  const mode=selectedSlotMode();
+  if(note){
+    note.textContent=!liveSlots?'':mode==='request'
+      ?'Förfrågan: tiden ligger utanför tisdag/torsdag 15–20. Vi bekräftar via SMS innan du kommer.'
+      :'Bokas direkt: tiden gäller så fort du skickat formuläret.';
+    note.style.color=mode==='request'?'#ffe0a2':'';
+  }
+  if(submitButton&&!isOrder&&!submitButton.disabled)submitButton.textContent=mode==='request'?'Skicka förfrågan':'Boka inlämning';
 }
 function dayLabel(isoDate){
   const [y,m,d]=isoDate.split('-').map(Number);
@@ -524,17 +545,21 @@ function fillDayOptions(){
   if(liveSlots){
     // Alla dagar visas; fullbokade dagar är gråa så kunden ser att det är tryck.
     let firstFree='';
+    let firstDirect='';
     [...liveSlots.entries()].forEach(([date,slots])=>{
       const freeCount=slots.filter((slot)=>slot.free).length;
+      const directCount=slots.filter((slot)=>slot.free&&slot.mode==='direct').length;
+      if(directCount&&!firstDirect)firstDirect=date;
       const option=document.createElement('option');
       option.value=date;
-      option.textContent=freeCount?`${dayLabel(date)} (${freeCount} lediga)`:`${dayLabel(date)} – fullbokat`;
+      option.textContent=!freeCount?`${dayLabel(date)} – fullbokat`:directCount?`${dayLabel(date)} (${directCount} direkt)`:`${dayLabel(date)} (förfrågan)`;
       option.disabled=!freeCount;
       if(freeCount&&!firstFree)firstFree=date;
       preferredDay.appendChild(option);
     });
     const keep=previous&&[...preferredDay.options].some((option)=>option.value===previous&&!option.disabled);
-    preferredDay.value=keep?previous:firstFree;
+    // Förvalt: första dag med direktbokning (tis/tors), annars första lediga.
+    preferredDay.value=keep?previous:(firstDirect||firstFree);
     return;
   }
   const now=stockholmNow();
@@ -559,16 +584,19 @@ function fillTimeOptions(){
   if(liveSlots){
     const slots=liveSlots.get(preferredDay&&preferredDay.value)||[];
     let firstFree='';
+    let firstDirect='';
     slots.forEach((slot)=>{
       const option=document.createElement('option');
       option.value=slot.time;
-      option.textContent=slot.free?slot.time:`${slot.time} – upptaget`;
+      option.textContent=!slot.free?`${slot.time} – upptaget`:slot.mode==='request'?`${slot.time} – förfrågan`:slot.time;
       option.disabled=!slot.free;
       if(slot.free&&!firstFree)firstFree=slot.time;
+      if(slot.free&&slot.mode==='direct'&&!firstDirect)firstDirect=slot.time;
       preferredClock.appendChild(option);
     });
     const keep=previous&&[...preferredClock.options].some((option)=>option.value===previous&&!option.disabled);
-    preferredClock.value=keep?previous:firstFree;
+    preferredClock.value=keep?previous:(firstDirect||firstFree);
+    syncSlotModeUi();
     return;
   }
   const now=stockholmNow();
@@ -727,6 +755,7 @@ let bookingStartedTracked=false;
 serviceChoiceInputs.forEach((input)=>input.addEventListener('change',()=>{setServiceFromChoice(input.value);trackBooking('service_selected',{service:input.value});}));
 if(logisticsSelect)logisticsSelect.addEventListener('change',syncPickupService);
 if(preferredDay)preferredDay.addEventListener('change',fillTimeOptions);
+if(preferredClock)preferredClock.addEventListener('change',syncSlotModeUi);
 addonInputs.forEach((input)=>input.addEventListener('change',updateSummary));
 messageInput.addEventListener('input',updateSummary);
 if(smsConsent) smsConsent.addEventListener('change',updateSummary);
@@ -752,6 +781,10 @@ function customerStatusMessage(result,timeLabel){
   const delivery=(result.case&&result.case.customerDelivery)||notifications.customerDelivery||{};
   const workshopNotified=notifications.staffSms&&(notifications.staffSms.status==='sent'||notifications.staffSms.status==='partial');
   const inCalendar=notifications.calendar&&notifications.calendar.status==='created';
+  if(result.case&&result.case.bookingMode==='request'){
+    // Förfrågan: tiden är INTE bokad. Samma budskap i SMS och e-post.
+    return `\u2713 Din f\u00f6rfr\u00e5gan \u00e4r mottagen${timeLabel?`: ${timeLabel}`:''}. Tiden \u00e4r inte bokad \u00e4nnu \u2014 vi bekr\u00e4ftar via SMS n\u00e4r vi kollat att vi kan ta emot dig. Kom inte f\u00f6rr\u00e4n du f\u00e5tt bekr\u00e4ftelsen. Beh\u00f6ver du en tid som g\u00e4ller direkt? V\u00e4lj tisdag eller torsdag 15\u201320.`;
+  }
   const base=`\u2713 Din tid \u00e4r bokad${timeLabel?`: ${timeLabel}`:''}. Kom d\u00e5 \u2014 vi h\u00f6r av oss bara om tiden beh\u00f6ver flyttas.`;
   const promise='Du har inte best\u00e4llt n\u00e5gon reparation \u00e4nnu: du godk\u00e4nner alltid priset innan vi b\u00f6rjar.';
 
@@ -838,6 +871,7 @@ if(bookingForm){
     }finally{
       submitButton.disabled=false;
       submitButton.textContent='Boka inl\u00e4mning';
+      syncSlotModeUi();
     }
   });
 }
