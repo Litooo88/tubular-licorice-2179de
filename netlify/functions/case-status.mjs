@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { readEnv } from "./_shared/env.mjs";
 import {
   findCaseByServiceNumber,
   normalizeServiceNumber,
@@ -24,13 +25,7 @@ const json = (body, status = 200) =>
   });
 
 const clean = (value, max = 200) => String(value ?? "").trim().slice(0, max);
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 
 const normalizePhone = (phone) => {
   const compact = clean(phone, 80).replace(/[^\d+]/g, "");

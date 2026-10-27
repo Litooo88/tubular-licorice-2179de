@@ -10,6 +10,7 @@
 // fältet `ringUnhandled`.
 
 import { getStore } from "@netlify/blobs";
+import { readEnv } from "./_shared/env.mjs";
 import { postSms as rawPostSms, smsConfigured } from "./_shared/sms.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
 import {
@@ -27,13 +28,7 @@ const json = (body, status = 200) =>
     headers: { "Content-Type": "application/json; charset=utf-8" },
   });
 
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 
 const STATE_STORE = "ops-warnings";
 const STATE_KEY = "ring-unhandled";
