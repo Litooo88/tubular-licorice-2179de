@@ -8,7 +8,7 @@
 // - Säger aldrig priser utöver listans "från"-pris, aldrig betalstatus,
 //   aldrig interna anteckningar, aldrig andra kunders uppgifter.
 // - Kan inte boka in verkstadsjobb själv; den bokar ett telefonmöte med
-//   Sebastian eller hänvisar till bokningssidan (tis/tors 15–20).
+//   Sebastian eller hänvisar till bokningssidan (lediga tider 12–20).
 
 import { normalizePhone } from "./sms.mjs";
 
@@ -28,7 +28,7 @@ const STEP_BY_STATUS = {
 const STATUS_NOTE = {
   waiting_parts: "Vi väntar på en reservdel.",
   waiting_customer: "Vi väntar på svar från kunden, kolla SMS eller mail.",
-  ready: "Fordonet är klart. Hämtning tisdag eller torsdag klockan 10 till 16, betalning vid hämtning.",
+  ready: "Fordonet är klart. Hämtning bokas på en ledig tid på bokningssidan, alla dagar mellan 12 och 20; tisdag och torsdag 15 till 20 är alltid öppet. Betalning vid hämtning.",
 };
 export const ACTIVE_STATUSES = new Set(["contacted", "checked_in", "diagnosing", "repairing", "waiting_parts", "waiting_customer", "ready"]);
 
@@ -173,7 +173,7 @@ export const compactSlots = (payload, { maxDays = 4, maxTimes = 6 } = {}) => {
     out.push({ date: clean(day.date, 10), weekday: weekdayName(day.date), times: free.slice(0, maxTimes) });
     if (out.length >= maxDays) break;
   }
-  return { status: clean(payload?.status, 20) || "ok", days: out, hours: "tisdag och torsdag klockan 10 till 16", bookingUrl: "nordicemobility.se/book-online" };
+  return { status: clean(payload?.status, 20) || "ok", days: out, hours: "lediga tider alla dagar mellan klockan 12 och 20; tisdag och torsdag 15 till 20 är alltid öppet", bookingUrl: "nordicemobility.se/book-online" };
 };
 
 const weekdayName = (date) => {

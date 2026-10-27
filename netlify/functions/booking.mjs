@@ -854,66 +854,41 @@ const calendarWindow = (caseItem) => {
 };
 
 const checkCalendarAvailability = async (caseItem) => {
+  const baseline = preferredIsBaseline(caseItem.preferredDate);
   const calendarConfig = googleCalendarConfig();
   if (!calendarConfig.ok) {
     return {
       status: "failed",
       provider: "google-calendar",
       reason: "not_configured",
+      baseline,
       missing: calendarConfig.missing,
       invalid: calendarConfig.invalid,
     };
   }
 
   try {
-    const token = await getGoogleAccessToken();
-    if (!token) {
-      return { status: "failed", provider: "google-calendar", reason: "no_token" };
-    }
-
     const window = eventWindow(caseItem);
-    const response = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        timeMin: window.start.utc,
-        timeMax: window.end.utc,
-        timeZone: window.timeZone,
-        items: [{ id: calendarConfig.calendarId }],
-      }),
-      signal: AbortSignal.timeout(8000),
-    });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) {
-      return { status: "failed", provider: "google-calendar", error: clean(body.error?.message || response.statusText, 240) };
+    const startMs = Date.parse(window.start.utc);
+    const endMs = Date.parse(window.end.utc);
+    const windows = await fetchCalendarWindows(startMs, endMs);
+    if (!windows.ok) {
+      return { status: "failed", provider: "google-calendar", reason: windows.reason, baseline };
     }
-
-    const calendar = body.calendars?.[calendarConfig.calendarId];
-    const errors = calendar?.errors || [];
-    if (errors.length) {
-      return {
-        status: "failed",
-        provider: "google-calendar",
-        error: clean(errors.map((item) => item.reason || item.message).filter(Boolean).join(", "), 240),
-      };
-    }
-
-    const busy = calendar?.busy || [];
+    const inOpen = windows.open.some((w) => overlaps(startMs, endMs, w.start, w.end));
+    const busy = windows.busy.filter((w) => overlaps(startMs, endMs, w.start, w.end));
+    const available = (baseline || inOpen) && busy.length === 0;
     return {
       status: "checked",
       provider: "google-calendar",
-      available: busy.length === 0,
-      busy: busy.slice(0, 3).map((item) => ({
-        start: clean(item.start, 80),
-        end: clean(item.end, 80),
-      })),
+      available,
+      reason: available ? "" : busy.length ? "busy" : "not_open",
+      baseline,
+      busy: busy.slice(0, 3).map((item) => ({ start: new Date(item.start).toISOString(), end: new Date(item.end).toISOString() })),
       checkedAt: new Date().toISOString(),
     };
   } catch (error) {
-    return { status: "failed", provider: "google-calendar", error: clean(error.message, 240) };
+    return { status: "failed", provider: "google-calendar", error: clean(error.message, 240), baseline };
   }
 };
 
@@ -1009,25 +984,32 @@ const vehicleModelFromBody = (body = {}) =>
 
 // Servervalidering av önskad tid: klienten kan inte litas på (lokal tidszon,
 // gammal flik, manipulerad request). Reglerna speglar bokningsformuläret:
-// tisdag och torsdag, 15:00-20:00 i halvtimmessteg, aldrig i dåtid
-// (Europe/Stockholm). Två verkstadsdagar i veckan är ett medvetet val
-// (uppdaterat 2026-10-19): med 12 mil pendling äter en utspridd kalender upp halva
-// ordervärdet, så alla inlämningar buntas till tisdag och torsdag.
-const DROPOFF_FIRST_MINUTE = 15 * 60;
+// alla dagar 12:00-20:00 i halvtimmessteg, aldrig i dåtid (Europe/Stockholm).
+//
+// Vilka av tiderna som faktiskt går att boka avgörs av kalendern (Sebastians
+// beslut 2026-10-26): tisdag och torsdag 15-20 är alltid öppet (inbyggt här,
+// så att en raderad kalenderhändelse aldrig stänger verkstaden av misstag),
+// övriga tider är upptagna tills Sebastian lägger in en "Öppet"-händelse i
+// verkstadskalendern. En vanlig (upptagen) händelse stänger alltid tiden.
+// Fel-säkert: når vi inte kalendern är bara tis/tors 15-20 bokningsbara.
+const DROPOFF_FIRST_MINUTE = 12 * 60;
 const DROPOFF_LAST_MINUTE = 20 * 60;
-const DROPOFF_WEEKDAYS = new Set([2, 4]);
+const BASELINE_WEEKDAYS = new Set([2, 4]);
+const BASELINE_FIRST_MINUTE = 15 * 60;
+const BASELINE_LAST_MINUTE = 20 * 60;
 const MAX_BOOKING_AHEAD_DAYS = 60;
+// Kalenderhändelser vars titel börjar så här öppnar tiden för bokning.
+export const OPEN_EVENT_RE = /^\s*(öppet|oppet|open|verkstad(en)? öppen)\b/i;
+
+export const isBaselineSlot = (weekday, minuteOfDay) =>
+  BASELINE_WEEKDAYS.has(weekday) && minuteOfDay >= BASELINE_FIRST_MINUTE && minuteOfDay <= BASELINE_LAST_MINUTE;
 
 const validatePreferredDate = (value) => {
   const parts = parsePreferredLocalParts(value);
   if (!parts) return "Ogiltig inlamningstid. Valj dag och klockslag i formularet.";
   const minuteOfDay = parts.hour * 60 + parts.minute;
   if (minuteOfDay < DROPOFF_FIRST_MINUTE || minuteOfDay > DROPOFF_LAST_MINUTE || parts.minute % 30 !== 0) {
-    return "Valj en tid mellan 15:00 och 20:00 (hel- eller halvtimme).";
-  }
-  const weekday = new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay();
-  if (!DROPOFF_WEEKDAYS.has(weekday)) {
-    return "Vi tar emot inlamning och upphamtning tisdagar och torsdagar. Valj en av de dagarna.";
+    return "Valj en tid mellan 12:00 och 20:00 (hel- eller halvtimme).";
   }
   const now = localPartsFromDate(new Date());
   const nowValue = Date.UTC(now.year, now.month - 1, now.day, now.hour, now.minute);
@@ -1041,13 +1023,81 @@ const validatePreferredDate = (value) => {
   return "";
 };
 
-// ---- Lediga tider (bokningsombyggnad steg 1, 2026-10-07) ----
-// GET /api/bookings?view=slots listar tis/tors-slots 35 dagar framåt och
-// markerar upptagna via EN freeBusy-fråga mot verkstadskalendern. Publik
-// endpoint utan persondata — den avslöjar bara ledigt/upptaget, samma
-// information som ett bokningsförsök redan ger via 409:an.
-// Fail-open: kan kalendern inte nås returneras status "unchecked" och klienten
-// visar alla tider (serverns 409-kontroll vid POST fångar ändå krockar).
+const preferredIsBaseline = (value) => {
+  const parts = parsePreferredLocalParts(value);
+  if (!parts) return false;
+  const weekday = new Date(Date.UTC(parts.year, parts.month - 1, parts.day)).getUTCDay();
+  return isBaselineSlot(weekday, parts.hour * 60 + parts.minute);
+};
+
+// ---- Kalenderfönster: "Öppet"-händelser och upptagna händelser ----
+// En events.list-fråga (i stället för freeBusy) så att vi ser titlarna:
+// freeBusy hade räknat själva "Öppet"-händelsen som upptagen.
+const overlaps = (aStart, aEnd, bStart, bEnd) => aStart < bEnd && aEnd > bStart;
+
+// Ren: delar upp kalenderhändelser i öppet-fönster och upptagna intervall (ms).
+export const classifyCalendarEvents = (events = [], timeZone = ICS_TIME_ZONE) => {
+  const open = [];
+  const busy = [];
+  for (const event of Array.isArray(events) ? events : []) {
+    if (!event || event.status === "cancelled") continue;
+    let start;
+    let end;
+    if (event.start?.dateTime) {
+      start = Date.parse(event.start.dateTime);
+      end = Date.parse(event.end?.dateTime || event.start.dateTime);
+    } else if (event.start?.date) {
+      // Heldag: hela lokala dygnet/dygnen.
+      const [y, m, d] = String(event.start.date).split("-").map(Number);
+      const [y2, m2, d2] = String(event.end?.date || event.start.date).split("-").map(Number);
+      start = Date.parse(localPartsToUtcIso({ year: y, month: m, day: d, hour: 0, minute: 0 }, timeZone));
+      end = Date.parse(localPartsToUtcIso({ year: y2, month: m2, day: d2, hour: 0, minute: 0 }, timeZone));
+      if (end <= start) end = start + 24 * 60 * 60 * 1000;
+    } else {
+      continue;
+    }
+    if (!Number.isFinite(start) || !Number.isFinite(end) || end <= start) continue;
+    if (OPEN_EVENT_RE.test(String(event.summary || ""))) {
+      open.push({ start, end });
+    } else if (event.transparency !== "transparent") {
+      busy.push({ start, end });
+    }
+  }
+  return { open, busy };
+};
+
+const fetchCalendarWindows = async (timeMinMs, timeMaxMs) => {
+  const calendarConfig = googleCalendarConfig();
+  if (!calendarConfig.ok) return { ok: false, reason: "not_configured", open: [], busy: [] };
+  try {
+    const token = await getGoogleAccessToken();
+    if (!token) return { ok: false, reason: "no_token", open: [], busy: [] };
+    const params = new URLSearchParams({
+      timeMin: new Date(timeMinMs).toISOString(),
+      timeMax: new Date(timeMaxMs).toISOString(),
+      singleEvents: "true",
+      orderBy: "startTime",
+      maxResults: "250",
+    });
+    const response = await fetch(
+      `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarConfig.calendarId)}/events?${params}`,
+      { headers: { Authorization: `Bearer ${token}` }, signal: AbortSignal.timeout(8000) },
+    );
+    const body = await response.json().catch(() => ({}));
+    if (!response.ok) return { ok: false, reason: clean(body.error?.message || response.statusText, 120), open: [], busy: [] };
+    return { ok: true, reason: "", ...classifyCalendarEvents(body.items, env("GOOGLE_CALENDAR_TIMEZONE") || ICS_TIME_ZONE) };
+  } catch (error) {
+    return { ok: false, reason: clean(error?.message, 120), open: [], busy: [] };
+  }
+};
+
+// ---- Lediga tider (bokningsombyggnad steg 1, 2026-10-07; alla dagar 2026-10-26) ----
+// GET /api/bookings?view=slots listar alla dagar 12-20 i 35 dagar framåt och
+// markerar vilka tider som är lediga: tis/tors 15-20 eller inom "Öppet" i
+// verkstadskalendern, och inte upptagna. Publik endpoint utan persondata —
+// den avslöjar bara ledigt/upptaget, samma information som ett bokningsförsök
+// redan ger via 409:an. Fel-säkert: kan kalendern inte nås returneras status
+// "unchecked" och bara tis/tors 15-20 är lediga.
 
 const SLOTS_CACHE_TTL_MS = 60 * 1000;
 let slotsCache = { at: 0, payload: null };
@@ -1057,7 +1107,7 @@ export const buildDropoffDays = (now = localPartsFromDate(new Date())) => {
   const days = [];
   for (let offset = 0; offset < 35; offset += 1) {
     const date = new Date(Date.UTC(now.year, now.month - 1, now.day + offset, 12, 0));
-    if (!DROPOFF_WEEKDAYS.has(date.getUTCDay())) continue;
+    const weekday = date.getUTCDay();
     const dayParts = { year: date.getUTCFullYear(), month: date.getUTCMonth() + 1, day: date.getUTCDate() };
     const slots = [];
     for (let minute = DROPOFF_FIRST_MINUTE; minute <= DROPOFF_LAST_MINUTE; minute += 30) {
@@ -1069,6 +1119,7 @@ export const buildDropoffDays = (now = localPartsFromDate(new Date())) => {
         time: `${String(parts.hour).padStart(2, "0")}:${String(parts.minute).padStart(2, "0")}`,
         startMs,
         endMs: startMs + 30 * 60 * 1000,
+        baseline: isBaselineSlot(weekday, minute),
       });
     }
     if (slots.length) {
@@ -1081,56 +1132,29 @@ export const buildDropoffDays = (now = localPartsFromDate(new Date())) => {
   return days;
 };
 
-const fetchBusyIntervals = async (days) => {
-  const calendarConfig = googleCalendarConfig();
-  if (!calendarConfig.ok || !days.length) return { busy: null, reason: calendarConfig.ok ? "empty" : "not_configured" };
-  try {
-    const token = await getGoogleAccessToken();
-    if (!token) return { busy: null, reason: "no_token" };
-    const firstSlot = days[0].slots[0];
-    const lastDay = days[days.length - 1];
-    const lastSlot = lastDay.slots[lastDay.slots.length - 1];
-    const response = await fetch("https://www.googleapis.com/calendar/v3/freeBusy", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        timeMin: new Date(firstSlot.startMs).toISOString(),
-        timeMax: new Date(lastSlot.endMs).toISOString(),
-        items: [{ id: calendarConfig.calendarId }],
-      }),
-      signal: AbortSignal.timeout(8000),
-    });
-    const body = await response.json().catch(() => ({}));
-    if (!response.ok) return { busy: null, reason: clean(body.error?.message || response.statusText, 120) };
-    const calendar = body.calendars?.[calendarConfig.calendarId];
-    if (calendar?.errors?.length) return { busy: null, reason: "calendar_errors" };
-    return {
-      busy: (calendar?.busy || []).map((item) => ({ start: Date.parse(item.start), end: Date.parse(item.end) }))
-        .filter((item) => Number.isFinite(item.start) && Number.isFinite(item.end)),
-      reason: "",
-    };
-  } catch (error) {
-    return { busy: null, reason: clean(error?.message, 120) };
-  }
-};
-
-export const markFreeSlots = (days, busy) =>
+// windows = { open, busy } från kalendern, eller null när den inte kunde nås
+// (då gäller bara grundtiderna tis/tors 15-20).
+export const markFreeSlots = (days, windows) =>
   days.map((day) => ({
     date: day.date,
-    slots: day.slots.map((slot) => ({
-      time: slot.time,
-      free: busy ? !busy.some((interval) => slot.startMs < interval.end && slot.endMs > interval.start) : true,
-    })),
+    slots: day.slots.map((slot) => {
+      const inOpen = Boolean(windows?.open?.some((w) => overlaps(slot.startMs, slot.endMs, w.start, w.end)));
+      const inBusy = Boolean(windows?.busy?.some((w) => overlaps(slot.startMs, slot.endMs, w.start, w.end)));
+      return { time: slot.time, free: (slot.baseline || inOpen) && !inBusy };
+    }),
   }));
 
 const listDropoffSlots = async () => {
   if (slotsCache.payload && Date.now() - slotsCache.at < SLOTS_CACHE_TTL_MS) return slotsCache.payload;
   const days = buildDropoffDays();
-  const { busy, reason } = await fetchBusyIntervals(days);
+  const firstSlot = days[0]?.slots[0];
+  const lastDay = days[days.length - 1];
+  const lastSlot = lastDay?.slots[lastDay.slots.length - 1];
+  const windows = firstSlot && lastSlot ? await fetchCalendarWindows(firstSlot.startMs, lastSlot.endMs) : { ok: false, reason: "empty" };
   const payload = {
-    status: busy ? "ok" : reason === "not_configured" ? "not_configured" : "unchecked",
+    status: windows.ok ? "ok" : windows.reason === "not_configured" ? "not_configured" : "unchecked",
     generatedAt: new Date().toISOString(),
-    days: markFreeSlots(days, busy),
+    days: markFreeSlots(days, windows.ok ? windows : null),
   };
   slotsCache = { at: Date.now(), payload };
   return payload;
@@ -1296,6 +1320,13 @@ export default async (request, context) => {
     // saknad konfiguration ska ge manuell hantering, inte totalstopp
     // (CLAUDE.md: integrationer ska ha ett säkert not_configured-läge).
     const calendarConfigured = availability.reason !== "not_configured";
+    // Utanför tis/tors 15-20 måste kalendern bekräfta att tiden är öppen.
+    if (availability.status !== "checked" && !availability.baseline) {
+      return json({
+        error: "Tiden ar inte oppen for bokning. Valj en ledig tid i formularet eller kontakta oss.",
+        availability,
+      }, 409);
+    }
     if (availability.status !== "checked" && calendarConfigured) {
       return json({
         error: "Kunde inte kontrollera verkstadskalendern just nu. Ring eller SMS:a oss sa bokar vi tiden manuellt.",
@@ -1304,7 +1335,9 @@ export default async (request, context) => {
     }
     if (availability.status === "checked" && !availability.available) {
       return json({
-        error: "Tiden ar redan upptagen i verkstadskalendern. Valj en annan tid eller kontakta oss direkt.",
+        error: availability.reason === "not_open"
+          ? "Tiden ar inte oppen for bokning. Valj en ledig tid i formularet eller kontakta oss."
+          : "Tiden ar redan upptagen i verkstadskalendern. Valj en annan tid eller kontakta oss direkt.",
         availability,
       }, 409);
     }

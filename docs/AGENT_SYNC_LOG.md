@@ -32,6 +32,22 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-26 — Claude Code — KLAR (Bokningstider: alla dagar 12–20, öppet via kalendern)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main).
+- **Gjorde:** kunden ser alla dagar 12–20; ledig = tis/tors 15–20 (kod, `isBaselineSlot`) ELLER inom
+  kalenderhändelse med titel som börjar "Öppet" (`OPEN_EVENT_RE`), minus upptagna händelser.
+  `booking.mjs` läser nu `events.list` (inte freeBusy) i både slots och bokningskontroll
+  (`classifyCalendarEvents`). Server avvisar stängda tider (409 `not_open`). Formuläret visar
+  upptagna tider gråa. Alla texter + Novas prompt/kod uppdaterade (Nova sa "10 till 16" sedan 19/10).
+- **Tester:** alla `test:*` gröna (205, `test:status` 17/17 nya slot-tester), build OK,
+  `verify:checkout-products` OK, callflow `check` OK. Formuläret renderat i Chromium med mockade
+  kalenderfönster: fullbokade dagar och upptagna tider gråa, tis/tors fria.
+- **Rutin för Sebastian:** lägg in "Öppet 12–20" (eller del av dag) i "Nordic Verkstad - Bokningar"
+  för dagar han är där; "Upptagen" stänger tider (även tis/tors). Transparenta händelser spärrar inget.
+- **Kvar för Sebastian:** publicera nya prompten i ElevenLabs (docs/voice-agent-prompt.md), stänga
+  Googles bokningssida ("Boka service — Nordic E-Mobility", visar 09.00), uppdatera Google-företagsprofilens
+  öppettider. Tjänstekontot måste ha läsrätt på kalendern (har skrivrätt → OK).
 ### 2026-10-26 - Codex - KLAR lokalt (publika budskap och förtroende)
 
 - Implementation: `75b856c` på `codex/site-clarity-trust`. Ingen push/deploy.

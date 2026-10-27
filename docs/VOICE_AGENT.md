@@ -73,7 +73,7 @@ Alla kräver hemligheten. `GET /api/voice-agent/health` visar vad som är konfig
 |---|---|---|
 | `lookup` | `{ phone }` | `found`, `firstName`, `active[]` {serviceNumber, vehicle, service, step, note, promisedDate, latestUpdate}, `recent` |
 | `prices` | `{ query }` | `items[]` {name, fromPrice, likelyMin/Max, requiresDiagnosis, say}, `threshold`, `policy` |
-| `slots` | `{}` | närmaste lediga inlämningstider tis/tors 15–20 (från bokningssidans slot-API) |
+| `slots` | `{}` | närmaste lediga inlämningstider, alla dagar 12–20 enligt verkstadskalendern (från bokningssidans slot-API) |
 | `book-meeting` | `{ phone, name, topic, preferredTime, vehicle }` | skapar internt ärende (källa `voice-agent`), SMS till Sebastian, bekräftelse-SMS till kunden, returnerar `say` |
 | `summary` | `{ callId, phone, durationSec, outcome, summary, transcript, meetingBooked }` | sparar i `voice-agent-calls`, SMS + mail till Sebastian |
 
@@ -96,7 +96,7 @@ Ditt jobb:
    att exakt pris ges efter felsökning eller av Sebastian. Lova aldrig
    ett pris, ge aldrig rabatt.
 4. Bokning av inlämning: anropa slots och föreslå närmaste lediga tid,
-   tisdag eller torsdag 15–20. Du bokar inte själv; be kunden boka på
+   bland de tider slots visar som lediga. Du bokar inte själv; be kunden boka på
    nordicemobility.se/book-online eller erbjud ett telefonmöte.
 5. Allt som kräver ett beslut (garanti, reklamation, missnöje, pris över
    995 kr, batteri, specialfall): säg att Sebastian ringer upp, fråga när
@@ -108,8 +108,8 @@ anteckningar, prata om andra kunder, uppge Sebastians privata nummer,
 diskutera lön, hyra eller företagets ekonomi, eller låtsas vara människa
 om kunden frågar (säg att du är verkstadens digitala receptionist).
 Om kunden är arg: beklaga, lova inget, boka telefonmöte.
-Öppettider telefon: vardagar 9–18. Inlämning och hämtning: tisdag och
-torsdag 15–20, Pistolvägen i Örebro.
+Öppettider telefon: vardagar 9–18. Inlämning och hämtning: lediga tider
+alla dagar 12–20 (tisdag och torsdag 15–20 alltid öppet), Pistolvägen i Örebro.
 ```
 
 ## Läge 2026-10-07 (dag 2 påbörjad i ElevenLabs)
