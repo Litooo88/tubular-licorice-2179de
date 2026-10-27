@@ -1,5 +1,6 @@
 import { getStore } from "@netlify/blobs";
-import { createHash, createSign } from "node:crypto";
+import { readEnv } from "./_shared/env.mjs";
+import { createHash } from "node:crypto";
 import {
   createServiceNumber,
   reserveServiceNumber,
@@ -12,6 +13,8 @@ import {
 } from "./_shared/vehicle-identity.mjs";
 import { publicBookingCase } from "./_shared/public-booking.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
+import { getGoogleAccessToken, googleCalendarConfig, WORKSHOP_ORGANIZER } from "./_shared/google-calendar.mjs";
+import { BOOKING_MODES, REQUEST_EVENT_PREFIX, requestReceivedSms, WORKSHOP_REQUEST_HEADLINE } from "./_shared/booking-request.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -30,50 +33,10 @@ const htmlEscape = (value) =>
     "'": "&#039;",
   })[char]);
 
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 
 const looksLikeResendApiKey = (value) => clean(value, 220).startsWith("re_");
-const looksLikeGooglePrivateKey = (value) => {
-  const key = clean(value, 5000).replace(/\\n/g, "\n");
-  return key.includes("BEGIN PRIVATE KEY") && key.includes("END PRIVATE KEY");
-};
-const googleCalendarConfig = () => {
-  const calendarId = clean(env("GOOGLE_CALENDAR_ID") || WORKSHOP_ORGANIZER, 500);
-  const serviceEmail = clean(env("GOOGLE_SERVICE_ACCOUNT_EMAIL"), 240);
-  const privateKey = clean(env("GOOGLE_PRIVATE_KEY"), 5000).replace(/\\n/g, "\n");
-  const missing = [];
-  const invalid = [];
-
-  if (!calendarId) missing.push("GOOGLE_CALENDAR_ID");
-  if (!serviceEmail) missing.push("GOOGLE_SERVICE_ACCOUNT_EMAIL");
-  if (!privateKey) missing.push("GOOGLE_PRIVATE_KEY");
-
-  if (calendarId && /^https?:\/\//i.test(calendarId)) {
-    invalid.push("GOOGLE_CALENDAR_ID_must_be_calendar_id_not_url");
-  }
-  if (serviceEmail && !serviceEmail.endsWith(".iam.gserviceaccount.com")) {
-    invalid.push("GOOGLE_SERVICE_ACCOUNT_EMAIL_must_be_service_account_email");
-  }
-  if (privateKey && !looksLikeGooglePrivateKey(privateKey)) {
-    invalid.push("GOOGLE_PRIVATE_KEY_must_include_begin_and_end_private_key");
-  }
-
-  return {
-    ok: missing.length === 0 && invalid.length === 0,
-    missing,
-    invalid,
-    calendarId,
-    serviceEmail,
-  };
-};
 const WORKSHOP_LOCATION = "Pistolv\u00e4gen 6, \u00d6rebro";
-const WORKSHOP_ORGANIZER = "info@nordicemobility.se";
 const ICS_TIME_ZONE = "Europe/Stockholm";
 const WORKSHOP_ADDRESS = "Pistolv\u00e4gen 6, 702 21 \u00d6rebro";
 const MAPS_LINK = "https://www.google.com/maps/place/Pistolv%C3%A4gen+6,+702+21+%C3%96rebro";
@@ -130,6 +93,7 @@ const ADDON_BY_ID = new Map(ADDON_OPTIONS.map((option) => [option.id, option]));
 
 const logisticsLabel = (value) => LOGISTICS_LABELS[value] || clean(value, 120) || "Ej angivet";
 const isReadyPickup = (caseItem) => caseItem.logistics === "pickup-ready";
+const isRequest = (caseItem) => caseItem.bookingMode === BOOKING_MODES.request;
 const preferredTimeLabel = (caseItem) => isReadyPickup(caseItem) ? "Onskad upphamtning" : "Onskad inlamning";
 const preferredTimeHtmlLabel = (caseItem) => isReadyPickup(caseItem) ? "&Ouml;nskad upph&auml;mtning" : "&Ouml;nskad inl&auml;mning";
 
@@ -329,7 +293,8 @@ const workshopSmsMessage = (caseItem) => {
   const description = clean(caseItem.message, 80);
   const priority = caseItem.priority === "urgent" ? "Hog" : "Normal";
   return [
-    `Ny bokning #${shortCaseId(caseItem.id)}`,
+    ...(isRequest(caseItem) ? [WORKSHOP_REQUEST_HEADLINE] : []),
+    `${isRequest(caseItem) ? "Ny forfragan" : "Ny bokning"} #${shortCaseId(caseItem.id)}`,
     `Kund: ${caseItem.customer.name} - ${caseItem.customer.phone}`,
     `Fordon: ${vehicleIdentityLabel(caseItem.vehicle) || "Ej angivet"}`,
     `Felbeskrivning: ${description || "Saknas"}`,
@@ -549,7 +514,10 @@ const sendSmsConfirmation = async (caseItem, requested) => {
   const to = normalizePhone(caseItem.customer.phone);
 
   if (!requested) return { status: "not_requested", to };
-  return postSms({ to, message: smsMessage(caseItem) });
+  const message = isRequest(caseItem)
+    ? requestReceivedSms({ name: caseItem.customer.name, preferredDate: caseItem.preferredDate, serviceNumber: customerServiceNumber(caseItem), statusLink: statusLink(caseItem) })
+    : smsMessage(caseItem);
+  return postSms({ to, message });
 };
 
 const sendWorkshopSmsNotification = async (caseItem) => {
@@ -662,11 +630,13 @@ const customerEmailHtml = (caseItem) => `
     <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #dfe5dc;border-radius:8px;overflow:hidden">
       <div style="background:#061007;color:#fff;padding:22px 24px">
         <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8ff5ae;font-weight:700">Nordic E-Mobility</div>
-        <h1 style="font-size:24px;line-height:1.2;margin:8px 0 0">Din tid &auml;r bokad</h1>
+        <h1 style="font-size:24px;line-height:1.2;margin:8px 0 0">${isRequest(caseItem) ? "Din f&ouml;rfr&aring;gan &auml;r mottagen" : "Din tid &auml;r bokad"}</h1>
       </div>
       <div style="padding:24px;line-height:1.6">
         <p>Hej ${htmlEscape(firstName(caseItem.customer.name))},</p>
-        <p>Din tid hos Nordic E-Mobility &auml;r bokad &mdash; kom d&aring;, s&aring; tar vi hand om resten. Vi h&ouml;r av oss <strong>bara</strong> om tiden skulle beh&ouml;va flyttas.</p>
+        ${isRequest(caseItem)
+          ? `<p>Vi har tagit emot din f&ouml;rfr&aring;gan om tid hos Nordic E-Mobility. <strong>Tiden &auml;r inte bokad &auml;nnu.</strong> Vi kollar att vi kan ta emot dig och bekr&auml;ftar via SMS${caseItem.customer.email ? " och e-post" : ""} &mdash; v&auml;nta med att komma tills du f&aring;tt bekr&auml;ftelsen.</p>`
+          : `<p>Din tid hos Nordic E-Mobility &auml;r bokad &mdash; kom d&aring;, s&aring; tar vi hand om resten. Vi h&ouml;r av oss <strong>bara</strong> om tiden skulle beh&ouml;va flyttas.</p>`}
         <div style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:16px;margin:18px 0">
           <p style="margin:0 0 8px"><strong>&Auml;rende:</strong> ${htmlEscape(customerServiceNumber(caseItem))}</p>
           <p style="margin:0 0 8px"><strong>Tj&auml;nst:</strong> ${htmlEscape(caseItem.service)}</p>
@@ -680,7 +650,9 @@ const customerEmailHtml = (caseItem) => `
         </div>
         <p><a href="${htmlEscape(statusLink(caseItem))}" style="display:inline-block;background:#00c853;color:#021307;text-decoration:none;border-radius:8px;padding:12px 16px;font-weight:700">F&ouml;lj din reparation live</a>&nbsp;&nbsp;<a href="${MAPS_LINK}" style="display:inline-block;background:#061007;color:#fff;text-decoration:none;border-radius:8px;padding:12px 16px;font-weight:700">Visa p&aring; Google Maps</a></p>
         <p style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:12px 14px;font-size:14px"><strong>Ditt servicenummer:</strong> ${htmlEscape(customerServiceNumber(caseItem))}<br>Via l&auml;nken ovan ser du exakt var i processen ditt fordon &auml;r &mdash; fr&aring;n inl&auml;mning till klar f&ouml;r h&auml;mtning &mdash; och kan beg&auml;ra en statusuppdatering med ett knapptryck. Telefonen anv&auml;nder vi i f&ouml;rsta hand f&ouml;r bokningar och nya &auml;renden.</p>
-        <p><strong>Vad h&auml;nder nu?</strong><br>Din tid g&auml;ller &mdash; du beh&ouml;ver inte v&auml;nta p&aring; n&aring;got klartecken. Vi h&ouml;r av oss bara om vi beh&ouml;ver flytta tiden. N&auml;r du l&auml;mnat in fordonet g&aring;r vi igenom problemet, och <strong>inget arbete p&aring;b&ouml;rjas utan att du godk&auml;nt priset f&ouml;rst</strong>.</p>
+        <p><strong>Vad h&auml;nder nu?</strong><br>${isRequest(caseItem)
+          ? "Vi &aring;terkommer med ett klartecken eller f&ouml;reslag p&aring; annan tid. Tisdag och torsdag kl 15&ndash;20 kan du alltid boka direkt utan att v&auml;nta p&aring; bekr&auml;ftelse."
+          : "Din tid g&auml;ller &mdash; du beh&ouml;ver inte v&auml;nta p&aring; n&aring;got klartecken. Vi h&ouml;r av oss bara om vi beh&ouml;ver flytta tiden."} N&auml;r du l&auml;mnat in fordonet g&aring;r vi igenom problemet, och <strong>inget arbete p&aring;b&ouml;rjas utan att du godk&auml;nt priset f&ouml;rst</strong>.</p>
         <p>Efter bes&ouml;ket betyder en recension mycket f&ouml;r oss: <a href="${htmlEscape(REVIEW_LINK)}" style="color:#067a35">l&auml;mna en Google-recension</a>.</p>
         ${emailFooterHtml()}
       </div>
@@ -692,28 +664,29 @@ const sendCustomerEmail = async (caseItem) => {
   if (!caseItem.customer.email) return { status: "not_requested" };
   return resendEmail({
     to: [caseItem.customer.email],
-    subject: `Din tid \u00e4r bokad - ${customerServiceNumber(caseItem)} | Nordic E-Mobility`,
+    subject: `${isRequest(caseItem) ? "Din f\u00f6rfr\u00e5gan \u00e4r mottagen (tiden \u00e4r inte bokad \u00e4nnu)" : "Din tid \u00e4r bokad"} - ${customerServiceNumber(caseItem)} | Nordic E-Mobility`,
     html: customerEmailHtml(caseItem),
     text: [
       "Hej " + caseItem.customer.name + ",",
       "",
-      "Din tid hos Nordic E-Mobility ar bokad.",
-      `Tid: ${formatPreferredDateOnlyForSms(caseItem)}`,
+      isRequest(caseItem) ? "Vi har tagit emot din forfragan. Tiden ar INTE bokad annu - vi bekraftar via SMS. Kom inte forran du fatt bekraftelsen." : "Din tid hos Nordic E-Mobility ar bokad.",
+      `${isRequest(caseItem) ? "Onskad tid" : "Tid"}: ${formatPreferredDateOnlyForSms(caseItem)}`,
       `Plats: ${WORKSHOP_ADDRESS}`,
-      "Kom da - vi hor av oss bara om tiden behover flyttas.",
+      isRequest(caseItem) ? "Tisdag och torsdag 15-20 kan du alltid boka direkt utan att vanta pa bekraftelse." : "Kom da - vi hor av oss bara om tiden behover flyttas.",
       "Ingen reparation ar bestalld annu: du godkanner alltid pris innan arbete.",
       `Folj din reparation live: ${statusLink(caseItem)}`,
       `Servicenummer: ${customerServiceNumber(caseItem)}`,
       `Karta: ${MAPS_LINK}`,
       "",
-      "Kalenderfilen g\u00e4ller din bokade tid.",
+      isRequest(caseItem) ? "" : "Kalenderfilen g\u00e4ller din bokade tid.",
       "",
       "Detaljer:",
       caseSummaryText(caseItem),
       "",
       "Direktkontakt verkstad: 010-138 54 98.",
     ].join("\n"),
-    attachments: [buildIcsAttachment(caseItem)],
+    // Ingen kalenderfil for en obekraftad forfragan - den skulle lasas som bokad.
+    attachments: isRequest(caseItem) ? [] : [buildIcsAttachment(caseItem)],
     idempotencyKey: `${caseItem.id}-customer-email`,
   });
 };
@@ -728,10 +701,10 @@ const sendWorkshopEmail = async (caseItem) => {
 
   return resendEmail({
     to: recipients,
-    subject: `Ny bokning: ${caseItem.customer.name} - ${formatPreferredDateForEmail(caseItem.preferredDate)}`,
+    subject: `${isRequest(caseItem) ? "FORFRAGAN (bekrafta i admin)" : "Ny bokning"}: ${caseItem.customer.name} - ${formatPreferredDateForEmail(caseItem.preferredDate)}`,
     html: `
       <div style="font-family:Arial,sans-serif;line-height:1.55;color:#111">
-        <h2>Ny bokning / servicef&ouml;rfr&aring;gan</h2>
+        <h2>${isRequest(caseItem) ? "F&Ouml;RFR&Aring;GAN &mdash; kunden v&auml;ntar p&aring; din bekr&auml;ftelse i admin" : "Ny bokning / servicef&ouml;rfr&aring;gan"}</h2>
         <p><strong>${preferredTimeHtmlLabel(caseItem)}:</strong> ${htmlEscape(formatPreferredDateForEmail(caseItem.preferredDate))}</p>
         <pre style="white-space:pre-wrap;background:#f5f5f5;padding:14px;border-radius:8px">${htmlEscape(caseSummaryText(caseItem))}</pre>
       </div>
@@ -799,52 +772,6 @@ const retryFailedBookingNotifications = async ({ caseItem, store, smsRequested }
   logBookingDelivery(caseItem, { retry: true });
 };
 
-const base64Url = (input) =>
-  Buffer.from(input).toString("base64").replace(/=/g, "").replace(/\+/g, "-").replace(/\//g, "_");
-
-let googleTokenCache = { token: "", expiresAt: 0 };
-
-const getGoogleAccessToken = async () => {
-  if (googleTokenCache.token && googleTokenCache.expiresAt > Date.now() + 60000) {
-    return googleTokenCache.token;
-  }
-
-  const serviceEmail = env("GOOGLE_SERVICE_ACCOUNT_EMAIL");
-  const privateKey = env("GOOGLE_PRIVATE_KEY").replace(/\\n/g, "\n").trim();
-  if (!serviceEmail || !looksLikeGooglePrivateKey(privateKey)) return "";
-
-  const now = Math.floor(Date.now() / 1000);
-  const header = base64Url(JSON.stringify({ alg: "RS256", typ: "JWT" }));
-  const claim = base64Url(JSON.stringify({
-    iss: serviceEmail,
-    scope: "https://www.googleapis.com/auth/calendar.events https://www.googleapis.com/auth/calendar.readonly",
-    aud: "https://oauth2.googleapis.com/token",
-    exp: now + 3600,
-    iat: now,
-  }));
-  const unsigned = `${header}.${claim}`;
-  const signer = createSign("RSA-SHA256");
-  signer.update(unsigned);
-  signer.end();
-  const assertion = `${unsigned}.${base64Url(signer.sign(privateKey))}`;
-
-  const response = await fetch("https://oauth2.googleapis.com/token", {
-    method: "POST",
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-    body: new URLSearchParams({
-      grant_type: "urn:ietf:params:oauth:grant-type:jwt-bearer",
-      assertion,
-    }),
-    signal: AbortSignal.timeout(8000),
-  });
-  const body = await response.json().catch(() => ({}));
-  if (!response.ok || !body.access_token) {
-    throw new Error(clean(body.error_description || body.error || response.statusText, 180));
-  }
-  googleTokenCache = { token: body.access_token, expiresAt: Date.now() + Number(body.expires_in || 3600) * 1000 };
-  return googleTokenCache.token;
-};
-
 const calendarWindow = (caseItem) => {
   const window = eventWindow(caseItem);
   return {
@@ -877,12 +804,14 @@ const checkCalendarAvailability = async (caseItem) => {
     }
     const inOpen = windows.open.some((w) => overlaps(startMs, endMs, w.start, w.end));
     const busy = windows.busy.filter((w) => overlaps(startMs, endMs, w.start, w.end));
-    const available = (baseline || inOpen) && busy.length === 0;
+    // Ledig = inte upptagen. Direktbokning bara i grundtid/Öppet, annars förfrågan.
+    const available = busy.length === 0;
     return {
       status: "checked",
       provider: "google-calendar",
       available,
-      reason: available ? "" : busy.length ? "busy" : "not_open",
+      mode: baseline || inOpen ? BOOKING_MODES.direct : BOOKING_MODES.request,
+      reason: available ? "" : "busy",
       baseline,
       busy: busy.slice(0, 3).map((item) => ({ start: new Date(item.start).toISOString(), end: new Date(item.end).toISOString() })),
       checkedAt: new Date().toISOString(),
@@ -911,6 +840,7 @@ const createCalendarEvent = async (caseItem) => {
   try {
     const token = await getGoogleAccessToken();
     const window = calendarWindow(caseItem);
+    const summary = `${isReadyPickup(caseItem) ? "Upphamtning fardig scooter" : "Ny verkstadsforfragan"}: ${caseItem.customer.name}${vehicleIdentityLabel(caseItem.vehicle) ? ` - ${vehicleIdentityLabel(caseItem.vehicle)}` : ""}`;
     const response = await fetch(`https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarConfig.calendarId)}/events`, {
       method: "POST",
       headers: {
@@ -918,7 +848,7 @@ const createCalendarEvent = async (caseItem) => {
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        summary: `${isReadyPickup(caseItem) ? "Upphamtning fardig scooter" : "Ny verkstadsforfragan"}: ${caseItem.customer.name}${vehicleIdentityLabel(caseItem.vehicle) ? ` - ${vehicleIdentityLabel(caseItem.vehicle)}` : ""}`,
+        summary: `${isRequest(caseItem) ? REQUEST_EVENT_PREFIX : ""}${summary}`,
         location: WORKSHOP_LOCATION,
         description: caseSummaryText(caseItem),
         start: window.start,
@@ -935,6 +865,8 @@ const createCalendarEvent = async (caseItem) => {
       status: "created",
       provider: "google-calendar",
       id: clean(body.id, 160),
+      // Titeln utan FÖRFRÅGAN-prefix: admin återställer den när förfrågan bekräftas.
+      summary,
       htmlLink: clean(body.htmlLink, 500),
       createdAt: new Date().toISOString(),
     };
@@ -986,12 +918,14 @@ const vehicleModelFromBody = (body = {}) =>
 // gammal flik, manipulerad request). Reglerna speglar bokningsformuläret:
 // alla dagar 12:00-20:00 i halvtimmessteg, aldrig i dåtid (Europe/Stockholm).
 //
-// Vilka av tiderna som faktiskt går att boka avgörs av kalendern (Sebastians
-// beslut 2026-10-26): tisdag och torsdag 15-20 är alltid öppet (inbyggt här,
-// så att en raderad kalenderhändelse aldrig stänger verkstaden av misstag),
-// övriga tider är upptagna tills Sebastian lägger in en "Öppet"-händelse i
-// verkstadskalendern. En vanlig (upptagen) händelse stänger alltid tiden.
-// Fel-säkert: når vi inte kalendern är bara tis/tors 15-20 bokningsbara.
+// Bokningsmodell (Sebastians beslut 2026-10-27, se _shared/booking-request.mjs):
+// tisdag och torsdag 15-20 (inbyggt här, så att en raderad kalenderhändelse
+// aldrig stänger verkstaden av misstag) och tider inom en "Öppet"-händelse i
+// verkstadskalendern bokas DIREKT. Övriga tider 12-20 tas emot som FÖRFRÅGAN:
+// ärendet skapas men kunden måste invänta Sebastians bekräftelse (admin).
+// En vanlig (upptagen) händelse stänger alltid tiden, även för förfrågningar.
+// Fel-säkert: når vi inte kalendern är tis/tors 15-20 direktbokning och allt
+// annat förfrågan (Sebastian ser krockar när han bekräftar).
 const DROPOFF_FIRST_MINUTE = 12 * 60;
 const DROPOFF_LAST_MINUTE = 20 * 60;
 const BASELINE_WEEKDAYS = new Set([2, 4]);
@@ -1133,14 +1067,16 @@ export const buildDropoffDays = (now = localPartsFromDate(new Date())) => {
 };
 
 // windows = { open, busy } från kalendern, eller null när den inte kunde nås
-// (då gäller bara grundtiderna tis/tors 15-20).
+// (då är bara grundtiderna tis/tors 15-20 direktbokning, resten förfrågan).
+// free = inte upptagen; mode = "direct" (gäller direkt) eller "request"
+// (kunden inväntar bekräftelse).
 export const markFreeSlots = (days, windows) =>
   days.map((day) => ({
     date: day.date,
     slots: day.slots.map((slot) => {
       const inOpen = Boolean(windows?.open?.some((w) => overlaps(slot.startMs, slot.endMs, w.start, w.end)));
       const inBusy = Boolean(windows?.busy?.some((w) => overlaps(slot.startMs, slot.endMs, w.start, w.end)));
-      return { time: slot.time, free: (slot.baseline || inOpen) && !inBusy };
+      return { time: slot.time, free: !inBusy, mode: slot.baseline || inOpen ? BOOKING_MODES.direct : BOOKING_MODES.request };
     }),
   }));
 
@@ -1320,31 +1256,34 @@ export default async (request, context) => {
     // saknad konfiguration ska ge manuell hantering, inte totalstopp
     // (CLAUDE.md: integrationer ska ha ett säkert not_configured-läge).
     const calendarConfigured = availability.reason !== "not_configured";
-    // Utanför tis/tors 15-20 måste kalendern bekräfta att tiden är öppen.
-    if (availability.status !== "checked" && !availability.baseline) {
+    if (availability.status === "checked" && !availability.available) {
       return json({
-        error: "Tiden ar inte oppen for bokning. Valj en ledig tid i formularet eller kontakta oss.",
+        error: "Tiden ar redan upptagen i verkstadskalendern. Valj en annan tid eller kontakta oss direkt.",
         availability,
       }, 409);
     }
-    if (availability.status !== "checked" && calendarConfigured) {
+    // Direkt i grundtid (tis/tors 15-20) eller inom "Öppet"; annars förfrågan.
+    // Når vi inte kalendern blir allt utanför grundtiden förfrågan - en
+    // förfrågan lovar inget, Sebastian kontrollerar krockar när han bekräftar.
+    const mode = availability.status === "checked" ? availability.mode : availability.baseline ? BOOKING_MODES.direct : BOOKING_MODES.request;
+    if (availability.status !== "checked" && calendarConfigured && mode === BOOKING_MODES.direct) {
       return json({
         error: "Kunde inte kontrollera verkstadskalendern just nu. Ring eller SMS:a oss sa bokar vi tiden manuellt.",
         availability,
       }, 503);
     }
-    if (availability.status === "checked" && !availability.available) {
-      return json({
-        error: availability.reason === "not_open"
-          ? "Tiden ar inte oppen for bokning. Valj en ledig tid i formularet eller kontakta oss."
-          : "Tiden ar redan upptagen i verkstadskalendern. Valj en annan tid eller kontakta oss direkt.",
-        availability,
-      }, 409);
+    caseItem.bookingMode = mode;
+    if (mode === BOOKING_MODES.request) {
+      caseItem.bookingRequest = { status: "pending", requestedAt: now };
     }
     if (availability.status === "checked") {
-      caseItem.timeline.push({ at: availability.checkedAt, event: "Kalendern kontrollerad: tiden var ledig." });
-    } else {
+      caseItem.timeline.push({ at: availability.checkedAt, event: mode === BOOKING_MODES.request
+        ? "Kalendern kontrollerad: tiden ar ledig men utanfor grundtiderna - FORFRAGAN, kunden vantar pa bekraftelse."
+        : "Kalendern kontrollerad: tiden var ledig." });
+    } else if (!calendarConfigured) {
       caseItem.timeline.push({ at: new Date().toISOString(), event: "Kalender ej konfigurerad - tiden kontrolleras manuellt av verkstaden." });
+    } else {
+      caseItem.timeline.push({ at: new Date().toISOString(), event: "Kalendern kunde inte nas - FORFRAGAN, kontrollera krockar innan du bekraftar." });
     }
 
     caseItem.serviceNumber = await reserveServiceNumber(serviceNumberIndex, id, caseItem.serviceNumber);
@@ -1362,7 +1301,11 @@ export default async (request, context) => {
 
     const calendar = await createCalendarEvent(caseItem);
     caseItem.notifications.calendar = calendar;
-    if (calendar.status !== "created" && calendar.status !== "disabled") {
+    // En förfrågan lovar ingen tid, så en misslyckad kalenderhändelse stoppar
+    // den inte: Sebastian ser ärendet i admin och bekräftar/avböjer där.
+    if (calendar.status !== "created" && calendar.status !== "disabled" && mode === BOOKING_MODES.request) {
+      caseItem.timeline.push({ at: new Date().toISOString(), event: `Kalenderhandelse for forfragan kunde inte skapas: ${calendar.error || calendar.reason || "okant fel"}` });
+    } else if (calendar.status !== "created" && calendar.status !== "disabled") {
       caseItem.timeline.push({ at: new Date().toISOString(), event: `Kalenderhandelse kunde inte skapas: ${calendar.error || calendar.reason || "okant fel"}` });
       await store.setJSON(id, caseItem);
       return json({
@@ -1371,7 +1314,7 @@ export default async (request, context) => {
       }, 503);
     }
     if (calendar.status === "created") {
-      caseItem.timeline.push({ at: calendar.createdAt, event: "Kalenderhandelse skapad for verkstaden." });
+      caseItem.timeline.push({ at: calendar.createdAt, event: mode === BOOKING_MODES.request ? "Obekraftad forfragan inlagd i verkstadskalendern (FORFRAGAN i titeln)." : "Kalenderhandelse skapad for verkstaden." });
     }
 
     // Idempotency-nyckeln skrivs FÖRST NU, efter att bokningen är komplett i

@@ -26,24 +26,40 @@ Kunden fyller i:
 - rabattkod
 - intyg om att fordonet inte ar stoldgods
 
-### Bokningsbara tider (uppdaterat 2026-10-26)
+### Bokningsbara tider (uppdaterat 2026-10-27)
 
 Kunden ser alla dagar kl. 12.00–20.00 i halvtimmessteg (svensk tid), 35 dagar
-framåt. En tid är ledig om den
+framåt. Två lägen (`bookingMode` på ärendet):
 
-- ligger tisdag eller torsdag kl. 15.00–20.00 (grundtider, inbyggda i koden), **eller**
-- ligger inom en händelse i verkstadskalendern ("Nordic Verkstad - Bokningar")
-  vars titel börjar med **Öppet** (även "Oppet" eller "Open"),
+- **Direktbokning (`direct`)** – tisdag och torsdag kl. 15.00–20.00 (grundtider,
+  inbyggda i koden) samt tider inom en händelse i verkstadskalendern
+  ("Nordic Verkstad - Bokningar") vars titel börjar med **Öppet**. Tiden gäller
+  när kunden skickat formuläret: "Din tid är bokad", kalenderhändelse, ICS.
+- **Förfrågan (`request`)** – alla andra tider 12–20. Ärendet skapas med
+  `bookingRequest.status = "pending"`, kunden får "förfrågan mottagen, tiden
+  är INTE bokad, vänta på bekräftelse" (SMS + mail, ingen ICS), kalendern får
+  en händelse med prefixet **FÖRFRÅGAN (obekräftad):** och verkstadens SMS/mail
+  säger "kräver din bekräftelse i admin". Ingen tid lovas förrän Sebastian
+  agerat.
 
-**och** inte överlappar någon annan händelse i kalendern som är markerad som
-upptagen. Lediga (transparenta) händelser, t.ex. påminnelser, spärrar inget.
-Heldagshändelser som är upptagna (t.ex. "Semester") stänger hela dygnet.
+En tid är **upptagen** (grå, 409 vid försök) om den överlappar någon händelse i
+kalendern som inte är transparent – oavsett läge. Heldagshändelser som är
+upptagna (t.ex. "Semester") stänger hela dygnet.
 
-Rutin: Sebastian lägger in "Öppet 12–20" (eller del av dag) i kalendern för
-dagar han är på plats, och "Upptagen" för tider han inte kan ta emot. Upptagna
-tider visas gråa för kunden. Servern avvisar bokningsförsök på tider som inte är
-öppna (409), även om formuläret manipulerats. Når servern inte kalendern är bara
-grundtiderna bokningsbara. Befintliga bokningar ändras inte automatiskt.
+**Sebastians rutin för förfrågningar:** kundkortet i admin visar en gul ruta
+"FÖRFRÅGAN – kunden väntar på ditt svar" med två knappar:
+
+- *Bekräfta tiden* → kund-SMS "Din tid är nu bekräftad", FÖRFRÅGAN tas bort ur
+  kalendertiteln, `bookingRequest.status = "confirmed"`.
+- *Avböj tiden* → kund-SMS "Tyvärr kan vi inte ta emot dig … boka ny tid",
+  kalenderhändelsen tas bort, ärendet sätts till *väntar kund*.
+
+Båda SMS:en är manuella admin-åtgärder och går direkt (inte via
+godkännandekön). Bekräfta samma kväll – kunden kommer inte förrän SMS:et finns.
+
+Når servern inte kalendern är tis/tors 15–20 fortfarande direktbokning och allt
+annat förfrågan (Sebastian ser eventuella krockar när han bekräftar).
+Befintliga bokningar ändras inte automatiskt.
 
 ### 2. Systemet validerar tiden
 

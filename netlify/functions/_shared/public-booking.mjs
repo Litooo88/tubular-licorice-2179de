@@ -38,6 +38,8 @@ export const publicBookingCase = (caseItem = {}) => {
     status: clean(caseItem.status, 40) || "new",
     service: clean(caseItem.service, 240),
     preferredDate: clean(caseItem.preferredDate, 120) || null,
+    // "direct" = tiden galler, "request" = kunden vantar pa bekraftelse.
+    bookingMode: clean(caseItem.bookingMode, 20) || "direct",
     customerDelivery: publicDeliveryStatus(caseItem),
     notifications: {
       sms: publicChannelStatus(notifications.sms),

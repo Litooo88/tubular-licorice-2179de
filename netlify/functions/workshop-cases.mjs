@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { readEnv } from "./_shared/env.mjs";
 import internalCases from "./_shared/internal-case.js";
 import { ROOT_CAUSES, normalizeBrand, shouldIndex, upsertRepairIndex } from "./_shared/repair-index.mjs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
@@ -8,6 +9,8 @@ import {
 } from "./_shared/service-number.mjs";
 import { isQuietHour, nextOptimalSendAt } from "./_shared/quiet-hours.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
+import { deleteCalendarEvent, patchCalendarEvent } from "./_shared/google-calendar.mjs";
+import { isPendingRequest, REQUEST_EVENT_PREFIX, requestConfirmedSms, requestDeclinedSms } from "./_shared/booking-request.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -16,13 +19,7 @@ const json = (body, status = 200) =>
   });
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 const htmlEscape = (value) =>
   clean(value, 5000).replace(/[&<>"']/g, (char) => ({
     "&": "&amp;",
@@ -503,6 +500,51 @@ export default async (request, context) => {
     const operatorName = clean(body.operatorName, 80);
     const currentPayment = current.payment || {};
     const currentContent = current.content || {};
+
+    // Förfrågan (bokning utanför tis/tors 15-20): Sebastian bekräftar eller
+    // avböjer. Först här får kunden "tiden är bekräftad". Manuell admin-åtgärd
+    // => SMS:et går direkt (approved), inte via godkännandekön.
+    if (body.action === "confirm_booking_request" || body.action === "decline_booking_request") {
+      if (!isPendingRequest(current)) return json({ error: "Ärendet har ingen förfrågan som väntar på svar." }, 409);
+      const confirm = body.action === "confirm_booking_request";
+      const serviceNumber = serviceNumberForCase(current) || clean(current.id, 40).replace(/^case_/, "").slice(0, 18).toUpperCase();
+      const statusLink = `${SITE_URL}/status/?service=${encodeURIComponent(serviceNumber)}`;
+      const message = clean(body.message, 918) || (confirm
+        ? requestConfirmedSms({ name: current.customer?.name, preferredDate: current.preferredDate, serviceNumber, statusLink })
+        : requestDeclinedSms({ name: current.customer?.name, preferredDate: current.preferredDate, bookingUrl: `${SITE_URL}/book-online/` }));
+      const sms = await postSms({ to: current.customer?.phone, message, approved: true });
+      const eventId = clean(current.notifications?.calendar?.id, 160);
+      const calendar = confirm
+        ? await patchCalendarEvent(eventId, { summary: clean(current.notifications?.calendar?.summary, 300) || `Bokad inlamning: ${clean(current.customer?.name, 120)}` })
+        : await deleteCalendarEvent(eventId);
+      const by = operatorName || "Sebastian";
+      const next = {
+        ...current,
+        updatedAt: now,
+        updatedBy: { name: by, source: "admin", at: now },
+        bookingRequest: { ...(current.bookingRequest || {}), status: confirm ? "confirmed" : "declined", decidedAt: now, decidedBy: by },
+        status: confirm ? current.status : "waiting_customer",
+        outboundMessages: [...(Array.isArray(current.outboundMessages) ? current.outboundMessages : []), {
+          at: sms.sentAt || now, type: confirm ? "booking_request_confirmed" : "booking_request_declined",
+          to: normalizePhone(current.customer?.phone), status: sms.status, provider: sms.provider || "46elks", message, caseId: current.id,
+        }],
+        notifications: {
+          ...(current.notifications || {}),
+          bookingRequestSms: { status: sms.status, lastSentAt: sms.sentAt || now, to: normalizePhone(current.customer?.phone), error: sms.error || "" },
+          ...(confirm ? {} : { calendar: { ...(current.notifications?.calendar || {}), status: calendar.status === "deleted" ? "deleted" : current.notifications?.calendar?.status, deletedAt: now } }),
+        },
+        timeline: [
+          ...(Array.isArray(current.timeline) ? current.timeline : []),
+          { at: now, event: confirm ? `Förfrågan BEKRÄFTAD av ${by}: tiden gäller.` : `Förfrågan AVBÖJD av ${by}: kunden ombedd boka ny tid.` },
+          { at: sms.sentAt || now, event: `SMS till kund (${confirm ? "tid bekräftad" : "tid avböjd"}) ${sms.status === "sent" ? "skickat" : `misslyckades: ${clean(sms.error || sms.status, 120)}`}.` },
+          ...(calendar.status === "updated" ? [{ at: now, event: "Kalenderhändelsen uppdaterad: FÖRFRÅGAN borttagen ur titeln." }]
+            : calendar.status === "deleted" ? [{ at: now, event: "Kalenderhändelsen för förfrågan borttagen." }]
+            : calendar.status === "failed" ? [{ at: now, event: `Kalendern kunde inte uppdateras: ${clean(calendar.error, 120)} - rätta titeln manuellt.` }] : []),
+        ],
+      };
+      await store.setJSON(id, next);
+      return json({ ok: sms.status === "sent", sms, calendar, case: next });
+    }
 
     if (body.action === "send_sms") {
       const message = clean(body.message, 918);
