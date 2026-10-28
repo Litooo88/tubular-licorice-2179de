@@ -32,7 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-10-27 — Claude Code — KLAR (Bokningsmodell förfrågan + telefonfix pensionerat nummer)
+### 2026-10-28 — Claude Code (Drift & tillväxt) — PÅGÅR (Bokningswizard steg 2, omarbetad mot förfrågan-modellen)
+
+- **Branch:** `worktree-wizard-steg2-rework` (egen worktree, bas origin/main 4d61c57).
+- **Tar:** `book-online/index.html` (wizard-struktur i tre steg ovanpå DAGENS formulär —
+  Codex #163-texter och förfrågan-modellens "Skicka förfrågan"/"Boka inlämning" BEHÅLLS),
+  ev. nya tester. Rör INTE `booking.mjs`:s kontrakt, inte Novas filer.
+- **Bakgrund:** gamla `worktree-bokning-steg2` (d6098fe+f4c0280) mergades aldrig och är byggd
+  mot utgången bokningsmodell; den arbetas om här. GA4-shimfixen (dataLayer-shim för events
+  före deferred analytics.js) räddas in.
+- **Ingen annan fil tas.** Säg till här om ni behöver bokningssidan under tiden.
 
 - **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, mergad av Claude på Sebastians order).
 - **Telefoni (akut):** `VOICE_PRIMARY_NUMBER`/`VOICE_NOTIFY_TO`/`WORKSHOP_SMS_TO` i Netlify pekar sedan
