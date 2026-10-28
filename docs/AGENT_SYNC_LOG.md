@@ -32,6 +32,42 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-28 — Claude Code — KLAR (godkännandekön tjatar + kontraktstesterna tillbaka i grinden)
+
+- **Branch:** `fix/godkannandekon-synlig` (pushad, ej mergad). Ingen branchväxling
+  i den delade mappen — commit på plats, branchpekare satt efteråt.
+- **FYND 1 (åtgärdat):** godkännandespärren var ett tyst fel. 28/10 låg **tio
+  kund-SMS ogodkända sedan 27/10 09:00**, och eftersom utkastlistan samtidigt var
+  tom gick inget digest-SMS ut — `buildContactDigest` returnerade null. Spärren
+  hade bytt "skickas tyst" mot "skickas inte, tyst". Nu bär digesten kön också
+  (kort SMS även med tom utkastlista, ålder nämns från ett dygn), och "Att göra
+  nu" visar raden FÖRST när kön har poster. `call-dashboard` returnerar
+  `pendingSms` (antal + äldsta) — ren läsning, inga writes.
+- **Verifierat mot deadlock:** digest-SMS:et till Sebastian kan inte fastna i kön
+  det varnar om. `isStaffNumber` släpper förbi `gateSms`, och `SEBASTIAN_SMS_TO`
+  ligger i `STAFF_ENV`.
+- **FYND 2 (åtgärdat):** `test:contracts` hade fallit ur `npm run build` när
+  build-kedjan byggdes om. Elva tester som vaktar publik bokningsrespons (F01),
+  checkout-frakten (F05), tackmailets kvittens (F06), utkastformaten (F04), den
+  fail-closed SMS-webhooken (F07) och riskdefinitionen gick oskyddade. Tillbaka i
+  kedjan, nu 12 tester.
+- **FYND 3 (EJ åtgärdat, för ägaren av comm-testerna):** `test:comm` är RÖD
+  lokalt — `tests/kommunikation.test.mjs:57`, `readSmsLog` ger 0 poster efter ett
+  utskick mot den lokala Blobs-servern, och testet tar 25 s (ser ut som timeout).
+  **Produktionen loggar korrekt:** `/api/kommunikation` visar 14 avsändare med
+  kostnader sedan 2026-10-20. Alltså testmiljöartefakt, inte produktionshål.
+  Därför INTE lagd i build-grinden — lägg den dit när den är grön.
+- **Tester:** `npm run build` ✅ (contracts 12/12), `verify:checkout-products` ✅
+  44, `nemob-callflow npm run check` ✅, admins tre inline-script parsar ✅. Inga
+  SMS, mejl eller production-writes.
+- **OBS Codex:** din commit `0215432` (24/10, bara en loggpost här) låg opushad i
+  mappen. Den följer med min branch eftersom jag committade ovanpå main — säg till
+  om du vill ha den separat.
+- **Kvar sedan statuskontrollen 28/10:** 14 inkommande SMS utan ärende (hålet i
+  `sms-inbound`), 9 olösta i ringlistan, F10 (timeline, `admin/index.html:2450`),
+  F02 (ingen samtidighetskontroll i workshop-cases), och prisbeslutet 645 vs 695
+  för avancerad felsökning.
+
 ### 2026-10-24 - Codex - PÅGÅR (publika budskap och förtroende)
 
 - Egen worktree/branch `codex/site-clarity-trust`. Rättar FAQ/metadata/priser,
