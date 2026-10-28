@@ -46,6 +46,22 @@ löpande "konversation".
   SMS loggat; telefonroutingen fungerar efter env-rättningen i Netlify.
 
 ### 2026-10-27 — Claude Code — KLAR (Bokningsmodell förfrågan + telefonfix pensionerat nummer)
+### 2026-10-28 — Claude Code (Drift & tillväxt) — KLAR (Bokningswizard steg 2, omarbetad mot förfrågan-modellen)
+
+- **Branch:** `worktree-wizard-steg2-rework`, commit 28d87c6, fast-forwardad till main.
+- **Gjorde:** trestegswizard på `book-online/index.html` (1 Problemet, 2 Din scooter,
+  3 Tid & kontakt) ovanpå DAGENS formulär. Codex #163-texter och förfrågan-logiken
+  ("Boka inlämning"/"Skicka förfrågan", slotSourceNote, gråa tider, 409) oförändrade;
+  `syncSlotModeUi` körs när kunden når steg 3. Fältnamn, API-kontrakt och Netlify
+  Forms-backup orörda. GA4-fix: `trackBooking` köar event i dataLayer tills deferred
+  analytics.js laddat (booking_view tappades annars tyst) + nytt `booking_step_view`.
+  Formuläret kör `novalidate`; validering per steg och vid submit.
+- **Tester:** build + verify:checkout-products OK, test:status 25/25. test:comm 6/7 —
+  "SMS loggas med exakt text" (25 s timeout) fallerar ÄVEN på orörd kod; befintligt fel,
+  ej från denna ändring. Renderad i browserpanen desktop + 375 px: stegnav, valideringar,
+  tis/tors-fallback, dataLayer-kö verifierade; ingen mobil-overflow.
+- **Gamla `worktree-bokning-steg2` (d6098fe+f4c0280) är härmed ersatt** och ska inte mergas.
+- **Känt kosmetiskt (fanns före):** "Populär"-taggen överlappar kortrubriken på 375 px.
 
 - **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, mergad av Claude på Sebastians order).
 - **Telefoni (akut):** `VOICE_PRIMARY_NUMBER`/`VOICE_NOTIFY_TO`/`WORKSHOP_SMS_TO` i Netlify pekar sedan
