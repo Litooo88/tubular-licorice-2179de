@@ -100,6 +100,19 @@ h1{font-size:clamp(34px,5vw,58px);line-height:.98;margin-bottom:18px;letter-spac
 .contact-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
 .contact-actions a{display:block;border-radius:8px;border:1px solid rgba(0,200,83,.45);background:rgba(0,200,83,.12);padding:11px;text-align:center;font-weight:900;color:#dfffea}
 .form-block{border-top:1px solid #243027;padding-top:22px;margin-top:22px}
+[data-wizard-step][hidden]{display:none!important}
+.wizard-nav{display:flex;gap:8px;list-style:none;margin:0 0 4px;padding:0}
+.wizard-nav li{flex:1;display:flex;align-items:center;gap:8px;border:1px solid #2a352c;border-radius:8px;padding:9px 12px;font-size:12px;font-weight:900;color:#8d9a91;text-transform:uppercase;letter-spacing:.06em;cursor:default}
+.wizard-nav li b{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:999px;background:#17201a;border:1px solid #2a352c;font-size:12px}
+.wizard-nav li.is-active{border-color:rgba(0,200,83,.5);color:#dff3e5}
+.wizard-nav li.is-active b{background:rgba(0,200,83,.18);border-color:rgba(0,200,83,.5);color:#7ee2a8}
+.wizard-nav li.is-done{color:#b8c2ba;cursor:pointer}
+.wizard-nav li.is-done b{color:#7ee2a8}
+.wizard-buttons{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:18px;flex-wrap:wrap}
+.wizard-buttons .submit{width:auto;min-width:220px;margin:0}
+.wizard-hint{color:#8d9a91;font-size:13px;max-width:52%}
+.wizard-back{background:none;border:1px solid #3a463c;color:#dfe8e2;border-radius:7px;min-height:44px;padding:0 16px;font-weight:900;cursor:pointer}
+@media(max-width:640px){.wizard-nav li{padding:8px 6px;justify-content:center}.wizard-nav li:not(.is-active){font-size:0;gap:0}.wizard-nav li:not(.is-active) b{font-size:12px}.wizard-hint{max-width:100%}.wizard-buttons .submit{width:100%}}
 .block-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
 .block-head b{display:grid;place-items:center;width:32px;height:32px;border-radius:8px;background:var(--green);color:#021006}
 .block-head h3{font-size:18px}
@@ -254,12 +267,18 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       </div>
     </div>
 
-    <form name="booking" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+    <form name="booking" method="POST" data-netlify="true" netlify-honeypot="bot-field" novalidate>
       <input type="hidden" name="form-name" value="booking">
       <p style="display:none"><label>Fyll inte i detta: <input name="bot-field"></label></p>
 
-      <div class="form-block">
-        <div class="block-head"><b>1</b><h3>V&auml;lj det som passar b&auml;st</h3></div>
+      <ol class="wizard-nav" aria-label="Bokningssteg">
+        <li class="is-active" data-goto-step="1"><b>1</b> Problemet</li>
+        <li data-goto-step="2"><b>2</b> Din scooter</li>
+        <li data-goto-step="3"><b>3</b> Tid &amp; kontakt</li>
+      </ol>
+
+      <div class="form-block" data-wizard-step="1">
+        <div class="block-head"><b>1</b><h3>Vad beh&ouml;ver du hj&auml;lp med?</h3></div>
         <div class="problem-strip" aria-label="Vanliga problem">
           <div class="problem-chip"><strong>Punka?</strong> Slang, d&auml;ck eller tubeless.</div>
           <div class="problem-chip"><strong>D&aring;liga bromsar?</strong> Justering, bel&auml;gg och kontroll.</div>
@@ -332,10 +351,24 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
           <img class="partner-logo" src="/teverun-logo.jpg" alt="Teverun">
           <b class="partner-wordmark">MONORIM</b>
         </div>
+        <div class="wizard-buttons"><span class="wizard-hint">Du beh&ouml;ver inte veta vad som &auml;r fel &mdash; v&auml;lj det som ligger n&auml;rmast.</span><button type="button" class="submit wizard-next" data-next-step="2">N&auml;sta: din scooter &rarr;</button></div>
       </div>
 
-      <div class="form-block">
-        <div class="block-head"><b>2</b><h3>V&auml;lj tid och kontakt</h3></div>
+      <div class="form-block" data-wizard-step="2" hidden>
+        <div class="block-head"><b>2</b><h3>Din scooter</h3></div>
+        <div class="form-grid">
+          <div class="form-group"><label for="brand">Fabrikat / m&auml;rke</label><input id="brand" name="brand" required autocomplete="off" list="vehicleBrands" placeholder="T.ex. NAVEE"></div>
+          <div class="form-group"><label for="scooter">Exakt modellbeteckning</label><input id="scooter" name="scooter" required autocomplete="off" aria-describedby="vehicleIdentityHelp" placeholder="T.ex. N65i eller ST3 Pro"><small id="vehicleIdentityHelp" style="color:#8d9a91;line-height:1.45">St&aring;r oftast p&aring; etiketten under ramen eller p&aring; sidan av fotplattan. Skriv inte bara m&auml;rket.</small></div>
+          <datalist id="vehicleBrands">
+            <option value="NAVEE"><option value="Xiaomi"><option value="Ninebot / Segway"><option value="KuKirin"><option value="Dualtron"><option value="VSETT"><option value="Teverun"><option value="Halo Knight"><option value="iScooter"><option value="E-Wheels"><option value="Kugoo"><option value="Pure"><option value="NIU">
+          </datalist>
+        </div>
+        <div class="form-group full" style="margin-top:14px"><label for="message">Vad h&auml;nde?</label><textarea id="message" name="message" placeholder="Ex. bakd&auml;cket &auml;r platt, bromsen tar d&aring;ligt, laddar inte, startar inte eller vill ha snabb prisbed&ouml;mning."></textarea></div>
+        <div class="wizard-buttons"><button type="button" class="wizard-back" data-next-step="1">&larr; Tillbaka</button><button type="button" class="submit wizard-next" data-next-step="3">N&auml;sta: v&auml;lj tid &rarr;</button></div>
+      </div>
+
+      <div class="form-block" data-wizard-step="3" hidden>
+        <div class="block-head"><b>3</b><h3>Hur och n&auml;r?</h3></div>
         <div class="form-grid">
           <div class="form-group"><label for="name">Namn</label><input id="name" name="name" required autocomplete="name" placeholder="Ditt namn"></div>
           <div class="form-group"><label for="phone">Telefon</label><input id="phone" name="phone" required autocomplete="tel" inputmode="tel" placeholder="070-123 45 67"></div>
@@ -361,28 +394,18 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
             <option value="pickup-question">Fr&aring;ga om h&auml;mtning/l&auml;mning</option>
             <option value="not-sure">Vet inte &auml;n</option>
           </select></div>
-          <div class="form-group"><label for="brand">Fabrikat / m&auml;rke</label><input id="brand" name="brand" required autocomplete="off" list="vehicleBrands" placeholder="T.ex. NAVEE"></div>
-          <div class="form-group"><label for="scooter">Exakt modellbeteckning</label><input id="scooter" name="scooter" required autocomplete="off" aria-describedby="vehicleIdentityHelp" placeholder="T.ex. N65i eller ST3 Pro"><small id="vehicleIdentityHelp" style="color:#8d9a91;line-height:1.45">St&aring;r oftast p&aring; etiketten under ramen eller p&aring; sidan av fotplattan. Skriv inte bara m&auml;rket.</small></div>
-          <datalist id="vehicleBrands">
-            <option value="NAVEE"><option value="Xiaomi"><option value="Ninebot / Segway"><option value="KuKirin"><option value="Dualtron"><option value="VSETT"><option value="Teverun"><option value="Halo Knight"><option value="iScooter"><option value="E-Wheels">
-          </datalist>
         </div>
-      </div>
-
-      <div class="form-block">
-        <div class="block-head"><b>3</b><h3>Kort om problemet</h3></div>
-        <div class="form-group full"><label for="message">Vad h&auml;nde?</label><textarea id="message" name="message" placeholder="Ex. bakd&auml;cket &auml;r platt, bromsen tar d&aring;ligt, laddar inte, startar inte eller vill ha snabb prisbed&ouml;mning."></textarea></div>
         <input type="hidden" id="smsConsent" name="smsConsent" value="yes">
         <label class="check-row legal"><input type="checkbox" id="ownershipConfirm" name="ownershipConfirm" value="yes" required><span><strong>F&ouml;r allas trygghet: jag intygar att fordonet &auml;r mitt eller att jag har &auml;garens tillst&aring;nd.</strong><br>Jag kan visa kvitto, &auml;garuppgifter eller legitimation vid inl&auml;mning om verkstaden ber om det.</span></label>
         <label class="check-row legal"><input type="checkbox" id="termsConfirm" name="termsConfirm" value="yes" required><span><strong>Jag har l&auml;st och godk&auml;nner villkoren.</strong><br>Jag godk&auml;nner <a href="/villkor/" target="_blank" rel="noopener">bokningsvillkor</a>, no-show-policy och <a href="/garanti/" target="_blank" rel="noopener">garantipolicy</a> innan bokningen slutf&ouml;rs.</span></label>
-      </div>
 
-      <figure style="margin:0 0 12px;border-left:3px solid #00c853;padding:10px 14px;background:#0b100c;border-radius:0 8px 8px 0">
+      <figure style="margin:14px 0 12px;border-left:3px solid #00c853;padding:10px 14px;background:#0b100c;border-radius:0 8px 8px 0">
         <blockquote style="margin:0;color:#dce8df;font-size:13px;line-height:1.5">&rdquo;Duktiga, l&ouml;ste elproblem med min Ninebot jag haft ett bra tag. Har &auml;ven h&aring;llt kommunikation under processen. Kan starkt rekommendera.&rdquo;</blockquote>
         <figcaption style="margin-top:6px;color:#8d9a91;font-size:12px;font-weight:700">Tommie Irvhage &middot; &#9733;&#9733;&#9733;&#9733;&#9733; Google-recension</figcaption>
       </figure>
-      <p style="margin:0 0 10px;font-size:13px;color:#aeb8b0">Fast pris bekr&auml;ftas alltid innan arbete p&aring;b&ouml;rjas &middot; Fr&aring;gor? <a href="tel:+46101385498" style="font-weight:700">010-138 54 98</a></p>
-      <button type="submit" class="submit">Boka inl&auml;mning</button>
+      <p style="margin:0 0 10px;font-size:13px;color:#aeb8b0">Du godk&auml;nner alltid kostnadsf&ouml;rslaget innan arbete p&aring;b&ouml;rjas &middot; Fr&aring;gor? <a href="tel:+46101385498" style="font-weight:700">010-138 54 98</a></p>
+      <div class="wizard-buttons"><button type="button" class="wizard-back" data-next-step="2">&larr; Tillbaka</button><button type="submit" class="submit">Boka inl&auml;mning</button></div>
+      </div>
       <div class="status" id="bookingStatus" aria-live="polite"></div>
       <p class="note">Genom att skicka formul&auml;ret godk&auml;nner du att vi behandlar uppgifterna f&ouml;r att hantera &auml;rendet och kontakta dig om bokningen. Se <a href="/integritet/">integritetspolicy</a> och <a href="/villkor/">villkor</a>.</p>
     </form>
@@ -745,11 +768,55 @@ fillDayOptions();
 fillTimeOptions();
 loadLiveSlots();
 applyPrefillFromUrl();
+// Trestegsflödet (steg 2 i bokningsombyggnaden): kunden ser ett beslut i
+// taget. Alla fält ligger kvar i samma <form> med samma namn — API:t,
+// förfrågan-modellen och Netlify-backupen är oförändrade. Validering per
+// steg eftersom formuläret kör novalidate (dolda required-fält skulle
+// annars blockera submit tyst).
+let wizardStep=1;
+const wizardSteps=[...document.querySelectorAll('[data-wizard-step]')];
+const wizardNavItems=[...document.querySelectorAll('.wizard-nav li')];
+function validateWizardStep(step){
+  if(step===2&&!validateVehicleIdentity()){
+    bookingStatus.className='status err';
+    bookingStatus.textContent='Fyll i både fabrikat och exakt modellbeteckning så att vi kan märka upp rätt fordon.';
+    return false;
+  }
+  bookingStatus.className='status';bookingStatus.textContent='';
+  return true;
+}
+function gotoWizardStep(step){
+  if(step>wizardStep&&!validateWizardStep(wizardStep))return;
+  wizardStep=step;
+  wizardSteps.forEach((el)=>{el.hidden=Number(el.dataset.wizardStep)!==step;});
+  wizardNavItems.forEach((item)=>{
+    const n=Number(item.dataset.gotoStep);
+    item.classList.toggle('is-active',n===step);
+    item.classList.toggle('is-done',n<step);
+  });
+  trackBooking('booking_step_view',{step});
+  if(step===3)syncSlotModeUi();
+  const panel=document.querySelector('.wizard-nav');
+  if(panel)panel.scrollIntoView({behavior:'smooth',block:'start'});
+}
+document.querySelectorAll('.wizard-next,.wizard-back').forEach((button)=>button.addEventListener('click',()=>gotoWizardStep(Number(button.dataset.nextStep))));
+wizardNavItems.forEach((item)=>item.addEventListener('click',()=>{const n=Number(item.dataset.gotoStep);if(n<wizardStep)gotoWizardStep(n);}));
+gotoWizardStep(1);
 if(serviceSelect)serviceSelect.addEventListener('change',()=>{syncServiceChoiceFromSelect();syncVehicleIdentityRequirement();updateSummary();});
 // GA4-funnel (steg 0 i bokningsombyggnaden): fyra events utan persondata,
 // så vi kan räkna bokningsgrad = booking_completed / booking_view och se
 // var kunder faller bort. Baslinje mäts FÖRE flödesombyggnaden.
-function trackBooking(name,params){try{if(window.gtag)window.gtag('event',name,params||{});}catch(e){}}
+// Standard-shim: finns inte gtag ännu (analytics.js laddar med defer) köas
+// eventet i dataLayer och processas när GA4 laddar — annars tappades
+// booking_view tyst eftersom sidskriptet kör före analytics (bugg i steg 0;
+// använd page_view som funneltopp för baslinjeperioden t.o.m. 13/10).
+function trackBooking(name,params){
+  try{
+    window.dataLayer=window.dataLayer||[];
+    const g=window.gtag||function(){window.dataLayer.push(arguments);};
+    g('event',name,params||{});
+  }catch(e){}
+}
 trackBooking('booking_view');
 let bookingStartedTracked=false;
 serviceChoiceInputs.forEach((input)=>input.addEventListener('change',()=>{setServiceFromChoice(input.value);trackBooking('service_selected',{service:input.value});}));
@@ -808,7 +875,25 @@ if(bookingForm){
   bookingForm.addEventListener('submit',async(event)=>{
     event.preventDefault();
     const service=selectedService();
+    // Formuläret kör novalidate (wizard) — obligatoriska fält kontrolleras här.
+    const requireField=(id,label)=>{
+      const el=document.getElementById(id);
+      if(el&&!String(el.value||'').trim()){
+        bookingStatus.className='status err';
+        bookingStatus.textContent=label;
+        el.focus();
+        return false;
+      }
+      return true;
+    };
+    if(!requireField('name','Fyll i ditt namn.'))return;
+    if(!requireField('phone','Fyll i ditt telefonnummer.'))return;
+    const ownership=document.getElementById('ownershipConfirm');
+    const terms=document.getElementById('termsConfirm');
+    if(ownership&&ownership.required&&!ownership.checked){bookingStatus.className='status err';bookingStatus.textContent='Bocka i att fordonet är ditt eller att du har ägarens tillstånd.';ownership.focus();return;}
+    if(terms&&!terms.checked){bookingStatus.className='status err';bookingStatus.textContent='Bocka i att du godkänner villkoren.';terms.focus();return;}
     if(!validateVehicleIdentity()){
+      gotoWizardStep(2);
       bookingStatus.className='status err';
       bookingStatus.textContent='Fyll i både fabrikat och exakt modellbeteckning så att vi kan märka upp rätt fordon.';
       return;
