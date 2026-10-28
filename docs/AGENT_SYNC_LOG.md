@@ -32,6 +32,20 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-28 — Claude Code — KLAR (Mötes-SMS från Nova städat)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, mergad).
+- **Gjorde:** `meetingSmsToCustomer` i `_shared/voice-agent.mjs` skriver nu fyra rader (hälsning,
+  "ringer upp dig <tid>", "Ämne: …", signatur). Novas fritext städas: versal i tidsfrasen sänks,
+  skräp/blanksteg i slutet tas bort, ämne klipps vid ordgräns (90 tecken). Bakgrund: testsamtalet
+  27/10 gav "ringer upp dig Innan i morgon klockan 12, … angående E-Wheels E2SV2, … punkteringsfritt .".
+  Obs: kommunikationssidan rekonstruerar text för 46elks-SMS utan logg (före 20/10) med samma mall,
+  så äldre mötes-SMS visas i nytt format.
+- **Tester:** test:voice 53/53 (två nya fall), test:comm 7/7.
+- **Verifierat i prod 27/10:** Nova-samtal 17:56 lyckades (4:55, 45 meddelanden), möte bokat,
+  SMS loggat; telefonroutingen fungerar efter env-rättningen i Netlify.
+
+### 2026-10-27 — Claude Code — KLAR (Bokningsmodell förfrågan + telefonfix pensionerat nummer)
 ### 2026-10-28 — Claude Code (Drift & tillväxt) — KLAR (Bokningswizard steg 2, omarbetad mot förfrågan-modellen)
 
 - **Branch:** `worktree-wizard-steg2-rework`, commit 28d87c6, fast-forwardad till main.
