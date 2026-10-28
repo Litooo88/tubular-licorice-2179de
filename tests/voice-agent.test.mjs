@@ -73,7 +73,12 @@ test("telefonmöte kräver riktigt nummer och ett ämne", () => {
   assert.equal(normalizeMeeting({ phone: "0760000001", topic: "Batteri till G4" }).ok, true);
   assert.deepEqual(normalizeMeeting({ phone: "123", topic: "" }).errors, ["phone", "topic"]);
   const sms = meetingSmsToCustomer({ name: "Anna Gidmo", phone: "+46760000001", topic: "däckbyte", preferredTime: "i morgon förmiddag" });
-  assert.match(sms, /^Hej Anna! .*ringer upp dig i morgon förmiddag angående däckbyte/);
+  assert.match(sms, /^Hej Anna! Tack för samtalet\.\nSebastian på Nordic E-Mobility ringer upp dig i morgon förmiddag\.\nÄmne: däckbyte\.\n/);
+  // Fri text från Nova städas: versal sänks, skräp i slutet bort, ordgräns vid klipp.
+  const messy = meetingSmsToCustomer({ name: "Sebastian", phone: "+46700000000", topic: "E-Wheels E2SV2, punktering, vill byta till punkteringsfritt ", preferredTime: "Innan i morgon klockan 12, gärna i morgon förmiddag." });
+  assert.match(messy, /ringer upp dig innan i morgon klockan 12, gärna i morgon förmiddag\.\nÄmne: E-Wheels E2SV2, punktering, vill byta till punkteringsfritt\.\n/);
+  assert.match(meetingSmsToCustomer({ phone: "+46700000000", topic: "x".repeat(120) }), /ringer upp dig så snart han kan\.\nÄmne: x{90}\./);
+  assert.ok(meetingSmsToCustomer({ phone: "+46700000000", topic: "a ".repeat(200) }).length <= 320);
 });
 
 test("samtalssammanfattningen till Sebastian säger vem, vad och om möte bokats", () => {

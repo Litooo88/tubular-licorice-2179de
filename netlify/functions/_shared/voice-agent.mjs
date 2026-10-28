@@ -203,8 +203,31 @@ export const normalizeMeeting = (body) => {
 export const meetingSmsToSebastian = (m) =>
   `Telefonmöte bokat av röstassistenten: ${m.name || "okänt namn"} ${m.phone}${m.vehicle ? `, ${m.vehicle}` : ""}. Ämne: ${m.topic}. Önskad tid: ${m.preferredTime || "ingen angiven"}.`.slice(0, 480);
 
-export const meetingSmsToCustomer = (m) =>
-  `Hej${m.name ? ` ${m.name.split(/\s+/)[0]}` : ""}! Tack för samtalet. Sebastian på Nordic E-Mobility ringer upp dig${m.preferredTime ? ` ${m.preferredTime}` : " så snart han kan"} angående ${m.topic.slice(0, 60)}. Svara på detta SMS om något ändras.`.slice(0, 320);
+// Nova skriver önskad tid och ämne i fri text ("Innan i morgon klockan 12,
+// gärna i morgon förmiddag", "E-Wheels E2SV2, punktering, vill byta ..."), så
+// texten städas innan den sätts in i en mening: inledande versal sänks, skräp i
+// slutet tas bort och ämnet klipps vid ordgräns i stället för mitt i ett ord.
+const tidyPhrase = (value, max) => {
+  let text = clean(value, 300).replace(/\s+/g, " ").replace(/[\s.,;:!?-]+$/g, "");
+  if (text.length > max) {
+    const cut = text.slice(0, max);
+    text = (cut.includes(" ") ? cut.slice(0, cut.lastIndexOf(" ")) : cut).replace(/[\s.,;:!?-]+$/g, "");
+  }
+  return text;
+};
+const lowerFirst = (text) => (/^[A-ZÅÄÖ][a-zåäö]/.test(text) ? text[0].toLowerCase() + text.slice(1) : text);
+
+export const meetingSmsToCustomer = (m) => {
+  const first = m.name ? m.name.split(/\s+/)[0] : "";
+  const when = lowerFirst(tidyPhrase(m.preferredTime, 90));
+  const topic = tidyPhrase(m.topic, 90);
+  return [
+    `Hej${first ? ` ${first}` : ""}! Tack för samtalet.`,
+    `Sebastian på Nordic E-Mobility ringer upp dig ${when || "så snart han kan"}.`,
+    topic ? `Ämne: ${topic}.` : "",
+    "Svara på detta SMS om något ändras. /Nordic E-Mobility",
+  ].filter(Boolean).join("\n").slice(0, 320);
+};
 
 // ElevenLabs post-call-webhook: { type: "post_call_transcription", data: {
 // conversation_id, transcript: [{ role, message, tool_calls }], metadata: {
