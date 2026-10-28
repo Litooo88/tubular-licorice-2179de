@@ -3408,6 +3408,14 @@ function renderTodayStrip(data){
   const nyaOrorda=cases.filter(c=>c.status==='new'&&Date.now()-new Date(c.updatedAt||c.createdAt||0).getTime()>dygn).length;
   const dubbelkolla=cases.filter(c=>c.workshop&&c.workshop.needsSebastianReview).length;
   const items=[];
+  // Godkännandekön först: så länge den inte är tom går INGA kund-SMS ut, så
+  // allt annat i remsan är underordnat. Raden visas bara när kön har poster.
+  const vantarGodkannande=(data.pendingSms&&data.pendingSms.count)||0;
+  if(vantarGodkannande){
+    const aldst=data.pendingSms&&data.pendingSms.oldestAt;
+    const dygnGammalt=aldst?Math.floor((Date.now()-new Date(aldst).getTime())/dygn):0;
+    items.push(`<a href="/admin/kommunikation/" class="secondary" style="color:#ff6b5e;text-decoration:none">${vantarGodkannande} kund-SMS v&auml;ntar p&aring; godk&auml;nnande${dygnGammalt>=1?` (&auml;ldst ${dygnGammalt} dygn)`:''}</a>`);
+  }
   if(viktiga)items.push(`<button type="button" class="secondary" data-goto-tab="phone" style="color:#ff6b5e">${viktiga} VIKTIGT-telesvar</button>`);
   if(ringV)items.push(`<button type="button" class="secondary" data-goto-tab="phone" style="color:#ff6b5e">${ringV} RING-svar v&auml;ntar</button>`);
   if(atgard)items.push(`<button type="button" class="secondary" data-goto-tab="phone">${atgard} telesvar att l&auml;sa</button>`);

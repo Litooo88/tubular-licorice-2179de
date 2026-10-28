@@ -4,7 +4,7 @@ import { blockNumber, listBlockedNumbers, unblockNumber } from "./_shared/call-b
 import { findStaleRingReplies } from "./_shared/ring-escalation.mjs";
 import { isQuietHour, nextOptimalSendAt } from "./_shared/quiet-hours.mjs";
 import { SMS_PART_COST_SEK, campaignKey, filterRecipients, isGsm7, personalize, smsParts } from "./_shared/campaign.mjs";
-import { loggedSms } from "./_shared/comm-log.mjs";
+import { loggedSms, readPendingSms } from "./_shared/comm-log.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -657,7 +657,15 @@ const buildCallRows = async ({ syncLeads = false } = {}) => {
 
   const blockedNumbers = await listBlockedNumbers();
 
-  return { rows, todayRows, activeLeadRows, totals, stats, baselineStats, privateLine, account, inboundSms, ringUnhandled, optoutPhones, ownNumbers: [...ownNumbers()], campaignSent, voicemailAnalyses, blockedNumbers, readOnly: !syncLeads };
+  // Godkännandekön med i läsvyn så att "Att göra nu" kan visa den. Ren
+  // läsning — inga writes, inga utskick (samma regel som saldot ovan).
+  const pendingQueue = await readPendingSms().catch(() => []);
+  const pendingSms = {
+    count: pendingQueue.length,
+    oldestAt: pendingQueue.map((p) => String(p?.at || p?.queuedAt || "")).filter(Boolean).sort()[0] || null,
+  };
+
+  return { rows, todayRows, activeLeadRows, totals, stats, baselineStats, privateLine, account, inboundSms, ringUnhandled, optoutPhones, ownNumbers: [...ownNumbers()], campaignSent, voicemailAnalyses, blockedNumbers, pendingSms, readOnly: !syncLeads };
 };
 
 export default async (request) => {

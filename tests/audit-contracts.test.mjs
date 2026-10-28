@@ -265,3 +265,37 @@ test("risk: riskCases skiljs fran stalled och datakvalitet", () => {
   assert.equal(m.stalledByStatus.new, 3);
   assert.equal(m.missingModelCases, 1);
 });
+
+// --- Godkännandekön måste tjata, annars blir den ett tyst fel -------------
+
+test("digest: godkannandekon syns aven nar utkastlistan ar tom", async () => {
+  const { buildContactDigest } = await import("../netlify/functions/_shared/customer-contact.mjs");
+  const now = new Date("2026-10-28T09:00:00Z");
+  const koPost = (dagarSedan) => ({ at: new Date(now.getTime() - dagarSedan * 86400000).toISOString() });
+
+  // Inget att påminna om: inget SMS ska gå ut (brus var ett uttryckligt krav).
+  assert.equal(buildContactDigest({ drafts: [], pending: [], now }), null);
+
+  // Tom utkastlista men full kö: tidigare gav det null, alltså tystnad medan
+  // kundmeddelanden låg ogodkända. Nu ska det bli ett kort SMS.
+  const baraKo = buildContactDigest({ drafts: [], pending: [koPost(0), koPost(1), koPost(2)], now });
+  assert.ok(baraKo, "kön ensam måste ge ett meddelande");
+  assert.match(baraKo, /3 kund-SMS väntar på godkännande/);
+  assert.match(baraKo, /äldst 2 dygn/);
+  assert.match(baraKo, /admin\/kommunikation/);
+  assert.equal(/sms-utkast väntar/.test(baraKo), false);
+
+  // Färsk kö (under ett dygn) nämner ingen ålder.
+  assert.equal(/äldst/.test(buildContactDigest({ drafts: [], pending: [koPost(0)], now })), false);
+
+  // Båda köerna: utkastens numrering MÅSTE vara kvar, kön läggs till.
+  const bada = buildContactDigest({
+    drafts: [{ meta: { namn: "Anna", tjanst: "Broms" } }, { meta: { namn: "Bo", tjanst: "Batteri" } }],
+    pending: [koPost(0)],
+    now,
+  });
+  assert.match(bada, /2 sms-utkast väntar/);
+  assert.match(bada, /1\. Anna - Broms/);
+  assert.match(bada, /"1 ok"/);
+  assert.match(bada, /1 kund-SMS väntar på godkännande/);
+});

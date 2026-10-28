@@ -11,7 +11,7 @@
 
 import { getStore } from "@netlify/blobs";
 import { postSms as rawPostSms } from "./_shared/sms.mjs";
-import { loggedSms } from "./_shared/comm-log.mjs";
+import { loggedSms, readPendingSms } from "./_shared/comm-log.mjs";
 import { normalizeDraft } from "./sms-draft-inbox.mjs";
 import { buildContactDigest } from "./_shared/customer-contact.mjs";
 
@@ -89,10 +89,13 @@ export default async () => {
   const till = clean(env("SEBASTIAN_SMS_TO") || env("WORKSHOP_SMS_TO"), 40);
   const state = getStore({ name: "contact-queue", consistency: "strong" });
   const drafts = await läsUtkast();
+  // Godkännandekön bärs av samma digest. Utan den här raden fanns ingen yta
+  // alls som påminde om att kön inte var tom (se buildContactDigest).
+  const pending = await readPendingSms().catch(() => []);
 
-  if (!drafts.length) {
+  if (!drafts.length && !pending.length) {
     await state.setJSON("current", { at: new Date().toISOString(), items: [] }).catch(() => {});
-    return json({ ok: true, skipped: "inga_utkast" });
+    return json({ ok: true, skipped: "inget_att_paminna_om" });
   }
 
   // Numreringen MÅSTE sparas innan SMS:et går ut, annars kan ett snabbt svar
@@ -102,11 +105,13 @@ export default async () => {
     items: drafts.map((d, i) => ({ nr: i + 1, draftId: d.caseId, namn: clean(d?.meta?.namn, 80), telefon: clean(d?.meta?.telefon, 40) })),
   });
 
-  const mejl = await skickaMejl(drafts);
-  const message = buildContactDigest({ drafts });
+  // Mejlet hör till utkasten och skickas bara när det finns utkast — en tom
+  // utkastlista med väntande kö ska ge ett kort SMS, inte ett tomt mejl.
+  const mejl = drafts.length ? await skickaMejl(drafts) : { status: "skipped_inga_utkast" };
+  const message = buildContactDigest({ drafts, pending });
   const sms = till && message ? await postSms({ to: till, message }) : { status: "not_configured" };
-  console.log("contact_digest_sent", { count: drafts.length, sms: sms.status, mail: mejl.status });
-  return json({ ok: true, count: drafts.length, sms: sms.status, mail: mejl.status });
+  console.log("contact_digest_sent", { count: drafts.length, pending: pending.length, sms: sms.status, mail: mejl.status });
+  return json({ ok: true, count: drafts.length, pending: pending.length, sms: sms.status, mail: mejl.status });
 };
 
 // 06:20 UTC = 08:20 svensk sommartid, strax efter röstbrevlådedigesten 07:45
