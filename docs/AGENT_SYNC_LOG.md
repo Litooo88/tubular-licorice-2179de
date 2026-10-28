@@ -37,7 +37,8 @@ löpande "konversation".
 - **Branch:** `fix/godkannandekon-synlig` (pushad, ej mergad). Ingen branchväxling
   i den delade mappen — commit på plats, branchpekare satt efteråt.
 - **FYND 1 (åtgärdat):** godkännandespärren var ett tyst fel. 28/10 låg **tio
-  kund-SMS ogodkända sedan 27/10 09:00**, och eftersom utkastlistan samtidigt var
+  kund-SMS ogodkända sedan 27/10 09:00** (~20 timmar vid mätningen; jag skrev
+  felaktigt "över ett dygn" i commit-meddelandet), och eftersom utkastlistan var
   tom gick inget digest-SMS ut — `buildContactDigest` returnerade null. Spärren
   hade bytt "skickas tyst" mot "skickas inte, tyst". Nu bär digesten kön också
   (kort SMS även med tom utkastlista, ålder nämns från ett dygn), och "Att göra
