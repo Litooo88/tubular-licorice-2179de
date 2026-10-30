@@ -32,6 +32,25 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-30 — Claude Code — KLAR (Admin-GUI: gemensam meny, död kod bort)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, mergas av Claude på Sebastians order).
+- **Gjorde:** ny `admin/admin-nav.js` laddas på /admin/, /admin/kommunikation/, /admin/ring-upp/,
+  /admin/nova-rapport/: meny Ärenden · Kommunikation · Ring upp · Nova, fast bottenmeny på mobil
+  (≤700 px), rad överst på dator. Märke på Kommunikation = SMS som väntar på godkännande + kontakter
+  som väntar på svar (`/api/kommunikation?days=7`, siffrorna cachas 3 min i sessionStorage, ingen
+  kunddata). Kommunikationssidan uppdaterar märket via `window.nordicAdminNavCounts`.
+- **Borttaget ur /admin/:** "Kommunikationsradar – demo/test" (mockdata, aldrig live), "Servicelänk-
+  utrullning" (engångsutskick om telefonbuggen, avslutat) inkl. all JS för båda, samt infotexten
+  "Automatiskt flöde" som påstod att kund-SMS går direkt (fel sedan godkännandespärren).
+  Inloggningsraden fälls ihop när token finns. Underflikar heter nu Att göra · Kundkort · Verktyg.
+  Rubrikernas korslänkar på undersidorna borttagna (menyn ersätter dem).
+- **Inte rört:** API:er/routes, Telefoni-verktygen (ringlista, samtalsdashboard, spärrlista,
+  vinn-tillbaka-kampanj, live-SMS), SMS-utkast, kundexport.
+- **Tester:** build grön, test:comm 7/7, inline-JS i admin parsar. Alla fyra sidor renderade i
+  Chromium 390 px: meny, aktiv flik och märke korrekt; inga nya JS-fel (två fel på kommunikation/
+  ring-upp kommer från testets mockdata och uppstår identiskt på main).
+
 ### 2026-10-30 — Claude Code — KLAR (Förfrågan: "Bekräfta annan tid" + mejl vid bekräftelse)
 
 - **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, mergas av Claude på Sebastians order).
