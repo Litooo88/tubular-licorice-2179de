@@ -32,6 +32,22 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-10-30 — Claude Code — KLAR (Förfrågan: "Bekräfta annan tid" + mejl vid bekräftelse)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, mergas av Claude på Sebastians order).
+- **Gjorde:** `workshop-cases` ny action `reschedule_booking_request {preferredDate}`: validerar tid
+  (ej passerad, max 90 d), sätter ny `preferredDate`, sparar kundens önskan i
+  `bookingRequest.requestedDate`, SMS (approved) + **mejl** med nya tiden, flyttar kalenderhändelsen
+  (start/slut + titel utan FÖRFRÅGAN). Fungerar på pending OCH redan bekräftade förfrågningar.
+  `confirm_booking_request` skickar nu också bekräftelsemejl. Texter/hjälpare i
+  `_shared/booking-request.mjs` (`requestRescheduledSms`, `requestConfirmedEmail`, `validateNewTime`,
+  `calendarWindowFor`). Admin: knapp "Bekräfta annan tid" (datum + halvtimme 08–20) i gula rutan,
+  "Flytta tiden" på bekräftade. Leveransrutan visar "Förfrågan mottagen" i stället för vilseledande
+  "Delvis bekräftad"; `&auml;`-entiteter som syntes råa i den rutan ersatta med UTF-8.
+- **Tester:** ny `tests/booking-reschedule.test.mjs` (hjälpare + helflöde mot BlobsServer, 46elks/Resend
+  mockade), i `test:status`. Build grön, test:comm 7/7, verify:checkout-products OK. Admin-kortet
+  renderat i Chromium 430 px, klickflödet skickar rätt PATCH.
+
 ### 2026-10-28 — Claude Code — KLAR (Mötes-SMS från Nova städat)
 
 - **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, mergad).
