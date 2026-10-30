@@ -252,6 +252,12 @@ button.stat.is-filtering{border-color:#00c853;outline:1px solid rgba(0,200,83,.5
   .request-banner .request-actions button{font-weight:700}
   .request-banner .request-actions button.confirm{background:#00c853;color:#021307;border-color:#00c853}
   .request-banner.decided{border-color:#2e7d32;background:#0f1f12;color:#b9f5c4}
+  .request-banner .reschedule-form{display:none;margin-top:10px;padding:10px;border:1px dashed #f0b429;border-radius:8px}
+  .request-banner .reschedule-form.open{display:block}
+  .request-banner .reschedule-form label{display:block;font-size:13px;margin-bottom:6px;color:#ffe9a8}
+  .request-banner .reschedule-row{display:flex;gap:8px;flex-wrap:wrap}
+  .request-banner .reschedule-row input,.request-banner .reschedule-row select{font-size:16px;padding:8px;border-radius:6px;border:1px solid #6b5a1f;background:#141000;color:#fff}
+  .request-banner .reschedule-hint{font-size:12px;margin-top:6px;color:#e8d79a}
   .delivery-banner strong{display:block;margin-bottom:4px}
   .delivery-banner.ok{background:rgba(0,200,83,.10);border:1px solid rgba(0,200,83,.3);color:#e7fff0}
   .delivery-banner.partial{background:rgba(255,194,71,.12);border:1px solid rgba(255,194,71,.35);color:#fff1cf}
@@ -1197,19 +1203,40 @@ function contactStateMeta(item){
   if(item.status==='waiting_customer') return {label:'V&auml;ntar svar',className:'waiting'};
   return {label:'Ska kontaktas',className:'todo'};
 }
+// Formulär för "Bekräfta annan tid": datum + klockslag (halvtimmar 08-20),
+// förvalt på kundens önskade tid. Skickar SMS + mejl med den valda tiden.
+function rescheduleFormHtml(item){
+  const raw=String(item.preferredDate||'');
+  const m=raw.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
+  const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm'}).format(new Date());
+  const day=m&&m[1]>=today?m[1]:today;
+  const time=m?m[2]:'15:00';
+  const times=[];
+  for(let minute=8*60;minute<=20*60;minute+=30)times.push(`${String(Math.floor(minute/60)).padStart(2,'0')}:${String(minute%60).padStart(2,'0')}`);
+  if(!times.includes(time))times.push(time);
+  return `<div class="reschedule-form"><label>Ny tid som kunden f&aring;r i SMS${item.customer&&item.customer.email?' och mejl':''}</label><div class="reschedule-row"><input type="date" class="reschedule-day" min="${today}" value="${html(day)}"><select class="reschedule-time">${times.sort().map((t)=>`<option value="${t}"${t===time?' selected':''}>${t}</option>`).join('')}</select><button type="button" class="confirm request-reschedule-send">Skicka bekr&auml;ftelse</button></div><div class="reschedule-hint">Kalenderh&auml;ndelsen flyttas till den nya tiden. Kolla kalendern f&ouml;rst.</div></div>`;
+}
 function customerDeliveryMeta(item){
   const notifications=item.notifications||{};
   const delivery=item.customerDelivery||notifications.customerDelivery||{};
   const smsSent=notifications.sms&&notifications.sms.status==='sent';
   const emailSent=notifications.customerEmail&&notifications.customerEmail.status==='sent';
   const sentCount=(smsSent?1:0)+(emailSent?1:0);
+  const request=item.bookingMode==='request'&&item.bookingRequest;
+  if(request&&item.bookingRequest.status==='pending'){
+    return {className:'partial',title:'F&ouml;rfr&aring;gan mottagen',text:sentCount?'Kunden har fått "förfrågan mottagen, vänta på bekräftelse". Svara nedan.':'Kunden har inte fått något kvitto. Svara nedan, då får kunden SMS.'};
+  }
+  if(request&&item.bookingRequest.status==='confirmed'){
+    const ok=notifications.bookingRequestSms&&notifications.bookingRequestSms.status==='sent';
+    return ok?{className:'ok',title:'Kund bekr&auml;ftad',text:'Bekräftelsen med tiden gick iväg till kunden.'}:{className:'attention',title:'Bekr&auml;ftelse-SMS gick inte iv&auml;g',text:'Ring kunden och bekräfta tiden.'};
+  }
   if(delivery.status==='sent'||sentCount===2){
-    return {className:'ok',title:'Kund bekr&auml;ftad',text:'SMS och e-post gick iv&auml;g till kunden.'};
+    return {className:'ok',title:'Kund bekr&auml;ftad',text:'SMS och e-post gick iväg till kunden.'};
   }
   if(delivery.status==='partial'||sentCount===1){
-    return {className:'partial',title:'Delvis bekr&auml;ftad',text:(delivery.nextStep||'En kanal gick iv&auml;g. Komplettera manuellt vid behov.')};
+    return {className:'partial',title:'Delvis bekr&auml;ftad',text:(delivery.nextStep||'En kanal gick iväg. Komplettera manuellt vid behov.')};
   }
-  return {className:'attention',title:'Kundbekr&auml;ftelse saknas',text:(delivery.nextStep||'Ingen automatisk kundbekr&auml;ftelse gick iv&auml;g. Ring eller skicka manuellt nu.')};
+  return {className:'attention',title:'Kundbekr&auml;ftelse saknas',text:(delivery.nextStep||'Ingen automatisk kundbekräftelse gick iväg. Ring eller skicka manuellt nu.')};
 }
 function needsCustomerAttention(item){
   return customerDeliveryMeta(item).className==='attention';
@@ -3736,8 +3763,8 @@ function caseCard(item){
       <div class="key-date ${missingPreferred?'missing':''}"><span>${isPickupReady?'Planerad upph&auml;mtning':'Planerad inl&auml;mning'}</span><b>${missingPreferred?'Beh&ouml;ver bokas in':html(displayDate(item.preferredDate))}</b></div>
       <div class="delivery-banner ${delivery.className}"><strong>${delivery.title}</strong>${html(delivery.text)}</div>
       ${item.bookingMode==='request'&&item.bookingRequest?(item.bookingRequest.status==='pending'
-        ?`<div class="request-banner" data-request-case="${html(item.id)}"><strong>F&Ouml;RFR&Aring;GAN &ndash; kunden v&auml;ntar p&aring; ditt svar</strong>Tiden ${html(displayDate(item.preferredDate))} ligger utanf&ouml;r tis/tors 15&ndash;20. Kunden har f&aring;tt &quot;v&auml;nta p&aring; bekr&auml;ftelse&quot; och kommer inte f&ouml;rr&auml;n du bekr&auml;ftat. Kolla kalendern f&ouml;rst.<div class="request-actions"><button type="button" class="confirm request-decide" data-decision="confirm_booking_request">Bekr&auml;fta tiden (SMS till kund)</button><button type="button" class="secondary request-decide" data-decision="decline_booking_request" data-confirm="Avb&ouml;ja tiden? Kunden f&aring;r SMS om att boka ny tid och kalenderh&auml;ndelsen tas bort.">Avb&ouml;j tiden</button></div></div>`
-        :`<div class="request-banner decided"><strong>F&ouml;rfr&aring;gan ${item.bookingRequest.status==='confirmed'?'bekr&auml;ftad':'avb&ouml;jd'}</strong>${html(item.bookingRequest.decidedBy||'')} ${item.bookingRequest.decidedAt?dateShort(item.bookingRequest.decidedAt):''}</div>`):''}
+        ?`<div class="request-banner" data-request-case="${html(item.id)}"><strong>F&Ouml;RFR&Aring;GAN &ndash; kunden v&auml;ntar p&aring; ditt svar</strong>Tiden ${html(displayDate(item.preferredDate))} ligger utanf&ouml;r tis/tors 15&ndash;20. Kunden har f&aring;tt &quot;v&auml;nta p&aring; bekr&auml;ftelse&quot; och kommer inte f&ouml;rr&auml;n du bekr&auml;ftat. Kolla kalendern f&ouml;rst.<div class="request-actions"><button type="button" class="confirm request-decide" data-decision="confirm_booking_request">Bekr&auml;fta tiden (SMS${item.customer&&item.customer.email?' + mejl':''})</button><button type="button" class="secondary request-reschedule-toggle">Bekr&auml;fta annan tid</button><button type="button" class="secondary request-decide" data-decision="decline_booking_request" data-confirm="Avb&ouml;ja tiden? Kunden f&aring;r SMS om att boka ny tid och kalenderh&auml;ndelsen tas bort.">Avb&ouml;j tiden</button></div>${rescheduleFormHtml(item)}</div>`
+        :`<div class="request-banner decided"><strong>F&ouml;rfr&aring;gan ${item.bookingRequest.status==='confirmed'?(item.bookingRequest.rescheduledAt?'bekr&auml;ftad p&aring; ny tid':'bekr&auml;ftad'):'avb&ouml;jd'}</strong>${html(item.bookingRequest.decidedBy||'')} ${item.bookingRequest.decidedAt?dateShort(item.bookingRequest.decidedAt):''}${item.bookingRequest.rescheduledAt&&item.bookingRequest.requestedDate?` &middot; kunden bad om ${html(displayDate(item.bookingRequest.requestedDate))}`:''}${item.bookingRequest.status==='confirmed'?`<div class="request-actions"><button type="button" class="secondary request-reschedule-toggle">Flytta tiden</button></div>${rescheduleFormHtml(item)}`:''}</div>`):''}
       <div class="message-box"><strong>${html(item.service||'Annat')}</strong><br>${html(item.message||'Ingen beskrivning')}</div>
       ${item.order?`<div class="addons-box"><strong>Produktorder ${html(item.order.reference||'')}</strong><br>${html(item.order.brand||'')} · ${html(item.payment?.providerMethod||'Stripe')}<br>${html([item.order.shipping?.name,item.order.shipping?.address?.line1,item.order.shipping?.address?.postal_code,item.order.shipping?.address?.city].filter(Boolean).join(', '))}<br>Leveransval behöver bekräftas med kunden.</div>`:''}
       ${addonHtml}
@@ -4220,6 +4247,34 @@ function caseCard(item){
       await loadCaseTimeline(item,card);
     }catch(error){showError(error.message)}
     finally{button.disabled=false;button.textContent=original}
+  });
+  card.querySelectorAll('.request-reschedule-toggle').forEach((button)=>{
+    button.addEventListener('click',()=>{
+      const form=button.closest('.request-banner').querySelector('.reschedule-form');
+      if(form)form.classList.toggle('open');
+    });
+  });
+  card.querySelectorAll('.request-reschedule-send').forEach((button)=>{
+    button.addEventListener('click',async()=>{
+      const form=button.closest('.reschedule-form');
+      const day=form.querySelector('.reschedule-day').value;
+      const time=form.querySelector('.reschedule-time').value;
+      if(!day||!time){showError('Välj datum och klockslag.');return;}
+      const label=new Date(`${day}T12:00:00Z`).toLocaleDateString('sv-SE',{timeZone:'UTC',weekday:'long',day:'numeric',month:'long'});
+      if(!confirm(`Boka in kunden ${label} kl ${time}?\n\nKunden får SMS${item.customer&&item.customer.email?' och mejl':''} med den nya tiden och kalendern flyttas.`))return;
+      const original=button.textContent;
+      button.disabled=true;
+      button.textContent='Skickar...';
+      try{
+        const result=await api('/api/cases/'+encodeURIComponent(item.id),{
+          method:'PATCH',
+          body:JSON.stringify({action:'reschedule_booking_request',preferredDate:`${day}T${time}`,operatorName:caseOperatorName()})
+        });
+        if(result&&result.sms&&result.sms.status!=='sent')showError(`Nya tiden är sparad men SMS:et gick inte iväg (${result.sms.error||result.sms.status}). Ring kunden.`);
+        await loadCases();
+      }catch(error){showError(error.message)}
+      finally{button.disabled=false;button.textContent=original;}
+    });
   });
   card.querySelectorAll('.request-decide').forEach((button)=>{
     button.addEventListener('click',async()=>{

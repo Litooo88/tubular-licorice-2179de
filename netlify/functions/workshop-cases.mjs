@@ -10,7 +10,7 @@ import {
 import { isQuietHour, nextOptimalSendAt } from "./_shared/quiet-hours.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
 import { deleteCalendarEvent, patchCalendarEvent } from "./_shared/google-calendar.mjs";
-import { isPendingRequest, REQUEST_EVENT_PREFIX, requestConfirmedSms, requestDeclinedSms } from "./_shared/booking-request.mjs";
+import { calendarWindowFor, isPendingRequest, requestConfirmedEmail, requestConfirmedSms, requestDeclinedSms, requestRescheduledSms, validateNewTime } from "./_shared/booking-request.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -100,6 +100,9 @@ const numberOrNull = (value) => {
   const normalized = Number(String(value).replace(/[^\d.,-]/g, "").replace(",", "."));
   return Number.isFinite(normalized) ? normalized : null;
 };
+
+const WORKSHOP_ADDRESS = "Pistolvägen 6, 702 21 Örebro";
+const MAPS_LINK = "https://www.google.com/maps/place/Pistolv%C3%A4gen+6,+702+21+%C3%96rebro";
 
 const STAFF = {
   workshop: { key: "workshop", name: "Verkstaden", role: "Golv, mottagning och snabba jobb", phone: "010-138 54 98" },
@@ -501,49 +504,95 @@ export default async (request, context) => {
     const currentPayment = current.payment || {};
     const currentContent = current.content || {};
 
-    // Förfrågan (bokning utanför tis/tors 15-20): Sebastian bekräftar eller
-    // avböjer. Först här får kunden "tiden är bekräftad". Manuell admin-åtgärd
-    // => SMS:et går direkt (approved), inte via godkännandekön.
-    if (body.action === "confirm_booking_request" || body.action === "decline_booking_request") {
-      if (!isPendingRequest(current)) return json({ error: "Ärendet har ingen förfrågan som väntar på svar." }, 409);
-      const confirm = body.action === "confirm_booking_request";
+    // Förfrågan (bokning utanför tis/tors 15-20): Sebastian bekräftar, väljer
+    // en annan tid eller avböjer. Först här får kunden "tiden gäller".
+    // Manuell admin-åtgärd => SMS:et går direkt (approved), inte via kön.
+    //   confirm_booking_request    -> SMS + mejl med kundens önskade tid
+    //   reschedule_booking_request -> {preferredDate:"YYYY-MM-DDTHH:MM"}: SMS + mejl med NY tid,
+    //                                 kalenderhändelsen flyttas (fungerar även på redan bekräftad)
+    //   decline_booking_request    -> SMS "boka ny tid", kalenderhändelsen tas bort
+    const REQUEST_ACTIONS = new Set(["confirm_booking_request", "reschedule_booking_request", "decline_booking_request"]);
+    if (REQUEST_ACTIONS.has(body.action)) {
+      const kind = body.action === "confirm_booking_request" ? "confirm" : body.action === "reschedule_booking_request" ? "reschedule" : "decline";
+      const requestStatus = clean(current.bookingRequest?.status, 20);
+      const canReschedule = current.bookingMode === "request" && ["pending", "confirmed"].includes(requestStatus);
+      if (kind === "reschedule" ? !canReschedule : !isPendingRequest(current)) {
+        return json({ error: "Ärendet har ingen förfrågan som väntar på svar." }, 409);
+      }
+      let newDate = current.preferredDate;
+      if (kind === "reschedule") {
+        const check = validateNewTime(body.preferredDate);
+        if (!check.ok) return json({ error: check.error }, 400);
+        newDate = check.value;
+      }
+      const previousDate = current.preferredDate;
       const serviceNumber = serviceNumberForCase(current) || clean(current.id, 40).replace(/^case_/, "").slice(0, 18).toUpperCase();
       const statusLink = `${SITE_URL}/status/?service=${encodeURIComponent(serviceNumber)}`;
-      const message = clean(body.message, 918) || (confirm
-        ? requestConfirmedSms({ name: current.customer?.name, preferredDate: current.preferredDate, serviceNumber, statusLink })
+      const who = { name: current.customer?.name, preferredDate: newDate, serviceNumber, statusLink };
+      const message = clean(body.message, 918) || (kind === "confirm" ? requestConfirmedSms(who)
+        : kind === "reschedule" ? requestRescheduledSms(who)
         : requestDeclinedSms({ name: current.customer?.name, preferredDate: current.preferredDate, bookingUrl: `${SITE_URL}/book-online/` }));
       const sms = await postSms({ to: current.customer?.phone, message, approved: true });
+      const customerEmail = clean(current.customer?.email, 240);
+      let email = { status: "not_requested" };
+      if (kind !== "decline" && customerEmail) {
+        const mail = requestConfirmedEmail({ ...who, address: WORKSHOP_ADDRESS, mapsLink: MAPS_LINK, changed: kind === "reschedule", previousDate: kind === "reschedule" ? previousDate : "" });
+        email = await resendEmail({ to: [customerEmail], ...mail, idempotencyKey: `${current.id}-request-${kind}-${newDate}` })
+          .catch((error) => ({ status: "failed", error: clean(error?.message, 180) }));
+      }
       const eventId = clean(current.notifications?.calendar?.id, 160);
-      const calendar = confirm
-        ? await patchCalendarEvent(eventId, { summary: clean(current.notifications?.calendar?.summary, 300) || `Bokad inlamning: ${clean(current.customer?.name, 120)}` })
-        : await deleteCalendarEvent(eventId);
+      const baseSummary = clean(current.notifications?.calendar?.summary, 300) || `Bokad inlamning: ${clean(current.customer?.name, 120)}`;
+      let calendar;
+      if (kind === "decline") {
+        calendar = await deleteCalendarEvent(eventId);
+      } else if (kind === "reschedule") {
+        const window = calendarWindowFor(newDate, Number(env("GOOGLE_CALENDAR_DURATION_MINUTES") || 30), env("GOOGLE_CALENDAR_TIMEZONE") || "Europe/Stockholm");
+        calendar = await patchCalendarEvent(eventId, { summary: baseSummary, ...window });
+      } else {
+        calendar = await patchCalendarEvent(eventId, { summary: baseSummary });
+      }
       const by = operatorName || "Sebastian";
+      const smsLine = `SMS till kund (${kind === "confirm" ? "tid bekräftad" : kind === "reschedule" ? "ny tid" : "tid avböjd"}) ${sms.status === "sent" ? "skickat" : `misslyckades: ${clean(sms.error || sms.status, 120)}`}.`;
+      const emailLine = email.status === "sent" ? "Bekräftelsemejl skickat till kund."
+        : email.status === "not_requested" ? "" : `Bekräftelsemejl ej skickat (${clean(email.error || email.status, 120)}).`;
       const next = {
         ...current,
+        preferredDate: newDate,
         updatedAt: now,
         updatedBy: { name: by, source: "admin", at: now },
-        bookingRequest: { ...(current.bookingRequest || {}), status: confirm ? "confirmed" : "declined", decidedAt: now, decidedBy: by },
-        status: confirm ? current.status : "waiting_customer",
+        bookingRequest: {
+          ...(current.bookingRequest || {}),
+          status: kind === "decline" ? "declined" : "confirmed",
+          decidedAt: now,
+          decidedBy: by,
+          ...(kind === "reschedule" ? { requestedDate: current.bookingRequest?.requestedDate || previousDate, rescheduledAt: now } : {}),
+        },
+        status: kind === "decline" ? "waiting_customer" : current.status,
         outboundMessages: [...(Array.isArray(current.outboundMessages) ? current.outboundMessages : []), {
-          at: sms.sentAt || now, type: confirm ? "booking_request_confirmed" : "booking_request_declined",
+          at: sms.sentAt || now, type: `booking_request_${kind === "confirm" ? "confirmed" : kind === "reschedule" ? "rescheduled" : "declined"}`,
           to: normalizePhone(current.customer?.phone), status: sms.status, provider: sms.provider || "46elks", message, caseId: current.id,
         }],
         notifications: {
           ...(current.notifications || {}),
           bookingRequestSms: { status: sms.status, lastSentAt: sms.sentAt || now, to: normalizePhone(current.customer?.phone), error: sms.error || "" },
-          ...(confirm ? {} : { calendar: { ...(current.notifications?.calendar || {}), status: calendar.status === "deleted" ? "deleted" : current.notifications?.calendar?.status, deletedAt: now } }),
+          ...(email.status !== "not_requested" ? { bookingRequestEmail: { status: email.status, lastSentAt: email.sentAt || now, error: email.error || "" } } : {}),
+          ...(kind === "decline" ? { calendar: { ...(current.notifications?.calendar || {}), status: calendar.status === "deleted" ? "deleted" : current.notifications?.calendar?.status, deletedAt: now } } : {}),
         },
         timeline: [
           ...(Array.isArray(current.timeline) ? current.timeline : []),
-          { at: now, event: confirm ? `Förfrågan BEKRÄFTAD av ${by}: tiden gäller.` : `Förfrågan AVBÖJD av ${by}: kunden ombedd boka ny tid.` },
-          { at: sms.sentAt || now, event: `SMS till kund (${confirm ? "tid bekräftad" : "tid avböjd"}) ${sms.status === "sent" ? "skickat" : `misslyckades: ${clean(sms.error || sms.status, 120)}`}.` },
-          ...(calendar.status === "updated" ? [{ at: now, event: "Kalenderhändelsen uppdaterad: FÖRFRÅGAN borttagen ur titeln." }]
+          { at: now, event: kind === "confirm" ? `Förfrågan BEKRÄFTAD av ${by}: tiden gäller.`
+            : kind === "reschedule" ? `NY TID satt av ${by}: ${newDate.replace("T", " ")} (kunden bad om ${String(previousDate || "").replace("T", " ")}).`
+            : `Förfrågan AVBÖJD av ${by}: kunden ombedd boka ny tid.` },
+          { at: sms.sentAt || now, event: smsLine },
+          ...(emailLine ? [{ at: email.sentAt || now, event: emailLine }] : []),
+          ...(calendar.status === "updated" ? [{ at: now, event: kind === "reschedule" ? "Kalenderhändelsen flyttad till nya tiden." : "Kalenderhändelsen uppdaterad: FÖRFRÅGAN borttagen ur titeln." }]
             : calendar.status === "deleted" ? [{ at: now, event: "Kalenderhändelsen för förfrågan borttagen." }]
-            : calendar.status === "failed" ? [{ at: now, event: `Kalendern kunde inte uppdateras: ${clean(calendar.error, 120)} - rätta titeln manuellt.` }] : []),
+            : calendar.status === "failed" ? [{ at: now, event: `Kalendern kunde inte uppdateras: ${clean(calendar.error, 120)} - rätta manuellt.` }]
+            : calendar.status === "skipped" && kind === "reschedule" ? [{ at: now, event: "Ingen kalenderhändelse fanns - lägg in den nya tiden manuellt." }] : []),
         ],
       };
       await store.setJSON(id, next);
-      return json({ ok: sms.status === "sent", sms, calendar, case: next });
+      return json({ ok: sms.status === "sent", sms, email, calendar, case: next });
     }
 
     if (body.action === "send_sms") {

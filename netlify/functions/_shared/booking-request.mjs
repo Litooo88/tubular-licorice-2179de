@@ -63,3 +63,95 @@ export const requestDeclinedSms = ({ name, preferredDate, bookingUrl }) =>
 // Verkstad: rubrikrad i det interna SMS:et så att en förfrågan aldrig läses
 // som en färdig bokning.
 export const WORKSHOP_REQUEST_HEADLINE = "FÖRFRÅGAN – kräver din bekräftelse i admin (Bekräfta tiden / Avböj)";
+
+// ---- Bekräfta annan tid (Sebastian flyttar en förfrågan, 2026-10-30) ----
+// Sebastian väljer en ny tid i admin; kunden får SMS + mejl med DEN tiden.
+
+const htmlEscape = (value) =>
+  String(value ?? "").replace(/[&<>"']/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;" })[char]);
+
+export const LOCAL_TIME_RE = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/;
+
+// "Nu" som lokal svensk tid i formatet YYYY-MM-DDTHH:MM (jämförbar som sträng).
+export const stockholmNowLocal = (now = new Date()) => {
+  const parts = Object.fromEntries(new Intl.DateTimeFormat("sv-SE", {
+    timeZone: "Europe/Stockholm", year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", hourCycle: "h23",
+  }).formatToParts(now).filter((p) => p.type !== "literal").map((p) => [p.type, p.value]));
+  return `${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}`;
+};
+
+// Validerar Sebastians nya tid: giltigt datum och klockslag, inte passerad,
+// högst 90 dagar fram. Klocktiden begränsas inte: det är Sebastians beslut.
+export const validateNewTime = (value, now = new Date()) => {
+  const raw = clean(value, 40);
+  const match = raw.match(LOCAL_TIME_RE);
+  if (!match) return { ok: false, error: "Välj datum och klockslag." };
+  const [, y, mo, d, h, mi] = match.map(Number);
+  const probe = new Date(Date.UTC(y, mo - 1, d, h, mi));
+  if (probe.getUTCFullYear() !== y || probe.getUTCMonth() !== mo - 1 || probe.getUTCDate() !== d || h > 23 || mi > 59) {
+    return { ok: false, error: "Ogiltigt datum eller klockslag." };
+  }
+  if (raw <= stockholmNowLocal(now)) return { ok: false, error: "Tiden har redan passerat." };
+  const limit = stockholmNowLocal(new Date(now.getTime() + 90 * 864e5));
+  if (raw > limit) return { ok: false, error: "Tiden ligger mer än 90 dagar fram." };
+  return { ok: true, value: raw };
+};
+
+// Kalenderfönster för Google Calendar (lokal tid + tidszon, ingen konvertering).
+export const calendarWindowFor = (preferredDate, durationMinutes = 30, timeZone = "Europe/Stockholm") => {
+  const match = clean(preferredDate, 40).match(/^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})/);
+  if (!match) return null;
+  const [, y, mo, d, h, mi] = match.map(Number);
+  const start = new Date(Date.UTC(y, mo - 1, d, h, mi));
+  const end = new Date(start.getTime() + Math.max(15, Math.min(240, durationMinutes)) * 60000);
+  const fmt = (date) => date.toISOString().slice(0, 16) + ":00";
+  return { start: { dateTime: fmt(start), timeZone }, end: { dateTime: fmt(end), timeZone } };
+};
+
+// Kund: Sebastian har bekräftat en ANNAN tid än den kunden bad om.
+export const requestRescheduledSms = ({ name, preferredDate, serviceNumber, statusLink }) =>
+  `Hej ${firstNameOf(name)}! Vi har bokat in dig på en ny tid hos Nordic E-Mobility: ${formatRequestedTime(preferredDate)}. Kom då — vi hör av oss bara om tiden behöver flyttas igen.\n` +
+  `Passar tiden inte? Svara på detta SMS eller ring ${WORKSHOP_PHONE_DISPLAY}.\n` +
+  `Servicenummer: ${serviceNumber}\nFölj din reparation: ${statusLink}\n/Nordic E-Mobility`;
+
+// Kund: bekräftelsemejl (samma för bekräftad och ny tid; changed styr texten).
+export const requestConfirmedEmail = ({ name, preferredDate, serviceNumber, statusLink, address, mapsLink, changed = false, previousDate = "" }) => {
+  const when = formatRequestedTime(preferredDate);
+  const subject = `${changed ? "Ny tid bokad" : "Din tid är bekräftad"}: ${when} - ${serviceNumber} | Nordic E-Mobility`;
+  const lead = changed
+    ? `Vi har bokat in dig på en ny tid${previousDate ? ` i stället för ${formatRequestedTime(previousDate)}` : ""}. Den nya tiden gäller &mdash; kom d&aring;.`
+    : "Din tid &auml;r nu bekr&auml;ftad. Kom d&aring; &mdash; vi h&ouml;r av oss bara om tiden beh&ouml;ver flyttas.";
+  const html = `
+  <div style="margin:0;background:#f4f6f2;padding:24px;font-family:Arial,sans-serif;color:#111">
+    <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #dfe5dc;border-radius:8px;overflow:hidden">
+      <div style="background:#061007;color:#fff;padding:22px 24px">
+        <div style="font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8ff5ae;font-weight:700">Nordic E-Mobility</div>
+        <h1 style="font-size:24px;line-height:1.2;margin:8px 0 0">${changed ? "Ny tid bokad" : "Din tid &auml;r bekr&auml;ftad"}</h1>
+      </div>
+      <div style="padding:24px;line-height:1.6">
+        <p>Hej ${htmlEscape(firstNameOf(name))},</p>
+        <p>${lead}</p>
+        <div style="background:#f7faf6;border:1px solid #dfe8dc;border-radius:8px;padding:16px;margin:18px 0">
+          <p style="margin:0 0 8px;font-size:18px"><strong>Tid: ${htmlEscape(when)}</strong></p>
+          <p style="margin:0 0 8px"><strong>Plats:</strong> ${htmlEscape(address)}</p>
+          <p style="margin:0"><strong>Servicenummer:</strong> ${htmlEscape(serviceNumber)}</p>
+        </div>
+        <p><a href="${htmlEscape(statusLink)}" style="display:inline-block;background:#00c853;color:#021307;text-decoration:none;border-radius:8px;padding:12px 16px;font-weight:700">F&ouml;lj din reparation</a>&nbsp;&nbsp;<a href="${htmlEscape(mapsLink)}" style="display:inline-block;background:#061007;color:#fff;text-decoration:none;border-radius:8px;padding:12px 16px;font-weight:700">Visa p&aring; Google Maps</a></p>
+        <p>${changed ? "Passar tiden inte? Svara p&aring; detta mejl eller ring " + WORKSHOP_PHONE_DISPLAY + " s&aring; hittar vi en annan." : ""} Ingen reparation &auml;r best&auml;lld &auml;nnu: <strong>du godk&auml;nner alltid priset innan vi b&ouml;rjar</strong>.</p>
+        <p style="color:#555;font-size:13px">Nordic E-Mobility &middot; ${htmlEscape(address)} &middot; ${WORKSHOP_PHONE_DISPLAY}</p>
+      </div>
+    </div>
+  </div>`;
+  const text = [
+    `Hej ${firstNameOf(name)},`,
+    "",
+    changed ? `Vi har bokat in dig pa en ny tid${previousDate ? ` i stallet for ${formatRequestedTime(previousDate)}` : ""}. Den nya tiden galler - kom da.` : "Din tid ar nu bekraftad. Kom da - vi hor av oss bara om tiden behover flyttas.",
+    `Tid: ${when}`,
+    `Plats: ${address}`,
+    `Servicenummer: ${serviceNumber}`,
+    `Folj din reparation: ${statusLink}`,
+    changed ? `Passar tiden inte? Svara pa detta mejl eller ring ${WORKSHOP_PHONE_DISPLAY}.` : "",
+    "Ingen reparation ar bestalld annu: du godkanner alltid priset innan vi borjar.",
+  ].filter((line) => line !== null).join("\n");
+  return { subject, html, text };
+};
