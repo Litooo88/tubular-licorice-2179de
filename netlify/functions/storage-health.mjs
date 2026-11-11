@@ -4,8 +4,17 @@
 // `MissingBlobsEnvironmentError` on the SAME stores that the working v2
 // `workshop-cases.mjs` reads fine. This endpoint is the diagnostic probe that
 // confirms the fix — `hasBlobsContext`/`blobsAvailable` should now be true.
+//
+// Villkorade skrivningar (POST): kör den isolerade kontrollen i
+// _shared/case-store.mjs (`verifyConditionalWrites`) mot en egen probe-store
+// (aldrig kunddata). Den verifierar BÅDA operationerna var för sig:
+//   onlyIfNew  → skapa (modified: true) och dublett (modified: false)
+//   onlyIfMatch → fel etag (modified: false) och rätt etag (modified: true)
+// plus att etag kan läsas tillbaka. GET är rent läsande och visar bara den
+// cachade verifieringen från processens första skrivning (om någon gjorts).
 import { getStore } from "@netlify/blobs";
 import { adminTokenMatches, envValue } from "./_shared/admin-auth.mjs";
+import { allowUnversioned, lastVerification, PROBE_STORE, verifyConditionalWrites } from "./_shared/case-store.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -49,30 +58,25 @@ export default async (request) => {
     }
     const failed = storesChecked.filter((entry) => !entry.ok);
 
-    // Villkorade skrivningar (etag/onlyIfMatch) är grunden för
-    // dataintegriteten i _shared/case-store.mjs. Kontrollen är en skrivning
-    // mot en egen probe-store (aldrig mot kunddata) och körs bara vid POST,
-    // så GET förblir rent läsande.
+    // POST = skrivande probe mot PROBE_STORE. GET = bara cachat resultat.
     let conditionalWrites = null;
     if (request.method === "POST") {
-      try {
-        const probe = getStore({ name: "storage-health-probe", consistency: "strong" });
-        const key = `probe-${Date.now()}`;
-        const first = await probe.setJSON(key, { at: new Date().toISOString() }, { onlyIfNew: true });
-        const second = await probe.setJSON(key, { at: new Date().toISOString() }, { onlyIfNew: true });
-        await probe.delete(key).catch(() => {});
-        conditionalWrites = first?.modified === true && second?.modified === false;
-      } catch (error) {
-        conditionalWrites = { ok: false, errorCode: codeFor(error) };
-      }
+      conditionalWrites = await verifyConditionalWrites(getStore({ name: PROBE_STORE, consistency: "strong" }));
+    } else {
+      conditionalWrites = lastVerification();
     }
+    const unverified = conditionalWrites && conditionalWrites.ok === false;
 
     return json({
       ok: true,
       functionVersion: "v2",
       blobsAvailable: failed.length === 0,
-      // true = SDK:n stöder onlyIfNew/onlyIfMatch i den här miljön; null = inte testat (GET).
+      // { ok, steps: { onlyIfNewCreate, onlyIfNewDuplicate, etagOnRead, onlyIfMatchStale, onlyIfMatchFresh, valueAfterFresh }, etagSource, checkedAt }
+      // null = inte verifierat i den här processen än (GET).
       conditionalWrites,
+      conditionalWritesSource: request.method === "POST" ? "probe" : conditionalWrites ? "cached" : "none",
+      // Nödventilen: true betyder att case-store skriver OVILLKORAT om verifieringen faller.
+      unversionedWritesAllowed: allowUnversioned(),
       // The real signal: Netlify injects Blobs config here, not via SITE_ID/token env vars.
       hasBlobsContext: Boolean(envValue("NETLIFY_BLOBS_CONTEXT")),
       hasSiteId: Boolean(
@@ -82,7 +86,8 @@ export default async (request) => {
       storesChecked,
       warnings: [
         ...failed.map((entry) => `${entry.store}: ${entry.errorCode}`),
-        ...(conditionalWrites === false ? ["@netlify/blobs saknar villkorade skrivningar i den här miljön - kontrollera att netlify/functions/package.json och package.json har samma version."] : []),
+        ...(unverified ? ["@netlify/blobs villkorade skrivningar kunde inte verifieras - ärendeskrivningar stoppas (503 storage_unversioned) tills detta är löst. Kontrollera att netlify/functions/package.json och package.json har samma version (10.7.13)."] : []),
+        ...(allowUnversioned() ? ["CASE_STORE_ALLOW_UNVERSIONED är satt: skrivningar utan versionskontroll tillåts. Ta bort variabeln så snart orsaken är åtgärdad."] : []),
       ],
       readOnly: request.method === "GET",
     });
