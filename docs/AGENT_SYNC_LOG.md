@@ -32,7 +32,7 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-11-11 — Claude Code — PR ÖPPEN, VÄNTAR GODKÄNNANDE (NEMOB OS 2.0 backend: API-kontrakt, dataintegritet, kommunikation)
+### 2026-11-11 — Claude Code — PR #170 UPPDATERAD EFTER GRANSKNING, VÄNTAR GODKÄNNANDE (NEMOB OS 2.0 backend)
 
 - **Branch:** `feat/nemob-os-2-backend` i egen worktree (scratchpad), bas `origin/main` edf4f10.
   Ingen branchväxling i den delade mappen. Codex ocommittade loggrad i den delade mappen rörs inte.
@@ -59,7 +59,28 @@ löpande "konversation".
   samma assertion som på orörd main (sms-log-nycklar med kolon fungerar inte på Windows-filsystem),
   ej orsakat här, ej i grinden.
 - **PR:** #170 (`feat/nemob-os-2-backend` → main).
-- **Kvar:** Sebastians merge-godkännande. Sedan: verifiera `conditionalWrites: true` i produktion,
+- **Runda 2 (ChatGPT-granskning, Codex otillgänglig):** `case-store` är nu fail-closed: saknat etag, SDK utan
+  `{ modified }` eller backend som ignorerar villkor (isolerad probe mot `case-store-probe` en gång per process)
+  stoppar skrivningen med 503 `storage_unversioned`; nödventil `CASE_STORE_ALLOW_UNVERSIONED=1`. Ny
+  `_shared/send-journal.mjs` (store `send-journal`): reservation före utskick, leverantörs-id efter,
+  `committed` när ärendet sparats, dubblettskydd 2 min, `idempotencyKey`; ny schemalagd `comm-reconcile.mjs`
+  återapplicerar förlorade loggrader och kör klart avbrutna inkommande SMS. `claimJson` reserverar köposter
+  (outbox, sms-pending, sms-drafts). `sms-inbound` har beständig behandlingsstatus per 46elks-id med lease,
+  steg och omkörning. `storage-health` POST verifierar onlyIfNew OCH onlyIfMatch var för sig.
+  SDK-fynd: 10.7.13 räknar alla svar utom 412 som lyckad villkorad skrivning (dokumenterat i docs §3).
+- **Oberoende granskning (subagent) av hela diffen gav 12 fynd, alla åtgärdade:** fast idempotencyKey
+  låste utkast efter misslyckat utskick (failed/not_sent/unknown får nu försöka igen); tackmail/recensions-SMS
+  utanför journalen (reserveras nu, guard mot redan satt tackresultat); 409/503 dolde att SMS:et gått
+  (nu 200 + caseLogged:false); inbound-status som inte kunde sparas räknades som gjord (persist kastar →
+  failed/500); outbox thank_you ignorerade skrivfel (behåller köposten med resultatet, skickar inte om);
+  återspelning dubblerade loggrad; död assertion; case-sms force; claim-släpp vid in_flight; gallring/larm
+  för uttömda inbound-poster; extra försök att spara utskicksresultat; commitJson mappar nätfel till
+  `storage_error` (503) i stället för ofångat undantag.
+- **Tester runda 2:** build grön (174 tester, varav 46 i `test:integrity`: case-store 14, case-match 6,
+  cases-concurrency 3, send-journal 10, inbound-recovery 11, storage-health 1, outbox-flush 1),
+  verify:checkout-products OK, callflow check OK. `test:comm` 6/7 oförändrat – orsak och fix dokumenterad
+  i docs §12 (kolon i sms-log-nycklar + URL-kodad list i lokala servern), hålls utanför denna PR.
+- **Kvar:** Sebastians merge-godkännande. Sedan: `POST storage-health` direkt efter deploy (`conditionalWrites.ok`),
   bygga /api/approvals, /api/inbox, /api/overview enligt docs-filen; e-post-webhook (Resend Receiving).
 
 ### 2026-11-11 — Claude Code — KLAR (Git-återställning fas 2: PR #169 mergad, lokal main i synk)

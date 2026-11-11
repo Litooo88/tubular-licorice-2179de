@@ -107,8 +107,20 @@ Markerar kontakten som genomgången; allt som kommer in efter `at` räknas som n
 **Inkommande SMS (webhook, ej för klienter):** `POST /api/sms-inbound?secret=…`
 (46elks `sms_url`, fail-closed på `SMS_INBOUND_SECRET`). Nytt i denna PR:
 
-- **Idempotens.** 46elks meddelande-id (`id`) skrivs create-if-absent i
-  storen `sms-inbound-seen`; en omleverans svarar tomt utan ny notis.
+- **Idempotens och beständig behandlingsstatus.** 46elks meddelande-id (`id`)
+  får en post i storen `sms-inbound-seen` som skapas villkorat (`onlyIfNew`)
+  INNAN något behandlas: `{ id, at, from, to, message, status: "processing|done|failed",
+  attempts, leaseUntil, steps: { blocked, approval?, optout?, link: { status, caseId,
+  candidates, attached, final, reason }, inboxKey, inboxCaseId, notified, autoreply: { text, via } },
+  lastError, outcome? }`. Varje steg bockas av efter att det gjorts, så:
+  en parallell leverans av samma id ser en giltig lease (2 min) och svarar tomt;
+  en leverans efter krasch (lease ute) eller den schemalagda `comm-reconcile`
+  tar över och kör klart från det steg som saknas (max 5 försök); ett id ger
+  aldrig två notiser, två ärenderader eller två autosvar. Oväntat fel →
+  HTTP 500 (46elks får skicka om), posten `failed`. Misslyckad ärendekoppling
+  (`link.final: false`) försöks igen utan att notisen upprepas. Autosvar som
+  inte kunde ges i webhook-svaret skickas av reconcile via SMS-API:t
+  (RING-svaret går då genom godkännandespärren). Gallras efter 90 dagar.
 - **Ärendematchning** (`_shared/case-match.mjs`): exakt ett öppet ärende
   på avsändarnumret → SMS:et kopplas; flera öppna → `ambiguous` med
   kandidater, inget kopplas; bara avslutade → `closed_only`, inget kopplas.
@@ -173,18 +185,45 @@ invoiced|paid`, `paymentMethod: swish|card|cash|invoice|bank|other`,
 Övergång till `status: "done"` eller `paymentStatus: "paid"` utlöser
 tackmail + recensions-SMS **en gång** (eller köas i `outbox` under tysta
 timmar 21–08). `suppressThankYou: true` stänger tyst och permanent.
+Tackutskicket reserveras i utskicksjournalen (`idempotencyKey = <caseId>-thank-you`)
+och appliceras bara om ärendets färska version inte redan har ett
+tackresultat: två samtidiga avslut ger ett utskick (förloraren svarar
+`thankYouSkipped: true`).
 
 **Åtgärder** (`body.action`), alla manuella admin-åtgärder → SMS går
 direkt (`approved: true`), inte via kön:
 
 | action | Body | Svar |
 |---|---|---|
-| `send_sms` | `{ message, operatorName? }` | `{ ok, result: SmsResult, case }` |
-| `send_quote_sms` | `{ amount, summary, contactOwner? }` | `{ ok, result, case }` |
-| `send_payment_instruction` | `{ amount?, priceRows?, workSummary?, invoiceText?, paymentMethod?, paymentReference?, message? }` | `{ ok, result, case }`; status → `ready`, betalning → `invoice_ready` |
-| `send_status_link` | `{ force? }` | `{ ok, sms, email, case }` eller `{ ok, alreadySent: true, case }` |
-| `submit_workshop_log` | `{ workshop: {…} }` | `{ ok, result, case }` (SMS till Sebastian) |
-| `confirm_booking_request` / `reschedule_booking_request` / `decline_booking_request` | `{ preferredDate? (YYYY-MM-DDTHH:MM, krävs vid reschedule), message?, operatorName? }` | `{ ok, sms, email, calendar, case }`; `409` om ingen väntande förfrågan |
+| `send_sms` | `{ message, operatorName?, idempotencyKey?, force? }` | `{ ok, result: SmsResult, case, journalKey }` |
+| `send_quote_sms` | `{ amount, summary, contactOwner?, idempotencyKey?, force? }` | `{ ok, result, case, journalKey }` |
+| `send_payment_instruction` | `{ amount?, priceRows?, workSummary?, invoiceText?, paymentMethod?, paymentReference?, message?, idempotencyKey?, force? }` | `{ ok, result, case, journalKey }`; status → `ready`, betalning → `invoice_ready` |
+| `send_status_link` | `{ force?, idempotencyKey? }` | `{ ok, sms, email, case, journalKey }` eller `{ ok, alreadySent: true, case }` |
+| `submit_workshop_log` | `{ workshop: {…} }` | `{ ok, result, case }` (SMS till Sebastian, ej journalfört) |
+| `confirm_booking_request` / `reschedule_booking_request` / `decline_booking_request` | `{ preferredDate? (YYYY-MM-DDTHH:MM, krävs vid reschedule), message?, operatorName?, idempotencyKey? }` | `{ ok, sms, email, calendar, case, journalKey }`; `409` om ingen väntande förfrågan |
+
+**Kund-SMS-åtgärderna går via utskicksjournalen** (`_shared/send-journal.mjs`,
+store `send-journal`). Svarskoder utöver tabellen:
+
+- `409 { code: "duplicate_recent", journalKey }` — identisk text till samma
+  ärende inom två minuter. Skicka igen med `force: true` om det är avsiktligt.
+- `409 { code: "in_flight" }` — samma `idempotencyKey` behandlas just nu.
+- `503 { code: "storage_unversioned" }` — lagringen kan inte garantera
+  versionskontroll; **inget skickades** (se Dataintegritet).
+- `503 { code: "storage_error" }` — lagringen svarade inte (nätfel/5xx efter
+  SDK:ns omförsök) **före** utskicket; inget skickades.
+- `200 { ok, result|sms, case, caseLogged: false, caseError, journalKey }` —
+  utskicket GICK men ärendeskrivningen föll (konflikt/lagringsfel). Skicka
+  inte igen: `comm-reconcile` lägger loggraden på ärendet inom 15 min.
+- `200 { …, replayed: true }` — samma `idempotencyKey` igen och raden fanns
+  redan på ärendet: inget skickat, inget skrivet.
+- Ett misslyckat utskick (`failed`/`not_configured`) med samma
+  `idempotencyKey` får försöka igen; bara ett lyckat återspelas.
+- Samma `idempotencyKey` igen (t.ex. klientens omförsök efter nätfel) ger
+  det sparade resultatet tillbaka utan nytt utskick och loggar på ärendet
+  med samma `journalKey`. NEMOB OS bör alltid skicka en `idempotencyKey`
+  (UUID per knapptryck).
+- Loggposterna i `outboundMessages[]`/`smsLog[]` har `journalKey`.
 
 `SmsResult = { status: "sent|failed|not_configured|invalid_phone|missing_message|pending_approval", to, id?, sentAt?, error?, pendingId? }`.
 
@@ -201,7 +240,8 @@ direkt (`approved: true`), inte via kön:
 `workshop: { workDone, partsUsed, issuesFound, nextAction, needsSebastianReview, … }`,
 `media[]`, `coupon`, `createdAt`, `updatedAt`, `updatedBy`.
 
-**Sidospår på ärendet** (admin): `POST /api/cases/:id/sms` `{ message, kind: generic|ready|receipt }`,
+**Sidospår på ärendet** (admin): `POST /api/cases/:id/sms` `{ message, kind: generic|ready|receipt, idempotencyKey?, force? }`
+→ `{ status, sms, caseLogged, journalKey }` (samma 409/503-koder som ovan),
 `POST /api/cases/:id/call` (click-to-call), `GET|POST|DELETE /api/cases/:id/media`,
 `POST /api/cases/:id/analyze`. Svaren har nu `caseLogged: bool` där
 loggningen på ärendet kan misslyckas efter att utskicket/samtalet gått.
@@ -223,9 +263,45 @@ gång före skrivningen och appliceras bara på nytt. Konverterade:
 listning och skrivning), `sms-inbound`. Nya ärenden (booking,
 workshop-chat, call-dashboard) skriver unika id:n och är inte berörda.
 
+**Fail-closed (granskning 2026-11-11).** Versionskontroll kan inte
+garanteras i tre fall, och då STOPPAS skrivningen med `reason: "unversioned"`
+→ HTTP `503 { code: "storage_unversioned" }` i stället för att tyst skriva
+"sist vinner": (1) bloben saknar etag, (2) SDK:n svarar inte med
+`{ modified }` (8.x), (3) backend ignorerar villkorshuvudena. Fall 3 syns
+inte på en enskild skrivning (SDK 10.7.13 räknar ALLA svar utom 412 som
+lyckad villkorad skrivning, `dist/main.js` `set`/`setJSON`), så
+`ensureConditionalWrites()` kör en isolerad probe mot storen
+`case-store-probe` en gång per process före den första villkorade
+skrivningen: onlyIfNew skapa/dublett, etag-läsning, onlyIfMatch fel/rätt
+etag. `createIfAbsent` rapporterar aldrig en verifierad dedup utan
+`{ modified }`. Nödventil under incident: env
+`CASE_STORE_ALLOW_UNVERSIONED=1` återställer ovillkorad skrivning
+(`conditional: false`, `verified: false`) med loggrad per skrivning —
+`storage-health` varnar när den är satt. Kända SDK-begränsningar: ett 5xx
+från backend på en villkorad PUT rapporteras som lyckat (kan inte fångas
+här); SDK:n gör själv 5 omförsök med 5 s paus vid nätfel/5xx.
+
+**Reservation av köposter** (`claimJson`): `outbox` (per köpost i
+outbox-flush), `sms-pending` (approve), `sms-drafts` (approve) reserveras
+villkorat innan utskick — två överlappande körningar/klick ger ett utskick,
+förloraren får `in_flight`. Övergiven reservation (krasch) får tas över
+efter 10 min; misslyckat utskick släpper reservationen direkt.
+
+**Utskicksjournal** (`send-journal`): `reserved → sent|failed|not_sent|queued_approval → committed`,
+med `providerId`, fel och den avsedda loggraden (`apply`). Faller
+ärendeskrivningen efter utskicket återapplicerar `comm-reconcile`
+(schemalagd var 15:e minut, `7,22,37,52 * * * *`) raden idempotent på
+`journalKey`; reservationer utan resultat efter 10 min blir `unknown` med
+tidslinjeraden "kontrollera i 46elks-loggen". Gallras efter 30 dagar.
+46elks saknar idempotensnycklar: garantin är "aldrig omsänt av oss vid
+omförsök", inte exakt-en-gång mot leverantören.
+
 Kvar (ovillkorade, låg risk/engångsflöden): `booking.mjs` retry-loop på
 notiser, `stripe-webhook`/`product-order` (redan `onlyIfNew`), v1-funktioner
-via `_shared/storage.js` (skriver aldrig ärendebloben, bara `case-events`).
+via `_shared/storage.js` (skriver aldrig ärendebloben, bara `case-events`),
+tackmail/recensions-SMS i `sendThankYou` (Resend idempotency-key resp.
+`notifications.thankYou.reviewSms`-spärr, ej journalförda), kampanj-SMS i
+outbox-flush (reserveras men journalförs inte).
 
 **Viktigt för deploy:** `netlify/functions/package.json` pekade på
 `@netlify/blobs ^8.1.0` medan roten har `10.7.13`. Netlify installerar
@@ -233,7 +309,7 @@ funktionsmappens egna beroenden, så produktionen kan ha kört 8.x — där
 saknas `onlyIfMatch`/`onlyIfNew` helt (det befintliga
 `internal-case.js` skulle då kasta på `.modified`). Nu pinnad till
 `10.7.13`. Verifiera efter deploy med `POST /.netlify/functions/storage-health`
-→ `conditionalWrites: true`.
+→ `conditionalWrites.ok: true`.
 
 ---
 
@@ -316,7 +392,7 @@ en manuell admin-åtgärd hamnar i `sms-pending`.
 | Endpoint | Body | Svar |
 |---|---|---|
 | `GET /api/kommunikation` | – | `pending[]` + `smsApproval` (se §2) |
-| `POST /api/kommunikation/approve` | `{ id }` | `{ ok, result: SmsResult }`; `404` om id saknas; misslyckat utskick ligger kvar med `lastError` |
+| `POST /api/kommunikation/approve` | `{ id }` | `{ ok, result: SmsResult }`; `404` om id saknas; misslyckat utskick ligger kvar med `lastError`; `result.status: "in_flight"` om samma post godkänns parallellt; `"storage_unversioned"` om lagringen inte kan reservera |
 | `POST /api/kommunikation/approve-all` | `{ ids: [...] }` (max 200) | `{ ok, sent, results: [ { id, status, … } ] }` |
 | `POST /api/kommunikation/reject` | `{ id }` | `{ ok, result: { status: "rejected", by } }` |
 | `POST /api/kommunikation/sms-approval` | `{ enabled: bool }` | `{ ok, smsApproval }` — **högriskknapp**, visa bara i full översikt med bekräftelse |
@@ -325,7 +401,8 @@ Godkännande via SMS-svar ("1 ok", "alla ok") finns redan (`sms-inbound` ⇄ `co
 men gäller **AI-utkasten** (`/api/sms-drafts`), inte `sms-pending`. Två köer:
 
 - `GET /api/sms-drafts` → `{ drafts: [ { caseId, category: A|B|C, message, meta: { namn, telefon, tjanst, alderDagar, ursprung }, priority, closeProbability } ], count }`;
-  `POST /api/sms-drafts/:caseId/approve` `{ message?, operatorName? }` → `{ status: "sent|queued|not_configured", caseId, newStatus, caseLogged }`;
+  `POST /api/sms-drafts/:caseId/approve` `{ message?, operatorName?, idempotencyKey? }` → `{ status: "sent|queued|not_configured", caseId, newStatus, caseLogged, journalKey }`;
+  `409 { code: "in_flight" }` vid parallellt godkännande, `503 { code: "storage_unversioned" }`;
   `POST /api/sms-drafts/:caseId/skip`.
 
 Behöver utvecklas: ett gemensamt `GET /api/approvals` som slår ihop
@@ -352,8 +429,8 @@ affärsdata i presentationen, aldrig i lagringen.
 
 | Endpoint | Svar |
 |---|---|
-| `GET /.netlify/functions/storage-health` | `{ ok, functionVersion, blobsAvailable, hasBlobsContext, hasSiteId, storesChecked: [ { store, ok, errorCode? } ], warnings[], conditionalWrites: null, readOnly: true }` |
-| `POST /.netlify/functions/storage-health` | som GET men **`conditionalWrites: true|false`** (skriver/raderar en probe-nyckel i `storage-health-probe`, aldrig kunddata). `false` = SDK-versionen i funktionspaketet saknar villkorade skrivningar → varning i `warnings`. |
+| `GET /.netlify/functions/storage-health` | `{ ok, functionVersion, blobsAvailable, hasBlobsContext, hasSiteId, storesChecked: [ { store, ok, errorCode? } ], warnings[], conditionalWrites: null | <cachat probe-resultat>, conditionalWritesSource: "none|cached", unversionedWritesAllowed: bool, readOnly: true }` — skriver inget |
+| `POST /.netlify/functions/storage-health` | som GET men kör den isolerade proben mot `case-store-probe` (aldrig kunddata): **`conditionalWrites: { ok, steps: { onlyIfNewCreate, onlyIfNewDuplicate, etagOnRead, onlyIfMatchStale, onlyIfMatchFresh, valueAfterFresh }, etagSource: "get|list|none", checkedAt, error? }`**, `conditionalWritesSource: "probe"`. `ok: false` = ärendeskrivningar stoppas (503) → varning i `warnings`. |
 | `GET /api/voice-agent/health` (kräver `VOICE_AGENT_SECRET`) | `{ ok, tools[], sms, cases, mail }` |
 | `GET /api/booking-env-status` | env-variabler satt/ej satt + Google Calendar |
 | `GET /api/kommunikation` → `sources`, `balanceSek` | 46elks-nåbarhet och saldo |
@@ -377,7 +454,15 @@ Schemalagda funktioner lämnar i dag inga spår utöver loggar.
 4. **Godkännanden i fokusläget:** tre källor tills `/api/approvals` finns
    (§6). Koden som skickar/avvisar är `approve`/`reject` ovan — inga egna utskick.
 5. **Hälsa:** anropa `storage-health` med POST en gång per sessionstart
-   och visa `conditionalWrites`.
+   och visa `conditionalWrites.ok` och `unversionedWritesAllowed`.
+7. **Utskick:** skicka alltid `idempotencyKey` (UUID per knapptryck) på
+   `send_sms`/`send_quote_sms`/`send_payment_instruction`/`send_status_link`/
+   bokningsbeslut och `/api/cases/:id/sms`; visa `409 duplicate_recent` som
+   "skickades nyss – skicka ändå?" (→ `force: true`) och `503 storage_unversioned`
+   som ett systemfel, inte som "försök igen".
+8. **Inkorg:** en `sms-inbound-seen`-post med `status: "failed"` är "under
+   återhämtning", inte ett fel att visa; `steps.link.final: false` = kopplingen
+   kommer att försökas igen.
 6. Token: fortsätt mönstret i `admin-cases.mjs` (server-till-server, aldrig i klienten).
 
 ---
@@ -429,6 +514,31 @@ Kvar (konfiguration eller separat uppdrag, i prioritetsordning):
 5. Loggning: inga telefonnummer i `console.log` från de nya raderna
    (`sms_inbound_case_match` loggar bara status). Befintliga loggar i
    andra funktioner är inte genomgångna.
-6. Retention: `sms-log` gallras efter 12 mån; `sms-inbound`,
-   `voice-agent-calls` (med transkript) och `sms-inbound-seen` gallras
-   inte — föreslå samma 12-månadersregel i `comm-log-prune.mjs`.
+6. Retention: `sms-log` gallras efter 12 mån; `send-journal` 30 dagar och
+   `sms-inbound-seen` 90 dagar (comm-reconcile); `sms-inbound` och
+   `voice-agent-calls` (med transkript) gallras inte — föreslå samma
+   12-månadersregel i `comm-log-prune.mjs`.
+7. Första deploy med fail-closed lagring: kör `POST storage-health` direkt
+   efter deploy. Är `conditionalWrites.ok` false stoppas alla ärendeskrivningar
+   (503) tills orsaken är löst; `CASE_STORE_ALLOW_UNVERSIONED=1` är
+   nödventilen under tiden (ta bort den efteråt).
+
+---
+
+## 12. Känt testfel: `npm run test:comm` 6/7 (ej i grinden)
+
+`tests/kommunikation.test.mjs` faller på orörd `main` på Windows:
+`readSmsLog` returnerar 0 poster. Orsak (verifierad 2026-11-11 mot den
+lokala Blobs-servern): nycklarna i `sms-log` börjar med ISO-tid med kolon
+(`2026-11-11T22:37:54.507Z_706666666_4gn3`, `keyFor` i
+`_shared/comm-log.mjs`). Den lokala servern lagrar nyckeln URL-kodad
+(`%3A`) och `list()` returnerar den kodade formen; `readSmsLog` jämför
+`k.slice(0, 24) >= <ISO-tid>` och `%` (0x25) sorterar före `:` (0x3A), så
+alla rader filtreras bort — och `store.get(<kodad nyckel>)` skulle ändå
+inte träffa. Produktionen påverkas inte (Netlifys backend listar råa
+nycklar). Åtgärd, separat PR: i `_shared/comm-log.mjs` låt `listKeys`
+avkoda nycklar (`decodeURIComponent`, try/catch) och låt `keyFor`
+(sms-log, sms-pending) använda filsäker tid (`stampKey` i case-store:
+kolon/punkt → bindestreck); behåll läsning av gamla nycklar genom att
+normalisera jämförelsesträngen på samma sätt. Samma mönster finns redan i
+`case-store.readWithEtag` (list-fallbacken avkodar).

@@ -17,7 +17,7 @@
     "build:dist": "node scripts/build-dist.mjs",
     "build": "npm run test:orders && npm run test:voice && npm run test:status && npm run test:contracts && npm run test:integrity && npm run test:contact && npm run test:archive && npm run test:campaign && npm run generate:products && npm run build:dist && echo Static site ready",
     "test:contracts": "node --test tests/audit-contracts.test.mjs",
-    "test:integrity": "node --test tests/case-store.test.mjs tests/case-match.test.mjs tests/cases-concurrency.test.mjs",
+    "test:integrity": "node --test tests/case-store.test.mjs tests/case-match.test.mjs tests/cases-concurrency.test.mjs tests/send-journal.test.mjs tests/inbound-recovery.test.mjs tests/storage-health.test.mjs tests/outbox-flush.test.mjs",
     "test:contact": "node --test tests/customer-contact.test.mjs",
     "test:archive": "node --test tests/auto-archive.test.mjs",
     "test:campaign": "node --test tests/campaign.test.mjs",
