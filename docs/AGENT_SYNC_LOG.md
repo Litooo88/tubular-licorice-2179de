@@ -32,7 +32,7 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-11-11 — Claude Code — PÅGÅR (Git-återställning fas 2: PR för fix/godkannandekon-synlig)
+### 2026-11-11 — Claude Code — PR #169 ÖPPEN, VÄNTAR GODKÄNNANDE (Git-återställning fas 2)
 
 - **Branch:** `fix/godkannandekon-synlig` (de fyra lokala commits som saknas på origin/main:
   `bb42108` godkännandekön tjatar + contracts i build-grinden, samt tre loggposter).
@@ -41,6 +41,11 @@ löpande "konversation".
   denna logg genom att behålla båda sidor, kör build/verify/callflow check, pushar och
   öppnar PR mot main. Merge sker först efter Sebastians godkännande.
 - **Rör inte:** andra brancher, stashes, worktrees, produktion. Inga SMS/mejl.
+- **Resultat:** PR #169 (`fix/godkannandekon-synlig` → main). Merge av origin/main gjord, konflikt
+  bara i denna logg (båda sidor behållna). F01-kontraktstestet uppdaterat för fältet `bookingMode`
+  från #165 (låg utanför grinden när det mergades). build grön (128 tester), checkout-verify 44,
+  callflow check OK. `test:comm` 6/7 (känt 25 s-timeout, samma på origin/main, ej i grinden).
+- **Kvar:** Sebastians merge-godkännande; därefter lokal `main` → `origin/main` med `git branch -f`.
 
 ### 2026-10-30 — Claude Code — KLAR (Admin-GUI: gemensam meny, död kod bort)
 
