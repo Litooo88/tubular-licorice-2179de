@@ -32,6 +32,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-11 — Claude Code — PÅGÅR (NEMOB OS 2.0 backend: API-kontrakt, dataintegritet, kommunikation)
+
+- **Branch:** `feat/nemob-os-2-backend` i egen worktree (scratchpad), bas `origin/main` edf4f10.
+  Ingen branchväxling i den delade mappen. Codex ocommittade loggrad i den delade mappen rörs inte.
+- **Område (mitt):** `netlify/functions/**` (nya `_shared/case-store.mjs`, `sms-inbound.mjs`,
+  `workshop-cases.mjs` m.fl. skrivare mot `workshop-cases`), `tests/**`, `docs/NEMOB_OS_2_API_CONTRACTS.md`,
+  `netlify/functions/package.json` (blobs-version). Inga publika routes tas bort.
+- **Rör inte (Codex):** `nemob-os/server.mjs`, `nemob-os/lib/admin-cases.mjs`, `nemob-os/lib/unified.mjs`,
+  `nemob-os/public/index.html`, `nemob-os/public/unified/`, `nemob-os/test/unified.test.mjs`.
+  Behöver Codex ändra något för en integration beskrivs kontraktet i docs-filen i stället.
+- **Gör:** 1) kontraktsdokument för systemöversikt, inkorg, ärenden, bokningar, Nova, godkännandekö,
+  uppgifter, hälsa; 2) versionerade blob-skrivningar (etag/onlyIfMatch) med omförsök + tester;
+  3) inkommande SMS → ärendematchning + dedup på 46elks-id; 4) säkerhetsgenomgång; 5) PR, ingen merge.
+- **Produktion:** inga ändringar, inga kundutskick. Alla externa anrop mockas i tester.
+
 ### 2026-11-11 — Claude Code — KLAR (Git-återställning fas 2: PR #169 mergad, lokal main i synk)
 
 - **Branch:** `fix/godkannandekon-synlig` (de fyra lokala commits som saknas på origin/main:
