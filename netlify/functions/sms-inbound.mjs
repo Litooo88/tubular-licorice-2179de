@@ -9,6 +9,8 @@ import { tokenMatches } from "./_shared/admin-auth.mjs";
 import { parseApprovalReply } from "./_shared/customer-contact.mjs";
 import { isBlockedCaller } from "./_shared/call-blocklist.mjs";
 import { loggedSms, logSms, queuePendingSms, readSmsApproval } from "./_shared/comm-log.mjs";
+import { caseStore, commitCase, createIfAbsent } from "./_shared/case-store.mjs";
+import { attachInboundToCase, matchCaseByPhone } from "./_shared/case-match.mjs";
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
 const env = (name) => readEnv(name);
@@ -125,6 +127,51 @@ const hanteraGodkannande = async (kommando) => {
 const reply = (text) =>
   new Response(text || "", { status: 200, headers: { "Content-Type": "text/plain; charset=utf-8" } });
 
+// Idempotens: 46elks skickar om webhooken vid timeout/5xx. Samma meddelande-id
+// (fältet `id`) får bara behandlas en gång — annars dubbla notiser till
+// Sebastian och dubbla autosvar. Nyckeln skrivs create-if-absent.
+const SEEN_STORE = "sms-inbound-seen";
+const alreadySeen = async (providerId, meta) => {
+  if (!providerId) return false;
+  try {
+    const result = await createIfAbsent(getStore({ name: SEEN_STORE, consistency: "strong" }), providerId, { id: providerId, at: new Date().toISOString(), ...meta });
+    return !result.created;
+  } catch {
+    return false;
+  }
+};
+
+// Koppla SMS:et till kundens ärende när det är entydigt (_shared/case-match).
+// Läser hela ärendestoren – samma mönster som kommunikation.mjs; volymen är
+// låg (enstaka SMS/dag).
+const loadCases = async () => {
+  const store = caseStore();
+  const keys = [];
+  let cursor;
+  do {
+    const page = await store.list(cursor ? { cursor } : undefined).catch(() => ({ blobs: [] }));
+    keys.push(...(page.blobs || []).map((b) => b.key));
+    cursor = page.cursor;
+  } while (cursor);
+  const items = [];
+  for (let i = 0; i < keys.length; i += 40) {
+    const part = await Promise.all(keys.slice(i, i + 40).map((key) => store.get(key, { type: "json" }).catch(() => null)));
+    items.push(...part.filter(Boolean));
+  }
+  return items;
+};
+const linkToCase = async ({ from, message, at, providerId, inboundKey }) => {
+  try {
+    const match = matchCaseByPhone(await loadCases(), from);
+    if (match.status !== "matched") return { ...match, attached: false };
+    const saved = await commitCase(caseStore(), match.caseId, (fresh) =>
+      attachInboundToCase(fresh, { channel: "sms", from, text: message, at, providerId, inboundKey }));
+    return { ...match, attached: saved.ok, reason: saved.ok ? "" : saved.reason };
+  } catch (error) {
+    return { status: "error", caseId: "", candidates: [], attached: false, reason: clean(error?.message, 120) };
+  }
+};
+
 export default async (request) => {
   if (request.method !== "POST") return new Response("Method Not Allowed", { status: 405 });
 
@@ -156,8 +203,13 @@ export default async (request) => {
   const to = normalizePhone(params.get("to"));
   const message = clean(params.get("message"), 900);
   const direction = clean(params.get("direction"), 40) || "incoming";
+  const providerId = clean(params.get("id"), 120);
 
   if (!from || to !== OUR_NUMBER() || direction !== "incoming") return reply("");
+  if (await alreadySeen(providerId, { phoneDigits: from.replace(/\D/g, "").slice(-4) })) {
+    console.log("sms_inbound_duplicate_delivery", { providerId });
+    return reply("");
+  }
 
   // Spärrade nummer: meddelandet tas inte emot, inget autosvar skickas.
   if (await isBlockedCaller(from)) {
@@ -188,14 +240,26 @@ export default async (request) => {
       .catch(() => {});
   }
 
+  // Ärendekoppling (bara entydig träff kopplas; se _shared/case-match.mjs).
+  // STOPP kopplas inte – det är en avregistrering, inte ett ärendesvar.
+  // Nyckeln är filsäker (inga kolon): läsarna sorterar på fältet `at`, inte nyckeln.
+  const inboundKey = `${now.replace(/[:.]/g, "-")}_${from.replace(/\D/g, "")}`;
+  const link = isStop ? { status: "skipped", caseId: "", candidates: [], attached: false } : await linkToCase({ from, message, at: now, providerId, inboundKey });
   await getStore({ name: "sms-inbound", consistency: "strong" })
-    .setJSON(`${now}_${from.replace(/\D/g, "")}`, { phone: from, message, at: now, type, handled: isStop })
+    .setJSON(inboundKey, {
+      phone: from, message, at: now, type, handled: isStop, providerId,
+      caseId: link.caseId || "",
+      caseMatch: { status: link.status, attached: Boolean(link.attached), candidates: link.candidates || [] },
+    })
     .catch(() => {});
+  console.log("sms_inbound_case_match", { status: link.status, attached: Boolean(link.attached) });
 
   const sebastianTo = env("SEBASTIAN_SMS_TO") || env("WORKSHOP_SMS_TO");
   if (!isStop && sebastianTo && shouldNotify(from)) {
     const label = isRing ? "RING-svar (vill bli uppringd inom 24h)" : "SMS-svar";
-    await postSms({ to: sebastianTo, message: `${label} från ${from}: "${message.slice(0, 120)}"\nSvars-inkorgen i admin har hela listan.` });
+    const caseLine = link.status === "matched" && link.candidates[0]?.serviceNumber ? ` (ärende ${link.candidates[0].serviceNumber})`
+      : link.status === "ambiguous" ? ` (${link.candidates.length} öppna ärenden – välj i admin)` : "";
+    await postSms({ to: sebastianTo, message: `${label} från ${from}${caseLine}: "${message.slice(0, 120)}"\nSvars-inkorgen i admin har hela listan.` });
   }
 
   // Autosvaren skickas av 46elks som svar på webhooken, inte via postSms.
