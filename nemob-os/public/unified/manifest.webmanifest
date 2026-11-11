@@ -1,0 +1,11 @@
+{
+  "id": "/unified/",
+  "name": "NEMOB OS",
+  "short_name": "NEMOB OS",
+  "start_url": "/unified/",
+  "scope": "/unified/",
+  "display": "standalone",
+  "background_color": "#f5f5ef",
+  "theme_color": "#15251e",
+  "icons": [{ "src": "/icon-512.png", "sizes": "512x512", "type": "image/png" }]
+}
