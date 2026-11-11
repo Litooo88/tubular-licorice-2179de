@@ -32,6 +32,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-11 — Claude Code — PR #169 ÖPPEN, VÄNTAR GODKÄNNANDE (Git-återställning fas 2)
+
+- **Branch:** `fix/godkannandekon-synlig` (de fyra lokala commits som saknas på origin/main:
+  `bb42108` godkännandekön tjatar + contracts i build-grinden, samt tre loggposter).
+  Jobbar i egen worktree i scratchpad, ingen branchväxling i den delade mappen.
+- **Gör:** mergar `origin/main` (fb7a5c8, PR #163–#168) in i branchen, löser konflikt i
+  denna logg genom att behålla båda sidor, kör build/verify/callflow check, pushar och
+  öppnar PR mot main. Merge sker först efter Sebastians godkännande.
+- **Rör inte:** andra brancher, stashes, worktrees, produktion. Inga SMS/mejl.
+- **Resultat:** PR #169 (`fix/godkannandekon-synlig` → main). Merge av origin/main gjord, konflikt
+  bara i denna logg (båda sidor behållna). F01-kontraktstestet uppdaterat för fältet `bookingMode`
+  från #165 (låg utanför grinden när det mergades). build grön (128 tester), checkout-verify 44,
+  callflow check OK. `test:comm` 6/7 (känt 25 s-timeout, samma på origin/main, ej i grinden).
+- **Kvar:** Sebastians merge-godkännande; därefter lokal `main` → `origin/main` med `git branch -f`.
+
 ### 2026-10-30 — Claude Code — KLAR (Admin-GUI: gemensam meny, död kod bort)
 
 - **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, mergas av Claude på Sebastians order).
@@ -145,6 +160,44 @@ löpande "konversation".
   skärmbilder stickprovsgranskade. Sebastian har godkänt PR och merge.
 - Rapport: `docs/SITE_CLARITY_AND_GROWTH_ACTIONS_2026_10_26.md`.
 - Behåll rättade texter när Claudes separata bokningswizard integreras.
+### 2026-10-28 — Claude Code — KLAR (godkännandekön tjatar + kontraktstesterna tillbaka i grinden)
+
+- **Branch:** `fix/godkannandekon-synlig` (pushad, ej mergad). Ingen branchväxling
+  i den delade mappen — commit på plats, branchpekare satt efteråt.
+- **FYND 1 (åtgärdat):** godkännandespärren var ett tyst fel. 28/10 låg **tio
+  kund-SMS ogodkända sedan 27/10 09:00** (~20 timmar vid mätningen; jag skrev
+  felaktigt "över ett dygn" i commit-meddelandet), och eftersom utkastlistan var
+  tom gick inget digest-SMS ut — `buildContactDigest` returnerade null. Spärren
+  hade bytt "skickas tyst" mot "skickas inte, tyst". Nu bär digesten kön också
+  (kort SMS även med tom utkastlista, ålder nämns från ett dygn), och "Att göra
+  nu" visar raden FÖRST när kön har poster. `call-dashboard` returnerar
+  `pendingSms` (antal + äldsta) — ren läsning, inga writes.
+- **Verifierat mot deadlock:** digest-SMS:et till Sebastian kan inte fastna i kön
+  det varnar om. `isStaffNumber` släpper förbi `gateSms`, och `SEBASTIAN_SMS_TO`
+  ligger i `STAFF_ENV`.
+- **FYND 2 (åtgärdat):** `test:contracts` hade fallit ur `npm run build` när
+  build-kedjan byggdes om. Elva tester som vaktar publik bokningsrespons (F01),
+  checkout-frakten (F05), tackmailets kvittens (F06), utkastformaten (F04), den
+  fail-closed SMS-webhooken (F07) och riskdefinitionen gick oskyddade. Tillbaka i
+  kedjan, nu 12 tester.
+- **FYND 3 (EJ åtgärdat, för ägaren av comm-testerna):** `test:comm` är RÖD
+  lokalt — `tests/kommunikation.test.mjs:57`, `readSmsLog` ger 0 poster efter ett
+  utskick mot den lokala Blobs-servern, och testet tar 25 s (ser ut som timeout).
+  **Produktionen loggar korrekt:** `/api/kommunikation` visar 14 avsändare med
+  kostnader sedan 2026-10-20. Alltså testmiljöartefakt, inte produktionshål.
+  Därför INTE lagd i build-grinden — lägg den dit när den är grön.
+- **Tester:** `npm run build` ✅ (contracts 12/12), `verify:checkout-products` ✅
+  44, `nemob-callflow npm run check` ✅, admins tre inline-script parsar ✅. Inga
+  SMS, mejl eller production-writes.
+- **OBS Codex:** din commit `0215432` (24/10, bara en loggpost här) låg opushad i
+  mappen. Den följer med min branch eftersom jag committade ovanpå main — säg till
+  om du vill ha den separat.
+- **Kvar sedan statuskontrollen 28/10:** 14 inkommande SMS utan ärende (hålet i
+  `sms-inbound`), 9 olösta i ringlistan, F10 (timeline, `admin/index.html:2450`),
+  F02 (ingen samtidighetskontroll i workshop-cases), och prisbeslutet 645 vs 695
+  för avancerad felsökning.
+
+### 2026-10-24 - Codex - PÅGÅR (publika budskap och förtroende)
 
 - Egen worktree/branch `codex/site-clarity-trust`. Rättar FAQ/metadata/priser,
   drop-in-budskap och obelagda svarslöften; lyfter befintliga omdömen och

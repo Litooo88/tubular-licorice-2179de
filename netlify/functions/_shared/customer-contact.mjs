@@ -150,16 +150,36 @@ export const parseApprovalReply = (raw) => {
 
 // Digest-SMS:et. Hålls kort med flit: varje SMS-del kostar 0,52 kr och ett
 // meddelande över 160 tecken blir två delar. Hela texterna går i mejlet.
-export const buildContactDigest = ({ drafts = [], now = new Date() } = {}) => {
-  if (!drafts.length) return null;
+// Hur länge det äldsta meddelandet i godkännandekön har väntat.
+const koAlder = (pending, now) => {
+  const aldst = pending.map((p) => String(p?.at || p?.queuedAt || "")).filter(Boolean).sort()[0];
+  if (!aldst) return "";
+  const dygn = Math.floor((now.getTime() - new Date(aldst).getTime()) / (24 * 60 * 60 * 1000));
+  return dygn >= 1 ? ` (äldst ${dygn} dygn)` : "";
+};
+
+export const buildContactDigest = ({ drafts = [], pending = [], now = new Date() } = {}) => {
+  if (!drafts.length && !pending.length) return null;
   const datum = now.toLocaleDateString("sv-SE", { timeZone: "Europe/Stockholm", day: "numeric", month: "numeric" });
+
+  // Godkännandespärren (2026-10-23) köar alla kund-SMS i sms-pending. Kön är
+  // tyst av sig själv: ingen yta påminner om att den inte är tom, och den
+  // 2026-10-28 låg tio kundmeddelanden ogodkända i över ett dygn. Spärren bytte
+  // alltså "skickas tyst" mot "skickas inte, tyst" — därför bär digesten kön
+  // också, och går ut även när utkastlistan är tom men kön inte är det.
+  const koRad = pending.length
+    ? `${pending.length} kund-SMS väntar på godkännande${koAlder(pending, now)}: nordicemobility.se/admin/kommunikation/`
+    : "";
+
+  if (!drafts.length) return `[Nordic] ${datum}: ${koRad}`;
+
   const rader = drafts.slice(0, 5).map((d, i) => {
     const namn = clean(d?.meta?.namn, 18) || clean(d?.meta?.telefon, 18) || "okänd";
     const vad = clean(d?.rubrik || d?.meta?.tjanst, 24);
     return `${i + 1}. ${namn}${vad ? ` - ${vad}` : ""}`;
   });
   const extra = drafts.length > 5 ? ` (+${drafts.length - 5} fler i mejlet)` : "";
-  return `[Nordic] ${datum}: ${drafts.length} sms-utkast väntar${extra}\n${rader.join("\n")}\nSvara "1 ok" för att skicka, "alla ok" för allt, "1 nej" för att kasta. Hela texterna i mejlet.`;
+  return `[Nordic] ${datum}: ${drafts.length} sms-utkast väntar${extra}\n${rader.join("\n")}\nSvara "1 ok" för att skicka, "alla ok" för allt, "1 nej" för att kasta. Hela texterna i mejlet.${koRad ? `\n${koRad}` : ""}`;
 };
 
 export const PRISGRANS_SEK = PRISGRANS;
