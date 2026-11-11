@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { readEnv } from "./_shared/env.mjs";
 import { createHash } from "node:crypto";
 import { loggedSms } from "./_shared/comm-log.mjs";
 
@@ -14,13 +15,7 @@ const CHAT_RATE_LIMIT = 5;
 const chatRateLimitStore = globalThis.__nordicWorkshopChatRateLimit || new Map();
 globalThis.__nordicWorkshopChatRateLimit = chatRateLimitStore;
 
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 
 const normalizePhone = (phone) => {
   const compact = clean(phone, 80).replace(/[^\d+]/g, "");

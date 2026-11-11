@@ -8,7 +8,8 @@
 // - Säger aldrig priser utöver listans "från"-pris, aldrig betalstatus,
 //   aldrig interna anteckningar, aldrig andra kunders uppgifter.
 // - Kan inte boka in verkstadsjobb själv; den bokar ett telefonmöte med
-//   Sebastian eller hänvisar till bokningssidan (tis/tors 15–20).
+//   Sebastian eller hänvisar till bokningssidan (tis/tors 15–20 direkt,
+//   övriga dagar 12–20 som förfrågan).
 
 import { normalizePhone } from "./sms.mjs";
 
@@ -28,7 +29,7 @@ const STEP_BY_STATUS = {
 const STATUS_NOTE = {
   waiting_parts: "Vi väntar på en reservdel.",
   waiting_customer: "Vi väntar på svar från kunden, kolla SMS eller mail.",
-  ready: "Fordonet är klart. Hämtning tisdag eller torsdag klockan 10 till 16, betalning vid hämtning.",
+  ready: "Fordonet är klart. Hämtning bokas på bokningssidan: tisdag och torsdag 15 till 20 bokas direkt, övriga dagar 12 till 20 som förfrågan som Sebastian bekräftar. Betalning vid hämtning.",
 };
 export const ACTIVE_STATUSES = new Set(["contacted", "checked_in", "diagnosing", "repairing", "waiting_parts", "waiting_customer", "ready"]);
 
@@ -168,12 +169,15 @@ export const compactSlots = (payload, { maxDays = 4, maxTimes = 6 } = {}) => {
   const days = Array.isArray(payload?.days) ? payload.days : [];
   const out = [];
   for (const day of days) {
-    const free = (Array.isArray(day.slots) ? day.slots : []).filter((s) => s && s.available !== false && s.busy !== true).map((s) => clean(s.time, 5)).filter(Boolean);
+    const slots = (Array.isArray(day.slots) ? day.slots : []).filter((s) => s && s.available !== false && s.busy !== true && s.free !== false);
+    const free = slots.map((s) => clean(s.time, 5)).filter(Boolean);
     if (!free.length) continue;
-    out.push({ date: clean(day.date, 10), weekday: weekdayName(day.date), times: free.slice(0, maxTimes) });
+    // "direct" = bokas direkt, "request" = förfrågan som Sebastian bekräftar.
+    const mode = slots.some((s) => s.mode !== "request") ? "direct" : "request";
+    out.push({ date: clean(day.date, 10), weekday: weekdayName(day.date), times: free.slice(0, maxTimes), mode });
     if (out.length >= maxDays) break;
   }
-  return { status: clean(payload?.status, 20) || "ok", days: out, hours: "tisdag och torsdag klockan 10 till 16", bookingUrl: "nordicemobility.se/book-online" };
+  return { status: clean(payload?.status, 20) || "ok", days: out, hours: "tisdag och torsdag 15 till 20 bokas direkt; övriga dagar 12 till 20 skickas som förfrågan som Sebastian bekräftar", bookingUrl: "nordicemobility.se/book-online" };
 };
 
 const weekdayName = (date) => {
@@ -199,8 +203,31 @@ export const normalizeMeeting = (body) => {
 export const meetingSmsToSebastian = (m) =>
   `Telefonmöte bokat av röstassistenten: ${m.name || "okänt namn"} ${m.phone}${m.vehicle ? `, ${m.vehicle}` : ""}. Ämne: ${m.topic}. Önskad tid: ${m.preferredTime || "ingen angiven"}.`.slice(0, 480);
 
-export const meetingSmsToCustomer = (m) =>
-  `Hej${m.name ? ` ${m.name.split(/\s+/)[0]}` : ""}! Tack för samtalet. Sebastian på Nordic E-Mobility ringer upp dig${m.preferredTime ? ` ${m.preferredTime}` : " så snart han kan"} angående ${m.topic.slice(0, 60)}. Svara på detta SMS om något ändras.`.slice(0, 320);
+// Nova skriver önskad tid och ämne i fri text ("Innan i morgon klockan 12,
+// gärna i morgon förmiddag", "E-Wheels E2SV2, punktering, vill byta ..."), så
+// texten städas innan den sätts in i en mening: inledande versal sänks, skräp i
+// slutet tas bort och ämnet klipps vid ordgräns i stället för mitt i ett ord.
+const tidyPhrase = (value, max) => {
+  let text = clean(value, 300).replace(/\s+/g, " ").replace(/[\s.,;:!?-]+$/g, "");
+  if (text.length > max) {
+    const cut = text.slice(0, max);
+    text = (cut.includes(" ") ? cut.slice(0, cut.lastIndexOf(" ")) : cut).replace(/[\s.,;:!?-]+$/g, "");
+  }
+  return text;
+};
+const lowerFirst = (text) => (/^[A-ZÅÄÖ][a-zåäö]/.test(text) ? text[0].toLowerCase() + text.slice(1) : text);
+
+export const meetingSmsToCustomer = (m) => {
+  const first = m.name ? m.name.split(/\s+/)[0] : "";
+  const when = lowerFirst(tidyPhrase(m.preferredTime, 90));
+  const topic = tidyPhrase(m.topic, 90);
+  return [
+    `Hej${first ? ` ${first}` : ""}! Tack för samtalet.`,
+    `Sebastian på Nordic E-Mobility ringer upp dig ${when || "så snart han kan"}.`,
+    topic ? `Ämne: ${topic}.` : "",
+    "Svara på detta SMS om något ändras. /Nordic E-Mobility",
+  ].filter(Boolean).join("\n").slice(0, 320);
+};
 
 // ElevenLabs post-call-webhook: { type: "post_call_transcription", data: {
 // conversation_id, transcript: [{ role, message, tool_calls }], metadata: {

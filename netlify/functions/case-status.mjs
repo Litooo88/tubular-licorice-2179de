@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { readEnv } from "./_shared/env.mjs";
 import {
   findCaseByServiceNumber,
   normalizeServiceNumber,
@@ -24,13 +25,7 @@ const json = (body, status = 200) =>
   });
 
 const clean = (value, max = 200) => String(value ?? "").trim().slice(0, max);
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 
 const normalizePhone = (phone) => {
   const compact = clean(phone, 80).replace(/[^\d+]/g, "");
@@ -77,7 +72,7 @@ const STEPS = [
 const NOTES = {
   waiting_parts: "Vi väntar på en reservdel till din reparation.",
   waiting_customer: "Vi väntar på svar från dig — kolla SMS/mail eller ring oss.",
-  ready: "Ditt fordon är klart! Hämtning tisdag eller torsdag kl 15–20. Betalning sker vid hämtning.",
+  ready: "Ditt fordon är klart! Boka hämtning på en ledig tid (alla dagar 12–20, tisdag och torsdag 15–20 alltid öppet). Betalning sker vid hämtning.",
 };
 
 const firstNameOf = (item) => clean(item?.customer?.name, 140).split(/\s+/).filter(Boolean)[0] || "";

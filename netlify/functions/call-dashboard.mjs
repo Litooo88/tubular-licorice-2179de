@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { readEnv } from "./_shared/env.mjs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
 import { blockNumber, listBlockedNumbers, unblockNumber } from "./_shared/call-blocklist.mjs";
 import { findStaleRingReplies } from "./_shared/ring-escalation.mjs";
@@ -13,13 +14,7 @@ const json = (body, status = 200) =>
   });
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 
 const requireAdmin = (request) => {
   return requireAdminToken(request, json);

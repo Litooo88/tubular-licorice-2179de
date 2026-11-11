@@ -33,10 +33,11 @@ table{width:100%;border-collapse:collapse;font-size:13.5px}th,td{padding:6px 4px
 .btn.ok{background:var(--acc);color:#04130a}.btn.no{background:#3d1612;color:#ff9d90}.on{color:var(--acc);font-weight:700}.off{color:var(--warn);font-weight:700}
 input{background:#0f1512;border:1px solid var(--line);color:var(--ink);border-radius:10px;padding:10px;font-size:14px;width:100%}
 </style>
+<script src="/admin/admin-nav.js" defer></script>
 </head>
 <body>
 <div class="wrap">
-  <div class="row"><h1>Kommunikation</h1><span class="sub"><a href="/admin/nova-rapport/">Nova-rapport</a> · <a href="/admin/ring-upp/">Ring upp →</a></span></div>
+  <div class="row"><h1>Kommunikation</h1></div>
   <div class="sub" id="stamp">Laddar…</div>
   <div id="login" class="card" hidden>
     <div>Klistra in admin-token en gång. Den sparas bara i den här webbläsaren.</div>
@@ -184,6 +185,7 @@ async function load(){
   if(!token()){$('#login').hidden=false;$('#stamp').textContent='Ingen token sparad.';return}
   $('#stamp').textContent='Hämtar samtal och SMS från 46elks…';
   try{D=await api('/api/kommunikation?days=30')}catch(e){$('#stamp').innerHTML=`<span class="err">${esc(e.message)}</span>`;return}
+  try{window.nordicAdminNavCounts&&window.nordicAdminNavCounts({pending:(D.pending||[]).length,waiting:(D.contacts||[]).filter((c)=>c&&c.waiting).length})}catch{}
   $('#stamp').textContent=`Uppdaterad ${when(D.generatedAt)} · senaste ${D.days} dagarna · ${D.contacts.length} kontakter, ${D.counts.waiting} väntar på svar${(D.pending||[]).length?` · ${D.pending.length} SMS väntar på godkännande`:''}`;
   render();
 }

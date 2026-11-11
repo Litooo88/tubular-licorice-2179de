@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { readEnv } from "./_shared/env.mjs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
 import { normalizePhone } from "./_shared/sms.mjs";
 
@@ -25,13 +26,7 @@ const json = (body, status = 200) =>
 
 const clean = (value, max = 200) => String(value || "").trim().slice(0, max);
 
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 
 const DUPLICATE_WINDOW_MS = 60 * 1000;
 

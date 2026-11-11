@@ -42,6 +42,119 @@ löpande "konversation".
   öppnar PR mot main. Merge sker först efter Sebastians godkännande.
 - **Rör inte:** andra brancher, stashes, worktrees, produktion. Inga SMS/mejl.
 
+### 2026-10-30 — Claude Code — KLAR (Admin-GUI: gemensam meny, död kod bort)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, mergas av Claude på Sebastians order).
+- **Gjorde:** ny `admin/admin-nav.js` laddas på /admin/, /admin/kommunikation/, /admin/ring-upp/,
+  /admin/nova-rapport/: meny Ärenden · Kommunikation · Ring upp · Nova, fast bottenmeny på mobil
+  (≤700 px), rad överst på dator. Märke på Kommunikation = SMS som väntar på godkännande + kontakter
+  som väntar på svar (`/api/kommunikation?days=7`, siffrorna cachas 3 min i sessionStorage, ingen
+  kunddata). Kommunikationssidan uppdaterar märket via `window.nordicAdminNavCounts`.
+- **Borttaget ur /admin/:** "Kommunikationsradar – demo/test" (mockdata, aldrig live), "Servicelänk-
+  utrullning" (engångsutskick om telefonbuggen, avslutat) inkl. all JS för båda, samt infotexten
+  "Automatiskt flöde" som påstod att kund-SMS går direkt (fel sedan godkännandespärren).
+  Inloggningsraden fälls ihop när token finns. Underflikar heter nu Att göra · Kundkort · Verktyg.
+  Rubrikernas korslänkar på undersidorna borttagna (menyn ersätter dem).
+- **Inte rört:** API:er/routes, Telefoni-verktygen (ringlista, samtalsdashboard, spärrlista,
+  vinn-tillbaka-kampanj, live-SMS), SMS-utkast, kundexport.
+- **Tester:** build grön, test:comm 7/7, inline-JS i admin parsar. Alla fyra sidor renderade i
+  Chromium 390 px: meny, aktiv flik och märke korrekt; inga nya JS-fel (två fel på kommunikation/
+  ring-upp kommer från testets mockdata och uppstår identiskt på main).
+
+### 2026-10-30 — Claude Code — KLAR (Förfrågan: "Bekräfta annan tid" + mejl vid bekräftelse)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, mergas av Claude på Sebastians order).
+- **Gjorde:** `workshop-cases` ny action `reschedule_booking_request {preferredDate}`: validerar tid
+  (ej passerad, max 90 d), sätter ny `preferredDate`, sparar kundens önskan i
+  `bookingRequest.requestedDate`, SMS (approved) + **mejl** med nya tiden, flyttar kalenderhändelsen
+  (start/slut + titel utan FÖRFRÅGAN). Fungerar på pending OCH redan bekräftade förfrågningar.
+  `confirm_booking_request` skickar nu också bekräftelsemejl. Texter/hjälpare i
+  `_shared/booking-request.mjs` (`requestRescheduledSms`, `requestConfirmedEmail`, `validateNewTime`,
+  `calendarWindowFor`). Admin: knapp "Bekräfta annan tid" (datum + halvtimme 08–20) i gula rutan,
+  "Flytta tiden" på bekräftade. Leveransrutan visar "Förfrågan mottagen" i stället för vilseledande
+  "Delvis bekräftad"; `&auml;`-entiteter som syntes råa i den rutan ersatta med UTF-8.
+- **Tester:** ny `tests/booking-reschedule.test.mjs` (hjälpare + helflöde mot BlobsServer, 46elks/Resend
+  mockade), i `test:status`. Build grön, test:comm 7/7, verify:checkout-products OK. Admin-kortet
+  renderat i Chromium 430 px, klickflödet skickar rätt PATCH.
+
+### 2026-10-28 — Claude Code — KLAR (Mötes-SMS från Nova städat)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, mergad).
+- **Gjorde:** `meetingSmsToCustomer` i `_shared/voice-agent.mjs` skriver nu fyra rader (hälsning,
+  "ringer upp dig <tid>", "Ämne: …", signatur). Novas fritext städas: versal i tidsfrasen sänks,
+  skräp/blanksteg i slutet tas bort, ämne klipps vid ordgräns (90 tecken). Bakgrund: testsamtalet
+  27/10 gav "ringer upp dig Innan i morgon klockan 12, … angående E-Wheels E2SV2, … punkteringsfritt .".
+  Obs: kommunikationssidan rekonstruerar text för 46elks-SMS utan logg (före 20/10) med samma mall,
+  så äldre mötes-SMS visas i nytt format.
+- **Tester:** test:voice 53/53 (två nya fall), test:comm 7/7.
+- **Verifierat i prod 27/10:** Nova-samtal 17:56 lyckades (4:55, 45 meddelanden), möte bokat,
+  SMS loggat; telefonroutingen fungerar efter env-rättningen i Netlify.
+
+### 2026-10-27 — Claude Code — KLAR (Bokningsmodell förfrågan + telefonfix pensionerat nummer)
+### 2026-10-28 — Claude Code (Drift & tillväxt) — KLAR (Bokningswizard steg 2, omarbetad mot förfrågan-modellen)
+
+- **Branch:** `worktree-wizard-steg2-rework`, commit 28d87c6, fast-forwardad till main.
+- **Gjorde:** trestegswizard på `book-online/index.html` (1 Problemet, 2 Din scooter,
+  3 Tid & kontakt) ovanpå DAGENS formulär. Codex #163-texter och förfrågan-logiken
+  ("Boka inlämning"/"Skicka förfrågan", slotSourceNote, gråa tider, 409) oförändrade;
+  `syncSlotModeUi` körs när kunden når steg 3. Fältnamn, API-kontrakt och Netlify
+  Forms-backup orörda. GA4-fix: `trackBooking` köar event i dataLayer tills deferred
+  analytics.js laddat (booking_view tappades annars tyst) + nytt `booking_step_view`.
+  Formuläret kör `novalidate`; validering per steg och vid submit.
+- **Tester:** build + verify:checkout-products OK, test:status 25/25. test:comm 6/7 —
+  "SMS loggas med exakt text" (25 s timeout) fallerar ÄVEN på orörd kod; befintligt fel,
+  ej från denna ändring. Renderad i browserpanen desktop + 375 px: stegnav, valideringar,
+  tis/tors-fallback, dataLayer-kö verifierade; ingen mobil-overflow.
+- **Gamla `worktree-bokning-steg2` (d6098fe+f4c0280) är härmed ersatt** och ska inte mergas.
+- **Känt kosmetiskt (fanns före):** "Populär"-taggen överlappar kortrubriken på 375 px.
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main, mergad av Claude på Sebastians order).
+- **Telefoni (akut):** `VOICE_PRIMARY_NUMBER`/`VOICE_NOTIFY_TO`/`WORKSHOP_SMS_TO` i Netlify pekar sedan
+  2026-08-02 på tillfälliga +46725751086 → alla samtal mån–fre 09–18 gick till dess mobilsvar och nådde
+  aldrig Nova; 8 larm-SMS/dag till en död telefon. Ny `_shared/env.mjs` (`readEnv`) filtrerar
+  pensionerade nummer ur personalnycklarna, fallback +46700243319; alla funktioner med lokal `env`
+  använder den. **Sebastian bör ändå rätta env i Netlify** (tre nycklarna → +46700243319) och
+  trigga deploy; koden är ett skyddsnät. comm-log/kommunikation läser rå env (eget nummer ska
+  fortsatt filtreras som internt).
+- **Bokningsmodell (Sebastians beslut):** tis/tors 15–20 + "Öppet"-händelser = direktbokning. Övriga
+  tider 12–20 = **förfrågan** (`bookingMode:"request"`, `bookingRequest.status:"pending"`): kund får
+  "INTE bokad, vänta på bekräftelse" (SMS via spärren, mail utan ICS), kalender "FÖRFRÅGAN
+  (obekräftad): …", verkstads-SMS/mail flaggar. Admin-kundkort: gul ruta Bekräfta/Avböj →
+  `workshop-cases` `confirm_booking_request`/`decline_booking_request` (kund-SMS approved, kalender
+  patch/delete via ny `_shared/google-calendar.mjs`). Upptagna händelser spärrar som förut (409).
+  Slot-API: `{time, free, mode}` (free = ej upptagen). Texter: start, kontakt, bokning, Nova
+  (`voice-agent.mjs`, docs/voice-agent-prompt.md INLÄMNING), docs/booking-system-manual.md.
+- **Tester:** build grön (orders 9, voice 53, status 25, contact 14, archive 7, campaign 6),
+  test:comm 7, verify:checkout-products OK, callflow `tsc` OK. Formuläret renderat i Chromium:
+  "– förfrågan"/"– upptaget", knapp "Skicka förfrågan" vs "Boka inlämning", förval första tis/tors.
+- **Kvar för Sebastian:** rätta env i Netlify; publicera INLÄMNING-stycket i ElevenLabs igen;
+  Google-företagsprofilens öppettider och Googles bokningssida (appointment schedule) kan Claude inte
+  ändra (inga klick-verktyg). Gamla förfrågningar finns inte: modellen gäller nya bokningar.
+
+### 2026-10-26 — Claude Code — KLAR (Bokningstider: alla dagar 12–20, öppet via kalendern)
+
+- **Branch:** `ccr-5253a4c8-i1uwzt` (PR mot main).
+- **Gjorde:** kunden ser alla dagar 12–20; ledig = tis/tors 15–20 (kod, `isBaselineSlot`) ELLER inom
+  kalenderhändelse med titel som börjar "Öppet" (`OPEN_EVENT_RE`), minus upptagna händelser.
+  `booking.mjs` läser nu `events.list` (inte freeBusy) i både slots och bokningskontroll
+  (`classifyCalendarEvents`). Server avvisar stängda tider (409 `not_open`). Formuläret visar
+  upptagna tider gråa. Alla texter + Novas prompt/kod uppdaterade (Nova sa "10 till 16" sedan 19/10).
+- **Tester:** alla `test:*` gröna (205, `test:status` 17/17 nya slot-tester), build OK,
+  `verify:checkout-products` OK, callflow `check` OK. Formuläret renderat i Chromium med mockade
+  kalenderfönster: fullbokade dagar och upptagna tider gråa, tis/tors fria.
+- **Rutin för Sebastian:** lägg in "Öppet 12–20" (eller del av dag) i "Nordic Verkstad - Bokningar"
+  för dagar han är där; "Upptagen" stänger tider (även tis/tors). Transparenta händelser spärrar inget.
+- **Kvar för Sebastian:** publicera nya prompten i ElevenLabs (docs/voice-agent-prompt.md), stänga
+  Googles bokningssida ("Boka service — Nordic E-Mobility", visar 09.00), uppdatera Google-företagsprofilens
+  öppettider. Tjänstekontot måste ha läsrätt på kalendern (har skrivrätt → OK).
+### 2026-10-26 - Codex - KLAR lokalt (publika budskap och förtroende)
+
+- Implementation: `75b856c` på `codex/site-clarity-trust`. Ingen push/deploy.
+- Build, checkout-verifiering, callflow check, sex public-copy-tester och
+  syntaxkontroll godkända. Lokal rendering 390/1280 px utan overflow;
+  skärmbilder stickprovsgranskade. Sebastian har godkänt PR och merge.
+- Rapport: `docs/SITE_CLARITY_AND_GROWTH_ACTIONS_2026_10_26.md`.
+- Behåll rättade texter när Claudes separata bokningswizard integreras.
 ### 2026-10-28 — Claude Code — KLAR (godkännandekön tjatar + kontraktstesterna tillbaka i grinden)
 
 - **Branch:** `fix/godkannandekon-synlig` (pushad, ej mergad). Ingen branchväxling

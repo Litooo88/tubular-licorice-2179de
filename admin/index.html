@@ -16,6 +16,7 @@ a{color:#00c853}
 h1{font-size:34px;margin:0 0 8px;letter-spacing:0}
 .muted{color:#9ea79f}
 .panel,.case,.login,.column{background:#101410;border:1px solid #28322a;border-radius:8px}
+.login-wrap{margin-bottom:14px}.login-wrap>summary{cursor:pointer;color:#9eaaa2;font-size:13px;padding:6px 0}.login-wrap[open]>summary{margin-bottom:8px}
 .login{display:grid;grid-template-columns:1fr 180px auto auto auto;gap:12px;align-items:end;padding:18px;margin-bottom:14px}
 label{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#a8b2aa;font-weight:900;margin-bottom:6px}
 input,select,textarea{width:100%;background:#060806;border:1px solid #303a32;border-radius:8px;color:#fff;padding:10px 11px;font:inherit}
@@ -246,6 +247,18 @@ button.stat.is-filtering{border-color:#00c853;outline:1px solid rgba(0,200,83,.5
   .addons-box{border:1px solid rgba(0,200,83,.28);background:rgba(0,200,83,.08);border-radius:8px;padding:10px;margin:10px 0;color:#eaffef;font-size:13px;line-height:1.5}
   .addons-box strong{display:block;margin-bottom:4px}
   .delivery-banner{border-radius:8px;padding:12px 13px;margin:10px 0;line-height:1.45}
+  .request-banner{border:2px solid #f0b429;background:#2a2100;color:#ffe9a8;border-radius:8px;padding:12px 13px;margin:10px 0;line-height:1.45}
+  .request-banner strong{display:block;color:#fff;margin-bottom:4px}
+  .request-banner .request-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+  .request-banner .request-actions button{font-weight:700}
+  .request-banner .request-actions button.confirm{background:#00c853;color:#021307;border-color:#00c853}
+  .request-banner.decided{border-color:#2e7d32;background:#0f1f12;color:#b9f5c4}
+  .request-banner .reschedule-form{display:none;margin-top:10px;padding:10px;border:1px dashed #f0b429;border-radius:8px}
+  .request-banner .reschedule-form.open{display:block}
+  .request-banner .reschedule-form label{display:block;font-size:13px;margin-bottom:6px;color:#ffe9a8}
+  .request-banner .reschedule-row{display:flex;gap:8px;flex-wrap:wrap}
+  .request-banner .reschedule-row input,.request-banner .reschedule-row select{font-size:16px;padding:8px;border-radius:6px;border:1px solid #6b5a1f;background:#141000;color:#fff}
+  .request-banner .reschedule-hint{font-size:12px;margin-top:6px;color:#e8d79a}
   .delivery-banner strong{display:block;margin-bottom:4px}
   .delivery-banner.ok{background:rgba(0,200,83,.10);border:1px solid rgba(0,200,83,.3);color:#e7fff0}
   .delivery-banner.partial{background:rgba(255,194,71,.12);border:1px solid rgba(255,194,71,.35);color:#fff1cf}
@@ -352,6 +365,7 @@ textarea{min-height:66px;resize:vertical}
 window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debugMode:new URLSearchParams(window.location.search).has("ga_debug")};
 </script>
 <script src="/assets/analytics.js" defer></script>
+<script src="/admin/admin-nav.js" defer></script>
 </head>
 <body>
 <main class="wrap">
@@ -381,6 +395,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div id="ring-list-items"></div>
   </section>
 
+  <details class="login-wrap" id="loginWrap"><summary>Inloggning &amp; inst&auml;llningar</summary>
   <section class="login">
     <div><label for="token">Admin-token</label><input id="token" type="password" autocomplete="current-password" placeholder="ADMIN_TOKEN fr&aring;n Netlify"></div>
     <div><label for="operatorName">Jag &auml;r</label><select id="operatorName"><option value="Sebastian">Sebastian</option><option value="Verkstaden">Verkstaden</option></select></div>
@@ -388,14 +403,14 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <button class="secondary" id="refresh">Uppdatera</button>
     <button class="secondary" id="calendarTest">Testa kalender</button>
   </section>
+  </details>
 
   <div class="error" id="error"></div>
   <div class="calendar-result" id="calendarResult"></div>
-  <section class="panel notice"><strong>Automatiskt fl&ouml;de:</strong> Nya bokningar sparas h&auml;r, kunden ska f&aring; SMS och e-post direkt, och verkstaden f&aring;r avisering. Om ett kort markeras med r&ouml;d kundbekr&auml;ftelse beh&ouml;ver kunden f&ouml;ljas upp manuellt direkt.</section>
   <nav class="admin-tabs" aria-label="Adminvyer">
-    <button type="button" class="is-active" data-admin-tab="overview">Översikt</button>
-    <button type="button" data-admin-tab="phone">Telefoni</button>
+    <button type="button" class="is-active" data-admin-tab="overview">Att göra</button>
     <button type="button" data-admin-tab="cards">Kundkort</button>
+    <button type="button" data-admin-tab="phone">Verktyg</button>
   </nav>
 
   <div class="admin-view" id="overviewView">
@@ -460,31 +475,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
       <div class="ai-test-result" id="aiSmsTestResult"></div>
     </div>
   </section>
-  <details class="panel communication-radar" id="communicationRadarPanel">
-    <summary>
-    <div class="communication-radar-head">
-      <div>
-        <h2>Kommunikationsradar &ndash; demo/test</h2>
-        <p>Detta &auml;r mockdata. Inga riktiga Gmail/SMS/samtal h&auml;mtas h&auml;r. Inget skickas.</p>
-        <div class="communication-radar-status warn" id="communicationRadarStatus">Klicka p&aring; H&auml;mta demo-data f&ouml;r att ladda Kommunikationsradar.</div>
-      </div>
-      <div class="communication-radar-actions">
-        <button type="button" class="secondary" id="refreshCommunicationRadar">H&auml;mta demo-data</button>
-        <button type="button" class="secondary" id="testCommunicationDraft">Skapa svarsf&ouml;rslag dry-run</button>
-      </div>
-    </div>
-    </summary>
-    <div class="communication-radar-warning">Detta &auml;r en demo/testpanel. Raderna nedan &auml;r inte riktiga kund&auml;renden och ska inte anv&auml;ndas som live-underlag.</div>
-    <div class="communication-radar-grid">
-      <div class="communication-radar-card"><h3>Demo: nya inkommande</h3><div class="communication-radar-list" id="communicationNewList"></div></div>
-      <div class="communication-radar-card"><h3>Demo: kr&auml;ver svar</h3><div class="communication-radar-list" id="communicationReplyList"></div></div>
-      <div class="communication-radar-card"><h3>Demo: risk&auml;renden</h3><div class="communication-radar-list" id="communicationRiskList"></div></div>
-      <div class="communication-radar-card"><h3>Demo: leverant&ouml;rer</h3><div class="communication-radar-list" id="communicationSupplierList"></div></div>
-      <div class="communication-radar-card"><h3>Demo: utkast</h3><div class="communication-radar-list" id="communicationDraftList"></div></div>
-      <div class="communication-radar-card"><h3>Demo: koppla till &auml;rende</h3><div class="communication-radar-list" id="communicationLinkedList"></div></div>
-    </div>
-    <div class="communication-draft-preview" id="communicationDraftPreview"></div>
-  </details>
 
   <section class="panel active-overview">
     <h2>Operativ &auml;rendelista</h2>
@@ -600,27 +590,6 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
     <div id="voicemailList" class="muted">Uppdatera samtalen ovan f&ouml;r att ladda telesvarsinkorgen.</div>
   </section>
 
-  <section class="panel campaign-panel">
-    <h2>Servicel&auml;nk-utrullning &mdash; telefonbuggen + statusportalen</h2>
-    <p>Skickar varje kund med <strong>aktivt &auml;rende</strong> (inl&auml;mnad/fels&ouml;kning/reparation/v&auml;ntar/klar) ett SMS + mail som: <strong>1)</strong> ber om urs&auml;kt f&ouml;r telefonbuggen som stoppat &ouml;ver 600 samtal senaste m&aring;naden, <strong>2)</strong> ger kunden sitt s&auml;kra servicenummer (NEM-XXXX-XXXX-XXXX), <strong>3)</strong> f&ouml;rklarar statussidan och "Beg&auml;r statusuppdatering"-knappen. Kunder som redan f&aring;tt l&auml;nken hoppas &ouml;ver automatiskt. Nya bokningar f&aring;r l&auml;nken automatiskt i bekr&auml;ftelsen.</p>
-    <details style="margin:10px 0">
-      <summary style="cursor:pointer">Visa exakt vad kunden f&aring;r (SMS + mail)</summary>
-      <div style="background:#0d120e;border:1px solid #2a352c;border-radius:8px;padding:12px 14px;margin-top:8px;font-size:13px;line-height:1.6">
-        <strong>SMS:</strong><br>
-        <em>"Hej &lt;namn&gt;! Viktigt besked fr&aring;n Nordic E-Mobility: ett tekniskt fel i v&aring;r telefonv&auml;xel har den senaste m&aring;naden stoppat m&aring;nga inkommande samtal. Har du f&ouml;rs&ouml;kt ringa utan att komma fram ber vi verkligen om urs&auml;kt - felet l&aring;g hos tekniken och &auml;r nu &aring;tg&auml;rdat. Ditt &auml;rende har servicenummer NEM-XXXX-XXXX-XXXX. F&ouml;lj reparationen live, steg f&ouml;r steg: [l&auml;nk] /Nordic E-Mobility"</em><br><br>
-        <strong>Mail (&auml;mne):</strong> <em>"Vi ber om urs&auml;kt - och ger dig full koll. Servicenummer: NEM-..."</em><br>
-        <strong>Mail (inneh&aring;ll):</strong> samma urs&auml;kt med f&ouml;rklaringen att &ouml;ver 600 samtal stoppats av felet, kundens servicenummer i stor ruta, gr&ouml;n "F&ouml;lj din reparation"-knapp, f&ouml;rklaring av "Beg&auml;r statusuppdatering"-knappen samt att telefonen anv&auml;nds i f&ouml;rsta hand f&ouml;r bokningar.
-      </div>
-    </details>
-    <div class="call-actions">
-      <button type="button" class="secondary" id="buildStatusRollout">Bygg utskickslista (aktiva &auml;renden)</button>
-    </div>
-    <div class="call-status" id="statusRolloutStatus"></div>
-    <div id="statusRolloutPreview" class="muted">Klicka p&aring; "Bygg utskickslista" f&ouml;r att se exakt vilka kunder som f&aring;r utskicket.</div>
-    <div class="call-actions" style="margin-top:12px">
-      <button type="button" id="sendStatusRollout" disabled>Skicka till 0 kunder (SMS + mail, livesändning)</button>
-    </div>
-  </section>
 
   <section class="panel sms-panel live-send-panel">
     <h2>SMS till kund – live-s&auml;ndning</h2>
@@ -788,14 +757,6 @@ const aiSalesListEl=document.getElementById('aiSalesList');
 const aiSocialPostEl=document.getElementById('aiSocialPost');
 const aiQuoteTestResultEl=document.getElementById('aiQuoteTestResult');
 const aiSmsTestResultEl=document.getElementById('aiSmsTestResult');
-const communicationRadarStatusEl=document.getElementById('communicationRadarStatus');
-const communicationNewListEl=document.getElementById('communicationNewList');
-const communicationReplyListEl=document.getElementById('communicationReplyList');
-const communicationRiskListEl=document.getElementById('communicationRiskList');
-const communicationSupplierListEl=document.getElementById('communicationSupplierList');
-const communicationDraftListEl=document.getElementById('communicationDraftList');
-const communicationLinkedListEl=document.getElementById('communicationLinkedList');
-const communicationDraftPreviewEl=document.getElementById('communicationDraftPreview');
 const customerExportStatusEl=document.getElementById('customerExportStatus');
 const customerExportOutputEl=document.getElementById('customerExportOutput');
 const customerExportEmailsEl=document.getElementById('customerExportEmails');
@@ -804,7 +765,6 @@ let callDashboardRows=[];
 let callOptoutPhones=[];
 let callOwnNumbers=[];
 let callCampaignSent=new Map();
-let communicationRadarEvents=[];
 let latestCustomerEmails=[];
 let latestCustomerPhones=[];
 let cases=[];
@@ -818,6 +778,7 @@ const initialCaseTab=initialParams.get('tab')||'contact';
 let initialCaseFocused=false;
 
 tokenInput.value=localStorage.getItem('nordicAdminToken')||'';
+{const wrap=document.getElementById('loginWrap');if(wrap)wrap.open=!tokenInput.value;}
 const savedOperatorName=localStorage.getItem('nordicAdminOperator')||'Sebastian';
 operatorInput.value=['Sebastian','Verkstaden'].includes(savedOperatorName)?savedOperatorName:'Sebastian';
 operatorInput.addEventListener('change',()=>localStorage.setItem('nordicAdminOperator',operatorInput.value));
@@ -841,13 +802,9 @@ document.addEventListener('click',(event)=>{
   if(button)clickToCall(button.dataset.callNumber,button);
 });
 document.getElementById('campaignMessage').value=campaignDefaultMessage();
-document.getElementById('buildStatusRollout').addEventListener('click',buildStatusRollout);
-document.getElementById('sendStatusRollout').addEventListener('click',sendStatusRollout);
 document.getElementById('refreshAiControl').addEventListener('click',loadAiControlTower);
 document.getElementById('testAiQuote').addEventListener('click',testAiQuote);
 document.getElementById('testAiSmsDraft').addEventListener('click',testAiSmsDraft);
-document.getElementById('refreshCommunicationRadar').addEventListener('click',loadCommunicationRadar);
-document.getElementById('testCommunicationDraft').addEventListener('click',testCommunicationDraft);
 document.getElementById('exportCustomers').addEventListener('click',exportCustomerList);
 document.getElementById('copyCustomerEmails').addEventListener('click',copyCustomerEmailList);
 document.getElementById('copyCustomerPhones').addEventListener('click',copyCustomerPhoneList);
@@ -1191,19 +1148,40 @@ function contactStateMeta(item){
   if(item.status==='waiting_customer') return {label:'V&auml;ntar svar',className:'waiting'};
   return {label:'Ska kontaktas',className:'todo'};
 }
+// Formulär för "Bekräfta annan tid": datum + klockslag (halvtimmar 08-20),
+// förvalt på kundens önskade tid. Skickar SMS + mejl med den valda tiden.
+function rescheduleFormHtml(item){
+  const raw=String(item.preferredDate||'');
+  const m=raw.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);
+  const today=new Intl.DateTimeFormat('sv-SE',{timeZone:'Europe/Stockholm'}).format(new Date());
+  const day=m&&m[1]>=today?m[1]:today;
+  const time=m?m[2]:'15:00';
+  const times=[];
+  for(let minute=8*60;minute<=20*60;minute+=30)times.push(`${String(Math.floor(minute/60)).padStart(2,'0')}:${String(minute%60).padStart(2,'0')}`);
+  if(!times.includes(time))times.push(time);
+  return `<div class="reschedule-form"><label>Ny tid som kunden f&aring;r i SMS${item.customer&&item.customer.email?' och mejl':''}</label><div class="reschedule-row"><input type="date" class="reschedule-day" min="${today}" value="${html(day)}"><select class="reschedule-time">${times.sort().map((t)=>`<option value="${t}"${t===time?' selected':''}>${t}</option>`).join('')}</select><button type="button" class="confirm request-reschedule-send">Skicka bekr&auml;ftelse</button></div><div class="reschedule-hint">Kalenderh&auml;ndelsen flyttas till den nya tiden. Kolla kalendern f&ouml;rst.</div></div>`;
+}
 function customerDeliveryMeta(item){
   const notifications=item.notifications||{};
   const delivery=item.customerDelivery||notifications.customerDelivery||{};
   const smsSent=notifications.sms&&notifications.sms.status==='sent';
   const emailSent=notifications.customerEmail&&notifications.customerEmail.status==='sent';
   const sentCount=(smsSent?1:0)+(emailSent?1:0);
+  const request=item.bookingMode==='request'&&item.bookingRequest;
+  if(request&&item.bookingRequest.status==='pending'){
+    return {className:'partial',title:'F&ouml;rfr&aring;gan mottagen',text:sentCount?'Kunden har fått "förfrågan mottagen, vänta på bekräftelse". Svara nedan.':'Kunden har inte fått något kvitto. Svara nedan, då får kunden SMS.'};
+  }
+  if(request&&item.bookingRequest.status==='confirmed'){
+    const ok=notifications.bookingRequestSms&&notifications.bookingRequestSms.status==='sent';
+    return ok?{className:'ok',title:'Kund bekr&auml;ftad',text:'Bekräftelsen med tiden gick iväg till kunden.'}:{className:'attention',title:'Bekr&auml;ftelse-SMS gick inte iv&auml;g',text:'Ring kunden och bekräfta tiden.'};
+  }
   if(delivery.status==='sent'||sentCount===2){
-    return {className:'ok',title:'Kund bekr&auml;ftad',text:'SMS och e-post gick iv&auml;g till kunden.'};
+    return {className:'ok',title:'Kund bekr&auml;ftad',text:'SMS och e-post gick iväg till kunden.'};
   }
   if(delivery.status==='partial'||sentCount===1){
-    return {className:'partial',title:'Delvis bekr&auml;ftad',text:(delivery.nextStep||'En kanal gick iv&auml;g. Komplettera manuellt vid behov.')};
+    return {className:'partial',title:'Delvis bekr&auml;ftad',text:(delivery.nextStep||'En kanal gick iväg. Komplettera manuellt vid behov.')};
   }
-  return {className:'attention',title:'Kundbekr&auml;ftelse saknas',text:(delivery.nextStep||'Ingen automatisk kundbekr&auml;ftelse gick iv&auml;g. Ring eller skicka manuellt nu.')};
+  return {className:'attention',title:'Kundbekr&auml;ftelse saknas',text:(delivery.nextStep||'Ingen automatisk kundbekräftelse gick iväg. Ring eller skicka manuellt nu.')};
 }
 function needsCustomerAttention(item){
   return customerDeliveryMeta(item).className==='attention';
@@ -2484,10 +2462,6 @@ function showAiTestResult(element,title,rows,bad=false){
   element.className=`ai-test-result show ${bad?'bad':''}`;
   element.innerHTML=`<strong>${html(title)}</strong><br>${rows.map(([label,value])=>`${html(label)}: ${html(value===null||value===undefined?'-':value)}`).join('<br>')}`;
 }
-function showCommunicationStatus(message,state=''){
-  communicationRadarStatusEl.className=`communication-radar-status ${state}`;
-  communicationRadarStatusEl.textContent=message;
-}
 function showCustomerExportStatus(message,state=''){
   customerExportStatusEl.className=`customer-export-status ${state}`;
   customerExportStatusEl.textContent=message;
@@ -2626,21 +2600,6 @@ function communicationStatusLabel(item){
   if(item.draftId)return'draft';
   return'read_only';
 }
-function communicationEventHtml(rows=[]){
-  if(!rows.length)return'<div class="muted">Inget att visa.</div>';
-  return rows.map((item)=>{
-    const risk=item.risk||{};
-    const className=`communication-event ${risk.level==='high'?'risk':''} ${item.classification==='supplier'?'supplier':''}`;
-    const status=communicationStatusLabel(item);
-    const timeline=item.caseId?`<br>Timeline/case: ${html(item.caseId)}`:'';
-    const reasons=Array.isArray(risk.reasons)&&risk.reasons.length?`<br>Riskorsak: ${html(risk.reasons.join(', '))}`:'';
-    return `<article class="${className}">
-      <strong>${html(item.subject||item.classification||'Kommunikation')}</strong>
-      ${html(item.source||'manual')} - ${html(item.classification||'other')} - ${html(status)}
-      <small>${html(item.bodySummary||'Saknar sammanfattning')}<br>Risk: ${html(risk.level||'low')}${reasons}${timeline}<br>${html(dateShort(item.receivedAt))}</small>
-    </article>`;
-  }).join('');
-}
 function communicationDraftHtml(drafts=[]){
   if(!drafts.length)return'<div class="muted">Inga utkast.</div>';
   return drafts.slice(0,6).map((draft)=>`
@@ -2649,71 +2608,6 @@ function communicationDraftHtml(drafts=[]){
       ${html(draft.message||'Tomt utkast')}
       <small>Risk: ${html(draft.riskLevel||draft.risk&&draft.risk.level||'low')} - Kr&auml;ver godk&auml;nnande: ${draft.requiresApproval?'Ja':'Nej'}<br>Skickas: ${draft.sendsMessage?'Ja':'Nej'}</small>
     </article>`).join('');
-}
-function renderCommunicationRadar(data){
-  const events=Array.isArray(data.events)?data.events:[];
-  const drafts=Array.isArray(data.drafts)?data.drafts:[];
-  communicationRadarEvents=events;
-  communicationNewListEl.innerHTML=communicationEventHtml(events.filter((item)=>item.status==='new').slice(0,6));
-  communicationReplyListEl.innerHTML=communicationEventHtml(events.filter((item)=>['new','reviewed'].includes(item.status)).slice(0,6));
-  communicationRiskListEl.innerHTML=communicationEventHtml(events.filter((item)=>item.risk&&item.risk.level==='high').slice(0,6));
-  communicationSupplierListEl.innerHTML=communicationEventHtml(events.filter((item)=>item.classification==='supplier').slice(0,6));
-  communicationDraftListEl.innerHTML=communicationDraftHtml(drafts);
-  communicationLinkedListEl.innerHTML=communicationEventHtml(events.filter((item)=>item.caseId).slice(0,6));
-}
-async function loadCommunicationRadar(){
-  const button=document.getElementById('refreshCommunicationRadar');
-  try{
-    if(!aiAdminToken()){showCommunicationStatus('Admin-token saknas','warn');return;}
-    button.disabled=true;
-    showCommunicationStatus('Laddar Kommunikationsradar demo-data...');
-    const data=await aiFunctionFetch('/.netlify/functions/communication-radar-demo');
-    renderCommunicationRadar(data);
-    const summary=data.summary||{};
-    showCommunicationStatus(`Senast uppdaterad ${new Date().toLocaleTimeString('sv-SE')} - mock/dry-run - ${summary.total||0} handelser, ${summary.riskCases||0} risk`,data.dryRun?'warn':'');
-  }catch(error){
-    showCommunicationStatus(`Fel: ${error.message}`,'bad');
-  }finally{
-    button.disabled=false;
-  }
-}
-async function testCommunicationDraft(){
-  const button=document.getElementById('testCommunicationDraft');
-  try{
-    if(!aiAdminToken()){showCommunicationStatus('Admin-token saknas','warn');return;}
-    button.disabled=true;
-    const event=communicationRadarEvents.find((item)=>item.risk&&item.risk.level==='high')||communicationRadarEvents[0]||{
-      source:'gmail',
-      direction:'inbound',
-      from:'demo@example.test',
-      subject:'Demo arende',
-      bodySummary:'Kund vill boka service.',
-      dryRun:true
-    };
-    communicationDraftPreviewEl.className='communication-draft-preview show';
-    communicationDraftPreviewEl.textContent='Skapar svarsforslag i dry-run...';
-    const data=await aiFunctionFetch('/.netlify/functions/ai-communication-draft',{method:'POST',body:{event,dryRun:true,previewOnly:true}});
-    const draft=data.draft||{};
-    const preview=data.timelinePreview;
-    communicationDraftPreviewEl.innerHTML=[
-      '<strong>Svarsf&ouml;rslag dry-run</strong>',
-      `Status: ${html(draft.status||'-')}`,
-      `Risk: ${html(draft.riskLevel||draft.risk&&draft.risk.level||'-')}`,
-      `Kr&auml;ver godk&auml;nnande: ${draft.requiresApproval?'Ja':'Nej'}`,
-      `Skickas: ${data.sendsMessage||draft.sendsMessage?'Ja':'Nej'}`,
-      `Writes skipped: ${html((data.writesSkipped||[]).join(', ')||'-')}`,
-      '',
-      html(draft.message||'Inget utkast.'),
-      preview?`<br><strong>Timeline-preview</strong><br>${html(preview.type||'ai_suggestion')} - ${html(preview.content||'')}`:''
-    ].join('<br>');
-    showCommunicationStatus('Svarsforslag skapat i dry-run. Inget skickades och inga writes gjordes.','warn');
-  }catch(error){
-    communicationDraftPreviewEl.className='communication-draft-preview show';
-    communicationDraftPreviewEl.textContent=`Fel: ${error.message}`;
-    showCommunicationStatus(`Fel: ${error.message}`,'bad');
-  }finally{
-    button.disabled=false;
-  }
 }
 async function loadAiControlTower(){
   const button=document.getElementById('refreshAiControl');
@@ -3534,56 +3428,6 @@ async function activateSmsInbound(){
   }finally{button.disabled=false;}
 }
 const STATUS_ROLLOUT_STATUSES=['checked_in','diagnosing','repairing','waiting_parts','waiting_customer','ready'];
-let statusRolloutList=[];
-function showStatusRolloutStatus(message,bad=false){
-  const el=document.getElementById('statusRolloutStatus');
-  el.className=`call-status ${message?(bad?'bad':'ok'):''}`;
-  el.textContent=message;
-  el.style.display=message?'block':'none';
-}
-function buildStatusRollout(){
-  const eligible=cases.filter((item)=>STATUS_ROLLOUT_STATUSES.includes(String(item.status||'')));
-  statusRolloutList=eligible.filter((item)=>{
-    const alreadySent=item.notifications&&item.notifications.statusLink&&item.notifications.statusLink.status==='sent';
-    const hasChannel=(item.customer&&(item.customer.phone||item.customer.email));
-    // Klar + betald = kunden har i praktiken hämtat scootern (gamla ärenden
-    // som aldrig stängts) — de ska inte få "följ din reparation".
-    const pickedUp=String(item.status)==='ready'&&item.payment&&item.payment.status==='paid';
-    return !alreadySent&&hasChannel&&!pickedUp;
-  });
-  const skipped=eligible.length-statusRolloutList.length;
-  const rowsHtml=statusRolloutList.map((item)=>{
-    const channels=[item.customer&&item.customer.phone?'SMS':'',item.customer&&item.customer.email?'mail':''].filter(Boolean).join(' + ');
-    return `<tr><td>${html(item.customer&&item.customer.name||'Okänd')}</td><td>${html(item.vehicle&&item.vehicle.model||'-')}</td><td>${statusLabels[item.status]||html(item.status)}</td><td>${html(channels)}</td></tr>`;
-  }).join('');
-  document.getElementById('statusRolloutPreview').innerHTML=statusRolloutList.length
-    ?`<div class="muted" style="margin-bottom:8px">${statusRolloutList.length} kunder får utskicket · ${skipped} hoppas över (redan skickat eller saknar kontaktväg)</div><table class="active-table"><thead><tr><th>Kund</th><th>Modell</th><th>Status</th><th>Kanal</th></tr></thead><tbody>${rowsHtml}</tbody></table>`
-    :'<div class="muted">Inga kunder kvar att skicka till — alla aktiva ärenden har redan fått länken.</div>';
-  const sendButton=document.getElementById('sendStatusRollout');
-  sendButton.textContent=`Skicka till ${statusRolloutList.length} kunder (SMS + mail, livesändning)`;
-  sendButton.disabled=!statusRolloutList.length;
-  showStatusRolloutStatus(`Lista klar — granska innan du skickar.`);
-}
-async function sendStatusRollout(){
-  const button=document.getElementById('sendStatusRollout');
-  if(!statusRolloutList.length){showStatusRolloutStatus('Bygg utskickslistan först.',true);return;}
-  if(!confirm(`Skicka servicelänken till ${statusRolloutList.length} kunder via SMS + mail?\n\nVarje kund får sitt servicenummer och statuslänken. Redan skickade hoppas över automatiskt.`))return;
-  button.disabled=true;
-  let ok=0;const failed=[];
-  for(let i=0;i<statusRolloutList.length;i+=1){
-    const item=statusRolloutList[i];
-    button.textContent=`Skickar ${i+1}/${statusRolloutList.length}...`;
-    try{
-      const result=await api('/api/cases/'+encodeURIComponent(item.id),{method:'PATCH',body:JSON.stringify({action:'send_status_link',operatorName:operatorInput.value||'Sebastian'})});
-      if(result.ok||result.alreadySent)ok+=1;else failed.push(item.customer&&item.customer.name||item.id);
-    }catch(error){failed.push(item.customer&&item.customer.name||item.id);}
-  }
-  statusRolloutList=[];
-  button.textContent='Skicka till 0 kunder (SMS + mail, livesändning)';
-  document.getElementById('statusRolloutPreview').innerHTML='<div class="muted">Utskick klart. Bygg listan igen för aktuell status.</div>';
-  showStatusRolloutStatus(`Utrullning klar: ${ok} skickade${failed.length?`, ${failed.length} misslyckades (${failed.slice(0,5).join(', ')}${failed.length>5?'…':''})`:''}.`,Boolean(failed.length));
-  await loadCases();
-}
 async function sendLostLeadDiscount(row,button){
   if(!confirm(`Skicka RIKTIGT rabatt-SMS via 46elks till ${row.phone}? Rabatt kräver manuell kontroll.`))return;
   const original=button.textContent;
@@ -3737,6 +3581,9 @@ function caseCard(item){
     <div class="card-panel ${activeTab==='overview'?'is-active':''}" data-panel="overview">
       <div class="key-date ${missingPreferred?'missing':''}"><span>${isPickupReady?'Planerad upph&auml;mtning':'Planerad inl&auml;mning'}</span><b>${missingPreferred?'Beh&ouml;ver bokas in':html(displayDate(item.preferredDate))}</b></div>
       <div class="delivery-banner ${delivery.className}"><strong>${delivery.title}</strong>${html(delivery.text)}</div>
+      ${item.bookingMode==='request'&&item.bookingRequest?(item.bookingRequest.status==='pending'
+        ?`<div class="request-banner" data-request-case="${html(item.id)}"><strong>F&Ouml;RFR&Aring;GAN &ndash; kunden v&auml;ntar p&aring; ditt svar</strong>Tiden ${html(displayDate(item.preferredDate))} ligger utanf&ouml;r tis/tors 15&ndash;20. Kunden har f&aring;tt &quot;v&auml;nta p&aring; bekr&auml;ftelse&quot; och kommer inte f&ouml;rr&auml;n du bekr&auml;ftat. Kolla kalendern f&ouml;rst.<div class="request-actions"><button type="button" class="confirm request-decide" data-decision="confirm_booking_request">Bekr&auml;fta tiden (SMS${item.customer&&item.customer.email?' + mejl':''})</button><button type="button" class="secondary request-reschedule-toggle">Bekr&auml;fta annan tid</button><button type="button" class="secondary request-decide" data-decision="decline_booking_request" data-confirm="Avb&ouml;ja tiden? Kunden f&aring;r SMS om att boka ny tid och kalenderh&auml;ndelsen tas bort.">Avb&ouml;j tiden</button></div>${rescheduleFormHtml(item)}</div>`
+        :`<div class="request-banner decided"><strong>F&ouml;rfr&aring;gan ${item.bookingRequest.status==='confirmed'?(item.bookingRequest.rescheduledAt?'bekr&auml;ftad p&aring; ny tid':'bekr&auml;ftad'):'avb&ouml;jd'}</strong>${html(item.bookingRequest.decidedBy||'')} ${item.bookingRequest.decidedAt?dateShort(item.bookingRequest.decidedAt):''}${item.bookingRequest.rescheduledAt&&item.bookingRequest.requestedDate?` &middot; kunden bad om ${html(displayDate(item.bookingRequest.requestedDate))}`:''}${item.bookingRequest.status==='confirmed'?`<div class="request-actions"><button type="button" class="secondary request-reschedule-toggle">Flytta tiden</button></div>${rescheduleFormHtml(item)}`:''}</div>`):''}
       <div class="message-box"><strong>${html(item.service||'Annat')}</strong><br>${html(item.message||'Ingen beskrivning')}</div>
       ${item.order?`<div class="addons-box"><strong>Produktorder ${html(item.order.reference||'')}</strong><br>${html(item.order.brand||'')} · ${html(item.payment?.providerMethod||'Stripe')}<br>${html([item.order.shipping?.name,item.order.shipping?.address?.line1,item.order.shipping?.address?.postal_code,item.order.shipping?.address?.city].filter(Boolean).join(', '))}<br>Leveransval behöver bekräftas med kunden.</div>`:''}
       ${addonHtml}
@@ -4219,6 +4066,51 @@ function caseCard(item){
       await loadCaseTimeline(item,card);
     }catch(error){showError(error.message)}
     finally{button.disabled=false;button.textContent=original}
+  });
+  card.querySelectorAll('.request-reschedule-toggle').forEach((button)=>{
+    button.addEventListener('click',()=>{
+      const form=button.closest('.request-banner').querySelector('.reschedule-form');
+      if(form)form.classList.toggle('open');
+    });
+  });
+  card.querySelectorAll('.request-reschedule-send').forEach((button)=>{
+    button.addEventListener('click',async()=>{
+      const form=button.closest('.reschedule-form');
+      const day=form.querySelector('.reschedule-day').value;
+      const time=form.querySelector('.reschedule-time').value;
+      if(!day||!time){showError('Välj datum och klockslag.');return;}
+      const label=new Date(`${day}T12:00:00Z`).toLocaleDateString('sv-SE',{timeZone:'UTC',weekday:'long',day:'numeric',month:'long'});
+      if(!confirm(`Boka in kunden ${label} kl ${time}?\n\nKunden får SMS${item.customer&&item.customer.email?' och mejl':''} med den nya tiden och kalendern flyttas.`))return;
+      const original=button.textContent;
+      button.disabled=true;
+      button.textContent='Skickar...';
+      try{
+        const result=await api('/api/cases/'+encodeURIComponent(item.id),{
+          method:'PATCH',
+          body:JSON.stringify({action:'reschedule_booking_request',preferredDate:`${day}T${time}`,operatorName:caseOperatorName()})
+        });
+        if(result&&result.sms&&result.sms.status!=='sent')showError(`Nya tiden är sparad men SMS:et gick inte iväg (${result.sms.error||result.sms.status}). Ring kunden.`);
+        await loadCases();
+      }catch(error){showError(error.message)}
+      finally{button.disabled=false;button.textContent=original;}
+    });
+  });
+  card.querySelectorAll('.request-decide').forEach((button)=>{
+    button.addEventListener('click',async()=>{
+      if(button.dataset.confirm&&!confirm(button.dataset.confirm))return;
+      const original=button.textContent;
+      button.disabled=true;
+      button.textContent='Skickar...';
+      try{
+        const result=await api('/api/cases/'+encodeURIComponent(item.id),{
+          method:'PATCH',
+          body:JSON.stringify({action:button.dataset.decision,operatorName:caseOperatorName()})
+        });
+        if(result&&result.sms&&result.sms.status!=='sent')showError(`Beslutet är sparat men SMS:et gick inte iväg (${result.sms.error||result.sms.status}). Ring kunden.`);
+        await loadCases();
+      }catch(error){showError(error.message)}
+      finally{button.disabled=false;button.textContent=original;}
+    });
   });
   card.querySelectorAll('.quick-status').forEach((button)=>{
     button.addEventListener('click',async()=>{

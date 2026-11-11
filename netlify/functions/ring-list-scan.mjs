@@ -1,4 +1,5 @@
 import { getStore } from "@netlify/blobs";
+import { readEnv } from "./_shared/env.mjs";
 import { normalizePhone, postSms as rawPostSms } from "./_shared/sms.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
 import { isQuietHour } from "./_shared/quiet-hours.mjs";
@@ -18,13 +19,7 @@ const postSms = loggedSms("ring-list-scan", rawPostSms);
 //
 // Kalla nummer rörs inte — de fångas av det befintliga lost lead-flödet.
 
-const env = (name) => {
-  try {
-    return globalThis.Netlify?.env?.get?.(name) || process.env[name] || "";
-  } catch {
-    return process.env[name] || "";
-  }
-};
+const env = (name) => readEnv(name);
 
 const OUR_NUMBER = () => normalizePhone(env("ELKS_NUMBER") || "+46101385498");
 const WINDOW_MS = 25 * 60 * 1000; // överlappar körintervallet med marginal
