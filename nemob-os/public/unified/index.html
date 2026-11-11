@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="sv">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="theme-color" content="#15251e">
+  <title>NEMOB OS · Nordic E-Mobility</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="/icon-512.png">
+  <link rel="stylesheet" href="shell.css">
+  <script src="shell.js" type="module"></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#home" aria-label="NEMOB OS, översikt">
+      <span class="mark" aria-hidden="true">N</span>
+      <span><strong>NEMOB OS</strong><small>Nordic E-Mobility</small></span>
+    </a>
+    <nav id="navigation" aria-label="Huvudmeny">
+      <a href="#home"><span aria-hidden="true" data-icon="home"></span>Översikt</a>
+      <a href="#communication"><span aria-hidden="true" data-icon="communication"></span>Kommunikation</a>
+      <a href="#cases"><span aria-hidden="true" data-icon="cases"></span>Verkstad</a>
+      <a href="#bookings"><span aria-hidden="true" data-icon="bookings"></span>Bokningar</a>
+      <a href="#finance"><span aria-hidden="true" data-icon="finance"></span>Ekonomi</a>
+      <a href="#planning"><span aria-hidden="true" data-icon="planning"></span>Planering</a>
+    </nav>
+  </aside>
+  <main id="main">
+    <header class="topline">
+      <div id="date"></div>
+      <button id="refresh" type="button"><span aria-hidden="true" data-icon="refresh"></span>Uppdatera</button>
+    </header>
+    <header class="intro">
+      <h1 id="heading" tabindex="-1">Verkstadsöversikt</h1>
+      <div id="modes" role="group" aria-label="Visningsläge">
+        <button type="button" data-mode="focus" aria-pressed="true">Fokusläge</button>
+        <button type="button" data-mode="full" aria-pressed="false">Full översikt</button>
+      </div>
+    </header>
+    <p id="connection" role="status"></p>
+    <section id="content" aria-labelledby="heading"></section>
+  </main>
+</body>
+</html>

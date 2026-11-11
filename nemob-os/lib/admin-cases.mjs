@@ -35,6 +35,7 @@ export const fetchAdminCases = async ({ fetchImpl = fetch, env = process.env, no
   try {
     response = await fetchImpl(`${base}/api/cases`, {
       method: "GET",
+      redirect: "error",
       headers: { "x-admin-token": token, Accept: "application/json" },
       signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     });
