@@ -40,7 +40,8 @@ test("F01: publikt bokningssvar lacker inga interna falt", () => {
   for (const secret of ["INTERN", "swish", "2495", internalCase.id, "4711", "+46700000000", "test@example.com"]) {
     assert.equal(serialized.includes(secret), false, `publikt svar lackte "${secret}"`);
   }
-  assert.deepEqual(Object.keys(publicCase).sort(), ["customerDelivery", "notifications", "preferredDate", "service", "status"]);
+  assert.deepEqual(Object.keys(publicCase).sort(), ["bookingMode", "customerDelivery", "notifications", "preferredDate", "service", "status"]);
+  assert.equal(publicCase.bookingMode, "direct");
 });
 
 test("F01: kundens kvittens finns kvar och ar arlig", () => {
