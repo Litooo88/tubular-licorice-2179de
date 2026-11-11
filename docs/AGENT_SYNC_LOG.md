@@ -32,7 +32,7 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-11-11 — Claude Code — PR #169 ÖPPEN, VÄNTAR GODKÄNNANDE (Git-återställning fas 2)
+### 2026-11-11 — Claude Code — KLAR (Git-återställning fas 2: PR #169 mergad, lokal main i synk)
 
 - **Branch:** `fix/godkannandekon-synlig` (de fyra lokala commits som saknas på origin/main:
   `bb42108` godkännandekön tjatar + contracts i build-grinden, samt tre loggposter).
@@ -45,7 +45,11 @@ löpande "konversation".
   bara i denna logg (båda sidor behållna). F01-kontraktstestet uppdaterat för fältet `bookingMode`
   från #165 (låg utanför grinden när det mergades). build grön (128 tester), checkout-verify 44,
   callflow check OK. `test:comm` 6/7 (känt 25 s-timeout, samma på origin/main, ej i grinden).
-- **Kvar:** Sebastians merge-godkännande; därefter lokal `main` → `origin/main` med `git branch -f`.
+- **Mergad:** PR #169 → main `cf427d4` (merge-commit, historik bevarad) efter Sebastians godkännande.
+  Lokal `main` i den delade mappen fast-forwardad till `origin/main`; 0 lokala commits utanför
+  GitHub. Inga brancher, stashes eller worktrees raderade (arkivering är ett separat beslut).
+- **Kvar (nästa uppdrag, inte kod):** Netlify-env för telefonnumren, Stripe-tvisten, Google-
+  bokningssidan; sedan arkiv-taggar + diff-granskning av `codex/audit-four-safety-fixes`.
 
 ### 2026-10-30 — Claude Code — KLAR (Admin-GUI: gemensam meny, död kod bort)
 
