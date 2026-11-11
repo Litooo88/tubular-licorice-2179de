@@ -32,6 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-11 — Claude Code — PÅGÅR (Git-återställning fas 2: PR för fix/godkannandekon-synlig)
+
+- **Branch:** `fix/godkannandekon-synlig` (de fyra lokala commits som saknas på origin/main:
+  `bb42108` godkännandekön tjatar + contracts i build-grinden, samt tre loggposter).
+  Jobbar i egen worktree i scratchpad, ingen branchväxling i den delade mappen.
+- **Gör:** mergar `origin/main` (fb7a5c8, PR #163–#168) in i branchen, löser konflikt i
+  denna logg genom att behålla båda sidor, kör build/verify/callflow check, pushar och
+  öppnar PR mot main. Merge sker först efter Sebastians godkännande.
+- **Rör inte:** andra brancher, stashes, worktrees, produktion. Inga SMS/mejl.
+
 ### 2026-10-28 — Claude Code — KLAR (godkännandekön tjatar + kontraktstesterna tillbaka i grinden)
 
 - **Branch:** `fix/godkannandekon-synlig` (pushad, ej mergad). Ingen branchväxling
