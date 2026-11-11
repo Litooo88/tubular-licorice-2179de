@@ -4,7 +4,8 @@ import { normalizePhone, postSms as rawPostSms } from "./_shared/sms.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
 import { scoreLead } from "./_shared/lead-priority.mjs";
 import { isQuietHour, nextOptimalSendAt } from "./_shared/quiet-hours.mjs";
-import { commitCase } from "./_shared/case-store.mjs";
+import { claimJson, commitCase, readWithEtag } from "./_shared/case-store.mjs";
+import { markCommitted, sendJournaled } from "./_shared/send-journal.mjs";
 
 const postSms = loggedSms("sms-draft", rawPostSms);
 
@@ -162,9 +163,18 @@ export default async (request, context) => {
   }
 
   if (request.method === "POST" && id && action === "approve") {
-    const draft = await drafts.get(id, { type: "json" });
-    if (!draft) return json({ error: "Utkastet finns inte (redan hanterat?)." }, 404);
     const body = await request.json().catch(() => ({}));
+    // Reservera utkastet villkorat innan något skickas: två "1 ok"/klick
+    // samtidigt ger ett utskick, förloraren får 409. Reservationen släpps
+    // om utskicket misslyckas; en övergiven (krasch) får tas över efter 10 min.
+    const claim = await claimJson(drafts, id, { by: clean(body.operatorName, 80) || "admin" });
+    if (!claim.ok) {
+      if (claim.reason === "not_found") return json({ error: "Utkastet finns inte (redan hanterat?)." }, 404);
+      if (claim.reason === "unversioned") return json({ error: "Lagringen kan inte garantera versionskontroll just nu. Inget skickades.", code: "storage_unversioned" }, 503);
+      return json({ error: "Utkastet hanteras redan av ett annat anrop.", code: "in_flight" }, 409);
+    }
+    const draft = claim.item;
+    const releaseClaim = () => drafts.setJSON(id, { ...draft, claimedAt: "", claimedBy: "" }).catch(() => {});
     const message = clean(body.message || draft.message, 1600);
 
     const cases = getStore({ name: "workshop-cases", consistency: "strong" });
@@ -173,14 +183,14 @@ export default async (request, context) => {
     // att godkänna.
     const caseKey = clean(draft.caseId, 200) || id;
     const item = await cases.get(caseKey, { type: "json" });
-    if (!item) return json({ error: "Ärendet finns inte längre." }, 404);
+    if (!item) { await releaseClaim(); return json({ error: "Ärendet finns inte längre." }, 404); }
     const phone = normalizePhone(item?.customer?.phone);
-    if (!phone) return json({ error: "Kundtelefon saknas på ärendet." }, 400);
+    if (!phone) { await releaseClaim(); return json({ error: "Kundtelefon saknas på ärendet." }, 400); }
 
     // Respektera optout-listan (nyckel = normaliserat telefonnummer).
     const optout = getStore({ name: "sms-optout", consistency: "strong" });
     const opted = await optout.get(phone, { type: "json" }).catch(() => null);
-    if (opted) return json({ error: "Kunden har avböjt SMS (optout) — hantera manuellt." }, 409);
+    if (opted) { await releaseClaim(); return json({ error: "Kunden har avböjt SMS (optout) — hantera manuellt." }, 409); }
 
     // Tysta timmar (21–08 svensk tid): ett "1 ok" klockan 02:30 ska inte väcka
     // kunden. Utskicket köas i outbox-storen och går kl 10:00, samma väg som
@@ -213,19 +223,29 @@ export default async (request, context) => {
       return json({ status: "queued", sendAfter, caseId: caseKey });
     }
 
-    const sms = await postSms({ to: phone, message, approved: true }); // godkänt utkast
-    if (sms.status === "not_configured") return json({ status: "not_configured" });
-    if (sms.status !== "sent") return json({ status: sms.status, error: sms.error || "SMS kunde inte skickas." }, 502);
-
     const now = new Date().toISOString();
     const operator = clean(body.operatorName, 80);
+    // Utskicksjournal: reservation före, leverantörs-id efter, committed när
+    // ärendet sparats (annars återapplicerar comm-reconcile loggraden).
+    const sent = await sendJournaled({
+      caseId: caseKey, channel: "sms", to: phone, message, source: "sms-draft", operator, action: "approve_draft",
+      apply: { log: "smsLog", kind: "draft-inbox", statusFrom: ["new"], statusTo: "contacted", event: `AI-utkast (kategori ${draft.category}) godkänt${operator ? ` av ${operator}` : ""} och skickat via SMS-API.` },
+      idempotencyKey: clean(body.idempotencyKey, 120) || `draft-${id}`,
+      send: () => postSms({ to: phone, message, approved: true }), // godkänt utkast
+    });
+    if (sent.status === "in_flight") { await releaseClaim(); return json({ error: "Utkastet skickas redan.", code: "in_flight" }, 409); }
+    if (sent.status === "unversioned") { await releaseClaim(); return json({ error: "Lagringen kan inte garantera versionskontroll just nu. Inget skickades.", code: "storage_unversioned" }, 503); }
+    const sms = sent.result || {};
+    if (sms.status === "not_configured") { await releaseClaim(); return json({ status: "not_configured" }); }
+    if (sms.status !== "sent") { await releaseClaim(); return json({ status: sms.status, error: sms.error || "SMS kunde inte skickas." }, 502); }
+
     // Versionerad skrivning: SMS:et är skickat, loggningen görs om på färsk version.
     const saved = await commitCase(cases, caseKey, (fresh) => ({
       ...fresh,
       status: fresh.status === "new" ? "contacted" : fresh.status,
       smsLog: [
         ...(Array.isArray(fresh.smsLog) ? fresh.smsLog : []),
-        { at: now, kind: "draft-inbox", to: phone, message, status: "sent", providerId: sms.id || "", operator },
+        { at: now, kind: "draft-inbox", to: phone, message, status: "sent", providerId: sms.id || "", operator, journalKey: sent.journalKey },
       ].slice(-50),
       timeline: [
         ...(Array.isArray(fresh.timeline) ? fresh.timeline : []),
@@ -233,8 +253,9 @@ export default async (request, context) => {
       ],
       updatedAt: now,
     }));
+    if (saved.ok && !sent.replayed) await markCommitted(sent.journalKey, { caseEtag: saved.etag || "" }).catch(() => {});
     await drafts.delete(id);
-    return json({ status: "sent", caseId: caseKey, newStatus: saved.ok ? saved.item.status : item.status, caseLogged: saved.ok });
+    return json({ status: "sent", caseId: caseKey, newStatus: saved.ok ? saved.item.status : item.status, caseLogged: saved.ok, journalKey: sent.journalKey });
   }
 
   return json({ error: "Not found" }, 404);

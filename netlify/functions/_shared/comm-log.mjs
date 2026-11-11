@@ -12,6 +12,7 @@
 
 import { getStore } from "@netlify/blobs";
 import { normalizePhone } from "./sms.mjs";
+import { claimJson } from "./case-store.mjs";
 
 const SMS_LOG = "sms-log";
 const HANDLED = "comm-handled";
@@ -144,14 +145,24 @@ export const readPendingSms = async () => {
 };
 
 // Skickar ett köat SMS. send = den riktiga avsändaren (postSms från _shared/sms.mjs).
+// Posten reserveras villkorat (claimJson) innan utskicket: två "Godkänn"
+// samtidigt (dubbelklick, två flikar, SMS-kommando + admin) ger ETT utskick;
+// förloraren får { status: "in_flight" }. En reservation äldre än tio minuter
+// (krasch mitt i) får tas över.
 export const approvePendingSms = async (id, send, { by = "admin" } = {}) => {
   const store = getStore({ name: PENDING, consistency: "strong" });
-  const entry = await store.get(id, { type: "json" }).catch(() => null);
-  if (!entry) return { status: "not_found" };
+  const claim = await claimJson(store, id, { by });
+  if (!claim.ok) {
+    if (claim.reason === "not_found") return { status: "not_found" };
+    if (claim.reason === "unversioned") return { status: "storage_unversioned", error: "Lagringen kan inte garantera versionskontroll - inget skickades." };
+    return { status: "in_flight", error: "Utskicket hanteras redan av ett annat anrop." };
+  }
+  const entry = claim.item;
   const result = await send({ to: entry.to, message: entry.message, from: entry.from || undefined, approved: true });
   await logSms({ source: `approved:${entry.source}`, to: entry.to, message: entry.message, from: entry.from, result });
   if (result?.status === "sent") await store.delete(id).catch(() => {});
-  else await store.setJSON(id, { ...entry, lastError: clean(result?.error || result?.status, 200), lastTriedAt: new Date().toISOString(), by }).catch(() => {});
+  // Misslyckat: släpp reservationen så att nästa godkännande kan försöka igen.
+  else await store.setJSON(id, { ...entry, claimedAt: "", claimedBy: "", lastError: clean(result?.error || result?.status, 200), lastTriedAt: new Date().toISOString(), by }).catch(() => {});
   return result;
 };
 
