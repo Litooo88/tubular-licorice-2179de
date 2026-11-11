@@ -32,7 +32,7 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-11-11 — Claude Code — PÅGÅR (NEMOB OS 2.0 backend: API-kontrakt, dataintegritet, kommunikation)
+### 2026-11-11 — Claude Code — PR ÖPPEN, VÄNTAR GODKÄNNANDE (NEMOB OS 2.0 backend: API-kontrakt, dataintegritet, kommunikation)
 
 - **Branch:** `feat/nemob-os-2-backend` i egen worktree (scratchpad), bas `origin/main` edf4f10.
   Ingen branchväxling i den delade mappen. Codex ocommittade loggrad i den delade mappen rörs inte.
@@ -46,6 +46,21 @@ löpande "konversation".
   uppgifter, hälsa; 2) versionerade blob-skrivningar (etag/onlyIfMatch) med omförsök + tester;
   3) inkommande SMS → ärendematchning + dedup på 46elks-id; 4) säkerhetsgenomgång; 5) PR, ingen merge.
 - **Produktion:** inga ändringar, inga kundutskick. Alla externa anrop mockas i tester.
+- **Resultat:** `docs/NEMOB_OS_2_API_CONTRACTS.md` (alla åtta områden, befintligt vs saknat, Codex-
+  integrationspunkter, e-post-utredning, säkerhetsläge). Ny `_shared/case-store.mjs` (etag +
+  onlyIfMatch, omförsök på färsk data) används av workshop-cases (alla PATCH-grenar), case-sms,
+  case-call, case-media, case-status, sms-draft-inbox, outbox-flush, case-auto-archive. GET /api/cases/:id
+  ger ETag, PATCH tar If-Match (412). `sms-inbound`: dedup på 46elks-id (store `sms-inbound-seen`) +
+  ärendematchning (`_shared/case-match.mjs`: bara entydigt öppet ärende kopplas). Tidssäker
+  hemlighetsjämförelse i voice-agent/nova-outbound-hook. `netlify/functions/package.json` pinnad till
+  @netlify/blobs 10.7.13 (låg på ^8.1.0 = inga villkorade skrivningar i funktionspaketet!).
+  storage-health POST rapporterar `conditionalWrites`. Nya tester: `npm run test:integrity` (17 st) i grinden.
+- **Tester:** build grön (145 tester), verify:checkout-products OK, callflow check OK. `test:comm` 6/7:
+  samma assertion som på orörd main (sms-log-nycklar med kolon fungerar inte på Windows-filsystem),
+  ej orsakat här, ej i grinden.
+- **PR:** #170 (`feat/nemob-os-2-backend` → main).
+- **Kvar:** Sebastians merge-godkännande. Sedan: verifiera `conditionalWrites: true` i produktion,
+  bygga /api/approvals, /api/inbox, /api/overview enligt docs-filen; e-post-webhook (Resend Receiving).
 
 ### 2026-11-11 — Claude Code — KLAR (Git-återställning fas 2: PR #169 mergad, lokal main i synk)
 
