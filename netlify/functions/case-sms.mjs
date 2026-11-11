@@ -2,6 +2,7 @@ import { getStore } from "@netlify/blobs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
 import { normalizePhone, postSms as rawPostSms } from "./_shared/sms.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
+import { commitCase, commitFailureResponse, readWithEtag } from "./_shared/case-store.mjs";
 
 const postSms = loggedSms("case-sms", rawPostSms);
 
@@ -40,7 +41,7 @@ export default async (request, context) => {
   const operator = clean(body.operator || body.operatorName, 80);
 
   const store = getStore({ name: "workshop-cases", consistency: "strong" });
-  const item = await store.get(id, { type: "json" });
+  const { item, etag } = await readWithEtag(store, id);
   if (!item) return json({ error: "Ärendet finns inte." }, 404);
 
   const phone = normalizePhone(item?.customer?.phone);
@@ -66,28 +67,37 @@ export default async (request, context) => {
 
   const now = new Date().toISOString();
   const kindLabel = { generic: "kundinfo", ready: "klar för hämtning", receipt: "betalkvitto" }[kind];
-  const next = {
-    ...item,
-    smsLog: [
-      ...log,
-      { at: now, kind, to: phone, message, status: "sent", providerId: sms.id || "", operator },
-    ].slice(-50),
-    timeline: [
-      ...(Array.isArray(item.timeline) ? item.timeline : []),
-      { at: now, event: `SMS (${kindLabel}) skickat via API${operator ? ` av ${operator}` : ""}.` },
-    ],
-    updatedAt: now,
-  };
-  if (kind === "ready") {
-    next.completion = {
-      ...(item.completion || {}),
-      customerNotifiedAt: now,
-      customerNotifiedVia: "sms",
+  // Versionerad skrivning: SMS:et är redan skickat, bara loggningen görs om
+  // på färsk version vid konflikt.
+  const saved = await commitCase(store, id, (item) => {
+    const next = {
+      ...item,
+      smsLog: [
+        ...(Array.isArray(item.smsLog) ? item.smsLog : []),
+        { at: now, kind, to: phone, message, status: "sent", providerId: sms.id || "", operator },
+      ].slice(-50),
+      timeline: [
+        ...(Array.isArray(item.timeline) ? item.timeline : []),
+        { at: now, event: `SMS (${kindLabel}) skickat via API${operator ? ` av ${operator}` : ""}.` },
+      ],
+      updatedAt: now,
     };
+    if (kind === "ready") {
+      next.completion = {
+        ...(item.completion || {}),
+        customerNotifiedAt: now,
+        customerNotifiedVia: "sms",
+      };
+    }
+    return next;
+  }, { current: item, etag });
+  if (!saved.ok) {
+    // SMS:et gick – svara ändå sent, men tala om att loggningen inte kunde sparas.
+    console.warn("case-sms: log write failed", { id, reason: saved.reason });
+    return json({ status: "sent", sms: { at: now, to: phone, providerId: sms.id || "" }, caseLogged: false, caseError: saved.reason });
   }
-  await store.setJSON(id, next);
 
-  return json({ status: "sent", sms: { at: now, to: phone, providerId: sms.id || "" } });
+  return json({ status: "sent", sms: { at: now, to: phone, providerId: sms.id || "" }, caseLogged: true });
 };
 
 export const config = {

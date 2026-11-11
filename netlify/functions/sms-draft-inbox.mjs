@@ -4,6 +4,7 @@ import { normalizePhone, postSms as rawPostSms } from "./_shared/sms.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
 import { scoreLead } from "./_shared/lead-priority.mjs";
 import { isQuietHour, nextOptimalSendAt } from "./_shared/quiet-hours.mjs";
+import { commitCase } from "./_shared/case-store.mjs";
 
 const postSms = loggedSms("sms-draft", rawPostSms);
 
@@ -200,14 +201,14 @@ export default async (request, context) => {
         sendAfter,
         queuedAt,
       });
-      await cases.setJSON(caseKey, {
-        ...item,
+      await commitCase(cases, caseKey, (fresh) => ({
+        ...fresh,
         updatedAt: queuedAt,
         timeline: [
-          ...(Array.isArray(item.timeline) ? item.timeline : []),
+          ...(Array.isArray(fresh.timeline) ? fresh.timeline : []),
           { at: queuedAt, event: `AI-utkast godkänt${operatorQueued ? ` av ${operatorQueued}` : ""} under tysta timmar — SMS köat till ${new Date(sendAfter).toLocaleString("sv-SE", { timeZone: "Europe/Stockholm", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}.` },
         ],
-      });
+      }));
       await drafts.delete(id);
       return json({ status: "queued", sendAfter, caseId: caseKey });
     }
@@ -218,22 +219,22 @@ export default async (request, context) => {
 
     const now = new Date().toISOString();
     const operator = clean(body.operatorName, 80);
-    const next = {
-      ...item,
-      status: item.status === "new" ? "contacted" : item.status,
+    // Versionerad skrivning: SMS:et är skickat, loggningen görs om på färsk version.
+    const saved = await commitCase(cases, caseKey, (fresh) => ({
+      ...fresh,
+      status: fresh.status === "new" ? "contacted" : fresh.status,
       smsLog: [
-        ...(Array.isArray(item.smsLog) ? item.smsLog : []),
+        ...(Array.isArray(fresh.smsLog) ? fresh.smsLog : []),
         { at: now, kind: "draft-inbox", to: phone, message, status: "sent", providerId: sms.id || "", operator },
       ].slice(-50),
       timeline: [
-        ...(Array.isArray(item.timeline) ? item.timeline : []),
+        ...(Array.isArray(fresh.timeline) ? fresh.timeline : []),
         { at: now, event: `AI-utkast (kategori ${draft.category}) godkänt${operator ? ` av ${operator}` : ""} och skickat via SMS-API.` },
       ],
       updatedAt: now,
-    };
-    await cases.setJSON(caseKey, next);
+    }));
     await drafts.delete(id);
-    return json({ status: "sent", caseId: caseKey, newStatus: next.status });
+    return json({ status: "sent", caseId: caseKey, newStatus: saved.ok ? saved.item.status : item.status, caseLogged: saved.ok });
   }
 
   return json({ error: "Not found" }, 404);

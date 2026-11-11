@@ -8,6 +8,7 @@ import { sendThankYou, thankYouOutcome } from "./workshop-cases.mjs";
 import { postSms } from "./_shared/sms.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
 import { CAMPAIGN_BATCH_PER_RUN } from "./_shared/campaign.mjs";
+import { commitCase } from "./_shared/case-store.mjs";
 
 // Hur många gånger en köpost får försökas innan vi ger upp och slutar ockupera
 // kön. Utan tak skulle ett permanent providerfel återkomma i all evighet.
@@ -55,24 +56,26 @@ export default async () => {
                 ? "Köat tackmail skickat (efter nattstängning)."
                 : outcome.event;
 
-          await caseStore.setJSON(entry.caseId, {
-            ...caseItem,
+          // Versionerad skrivning: utskicket är gjort, resultatet läggs på
+          // ärendets FÄRSKA version (en samtidig admin-PATCH skrivs inte över).
+          await commitCase(caseStore, entry.caseId, (fresh) => ({
+            ...fresh,
             updatedAt: sentAt,
             coupon: thankYou.coupon,
             notifications: {
-              ...(caseItem.notifications || {}),
+              ...(fresh.notifications || {}),
               // Behåll "queued" så länge posten ligger kvar i kön, annars
               // skulle nästa körning avfärda ärendet som "skipped_not_queued"
               // och radera köposten utan att någonsin ha skickat något.
               thankYou: keepQueued
-                ? { ...(caseItem.notifications?.thankYou || {}), status: "queued", attempts, lastError: outcome.event }
+                ? { ...(fresh.notifications?.thankYou || {}), status: "queued", attempts, lastError: outcome.event }
                 : { status: thankYou.email.status, ...thankYou, delivered: outcome.delivered },
             },
             timeline: [
-              ...(Array.isArray(caseItem.timeline) ? caseItem.timeline : []),
+              ...(Array.isArray(fresh.timeline) ? fresh.timeline : []),
               { at: sentAt, event },
             ],
-          });
+          }));
 
           if (keepQueued) {
             await outbox.setJSON(blob.key, { ...entry, attempts, lastTriedAt: sentAt, lastError: outcome.event }).catch(() => {});
@@ -102,22 +105,19 @@ export default async () => {
         }
         results.push({ key: blob.key, status: "gave_up", sms: sms.status });
       } else {
-        const caseItem = await caseStore.get(entry.caseId, { type: "json" }).catch(() => null);
-        if (caseItem) {
-          await caseStore.setJSON(entry.caseId, {
-            ...caseItem,
-            status: caseItem.status === "new" ? "contacted" : caseItem.status,
-            smsLog: [
-              ...(Array.isArray(caseItem.smsLog) ? caseItem.smsLog : []),
-              { at: sentAt, kind: "draft-inbox", to: entry.phone, message: entry.message, status: "sent", providerId: sms.id || "", operator: entry.operator || "" },
-            ].slice(-50),
-            timeline: [
-              ...(Array.isArray(caseItem.timeline) ? caseItem.timeline : []),
-              { at: sentAt, event: `Köat AI-utkast (kategori ${entry.category || "C"}) skickat via SMS-API efter tysta timmar.` },
-            ],
-            updatedAt: sentAt,
-          }).catch(() => {});
-        }
+        await commitCase(caseStore, entry.caseId, (fresh) => ({
+          ...fresh,
+          status: fresh.status === "new" ? "contacted" : fresh.status,
+          smsLog: [
+            ...(Array.isArray(fresh.smsLog) ? fresh.smsLog : []),
+            { at: sentAt, kind: "draft-inbox", to: entry.phone, message: entry.message, status: "sent", providerId: sms.id || "", operator: entry.operator || "" },
+          ].slice(-50),
+          timeline: [
+            ...(Array.isArray(fresh.timeline) ? fresh.timeline : []),
+            { at: sentAt, event: `Köat AI-utkast (kategori ${entry.category || "C"}) skickat via SMS-API efter tysta timmar.` },
+          ],
+          updatedAt: sentAt,
+        })).catch(() => {});
         results.push({ key: blob.key, status: "sent" });
       }
     } else if (entry.type === "campaign_sms" && entry.phone && entry.message) {

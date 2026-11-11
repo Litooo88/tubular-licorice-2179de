@@ -2,6 +2,7 @@ import { getStore } from "@netlify/blobs";
 import { readEnv } from "./_shared/env.mjs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
 import { normalizePhone } from "./_shared/sms.mjs";
+import { commitCase } from "./_shared/case-store.mjs";
 
 // POST /api/cases/:id/call — click-to-call via 46elks.
 //
@@ -85,17 +86,20 @@ export default async (request, context) => {
   if (call.status !== "calling") return json({ status: call.status, error: call.error || "Samtalet kunde inte startas." }, 502);
 
   const now = new Date().toISOString();
-  await store.setJSON(id, {
-    ...item,
-    callLog: [...log, { at: now, direction: "outgoing", to: customer, providerId: call.id, operator }].slice(-50),
+  // Versionerad skrivning (samtalet är redan startat; loggningen görs om på
+  // färsk version vid konflikt).
+  const saved = await commitCase(store, id, (fresh) => ({
+    ...fresh,
+    callLog: [...(Array.isArray(fresh.callLog) ? fresh.callLog : []), { at: now, direction: "outgoing", to: customer, providerId: call.id, operator }].slice(-50),
     timeline: [
-      ...(Array.isArray(item.timeline) ? item.timeline : []),
+      ...(Array.isArray(fresh.timeline) ? fresh.timeline : []),
       { at: now, event: `Ringde kunden via växeln (click-to-call)${operator ? ` – ${operator}` : ""}.` },
     ],
     updatedAt: now,
-  });
+  }));
+  if (!saved.ok) console.warn("case-call: log write failed", { id, reason: saved.reason });
 
-  return json({ status: "calling", call: { id: call.id, to: customer, at: now } });
+  return json({ status: "calling", call: { id: call.id, to: customer, at: now }, caseLogged: saved.ok });
 };
 
 export const config = {

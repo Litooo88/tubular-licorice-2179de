@@ -11,11 +11,12 @@ import { isQuietHour, nextOptimalSendAt } from "./_shared/quiet-hours.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
 import { deleteCalendarEvent, patchCalendarEvent } from "./_shared/google-calendar.mjs";
 import { calendarWindowFor, isPendingRequest, requestConfirmedEmail, requestConfirmedSms, requestDeclinedSms, requestRescheduledSms, validateNewTime } from "./_shared/booking-request.mjs";
+import { commitCase, commitFailureResponse, etagHeaders, ifMatchSatisfied, readWithEtag } from "./_shared/case-store.mjs";
 
-const json = (body, status = 200) =>
+const json = (body, status = 200, headers = {}) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
+    headers: { "Content-Type": "application/json; charset=utf-8", ...headers },
   });
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
@@ -317,6 +318,11 @@ const normalizeStoredCase = (item) => {
 };
 
 const loadCase = async (store, id) => normalizeStoredCase(await store.get(id, { type: "json" }));
+// Med etag, för villkorade skrivningar (PATCH) och ETag-headern (GET).
+const loadCaseVersioned = async (store, id) => {
+  const { item, etag } = await readWithEtag(store, id);
+  return { item: normalizeStoredCase(item), etag };
+};
 
 const normalizePriceRows = (rows = []) =>
   Array.isArray(rows)
@@ -381,8 +387,8 @@ export default async (request, context) => {
 
   if (request.method === "GET") {
     if (id) {
-      const item = await loadCase(store, id);
-      return item ? json(item) : json({ error: "Not found" }, 404);
+      const { item, etag } = await loadCaseVersioned(store, id);
+      return item ? json(item, 200, etagHeaders(etag)) : json({ error: "Not found" }, 404);
     }
 
     const { blobs } = await store.list();
@@ -494,15 +500,25 @@ export default async (request, context) => {
   if (request.method === "PATCH") {
     if (!id) return json({ error: "Missing case id" }, 400);
 
-    const current = await loadCase(store, id);
+    const { item: current, etag } = await loadCaseVersioned(store, id);
     if (!current) return json({ error: "Not found" }, 404);
+    // NEMOB OS 2.0: klienten kan skicka If-Match (ETag från GET) och får 412 om
+    // ärendet ändrats sedan den läste. Admin-sidorna skickar ingen header.
+    if (!ifMatchSatisfied(request, etag)) {
+      return json({ error: "Ärendet har ändrats sedan du läste det. Ladda om och försök igen.", code: "precondition_failed" }, 412);
+    }
 
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object") return json({ error: "Ogiltig JSON i PATCH-body." }, 400);
     const now = new Date().toISOString();
     const operatorName = clean(body.operatorName, 80);
     const currentPayment = current.payment || {};
-    const currentContent = current.content || {};
+
+    // Versionerad skrivning (audit F02). `build(fresh)` är en ren funktion
+    // från ärendets FÄRSKA version till nästa; vid konflikt körs den igen på
+    // nyläst data. Sidoeffekter (SMS/mejl/kalender) sker före `save` och
+    // resultatet ligger i closuren, så inget skickas två gånger.
+    const save = (build) => commitCase(store, id, (fresh) => build(normalizeStoredCase(fresh)), { current, etag });
 
     // Förfrågan (bokning utanför tis/tors 15-20): Sebastian bekräftar, väljer
     // en annan tid eller avböjer. Först här får kunden "tiden gäller".
@@ -555,7 +571,7 @@ export default async (request, context) => {
       const smsLine = `SMS till kund (${kind === "confirm" ? "tid bekräftad" : kind === "reschedule" ? "ny tid" : "tid avböjd"}) ${sms.status === "sent" ? "skickat" : `misslyckades: ${clean(sms.error || sms.status, 120)}`}.`;
       const emailLine = email.status === "sent" ? "Bekräftelsemejl skickat till kund."
         : email.status === "not_requested" ? "" : `Bekräftelsemejl ej skickat (${clean(email.error || email.status, 120)}).`;
-      const next = {
+      const saved = await save((current) => ({
         ...current,
         preferredDate: newDate,
         updatedAt: now,
@@ -590,9 +606,9 @@ export default async (request, context) => {
             : calendar.status === "failed" ? [{ at: now, event: `Kalendern kunde inte uppdateras: ${clean(calendar.error, 120)} - rätta manuellt.` }]
             : calendar.status === "skipped" && kind === "reschedule" ? [{ at: now, event: "Ingen kalenderhändelse fanns - lägg in den nya tiden manuellt." }] : []),
         ],
-      };
-      await store.setJSON(id, next);
-      return json({ ok: sms.status === "sent", sms, email, calendar, case: next });
+      }));
+      if (!saved.ok) return commitFailureResponse(saved, json);
+      return json({ ok: sms.status === "sent", sms, email, calendar, case: saved.item }, 200, etagHeaders(saved.etag));
     }
 
     if (body.action === "send_sms") {
@@ -608,7 +624,7 @@ export default async (request, context) => {
         message,
         caseId: current.id,
       };
-      const next = {
+      const saved = await save((current) => ({
         ...current,
         updatedAt: now,
         updatedBy: operatorName ? { name: operatorName, source: "admin", at: now } : current.updatedBy,
@@ -629,9 +645,9 @@ export default async (request, context) => {
           { at: result.sentAt || now, event: `Manuellt SMS ${result.status === "sent" ? "skickat" : "misslyckades"} till kund.` },
           ...(result.status === "sent" && ["new", "contacted"].includes(current.status) ? [{ at: result.sentAt || now, event: "Status ändrad till väntar kund efter SMS-svar." }] : []),
         ],
-      };
-      await store.setJSON(id, next);
-      return json({ ok: result.status === "sent", result, case: next });
+      }));
+      if (!saved.ok) return commitFailureResponse(saved, json);
+      return json({ ok: result.status === "sent", result, case: saved.item }, 200, etagHeaders(saved.etag));
     }
 
     if (body.action === "send_status_link") {
@@ -666,7 +682,7 @@ export default async (request, context) => {
         idempotencyKey: `${current.id}-status-link`,
       });
       const anySent = smsResult.status === "sent" || emailResult.status === "sent";
-      const next = {
+      const saved = await save((current) => ({
         ...current,
         serviceNumber,
         updatedAt: now,
@@ -678,9 +694,9 @@ export default async (request, context) => {
           ...(Array.isArray(current.timeline) ? current.timeline : []),
           { at: now, event: `Servicelänk skickad till kund (SMS: ${smsResult.status}, mail: ${emailResult.status}).` },
         ],
-      };
-      await store.setJSON(id, next);
-      return json({ ok: anySent, sms: smsResult, email: emailResult, case: next });
+      }));
+      if (!saved.ok) return commitFailureResponse(saved, json);
+      return json({ ok: anySent, sms: smsResult, email: emailResult, case: saved.item }, 200, etagHeaders(saved.etag));
     }
 
     if (body.action === "send_quote_sms") {
@@ -711,20 +727,20 @@ export default async (request, context) => {
         caseId: current.id,
         quote: { amount, summary, contactOwner },
       };
-      const next = {
+      const saved = await save((current) => ({
         ...current,
         updatedAt: now,
         updatedBy: operatorName ? { name: operatorName, source: "admin", at: now } : current.updatedBy,
         status: current.status === "new" ? "waiting_customer" : current.status,
-        quote,
+        quote: { ...(current.quote || {}), ...quote },
         outboundMessages: [...(Array.isArray(current.outboundMessages) ? current.outboundMessages : []), entry],
         timeline: [
           ...(Array.isArray(current.timeline) ? current.timeline : []),
           { at: result.sentAt || now, event: `Prisf\u00f6rslag ${result.status === "sent" ? "skickat" : "misslyckades"} via SMS: ${Math.round(amount)} kr.` },
         ],
-      };
-      await store.setJSON(id, next);
-      return json({ ok: result.status === "sent", result, case: next });
+      }));
+      if (!saved.ok) return commitFailureResponse(saved, json);
+      return json({ ok: result.status === "sent", result, case: saved.item }, 200, etagHeaders(saved.etag));
     }
 
     if (body.action === "send_payment_instruction") {
@@ -733,6 +749,7 @@ export default async (request, context) => {
       const priceRows = normalizePriceRows(body.priceRows);
       const message = clean(body.message, 918) || paymentSmsText({ caseItem: current, amount });
       const result = await postSms({ to: current.customer?.phone, message, approved: true }); // manuell admin-åtgärd
+      const saved = await save((current) => {
       const nextCompletion = {
         ...(current.completion || {}),
         totalCost: amount,
@@ -773,40 +790,54 @@ export default async (request, context) => {
           { at: result.sentAt || now, event: `Betalningsinstruktion ${result.status === "sent" ? "skickad" : "misslyckades"} via SMS: ${Math.round(amount)} kr.` },
         ],
       };
-      await store.setJSON(id, next);
-      return json({ ok: result.status === "sent", result, case: next });
+      return next;
+      });
+      if (!saved.ok) return commitFailureResponse(saved, json);
+      return json({ ok: result.status === "sent", result, case: saved.item }, 200, etagHeaders(saved.etag));
     }
 
     if (body.action === "submit_workshop_log") {
-      const workshop = normalizeWorkshopState(current.workshop || {}, body.workshop || {});
-      const next = {
-        ...current,
-        updatedAt: now,
-        workshop: {
-          ...workshop,
-          submittedToSebastianAt: now,
-          needsSebastianReview: true,
-          reviewRequestedAt: workshop.reviewRequestedAt || now,
-        },
+      const withWorkshop = (current) => {
+        const workshop = normalizeWorkshopState(current.workshop || {}, body.workshop || {});
+        return {
+          ...current,
+          updatedAt: now,
+          workshop: {
+            ...workshop,
+            submittedToSebastianAt: now,
+            needsSebastianReview: true,
+            reviewRequestedAt: workshop.reviewRequestedAt || now,
+          },
+        };
       };
-      const result = await postSms({ to: env("SEBASTIAN_SMS_TO") || STAFF.sebastian.phone, message: workshopReviewSmsText(next) });
-      next.notifications = {
-        ...(current.notifications || {}),
-        workshopLogSms: {
-          status: result.status,
-          to: result.to,
-          provider: result.provider || "46elks",
-          sentAt: result.sentAt || now,
-          error: result.error || "",
-        },
-      };
-      next.timeline = [
-        ...(Array.isArray(current.timeline) ? current.timeline : []),
-        { at: result.sentAt || now, event: `Workshoplogg ${result.status === "sent" ? "skickad" : "kunde inte skickas"} till Sebastian via SMS.` },
-      ];
-      await store.setJSON(id, next);
-      return json({ ok: result.status === "sent", result, case: next });
+      const result = await postSms({ to: env("SEBASTIAN_SMS_TO") || STAFF.sebastian.phone, message: workshopReviewSmsText(withWorkshop(current)) });
+      const saved = await save((current) => {
+        const next = withWorkshop(current);
+        next.notifications = {
+          ...(current.notifications || {}),
+          workshopLogSms: {
+            status: result.status,
+            to: result.to,
+            provider: result.provider || "46elks",
+            sentAt: result.sentAt || now,
+            error: result.error || "",
+          },
+        };
+        next.timeline = [
+          ...(Array.isArray(current.timeline) ? current.timeline : []),
+          { at: result.sentAt || now, event: `Workshoplogg ${result.status === "sent" ? "skickad" : "kunde inte skickas"} till Sebastian via SMS.` },
+        ];
+        return next;
+      });
+      if (!saved.ok) return commitFailureResponse(saved, json);
+      return json({ ok: result.status === "sent", result, case: saved.item }, 200, etagHeaders(saved.etag));
     }
+
+    // Generell fältuppdatering. Ren funktion från färsk version till nästa —
+    // körs igen vid skrivkonflikt. Tackmailet (sidoeffekt) hanteras efteråt.
+    const applyGenericPatch = (current) => {
+    const currentPayment = current.payment || {};
+    const currentContent = current.content || {};
 
     const nextCompletion = {
       ...(current.completion || {}),
@@ -1048,6 +1079,10 @@ export default async (request, context) => {
     }
 
     next.timeline = timeline;
+    return next;
+    };
+
+    const next = applyGenericPatch(current);
 
     // Endast vid ÖVERGÅNGEN till done/paid — tidigare skickade varje PATCH på
     // ett redan avslutat/betalt ärende (utan skickat tackmail) om utskicket,
@@ -1056,15 +1091,18 @@ export default async (request, context) => {
     const becamePaid = next.payment?.status === "paid" && currentPayment.status !== "paid";
     const thankYouTriggered = (becameDone || becamePaid) &&
       !["sent", "suppressed"].includes(next.notifications?.thankYou?.status);
+    // Sidoeffekten (mejl/SMS/outbox) sker EN gång här; `thankYouPatch` lägger
+    // bara resultatet på ärendet och kan köras om på en färsk version.
+    let thankYouPatch = (item) => item;
     if (thankYouTriggered && body.suppressThankYou === true) {
       // Tyst stängning (bekräftelserutan i admin / städning av gamla ärenden).
       // "suppressed" är avsiktligt permanent: annars skulle nästa orelaterade
       // PATCH på ärendet trigga utskicket i efterhand.
-      next.notifications = {
-        ...(next.notifications || {}),
-        thankYou: { status: "suppressed", at: now },
+      thankYouPatch = (item) => {
+        item.notifications = { ...(item.notifications || {}), thankYou: { status: "suppressed", at: now } };
+        item.timeline.push({ at: now, event: "Avslutad/betald utan tackmail (manuellt val i admin)." });
+        return item;
       };
-      next.timeline.push({ at: now, event: "Avslutad/betald utan tackmail (manuellt val i admin)." });
     } else if (thankYouTriggered && isQuietHour()) {
       // Tysta timmar (21-08 svensk tid): nattstängda ärenden ska inte skicka
       // recensionsutskick kl 03. Köa i outbox-storen — den schemalagda
@@ -1073,37 +1111,39 @@ export default async (request, context) => {
       await getStore({ name: "outbox", consistency: "strong" })
         .setJSON(`${next.id}-thank-you`, { type: "thank_you", caseId: next.id, sendAfter, queuedAt: now, thankYouVariant: thankYouVariantFor(next, clean(body.thankYouVariant, 20)) })
         .catch(() => {});
-      next.notifications = {
-        ...(next.notifications || {}),
-        thankYou: { status: "queued", sendAfter, queuedAt: now },
+      thankYouPatch = (item) => {
+        item.notifications = { ...(item.notifications || {}), thankYou: { status: "queued", sendAfter, queuedAt: now } };
+        item.timeline.push({ at: now, event: `Tackmail köat (nattstängning) — skickas ${new Date(sendAfter).toLocaleString("sv-SE", { timeZone: "Europe/Stockholm", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}.` });
+        return item;
       };
-      next.timeline.push({ at: now, event: `Tackmail köat (nattstängning) — skickas ${new Date(sendAfter).toLocaleString("sv-SE", { timeZone: "Europe/Stockholm", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}.` });
     } else if (thankYouTriggered) {
       // A provider failure (Resend timeout/network) must not lose the whole
       // PATCH — the status/payment change still has to be persisted below.
       try {
         const thankYou = await sendThankYou(next, clean(body.thankYouVariant, 20));
         const outcome = thankYouOutcome(thankYou);
-        next.coupon = thankYou.coupon;
-        next.notifications = {
-          ...(next.notifications || {}),
-          thankYou: { status: thankYou.email.status, ...thankYou, delivered: outcome.delivered },
+        thankYouPatch = (item) => {
+          item.coupon = thankYou.coupon;
+          item.notifications = { ...(item.notifications || {}), thankYou: { status: thankYou.email.status, ...thankYou, delivered: outcome.delivered } };
+          item.timeline.push({ at: thankYou.sentAt || now, event: outcome.event });
+          return item;
         };
-        next.timeline.push({ at: thankYou.sentAt || now, event: outcome.event });
       } catch (error) {
-        next.notifications = {
-          ...(next.notifications || {}),
-          thankYou: { status: "failed", error: clean(error?.message, 180) },
+        const message = clean(error?.message, 180);
+        thankYouPatch = (item) => {
+          item.notifications = { ...(item.notifications || {}), thankYou: { status: "failed", error: message } };
+          item.timeline.push({ at: now, event: "Tackmail kunde inte skickas (provider-fel). Arendet sparades anda." });
+          return item;
         };
-        next.timeline.push({ at: now, event: "Tackmail kunde inte skickas (provider-fel). Arendet sparades anda." });
       }
     }
 
-    await store.setJSON(id, next);
+    const saved = await save((fresh) => thankYouPatch(applyGenericPatch(fresh)));
+    if (!saved.ok) return commitFailureResponse(saved, json);
     // Repair Intelligence: avslut med data => en rad i repair-index (idempotent,
     // fel här får aldrig fälla PATCH:en).
-    if (shouldIndex(next)) await upsertRepairIndex(next).catch(() => {});
-    return json({ ok: true, case: next });
+    if (shouldIndex(saved.item)) await upsertRepairIndex(saved.item).catch(() => {});
+    return json({ ok: true, case: saved.item, conflictRetries: saved.attempts - 1 }, 200, etagHeaders(saved.etag));
   }
 
   if (request.method === "DELETE") {
