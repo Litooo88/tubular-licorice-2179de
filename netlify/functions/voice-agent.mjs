@@ -20,6 +20,7 @@
 
 import { getStore } from "@netlify/blobs";
 import { readEnv } from "./_shared/env.mjs";
+import { tokenMatches } from "./_shared/admin-auth.mjs";
 import { postSms as rawPostSms } from "./_shared/sms.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
 import { callOutcome, classifyNovaCall, KIND_LABELS, matchOutboundCall, outboundFirstMessage, ownNovaNumbers } from "./_shared/nova.mjs";
@@ -68,7 +69,8 @@ const authorized = (request) => {
   if (!expected) return { ok: false, status: 503, error: "not_configured" };
   const provided = request.headers.get("x-voice-agent-secret") || new URL(request.url).searchParams.get("s") || "";
   const bearer = (request.headers.get("authorization") || "").replace(/^Bearer\s+/i, "");
-  if (provided !== expected && bearer !== expected) return { ok: false, status: 401, error: "unauthorized" };
+  // Tidssäker jämförelse (samma som admin-token); tidigare vanlig !==.
+  if (!tokenMatches(expected, provided) && !tokenMatches(expected, bearer)) return { ok: false, status: 401, error: "unauthorized" };
   return { ok: true };
 };
 

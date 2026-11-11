@@ -3,12 +3,14 @@
 
 import { getStore } from "@netlify/blobs";
 import { OUTBOUND_MAX_ATTEMPTS } from "./_shared/nova.mjs";
+import { tokenMatches } from "./_shared/admin-auth.mjs";
 
 const env = (n) => { try { return globalThis.Netlify?.env?.get?.(n) || process.env[n] || ""; } catch { return process.env[n] || ""; } };
 
 export default async (request) => {
   const url = new URL(request.url);
-  if (!env("VOICE_AGENT_SECRET") || url.searchParams.get("s") !== env("VOICE_AGENT_SECRET")) return new Response("unauthorized", { status: 401 });
+  // Tidssäker jämförelse (tidigare vanlig !==). Fail-closed utan hemlighet.
+  if (!env("VOICE_AGENT_SECRET") || !tokenMatches(env("VOICE_AGENT_SECRET"), url.searchParams.get("s") || "")) return new Response("unauthorized", { status: 401 });
   const key = url.searchParams.get("key") || "";
   const form = await request.formData().catch(() => null);
   const state = String(form?.get("state") || form?.get("result") || "");

@@ -49,10 +49,30 @@ export default async (request) => {
     }
     const failed = storesChecked.filter((entry) => !entry.ok);
 
+    // Villkorade skrivningar (etag/onlyIfMatch) är grunden för
+    // dataintegriteten i _shared/case-store.mjs. Kontrollen är en skrivning
+    // mot en egen probe-store (aldrig mot kunddata) och körs bara vid POST,
+    // så GET förblir rent läsande.
+    let conditionalWrites = null;
+    if (request.method === "POST") {
+      try {
+        const probe = getStore({ name: "storage-health-probe", consistency: "strong" });
+        const key = `probe-${Date.now()}`;
+        const first = await probe.setJSON(key, { at: new Date().toISOString() }, { onlyIfNew: true });
+        const second = await probe.setJSON(key, { at: new Date().toISOString() }, { onlyIfNew: true });
+        await probe.delete(key).catch(() => {});
+        conditionalWrites = first?.modified === true && second?.modified === false;
+      } catch (error) {
+        conditionalWrites = { ok: false, errorCode: codeFor(error) };
+      }
+    }
+
     return json({
       ok: true,
       functionVersion: "v2",
       blobsAvailable: failed.length === 0,
+      // true = SDK:n stöder onlyIfNew/onlyIfMatch i den här miljön; null = inte testat (GET).
+      conditionalWrites,
       // The real signal: Netlify injects Blobs config here, not via SITE_ID/token env vars.
       hasBlobsContext: Boolean(envValue("NETLIFY_BLOBS_CONTEXT")),
       hasSiteId: Boolean(
@@ -60,8 +80,11 @@ export default async (request) => {
         envValue("BLOBS_SITE_ID") || envValue("NETLIFY_BLOBS_SITE_ID"),
       ),
       storesChecked,
-      warnings: failed.map((entry) => `${entry.store}: ${entry.errorCode}`),
-      readOnly: true,
+      warnings: [
+        ...failed.map((entry) => `${entry.store}: ${entry.errorCode}`),
+        ...(conditionalWrites === false ? ["@netlify/blobs saknar villkorade skrivningar i den här miljön - kontrollera att netlify/functions/package.json och package.json har samma version."] : []),
+      ],
+      readOnly: request.method === "GET",
     });
   } catch (error) {
     return json({
