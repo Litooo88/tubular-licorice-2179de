@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { summarizeCases, fetchCommunication, fetchDrafts, readUnifiedPlanning } from "../lib/unified.mjs";
+import { summarizeCases, fetchCommunication, fetchApprovals, fetchDrafts, readUnifiedPlanning } from "../lib/unified.mjs";
 
 test("case overview filters closed cases and does not return raw customer/payment details", () => {
   const result = summarizeCases({ status: "ok", cases: [
@@ -69,4 +69,30 @@ test("drafts use authenticated GET and omit contact details", async () => {
     return Response.json({ drafts: [{ meta: { namn: "Test", telefon: "hidden" }, message: "Hej" }] });
   };
   assert.deepEqual(await fetchDrafts({ env, fetchImpl }), { status: "ok", drafts: [{ customer: "Test", message: "Hej" }] });
+});
+
+test("approvals keeps available queues and distinguishes unpublished endpoints from API errors", async () => {
+  const env = { NORDIC_ADMIN_TOKEN: "test" };
+  const result = await fetchApprovals({ env, fetchImpl: async (url, options) => {
+    assert.equal(url.pathname + url.search, "/api/approvals?limit=500");
+    assert.equal(options.headers["x-admin-token"], "test");
+    assert.equal(options.redirect, "error");
+    assert.equal(options.method || "GET", "GET");
+    return Response.json({
+      items: [{ kind: "sms", text: "Test", inFlight: true, to: "hidden", approve: { url: "/hidden" } }],
+      counts: { sms: 1, draft: 0, booking_request: 0 },
+      sources: { sms: "ok", drafts: "error: hidden", bookings: "ok" },
+      partial: true,
+    });
+  } });
+  assert.equal(result.partial, true);
+  assert.deepEqual(result.groups.sms.items, [
+    { caseId: "", name: "", source: "", message: "Test", inFlight: true, failed: false },
+  ]);
+  assert.equal(result.groups.draft.count, null);
+  assert.equal(result.groups.booking_request.count, 0);
+  for (const [status, expected] of [[404, "unavailable"], [405, "unavailable"], [401, "down"], [503, "down"]]) {
+    assert.deepEqual(await fetchApprovals({ env, fetchImpl: async () => new Response(null, { status }) }),
+      { status: expected });
+  }
 });

@@ -63,7 +63,7 @@ export function summarizeCases(result, now = new Date()) {
     workshopDecisions: review.map(caseRow),
     upcoming: bookings.length,
     readyUnpaid: ready.length,
-    cases: open.slice(0, 8).map(caseRow),
+    cases: open.map(caseRow),
     decisions: decisions.slice(0, 5).map((item) => ({
       ...caseRow(item),
       reason: item.bookingRequest?.status === "pending" ? "Bokningsförfrågan" : "Verkstaden behöver besked",
@@ -100,7 +100,7 @@ export async function fetchCommunication({ env = process.env, fetchImpl = fetch 
       queuedSms: data.pending.filter((item) => item && typeof item.message === "string").map((item) => ({
         source: text(item.sourceLabel || item.source), message: item.message.slice(0, 1600),
       })),
-      contacts: data.contacts.filter((item) => item?.waiting === true).slice(0, 3).map((item) => ({
+      contacts: data.contacts.filter((item) => item?.waiting === true).map((item) => ({
         name: text(item.name) || "Kund utan registrerat namn",
         hours: Number.isFinite(item.waitingHours) ? Math.max(0, Math.floor(item.waitingHours)) : null,
       })),
@@ -133,14 +133,52 @@ export async function fetchDrafts({ env = process.env, fetchImpl = fetch } = {})
   }
 }
 
+const approvalSources = { sms: "sms", draft: "drafts", booking_request: "bookings" };
+
+export async function fetchApprovals({ env = process.env, fetchImpl = fetch } = {}) {
+  const token = env.NORDIC_ADMIN_TOKEN?.trim();
+  if (!token) return { status: "not_configured" };
+  try {
+    const origin = resolveNordicOrigin(env);
+    if (!origin) return { status: "down" };
+    const response = await fetchImpl(new URL("/api/approvals?limit=500", origin), {
+      headers: { Accept: "application/json", "x-admin-token": token },
+      redirect: "error",
+      signal: AbortSignal.timeout(12000),
+    });
+    if ([404, 405].includes(response.status)) return { status: "unavailable" };
+    if (!response.ok) return { status: "down" };
+    if (response.headers.get("content-type")?.includes("text/html")) return { status: "unavailable" };
+    const data = await response.json();
+    const kinds = Object.keys(approvalSources);
+    if (!Array.isArray(data.items) || !kinds.every((kind) => count(data.counts?.[kind]))) {
+      return { status: "down" };
+    }
+    const groups = Object.fromEntries(kinds.map((kind) => {
+      const items = data.items.filter((item) => item?.kind === kind).map((item) => ({
+        caseId: text(item.caseId), name: text(item.name), source: text(item.sourceLabel),
+        message: typeof item.text === "string" ? item.text.slice(0, 2000) : "",
+        inFlight: item.inFlight === true, failed: Boolean(item.lastError),
+      }));
+      const status = data.sources?.[approvalSources[kind]] === "ok" ? "ok" : "down";
+      return [kind, { status, count: status === "ok" ? data.counts[kind] : null, items }];
+    }));
+    return { status: "ok", groups, partial: data.partial === true ||
+      Object.values(groups).some((group) => group.status !== "ok") };
+  } catch {
+    return { status: "down" };
+  }
+}
+
 export async function readUnifiedBusiness() {
   const origin = resolveNordicOrigin();
-  const [cases, communication, drafts] = await Promise.all([
+  const [cases, communication, approvals] = await Promise.all([
     origin ? fetchAdminCases({ env: { ...process.env, NORDIC_SITE_URL: origin } }) : { status: "down" },
     fetchCommunication(),
-    fetchDrafts(),
+    fetchApprovals(),
   ]);
-  return { cases: summarizeCases(cases), communication, drafts, origin };
+  const drafts = approvals.status === "unavailable" ? await fetchDrafts() : null;
+  return { cases: summarizeCases(cases), communication, approvals, drafts, origin };
 }
 
 export function readUnifiedPlanning(tasks) {

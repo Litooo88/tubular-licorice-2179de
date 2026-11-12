@@ -58,10 +58,10 @@ const comm = () => tool("Öppna meddelanden och godkännanden", "/admin/kommunik
 const workshop = () => tool("Öppna verkstadsportalen", "/workshop/");
 const checkout = () => tool("Öppna checkout", "/checkout/");
 
-function communicationCard() {
+function communicationCard(full = false) {
   return card("Viktiga kundmeddelanden", "communication", fromSource(business?.communication, (data) =>
     metrics([[data.waiting, "Kontakter väntar på svar"], [data.pending, "SMS väntar på godkännande"]]) +
-    (data.contacts.length ? list(data.contacts, (row) => '<strong>' + escape(row.name) + '</strong><small>' +
+    (data.contacts.length ? list(full ? data.contacts : data.contacts.slice(0, 3), (row) => '<strong>' + escape(row.name) + '</strong><small>' +
       escape(row.hours === null ? "Väntar på svar" : "Väntar på svar · " + row.hours + " h") + '</small>') : "") +
     (data.partial ? paragraph("Kommunikationsunderlaget är delvis tillgängligt.") : "")), [comm()]);
 }
@@ -73,9 +73,9 @@ function automationCard() {
   [tool("Öppna Novas rapport", "/admin/nova-rapport/")]);
 }
 
-function casesCard() {
+function casesCard(full = false) {
   return card("Öppna kundärenden", "cases", fromSource(business?.cases, (data) =>
-    metrics([[data.open, "Öppna ärenden"]]) + caseRows(data.cases, "Inga öppna ärenden.", status)),
+    metrics([[data.open, "Öppna ärenden"]]) + caseRows(full ? data.cases : data.cases.slice(0, 8), "Inga öppna ärenden.", status)),
   [admin(), workshop(), link("Sök i reparationskunskapen", "/knowledge.html")]);
 }
 
@@ -102,7 +102,39 @@ function bookingCards() {
 function approvalCards() {
   const messages = (rows, empty, label) => rows.length ? list(rows, (row) =>
     '<strong>' + escape(label(row)) + '</strong><p class="message">' + escape(row.message) + '</p>') : paragraph(empty);
+  const approvals = business?.approvals;
+  const workshopCard = card("Verkstadsbeslut", "cases", fromSource(business?.cases, (data) =>
+    caseRows(data.workshopDecisions, "Inga verkstadsärenden flaggade för beslut.", status)), [admin()]);
+  if (approvals?.status === "ok") {
+    const groups = [
+      ["sms", "SMS som väntar på godkännande", "communication", comm()],
+      ["draft", "Svarsutkast", "planning", admin()],
+      ["booking_request", "Bokningsförfrågningar", "bookings", link("Visa bokningar", "#bookings")],
+    ];
+    return [
+      ...(approvals.partial ? [card("Delvis tillgänglig godkännandekö", "planning",
+        paragraph("Tillgängliga köer visas nedan. Välj Uppdatera för att försöka igen."))] : []),
+      ...groups.map(([kind, title, iconName, action]) => card(title, iconName,
+        fromSource(approvals.groups[kind], (group) =>
+          (group.items.length ? list(group.items, (row) => {
+            const name = row.name || row.source || title;
+            const heading = row.caseId ? tool(name, "/admin/?case=" + encodeURIComponent(row.caseId) + "&tab=contact")
+              : "<strong>" + escape(name) + "</strong>";
+            return heading + '<p class="message">' + escape(row.message) + '</p>' +
+              (row.inFlight ? "<small>Behandlas just nu</small>" :
+                row.failed ? "<small>Senaste försöket misslyckades</small>" : "");
+          }) : paragraph(group.count ? "Detaljer saknas för väntande poster." : "Inga väntande poster.")) +
+          (group.count > group.items.length && group.items.length ?
+            paragraph("Visar " + group.items.length + " av " + group.count + " poster.") : "")), [action])),
+      workshopCard,
+    ];
+  }
+  if (approvals?.status !== "unavailable") {
+    return [card("Godkännandekö", "planning", paragraph(sourceMessage(approvals)), [comm(), admin()]), workshopCard];
+  }
   return [
+    card("Godkännanden från befintliga källor", "planning",
+      paragraph("Det gemensamma API:t är inte tillgängligt här ännu.")),
     card("SMS som väntar på godkännande", "communication", fromSource(business?.communication, (data) =>
       messages(data.queuedSms, data.pending ? "Meddelandetext saknas i källan." : "Inga SMS väntar.",
         (row) => row.source || "Kund-SMS")), [comm()]),
@@ -111,8 +143,7 @@ function approvalCards() {
     card("Bokningsförfrågningar", "bookings", fromSource(business?.cases, (data) =>
       caseRows(data.bookingQueue, "Inga bokningsförfrågningar väntar.",
         (row) => bookingDetail(row, "Väntar på besked"), "contact")), [link("Visa bokningar", "#bookings")]),
-    card("Verkstadsbeslut", "cases", fromSource(business?.cases, (data) =>
-      caseRows(data.workshopDecisions, "Inga verkstadsärenden flaggade för beslut.", status)), [admin()]),
+    workshopCard,
   ];
 }
 
@@ -127,11 +158,13 @@ function financeCard() {
 function priorities() {
   const cases = business?.cases;
   const communication = business?.communication;
+  const approvals = business?.approvals;
+  const useLegacy = approvals?.status === "unavailable";
   return [
-    [cases?.pending, "Granska bokningsförfrågningar", "#bookings"],
+    [useLegacy ? cases?.pending : approvals?.groups?.booking_request.count, "Granska bokningsförfrågningar", "#bookings"],
     [communication?.waiting, "Följ upp kunder som väntar på svar", "#communication"],
-    [communication?.pending, "Granska SMS för godkännande", "#approvals"],
-    [business?.drafts?.drafts?.length, "Granska svarsutkast", "#approvals"],
+    [useLegacy ? communication?.pending : approvals?.groups?.sms.count, "Granska SMS för godkännande", "#approvals"],
+    [useLegacy ? business?.drafts?.drafts?.length : approvals?.groups?.draft.count, "Granska svarsutkast", "#approvals"],
     [cases?.review, "Följ upp verkstadsbeslut", "#cases"],
     [cases?.readyUnpaid, "Följ upp betalning för klara ärenden", "#finance"],
   ].filter(([present]) => present).slice(0, 3);
@@ -139,7 +172,9 @@ function priorities() {
 
 function focusCards() {
   const items = priorities();
-  const complete = business?.cases?.status === "ok" && business?.communication?.status === "ok" && !business.communication.partial && business?.drafts?.status === "ok";
+  const complete = business?.cases?.status === "ok" && business?.communication?.status === "ok" && !business.communication.partial &&
+    (business?.approvals?.status === "ok" && !business.approvals.partial ||
+      business?.approvals?.status === "unavailable" && business?.drafts?.status === "ok");
   const decisions = fromSource(business?.cases, (data) =>
     caseRows(data.decisions, "Inga boknings- eller verkstadsbeslut flaggade.", (row) => row.reason));
   return [
@@ -185,8 +220,8 @@ function render() {
     home: () => mode === "focus" ? focusCards() : [casesCard(), communicationCard(), bookingsCard(), financeCard(),
       automationCard(), card("Godkännanden", "planning", "", [link("Visa godkännanden", "#approvals")]), card("Planering", "planning", paragraph("Dina uppgifter och nästa steg i den privata arbetsytan."),
         [link("Öppna planering", "#planning")])],
-    communication: () => [communicationCard(), automationCard()],
-    cases: () => [casesCard(), card("Ärenden som kräver beslut", "planning", fromSource(business?.cases, (data) =>
+    communication: () => [communicationCard(true), automationCard()],
+    cases: () => [casesCard(true), card("Ärenden som kräver beslut", "planning", fromSource(business?.cases, (data) =>
       caseRows(data.decisions, "Inga ärenden flaggade för beslut.", (row) => row.reason)))],
     bookings: bookingCards,
     approvals: approvalCards,
