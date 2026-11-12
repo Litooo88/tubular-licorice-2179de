@@ -30,6 +30,31 @@ löpande "konversation".
 
 ## Logg
 
+### 2026-11-12 - Codex - KLAR (AI-assistent i PR #173)
+
+- Synk med main 778f28c. NEMOB OS anropar bara dokumenterade Gateway-läsverktyg för samtal, kundsökning och presence. Statusval är en förhandsvisning. Full build, 82 OS-tester och Chromium 375/768/1440 godkända. Gateway live och fysisk mobil kvar.
+
+### 2026-11-12 - Codex - KLAR (PR #173 verifiering och sökning)
+
+- codex/nemob-os-unified: commit 0bd5467. Kundsökning, kommunikationshistorik och driftunderlag. Booking-testets 503 kom från installerad Blobs 8.2.0; npm ci återställde 10.7.13. Full build, NEMOB OS 80/80, Chromium 375/768/1440 och produktionsläsning OK. Gateway och Netlify-funktioner orörda.
+
+### 2026-11-12 - Codex - KLAR (approvals i NEMOB OS)
+
+- codex/nemob-os-unified: endast nemob-os. Läser /api/approvals enligt PR #171. Ombaserad på 507e9f4. Commit 2fe46ef, 80/80 OS-tester, checkout 44 och Callflow OK. Loopback EACCES kvar. Ingen ändring i Netlify-backend.
+
+### 2026-11-12 - Codex - KLAR (gemensamma läsvyer, lokal handoff)
+
+- Worktree codex/nemob-os-unified. Ändrar NEMOB OS-vyer och lokal läsadapter. Återanvänder /api/cases, /api/kommunikation och /api/sms-drafts. PR #170 mergad enligt GitHub. Inga ändringar i kommunikationsbackend. Commit 6d37a6e. 79/79 OS-tester, checkout 44 och Callflow godkända. Loopback EACCES kvar. Visuell verifiering och PR återstår.
+
+### 2026-11-11 - Codex - KLAR (NEMOB OS bokningskö, lokal handoff)
+
+- Branch: codex/nemob-os-unified. Arbetar i NEMOB OS läsadapter, vy och test. Befintligt GET /api/cases återanvänds. Ingen ändring i Netlify-backend. 78/78 OS-tester, checkout 44 och Callflow godkända. Lokal server band port 4579. Fristående loopback-klient fick EACCES och webbläsaren kunde inte öppna verifieringsfliken. Visuell verifiering och PR kvar.
+
+### 2026-11-11 - Codex - KLAR (NEMOB OS 2.0, lokal handoff)
+
+- **Branch:** codex/nemob-os-unified i .local/nemob-os-unified, isolerad Git-worktree baserad på main edf4f10.
+- **Område:** nemob-os/ (lokalt skal, läsvyer och tester). Verifiering: 78/78 NEMOB OS-tester. Byggkedja och kommunikationens HTTP-test blockerade av localhost EACCES. Skärmbilder kvar efter blockerat webbläsaranrop. Ingen merge eller deploy.
+
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
 ### 2026-11-12 — Claude Code — KLAR (AI Gateway säkerhet + OAuth: PR #175 godkänd av Sebastian och mergad)

@@ -15,6 +15,8 @@ import { Store, defaultStorePath } from "./lib/store.mjs";
 import { newTask, taskPatch } from "./lib/tasks.mjs";
 import { generatePlan, summarizeDay } from "./lib/plan.mjs";
 import { fetchNordicBrief } from "./lib/nordic.mjs";
+import { readAssistant } from "./lib/assistant.mjs";
+import { readUnifiedBusiness, readUnifiedPlanning } from "./lib/unified.mjs";
 import { fetchAdminCases } from "./lib/admin-cases.mjs";
 import { openCasesPrioritized, searchCases } from "./lib/lookup.mjs";
 import { adviseTask } from "./lib/advice.mjs";
@@ -67,7 +69,7 @@ if (AUTH.error) {
   process.exit(1);
 }
 const sessions = new SessionStore();
-const store = new Store(defaultStorePath(BASE_DIR));
+const store = new Store(process.env.NEMOB_OS_STORE_PATH || defaultStorePath(BASE_DIR));
 const canonicalPath = String(process.env.REPAIR_INTELLIGENCE_CANON_PATH || "").trim();
 const feedbackPath = String(
   process.env.REPAIR_INTELLIGENCE_FEEDBACK_PATH || defaultRepairFeedbackPath(BASE_DIR),
@@ -89,7 +91,7 @@ const MIME = {
   ".webmanifest": "application/manifest+json; charset=utf-8",
 };
 
-const loginHtml = (wrongPin) => `<!doctype html>
+const loginHtml = (wrongPin, next = "/") => `<!doctype html>
 <html lang="sv"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow"><title>NEMOB OS — lås upp</title>
@@ -107,6 +109,7 @@ const loginHtml = (wrongPin) => `<!doctype html>
   .err{color:#f5c0b8;font-size:13px;margin-top:10px}
 </style></head><body>
 <form method="post" action="/api/login">
+  <input type="hidden" name="next" value="${next}">
   <h1>NEMOB <span>OS</span></h1><p>Ange PIN för att låsa upp</p>
   <input name="pin" type="password" inputmode="numeric" autocomplete="current-password" autofocus required>
   <button type="submit">Lås upp</button>
@@ -147,7 +150,9 @@ const readBody = (req) =>
   });
 
 const serveStatic = (res, urlPath) => {
-  const relative = urlPath === "/" ? "index.html" : urlPath.replace(/^\/+/, "");
+  const relative = urlPath === "/" ? "index.html"
+    : urlPath === "/unified/" ? "unified/index.html"
+    : urlPath.replace(/^\/+/, "");
   const filePath = resolve(PUBLIC_DIR, normalize(relative));
   if (!filePath.startsWith(PUBLIC_DIR) || !existsSync(filePath)) {
     res.writeHead(404, { "Content-Type": "text/plain; charset=utf-8" });
@@ -182,6 +187,20 @@ const handleApi = async (req, res, url) => {
 
   if (path === "/api/health" && req.method === "GET") {
     return json(res, { ok: true, now: new Date().toISOString(), date: stockholmDate() });
+  }
+
+  if (path === "/api/unified/business" && req.method === "GET") {
+    return json(res, await readUnifiedBusiness());
+  }
+  if (path === "/api/unified/assistant" && req.method === "POST") {
+    if (req.headers["content-type"]?.split(";")[0]?.trim() !== "application/json") {
+      return json(res, { error: "unsupported_content_type" }, 415);
+    }
+    const body = await readBody(req);
+    return json(res, await readAssistant(body?.kind, body?.query));
+  }
+  if (path === "/api/unified/planning" && req.method === "GET") {
+    return json(res, readUnifiedPlanning(store.tasks));
   }
 
   if (path === "/api/meta" && req.method === "GET") {
@@ -400,14 +419,15 @@ const handleLogin = async (req, res) => {
     return;
   }
   const body = await readFormOrJson(req);
+  const next = body.next === "/unified/" ? "/unified/" : "/";
   if (pinMatches(body.pin, AUTH.pin)) {
-    res.writeHead(303, { "Set-Cookie": sessionCookie(sessions.create()), Location: "/" });
+    res.writeHead(303, { "Set-Cookie": sessionCookie(sessions.create()), Location: next });
     res.end();
     return;
   }
   failedPinAttempts.push(Date.now());
   res.writeHead(401, { "Content-Type": "text/html; charset=utf-8" });
-  res.end(loginHtml(true));
+  res.end(loginHtml(true, next));
 };
 
 const server = createServer(async (req, res) => {
@@ -424,7 +444,7 @@ const server = createServer(async (req, res) => {
           return;
         }
         res.writeHead(401, { "Content-Type": "text/html; charset=utf-8" });
-        res.end(loginHtml(false));
+        res.end(loginHtml(false, url.pathname === "/unified/" ? "/unified/" : "/"));
         return;
       }
     }
