@@ -73,3 +73,39 @@ h1 { font-size: clamp(1.95rem, 4.5vw, 3.4rem); line-height: 1.08; letter-spacing
 #refresh[hidden] { display: none; }
 [data-assistant] button, .assistant-query, #presence-choice { min-height: 44px; max-width: 100%; font: inherit; margin: 6px 0; }
 .assistant-query, #presence-choice { display: block; width: 100%; }
+
+#connection:empty { display: none; }
+.work-item { border-top: 1px solid var(--border); margin-top: 12px; }
+.work-item summary { min-height: 52px; cursor: pointer; padding: 12px 0; font-weight: 650; }
+.work-item[data-contact] summary { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 8px; }
+.work-item[data-contact] summary::marker { content: ""; }
+.work-item[data-contact] summary::after { content: "+"; grid-column: 2; grid-row: 1; justify-self: end; color: var(--accent); }
+.work-item[data-contact][open] summary::after { content: "−"; }
+.work-item[data-contact] summary .work-status { margin-right: 21px; }
+.work-item small, .personal-ring small { display: block; color: var(--muted); margin-top: 4px; }
+.work-status { background: #edf3e9; padding: 5px 8px; border-radius: 6px; font-size: .75rem; font-weight: 650; }
+.card .demo-label { background: #f8f4e7; color: #504124; border-radius: 8px; padding: 9px 11px; font-size: .85rem; }
+.demo-label strong { margin-right: 5px; }
+.work-feedback:empty { margin: 0; }
+.work-detail { padding: 0 0 10px; }
+.work-detail > a, .work-actions > a { display: inline-flex; align-items: center; min-height: 44px; color: var(--accent); text-underline-offset: 3px; font-weight: 650; }
+.work-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; margin: 4px 0 14px; }
+.work-facts dt { color: var(--muted); font-size: .8rem; }
+.work-facts dd { margin: 3px 0 0; overflow-wrap: anywhere; }
+.work-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; margin: 10px 0 0; }
+.work-actions button { min-height: 44px; min-width: 44px; border: 1px solid #cbd7cc; border-radius: 8px; background: #fff; padding: 7px 12px; font-weight: 650; font-size: .88rem; }
+.work-actions button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.work-actions button:disabled { opacity: .55; cursor: default; }
+.personal-ring { padding-inline-start: 22px; }
+.personal-ring li { padding-block: 9px; border-bottom: 1px solid var(--border); }
+.suggestion { padding: 12px 0 2px; }
+.suggestion h3, .day-blocks h3 { margin: 7px 0 0; font-size: 1rem; }
+.suggestion p { margin-top: 5px; }
+.work-form { display: grid; gap: 8px; margin-top: 12px; }
+.work-form input, .work-form textarea { display: block; width: 100%; font: inherit; padding: 8px; border: 1px solid #cbd7cc; border-radius: 8px; min-height: 44px; }
+.day-blocks { display: grid; gap: 8px; margin-top: 10px; }
+.day-blocks h3 { margin-top: 15px; }
+@media (max-width: 430px) {
+  .work-item[data-contact] summary { grid-template-columns: 1fr; justify-items: start; padding-right: 21px; position: relative; }
+  .work-item[data-contact] summary::after { position: absolute; right: 0; top: 12px; }
+}

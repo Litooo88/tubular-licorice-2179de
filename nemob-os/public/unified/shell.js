@@ -1,3 +1,5 @@
+import { bindWork, dayCards, loadDay, ringCards, suggestionCards } from "./work.js";
+
 const icons = {
   home: '<path d="M3 10l9-7 9 7v10H3zM9 20v-6h6v6"/>',
   communication: '<path d="M20 15a3 3 0 0 1-3 3H9l-5 3v-6a3 3 0 0 1-1-2V7a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3zM7 9h9M7 13h6"/>',
@@ -14,7 +16,7 @@ document.querySelectorAll("[data-icon]").forEach((node) => { node.innerHTML = ic
 
 const titles = {
   home: "Verkstadsöversikt", communication: "Kommunikation", cases: "Verkstad och kundärenden",
-  bookings: "Bokningar", approvals: "Godkännanden", finance: "Ekonomi och checkout", planning: "Privat planering", assistant: "AI-assistent",
+  bookings: "Bokningar", approvals: "Godkännanden", finance: "Ekonomi och checkout", planning: "Dagsplanering", ring: "Ringlista", suggestions: "Förslag att planera", assistant: "AI-assistent",
 };
 const statuses = {
   new: "Ny", contacted: "Kontaktad", checked_in: "Inlämnad", diagnosing: "Diagnos",
@@ -35,7 +37,6 @@ const metrics = (entries) => '<div class="metrics">' + entries.map(([value, labe
 let mode = "focus";
 let caseQuery = "";
 let business = null;
-let planning = null;
 let request = null;
 const route = () => Object.hasOwn(titles, location.hash.slice(1)) ? location.hash.slice(1) : "home";
 const origin = () => business?.origin || "https://www.nordicemobility.se";
@@ -215,28 +216,9 @@ function focusCards() {
   const complete = business?.cases?.status === "ok" && business?.communication?.status === "ok" && !business.communication.partial &&
     (business?.approvals?.status === "ok" && !business.approvals.partial ||
       business?.approvals?.status === "unavailable" && business?.drafts?.status === "ok");
-  const decisions = fromSource(business?.cases, (data) =>
-    caseRows(data.decisions, "Inga boknings- eller verkstadsbeslut flaggade.", (row) => row.reason));
-  return [
-    card("Dagens prioriteringar", "planning", items.length ? list(items, ([, label, href]) => link(label, href)) :
-      paragraph(complete ? "Inga prioriteringar i de anslutna köerna." : "Dagens prioriteringar visas när underlag finns."),
-    [link("Visa privat planering", "#planning")], true),
-    communicationCard(),
-    card("Ärenden som kräver beslut", "cases", decisions, [admin()]),
-    automationCard(),
-    card("Nästa rekommenderade åtgärd", "next", items.length ?
-      paragraph(items[0][1] + ".") : paragraph("Öppna planeringen för att gå igenom dina uppgifter."),
-    [items.length ? link("Visa åtgärden", items[0][2]) : link("Öppna planering", "#planning")]),
-  ];
-}
-
-function planningCard() {
-  const renderTasks = (rows) => rows.length ? list(rows, (row) => '<strong>' + escape(row.title) + '</strong><small>' +
-    escape(row.next || row.reason || row.status) + '</small>') : paragraph("Inga uppgifter att visa.");
-  const body = planning?.status === "ok" ? renderTasks(planning.priorities) : paragraph(sourceMessage(planning));
-  return [card("Dina tre viktigaste uppgifter", "planning", body, [link("Hantera uppgifter och dagsplan", "/")], true),
-    card("Alla lokala uppgifter", "planning", planning?.status === "ok" ? renderTasks(planning.tasks) :
-      paragraph(sourceMessage(planning)))];
+  return [card("Dagens prioriteringar", "planning", items.length ? list(items, ([, label, href]) => link(label, href)) :
+    paragraph(complete ? "Inga prioriteringar i de anslutna köerna." : "Dagens prioriteringar visas när underlag finns."),
+    [link("Öppna dagsplaneringen", "#planning")], true)];
 }
 
 function assistantCards() {
@@ -312,7 +294,7 @@ function render() {
   document.querySelector("#date").textContent = new Intl.DateTimeFormat("sv-SE", {
     dateStyle: "full", timeZone: "Europe/Stockholm",
   }).format();
-  document.querySelector("#refresh").hidden = page === "assistant";
+  document.querySelector("#refresh").hidden = ["assistant", "ring", "suggestions"].includes(page);
   document.querySelector("#modes").hidden = page !== "home";
   document.querySelectorAll("[data-mode]").forEach((button) =>
     button.setAttribute("aria-pressed", String(button.dataset.mode === mode)));
@@ -321,37 +303,41 @@ function render() {
     else anchor.removeAttribute("aria-current");
   });
   const connection = document.querySelector("#connection");
-  connection.textContent = page === "planning" ? "Lokal planering · privat arbetsyta" :
+  connection.textContent = page === "planning" ? "Lokal planering" : ["ring", "suggestions"].includes(page) ? "" :
     business?.cases?.status === "ok" || business?.communication?.status === "ok" ? "Anslutna verksamhetskällor" :
       business ? "Lokal version · verksamhetsdata är inte tillgänglig" : "Hämtar verksamhetsdata …";
   const views = {
-    home: () => mode === "focus" ? focusCards() : [casesCard(), communicationCard(), bookingsCard(), financeCard(),
+    home: () => mode === "focus" ? focusCards() : [casesCard(true), communicationCard(), bookingsCard(), financeCard(),
       automationCard(), card("AI-assistent", "nova", "", [link("Öppna assistenten", "#assistant")]), card("Godkännanden", "planning", "", [link("Visa godkännanden", "#approvals")]), card("Planering", "planning", paragraph("Dina uppgifter och nästa steg i den privata arbetsytan."),
-        [link("Öppna planering", "#planning")])],
+        [link("Öppna planering", "#planning"), link("Förslag att planera", "#suggestions"), link("Ringlista", "#ring")])],
     communication: () => [communicationCard(true), automationCard(), historyCard()],
     cases: () => [casesCard(true), card("Ärenden som kräver beslut", "planning", fromSource(business?.cases, (data) =>
       caseRows(data.decisions, "Inga ärenden flaggade för beslut.", (row) => row.reason)))],
     bookings: bookingCards,
     approvals: approvalCards,
     finance: () => [financeCard()],
-    planning: planningCard,
+    planning: () => dayCards(card),
+    ring: () => ringCards(card),
+    suggestions: () => suggestionCards(card),
     assistant: assistantCards,
   };
   document.querySelector("#content").innerHTML = '<div class="grid">' + views[page]().join("") + '</div>';
 }
 
 async function load(force = false) {
-  const isPrivate = route() === "planning";
-  if (!isPrivate) planning = null;
-  if (route() === "assistant") {
+  const page = route();
+  if (["planning", "suggestions", "ring", "assistant"].includes(page)) {
     request?.controller.abort();
     request = null;
     document.querySelector("#refresh").disabled = false;
+    if (page === "planning" || page === "suggestions") {
+      await loadDay(() => { if (route() === page) render(); });
+    }
     return;
   }
-  const endpoint = isPrivate ? "planning" : "business";
+  const endpoint = "business";
   if (request?.endpoint === endpoint) return;
-  if (!force && (isPrivate ? planning : business)) {
+  if (!force && business) {
     request?.controller.abort();
     request = null;
     document.querySelector("#refresh").disabled = false;
@@ -369,8 +355,7 @@ async function load(force = false) {
     data = { status: "down" };
   }
   if (controller.signal.aborted) return;
-  if (isPrivate) planning = { status: "ok", ...data };
-  else business = data.status ? { cases: data, communication: data } : data;
+  business = data.status ? { cases: data, communication: data } : data;
   request = null;
   document.querySelector("#refresh").disabled = false;
   render();
@@ -395,5 +380,6 @@ document.querySelector("#modes").addEventListener("click", (event) => {
     render();
   }
 });
+bindWork(document.querySelector("#content"), render);
 render();
 load();
