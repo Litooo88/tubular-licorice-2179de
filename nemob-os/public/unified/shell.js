@@ -117,12 +117,25 @@ function approvalCards() {
       ...groups.map(([kind, title, iconName, action]) => card(title, iconName,
         fromSource(approvals.groups[kind], (group) =>
           (group.items.length ? list(group.items, (row) => {
-            const name = row.name || row.source || title;
-            const heading = row.caseId ? tool(name, "/admin/?case=" + encodeURIComponent(row.caseId) + "&tab=contact")
-              : "<strong>" + escape(name) + "</strong>";
-            return heading + '<p class="message">' + escape(row.message) + '</p>' +
-              (row.inFlight ? "<small>Behandlas just nu</small>" :
-                row.failed ? "<small>Senaste försöket misslyckades</small>" : "");
+            const name = row.name || row.source || "Godkännande";
+            const caseRow = business?.cases?.cases?.find((item) => item.id === row.caseId);
+            const timestamp = Date.parse(row.at);
+            const history = Number.isFinite(timestamp) ? new Intl.DateTimeFormat("sv-SE", {
+              dateStyle: "short", timeStyle: "short", timeZone: "Europe/Stockholm",
+            }).format(timestamp) : "";
+            const context = [row.reference || caseRow?.reference, row.service || caseRow?.title,
+              caseRow && status(caseRow)].filter(Boolean).join(" · ");
+            return '<details class="approval-detail"><summary>' + escape(name) + '</summary>' +
+              (context ? paragraph(context) : "") +
+              (row.name ? "" : paragraph("Kundnamn saknas i källan.")) +
+              paragraph(history ? "Registrerat " + history : "Registreringstid saknas.") +
+              (row.inFlight ? paragraph("Behandlas just nu.") : "") +
+              (row.failed ? paragraph("Senaste försöket misslyckades.") : "") +
+              '<p><strong>' + (kind === "booking_request" ? "Önskad bokning" : "Föreslagen text") + '</strong></p>' +
+              '<p class="message">' + escape(row.message || "Underlag saknas.") + '</p>' +
+              (row.caseId ? '<div class="actions">' + tool("Öppna ärendehistorik i Admin",
+                "/admin/?case=" + encodeURIComponent(row.caseId) + "&tab=contact") + '</div>' :
+                paragraph("Ingen ärendehistorik är kopplad till posten.")) + '</details>';
           }) : paragraph(group.count ? "Detaljer saknas för väntande poster." : "Inga väntande poster.")) +
           (group.count > group.items.length && group.items.length ?
             paragraph("Visar " + group.items.length + " av " + group.count + " poster.") : "")), [action])),

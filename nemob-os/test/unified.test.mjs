@@ -87,7 +87,7 @@ test("approvals keeps available queues and distinguishes unpublished endpoints f
   } });
   assert.equal(result.partial, true);
   assert.deepEqual(result.groups.sms.items, [
-    { caseId: "", name: "", source: "", message: "Test", inFlight: true, failed: false },
+    { caseId: "", name: "", source: "", message: "Test", at: "", service: "", reference: "", inFlight: true, failed: false },
   ]);
   assert.equal(result.groups.draft.count, null);
   assert.equal(result.groups.booking_request.count, 0);

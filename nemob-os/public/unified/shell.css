@@ -49,6 +49,7 @@ h1 { font-size: clamp(1.95rem, 4.5vw, 3.4rem); line-height: 1.08; letter-spacing
 .rows { list-style: none; padding: 0; margin: 11px 0 0; }
 .rows a { display: inline-flex; align-items: center; min-height: 44px; }
 .rows li { border-top: 1px solid var(--border); padding: 10px 0; overflow-wrap: anywhere; }
+.approval-detail summary { min-height: 44px; padding: 12px 0; cursor: pointer; font-weight: 650; }
 .rows .message { white-space: pre-wrap; }
 .rows small { display: block; color: var(--muted); margin-top: 4px; }
 .metric { font-size: 1.55rem; color: #18291f; }

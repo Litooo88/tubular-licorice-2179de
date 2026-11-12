@@ -85,7 +85,7 @@ export async function fetchCommunication({ env = process.env, fetchImpl = fetch 
       method: "GET",
       headers: { Accept: "application/json", "x-admin-token": token },
       redirect: "error",
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(25000),
     });
     if (!response.ok) return { status: "down" };
     const data = await response.json();
@@ -121,7 +121,7 @@ export async function fetchDrafts({ env = process.env, fetchImpl = fetch } = {})
       method: "GET",
       headers: { Accept: "application/json", "x-admin-token": token },
       redirect: "error",
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(25000),
     });
     if (!response.ok) return { status: "down" };
     const data = await response.json();
@@ -144,7 +144,7 @@ export async function fetchApprovals({ env = process.env, fetchImpl = fetch } = 
     const response = await fetchImpl(new URL("/api/approvals?limit=500", origin), {
       headers: { Accept: "application/json", "x-admin-token": token },
       redirect: "error",
-      signal: AbortSignal.timeout(12000),
+      signal: AbortSignal.timeout(25000),
     });
     if ([404, 405].includes(response.status)) return { status: "unavailable" };
     if (!response.ok) return { status: "down" };
@@ -158,6 +158,7 @@ export async function fetchApprovals({ env = process.env, fetchImpl = fetch } = 
       const items = data.items.filter((item) => item?.kind === kind).map((item) => ({
         caseId: text(item.caseId), name: text(item.name), source: text(item.sourceLabel),
         message: typeof item.text === "string" ? item.text.slice(0, 2000) : "",
+        at: text(item.at), service: text(item.service), reference: text(item.serviceNumber),
         inFlight: item.inFlight === true, failed: Boolean(item.lastError),
       }));
       const status = data.sources?.[approvalSources[kind]] === "ok" ? "ok" : "down";

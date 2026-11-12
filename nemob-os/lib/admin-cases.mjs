@@ -9,7 +9,7 @@
 // - Hela ärendelistan stannar i serverns minne; anroparen ansvarar för att
 //   bara skicka filtrerade, whitelistade träffar vidare (lib/lookup.mjs).
 
-const FETCH_TIMEOUT_MS = 10000;
+const FETCH_TIMEOUT_MS = 25000;
 const CACHE_TTL_MS = 60 * 1000;
 
 let memoryCache = { fetchedAt: 0, cases: null };

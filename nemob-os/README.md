@@ -200,3 +200,11 @@ riktiga endpointen.
 - AI-genererade dagsomdömen och förslag.
 - Återkommande uppgifter och mallar.
 - Koppling till fler Nordic-datafält än briefing-endpointen exponerar.
+
+## NEMOB OS 2.0
+
+Starta med `npm run nemob-os` och öppna `http://127.0.0.1:4571/unified/`. Lägg `NORDIC_ADMIN_TOKEN` i serverns miljö eller i lokal `nemob-os/.env`.
+
+För mobil åtkomst kan du binda servern till datorns privata Tailscale-IP med `NEMOB_OS_HOST`, sätta en lång unik `NEMOB_OS_PIN` och begränsa tailnet-åtkomst till godkända enheter. Öppna `http://<tailscale-ip>:4571/unified/` på telefonen. PWA-installation över nätverket behöver verifieras med HTTPS på aktuella enheter. Publicera aldrig planeringsdatabasen eller servern på den publika webbplatsen.
+
+För flera användare behövs en autentiserad HTTPS-ingång och separata serverkontrollerade behörigheter för verksamhetsdata och privat planering. En proxy till loopback måste själv verifiera åtkomst: loopback kräver ingen PIN och dagens PIN-session har åtkomst till båda arbetsytorna.
