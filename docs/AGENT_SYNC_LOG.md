@@ -32,6 +32,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — KLAR (GET /api/approvals: PR #171 godkänd av Sebastian och mergad till main)
+
+- **Branch:** `feat/api-approvals` i egen worktree (scratchpad), bas `origin/main` 78521b5 (PR #170 mergad).
+  Ingen branchväxling i den delade mappen. Codex ocommittade rader i denna fil där rörs inte.
+- **Område:** ny `netlify/functions/approvals.mjs` (`GET /api/approvals`, admin), test `tests/approvals.test.mjs`,
+  `docs/NEMOB_OS_2_API_CONTRACTS.md` §6. Läser bara befintliga källor (`sms-pending`, `sms-drafts`, väntande
+  bokningsförfrågningar i `workshop-cases`); inga nya utskick, godkännande/avslag pekar på befintliga rutter.
+- **Rör inte (Codex):** `nemob-os/**`.
+- **Resultat:** `approvals.mjs` slår ihop sms-pending, AI-utkast och väntande bokningsförfrågningar till en
+  lista med `approve`/`reject`-pekare mot befintliga rutter; skriver/skickar inget. Följdfix: `comm-log.listKeys`
+  avkodar list-nycklar (lokala servern URL-kodar kolon) → `test:comm` 7/7 (det kända felet, docs §12).
+- **Tester:** build grön (176 tester, `test:approvals` 2 i grinden), verify:checkout-products OK, callflow OK.
+- **PR:** #171, godkänd 2026-11-12 och mergad via GitHub. Lokal main i delade mappen: se posten för PR #170.
+
+
 ### 2026-11-11 — Claude Code — KLAR (NEMOB OS 2.0 backend: PR #170 godkänd 2026-11-12 och mergad till main)
 
 - **Branch:** `feat/nemob-os-2-backend` i egen worktree (scratchpad), bas `origin/main` edf4f10.

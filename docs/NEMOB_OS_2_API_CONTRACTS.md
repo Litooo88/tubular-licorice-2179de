@@ -405,10 +405,37 @@ men gäller **AI-utkasten** (`/api/sms-drafts`), inte `sms-pending`. Två köer:
   `409 { code: "in_flight" }` vid parallellt godkännande, `503 { code: "storage_unversioned" }`;
   `POST /api/sms-drafts/:caseId/skip`.
 
-Behöver utvecklas: ett gemensamt `GET /api/approvals` som slår ihop
-`sms-pending`, AI-utkast och väntande bokningsförfrågningar till en lista
-`{ items: [ { kind: "sms|draft|booking_request", id, caseId, to, name, text, at, approveUrl, rejectUrl } ] }`
-— det är fokuslägets "beslut just nu". Tills dess: tre anrop.
+**`GET /api/approvals`** (admin, nytt 2026-11-12, `approvals.mjs`) — fokuslägets
+"beslut just nu". Slår ihop de tre källorna till en lista, skriver inget och
+skickar inget; varje rad pekar på den befintliga rutten som utför beslutet.
+
+Query: `?kind=sms,draft,booking_request` (filter), `?limit=N` (1–500, standard 200).
+
+```
+{
+  items: [ {
+    kind: "sms" | "draft" | "booking_request",
+    id, caseId, to (E.164), name, text, at (ISO, längst väntande först),
+    approve: { method, url, body }, reject: { method, url, body },
+    approveUrl, rejectUrl,                 // samma som approve.url/reject.url
+    // sms:             source, sourceLabel, inFlight, lastError
+    // draft:           category, priority, closeProbability, service, ageDays, inFlight
+    // booking_request: serviceNumber, requestedDate, service, vehicle, message,
+    //                  reschedule: { method, url, body: { action, preferredDate } }
+  } ],
+  counts: { total, sms, draft, booking_request },
+  smsApproval: { enabled, updatedAt, by },
+  sources: { sms, drafts, bookings },      // "ok" | "skipped" | "error: …"
+  partial: bool,                           // någon källa föll – visa "delvis"
+  generatedAt
+}
+```
+
+Beslut utförs med `approve`/`reject` som de står (`body` får kompletteras:
+`operatorName`, `message`, `idempotencyKey`; för `reschedule` ersätts
+`preferredDate`). `inFlight: true` = någon annan håller just nu på med
+posten (reservation < 10 min) – visa som upptagen, inte som knapp.
+Fel i en källa fäller inte anropet (`sources` + `partial`).
 
 ---
 
@@ -451,8 +478,9 @@ Schemalagda funktioner lämnar i dag inga spår utöver loggar.
    `ambiguous` ska bli ett beslut ("vilket ärende?"), inte ett fel.
 3. **Ärendekortet:** rendera `inboundMessages[]` tillsammans med
    `outboundMessages[]`/`smsLog[]` som en konversation.
-4. **Godkännanden i fokusläget:** tre källor tills `/api/approvals` finns
-   (§6). Koden som skickar/avvisar är `approve`/`reject` ovan — inga egna utskick.
+4. **Godkännanden i fokusläget:** `GET /api/approvals` (§6) ger listan;
+   besluten utförs med radens `approve`/`reject` mot de befintliga rutterna
+   — inga egna utskick. `inFlight` visas som upptagen.
 5. **Hälsa:** anropa `storage-health` med POST en gång per sessionstart
    och visa `conditionalWrites.ok` och `unversionedWritesAllowed`.
 7. **Utskick:** skicka alltid `idempotencyKey` (UUID per knapptryck) på
@@ -536,9 +564,9 @@ lokala Blobs-servern): nycklarna i `sms-log` börjar med ISO-tid med kolon
 `k.slice(0, 24) >= <ISO-tid>` och `%` (0x25) sorterar före `:` (0x3A), så
 alla rader filtreras bort — och `store.get(<kodad nyckel>)` skulle ändå
 inte träffa. Produktionen påverkas inte (Netlifys backend listar råa
-nycklar). Åtgärd, separat PR: i `_shared/comm-log.mjs` låt `listKeys`
-avkoda nycklar (`decodeURIComponent`, try/catch) och låt `keyFor`
-(sms-log, sms-pending) använda filsäker tid (`stampKey` i case-store:
-kolon/punkt → bindestreck); behåll läsning av gamla nycklar genom att
-normalisera jämförelsesträngen på samma sätt. Samma mönster finns redan i
-`case-store.readWithEtag` (list-fallbacken avkodar).
+nycklar). Åtgärdat 2026-11-12 (PR för `/api/approvals`, som behövde läsa
+`sms-pending` lokalt): `listKeys` i `_shared/comm-log.mjs` avkodar
+nycklarna (`decodeURIComponent`, try/catch) → `test:comm` 7/7. Kvar som
+valfri förbättring: låt `keyFor` (sms-log, sms-pending) använda filsäker
+tid (`stampKey` i case-store) och normalisera jämförelsesträngen i
+`readSmsLog`/`pruneSmsLog` på samma sätt.
