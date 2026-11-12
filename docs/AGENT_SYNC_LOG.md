@@ -32,6 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — PÅGÅR (GET /api/approvals: gemensam godkännandelista för NEMOB OS 2.0)
+
+- **Branch:** `feat/api-approvals` i egen worktree (scratchpad), bas `origin/main` 78521b5 (PR #170 mergad).
+  Ingen branchväxling i den delade mappen. Codex ocommittade rader i denna fil där rörs inte.
+- **Område:** ny `netlify/functions/approvals.mjs` (`GET /api/approvals`, admin), test `tests/approvals.test.mjs`,
+  `docs/NEMOB_OS_2_API_CONTRACTS.md` §6. Läser bara befintliga källor (`sms-pending`, `sms-drafts`, väntande
+  bokningsförfrågningar i `workshop-cases`); inga nya utskick, godkännande/avslag pekar på befintliga rutter.
+- **Rör inte (Codex):** `nemob-os/**`.
+
+
 ### 2026-11-11 — Claude Code — KLAR (NEMOB OS 2.0 backend: PR #170 godkänd 2026-11-12 och mergad till main)
 
 - **Branch:** `feat/nemob-os-2-backend` i egen worktree (scratchpad), bas `origin/main` edf4f10.
