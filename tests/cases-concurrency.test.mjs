@@ -10,6 +10,8 @@ import test from "node:test";
 
 import { getStore, setEnvironmentContext } from "@netlify/blobs";
 import { BlobsServer } from "@netlify/blobs/server";
+import { pinTestEnv } from "./_test-env.mjs";
+
 
 const setup = async (t) => {
   const dir = await mkdtemp(join(tmpdir(), "blobs-cc-"));
@@ -18,9 +20,8 @@ const setup = async (t) => {
   const url = `http://localhost:${port}`;
   setEnvironmentContext({ siteID: "site", token: "mock", edgeURL: url, uncachedEdgeURL: url });
   const realFetch = globalThis.fetch;
-  const oldEnv = { ...process.env };
-  Object.assign(process.env, { ADMIN_TOKEN: "adm", ELKS_USERNAME: "u", ELKS_PASSWORD: "p", SEBASTIAN_SMS_TO: "+46700243319", SMS_INBOUND_SECRET: "inb" });
-  delete process.env.RESEND_API_KEY;
+  // Pinnad miljö: Netlifys byggmiljö har produktionens variabler (se _test-env.mjs).
+  const restoreEnv = pinTestEnv({ SMS_INBOUND_SECRET: "inb" });
   const sent = [];
   // Lokala servern sätter etag på filens mtime (ms). För att få en ÄKTA
   // överlappning fördröjs den första skrivningen mot en nyckel i `slowPut`,
@@ -36,7 +37,7 @@ const setup = async (t) => {
     if (u.includes("api.46elks.com")) { sent.push(Object.fromEntries(new URLSearchParams(String(init.body)))); return new Response(JSON.stringify({ id: `s${sent.length}` }), { status: 200, headers: { "Content-Type": "application/json" } }); }
     return realFetch(input, init);
   };
-  t.after(async () => { globalThis.fetch = realFetch; process.env = oldEnv; await server.stop(); await rm(dir, { recursive: true, force: true }); });
+  t.after(async () => { globalThis.fetch = realFetch; restoreEnv(); await server.stop(); await rm(dir, { recursive: true, force: true }); });
   return { sent, slowPut };
 };
 

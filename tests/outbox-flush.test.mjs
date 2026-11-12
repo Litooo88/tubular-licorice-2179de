@@ -11,6 +11,8 @@ import "./_blobs-test-env.mjs";
 import { getStore, setEnvironmentContext } from "@netlify/blobs";
 import { BlobsServer } from "@netlify/blobs/server";
 import { resetVerification, setProbeStoreFactory } from "../netlify/functions/_shared/case-store.mjs";
+import { pinTestEnv } from "./_test-env.mjs";
+
 
 const FIXED = new Date("2026-11-12T09:30:00.000Z").getTime(); // 10:30 svensk tid
 const RealDate = Date;
@@ -23,9 +25,7 @@ test("outbox-flush: två överlappande körningar skickar ett köat utkast exakt
   setEnvironmentContext({ siteID: "site", token: "mock", edgeURL: url, uncachedEdgeURL: url });
   resetVerification();
   setProbeStoreFactory(() => getStore({ name: "case-store-probe", consistency: "strong" }));
-  const oldEnv = { ...process.env };
-  Object.assign(process.env, { ELKS_USERNAME: "u", ELKS_PASSWORD: "p" });
-  delete process.env.RESEND_API_KEY;
+  const restoreEnv = pinTestEnv();
   const realFetch = globalThis.fetch;
   const sent = [];
   const putLocks = new Map();
@@ -41,7 +41,7 @@ test("outbox-flush: två överlappande körningar skickar ett köat utkast exakt
     static now() { return FIXED; }
   }
   globalThis.Date = FakeDate;
-  t.after(async () => { globalThis.Date = RealDate; globalThis.fetch = realFetch; process.env = oldEnv; await server.stop(); await rm(dir, { recursive: true, force: true }); });
+  t.after(async () => { globalThis.Date = RealDate; globalThis.fetch = realFetch; restoreEnv(); await server.stop(); await rm(dir, { recursive: true, force: true }); });
 
   const cases = getStore({ name: "workshop-cases", consistency: "strong" });
   await cases.setJSON("case_7", { id: "case_7", status: "new", customer: { name: "Nour", phone: "0701234567" }, smsLog: [], timeline: [] });
