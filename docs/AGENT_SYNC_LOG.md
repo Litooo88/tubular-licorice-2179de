@@ -57,7 +57,7 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-11-12 — Claude Code — PR ÖPPEN, VÄNTAR GODKÄNNANDE (AI Gateway: konfiguration i Blobs – Netlify-deployer föll med env-variabler)
+### 2026-11-12 — Claude Code — KLAR (AI Gateway: konfiguration i Blobs – PR #177 godkänd av Sebastian, mergas och aktiveras)
 
 - **Branch:** `feat/ai-gateway-config-blobs`, bas `origin/main` 17d4862. Delade mappen rörs inte.
 - **Orsak:** när AI_GATEWAY_CLIENTS/SIGNING_SECRET/OWNER_SECRET sattes i Netlify föll alla deployer i steget
@@ -73,7 +73,11 @@ löpande "konversation".
 - **Tester:** test:ai 22 (ny: hela Blobs-vägen – 503 utan konfig, admin-token krävs, validering, status utan
   hemligheter, klienter/OAuth fungerar direkt, PIN-byte, env-företräde). Build grön i simulerad Netlify-miljö
   (198 tester), checkout OK, callflow OK.
-- **PR:** se nedan. Efter merge: POST /api/ai/config med värdena från .local-filen (godkänt av Sebastian).
+- **PR:** #177 (feat/ai-gateway-config-blobs). Sebastian: "Ja" → mergas via REST, därefter POST /api/ai/config
+  (Claude-klient, genererad signeringsnyckel, ägar-PIN) och verifiering: GET /api/ai/config ready/oauthReady,
+  whoami 200, OAuth-metadata 200. PIN + Claude-nyckel skickas som fil till telefonen (aldrig i chatt/repo).
+- **Kvar:** delade mappens lokala main är kvar på edf4f10 (Codex ocommittade loggrader) – synkas bara på order.
+  Dynamisk probe-klient "probe" (utan scopes) finns i storen ai-oauth – kan återkallas via /api/ai/oauth/clients.
 
 
 ### 2026-11-12 — Claude Code — KLAR (AI Gateway hotfix: PR #176 godkänd av Sebastian och mergad)
