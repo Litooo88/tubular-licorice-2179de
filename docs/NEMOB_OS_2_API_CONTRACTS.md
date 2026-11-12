@@ -450,6 +450,90 @@ Blobs-stores (separat säkerhetsdomän). Codex äger kontraktet; backendens
 enda beröring är att `readUnifiedPlanning()` kan blandas med
 affärsdata i presentationen, aldrig i lagringen.
 
+### 7b. Företagets uppgiftsinkorg — `/api/task-inbox` (admin, nytt)
+
+Separat säkerhetsdomän från 7 ovan: **bara företagsdata** (store `task-inbox`),
+härledd ur Nova, ringlistan, inkommande SMS, 46elks-samtal, verkstadsärenden
+och bokningsförfrågningar. Privata planeringsuppgifter läses aldrig hit och
+AI Gateway exponerar inte inkorgen. Modul: `_shared/task-inbox.mjs`,
+tidsuttryck: `_shared/time-phrase.mjs`, funktion: `task-inbox.mjs`.
+Routen heter `task-inbox` just för att NEMOB OS lokala `/api/tasks` (privat) inte
+ska förväxlas.
+
+**Uppgiften** (`items[]`/`task`):
+```jsonc
+{ "id": "t_<20 hex>",                       // deterministiskt: sha1(source:sourceId)
+  "kind": "callback|meeting_call|booking_decision|case_followup|sms_reply|email|manual", "kindLabel": "Ring upp",
+  "title": "Ring upp Anna", "description": "…(≤400 tecken, aldrig transkript)",
+  "source": "ring-list|sms-ring|sms-inbound|nova-meeting|nova-message|nova-call|elks-missed|booking-request|case|email|manual",
+  "sourceId": "…", "sourceLabel": "Ringlistan",
+  "sources": [ { "id", "source", "sourceId", "receivedAt", "label" } ],   // alla signaler som pekar på samma behov
+  "customer": { "phone": "+46…", "name": "" }, "caseId": "case_…|''", "serviceNumber": "NE-…|''",
+  "receivedAt": "ISO", "receivedLocal": "YYYY-MM-DD HH:MM",             // tidigaste signalen (Europe/Stockholm i *Local)
+  "dueAt": "ISO|''", "dueLocal": "…",
+  "timing": null | {                                                       // Nova/bokning: tre SEPARATA tider
+      "receivedAt": "ISO", "receivedLocal": "…",                           //   när samtalet togs emot
+      "requested": null | { "raw": "imorgon kl 14", "status": "resolved|date_only|ambiguous|asap|none|past",
+                            "at": "ISO|null", "local": "…|null", "date": "YYYY-MM-DD|null", "needsReview": bool, "reason": "…" },
+      "confirmed": null | { "at": "ISO", "local": "…" },                   //   bara från faktisk bekräftelse (bokning/kalender)
+      "needsReview": bool },
+  "needsReview": bool,                     // otydlig tidsuppgift → visa "kontrollera tiden"; ingen tid hittas på
+  "signals": [ { "key": "safety|complaint|urgent|callback|buy", "label" } ],
+  "attempts": 3,                           // summerade kontaktförsök över alla källor
+  "priority": { "level": "high|medium|low", "score": 0-100, "reason": "Ring upp (grund 40) · väntat 2 dygn · …" },
+  "estimatedMinutes": 10, "status": "proposed|selected|in_progress|snoozed|done|rejected", "assignee": "sebastian",
+  "action": null | { "confirm": { method, url, body }, "decline": {…} },   // bokningsbeslut: pekar på PATCH /api/cases/:id
+  "snoozedUntil": "ISO|''", "selectedAt", "resolvedAt", "resolvedBy", "createdAt", "updatedAt",
+  "historyCount": 3 }                      // listan; GET /api/task-inbox/:id ger history[] { at, by, event, note }
+```
+
+| Metod | Beskrivning |
+|---|---|
+| `GET /api/task-inbox?status=open\|all\|<status>&kind=a,b&limit=N&sync=0` | Synkar förslag från källorna (hoppa över med `sync=0`), väcker snoozade vars tid passerat, returnerar `{ items[], counts: { total, open, byStatus, byKind, byPriority, needsReview, minutesOpen }, sources, partial, sync, generatedAt }`. Sortering: prioritet, deadline, äldst. Källfel fäller inte anropet: `sources.<källa>` bär feltexten, `partial: true`; `sources.email` är `not_configured` tills e-postintegrationen finns. |
+| `POST /api/task-inbox` | Manuell uppgift `{ title, description?, phone?, name?, caseId?, dueAt? (ISO eller YYYY-MM-DDTHH:MM Stockholm), estimatedMinutes?, priority?: high\|medium\|low, assignee?, idempotencyKey (≥ 8) }` → `201 { ok, created: true, task }`, samma nyckel igen → `200 { created: false, task }`. |
+| `POST /api/task-inbox/sync` | Bara synk → `{ ok, sync: { created, merged, refreshed, suppressed, unchanged, errors[] }, proposals, sources, partial }`. |
+| `GET /api/task-inbox/:id` | Uppgiften med `history[]`; svarshuvud `ETag`. Käll-id som slagits ihop (alias) ger ägaruppgiften. |
+| `POST /api/task-inbox/:id/select\|start\|done\|reject\|snooze\|reopen\|assign\|note` | `{ by?, note?, until? (snooze), assignee? (assign) }`, valfri `If-Match` → `200 { ok, task, unchanged }` + `ETag`. Idempotent: redan i målstatus → `unchanged: true`. `409 invalid_transition` (t.ex. done→select), `409 conflict`, `412 precondition_failed`, `400 invalid_until`, `503 storage_unversioned\|storage_error`. |
+| `GET /api/task-inbox/call-list?max=15` | Personlig ringlista: öppna `callback`/`meeting_call` med `work` (arbetsstatus ur ringlistan), valda först, sedan prioritet. `{ items[], totalOpen, totalMinutes, statuses, generatedAt }`. Snoozade visas inte förrän tiden passerat. |
+| `POST /api/task-inbox/call-list/build` | `{ max?, by? }` väljer topp-N (`proposed` → `selected`), idempotent → `{ ok, selected, items[] }`. |
+| `POST /api/task-inbox/call-list/:phone/status` | `{ status: waiting\|called_answered\|called_no_answer\|sms_sent\|handled_other\|callback_later, note?, callbackAt? (krävs för callback_later), by?, taskId? }`. Beständigt i ring-list-posten (`work: { status, label, at, by, note, callbackAt, attempts, history[] }`), skrivs versionerat; posten skapas om numret saknas. Speglas på uppgiften: svar/annat sätt → `done`, återkom senare → `snoozed` till `callbackAt`, inget svar/SMS → notering. Ringlistans egen `status` blir `watch` vid svar/hanterad (bevakas vidare av `ring-list-scan`). |
+
+**Deduplicering.** (1) Samma källa + käll-id ⇒ samma id (synk är idempotent).
+(2) Samma kundbehov (`callback:<telefon>`, `meeting:<telefon>`, `sms_reply:<telefon>`,
+`booking:<caseId>`, `case:<caseId>`) medan uppgiften är öppen ⇒ ingen ny uppgift;
+signalen läggs i `sources[]`, försöken summeras, prioriteten räknas om. (3) Är
+behovet avslutat och kunden hör av sig igen EFTER avslutet skapas en ny
+uppgift; äldre signaler än avslutet undertrycks. Nycklar: `task/<id>`,
+`need/<hash>`, `alias/<käll-id>`. Alla skrivningar går via `commitJson`/`createIfAbsent`
+(etag, fail-closed som ärendena).
+
+**Härledningsregler.** Ringlistan `status: new`; `sms-inbound` `type: ring` (uppringning
+lovad inom 24 tim) och obesvarade `other` (14 dagar); Nova-möten (önskad tid i fri
+text tolkas av `time-phrase`), Nova-meddelanden, inkommande Nova-samtal som slutade
+med "vill prata med Sebastian"/callback; 46elks missade inkommande samtal (48 tim,
+ett per nummer, spärrlista/egna nummer bort); bokningsförfrågningar `pending`
+(deadline: 4 tim, dock senast ett dygn före önskad tid); ärenden som väntat för
+länge (`new` 4 tim, `contacted`/`waiting_customer` 72 tim, `ready` 48 tim,
+`waiting_parts` 7 dagar). Prioritet = grund per typ + väntetid + antal försök
++ textsignaler (säkerhet/klagomål/brådska) + deadline + aktivt ärende.
+
+**Tider.** `receivedAt` är alltid systemets mottagningstid. Kundens önskemål
+blir `timing.requested` och får `at` BARA när dag och klockslag är entydiga
+("imorgon kl 14", "20/11 kl 10", "måndag klockan 9"); "i morgon eftermiddag",
+"nästa vecka", "halv tre" ger `date_only`/`ambiguous` med `needsReview: true` och
+ingen `at`. "så snart som möjligt" = `asap`. Referensen är när det sades
+(`receivedAt`), inte nu. `timing.confirmed` sätts bara från en faktisk bekräftad
+bokning (`bookingMode: direct` eller `bookingRequest.status: confirmed`).
+
+**Vad inkorgen inte gör.** Skickar inga SMS, ringer inte, bekräftar inga
+bokningar: `action` pekar på de befintliga rutterna (§3) som kräver operatörens
+klick. Ringlistans `sms_sent` är en *status*, utskicket görs via `/api/ring-list/:id/sms`.
+
+**Codex (nemob-os):** fokusläget/dagsplanen läser `GET /api/task-inbox` server-side
+(admin-token som i `admin-cases.mjs`), visar `needsReview` som "kontrollera tiden",
+`partial`/`sources` som "delvis", och blandar med de privata uppgifterna bara i
+presentationen. Skicka `If-Match` från `ETag` på övergångar; visa `412` som "ladda om".
+
 ---
 
 ## 8. Systemhälsa
