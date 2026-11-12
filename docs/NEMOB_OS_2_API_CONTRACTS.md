@@ -582,3 +582,13 @@ nycklarna (`decodeURIComponent`, try/catch) → `test:comm` 7/7. Kvar som
 valfri förbättring: låt `keyFor` (sms-log, sms-pending) använda filsäker
 tid (`stampKey` i case-store) och normalisera jämförelsesträngen i
 `readSmsLog`/`pruneSmsLog` på samma sätt.
+
+---
+
+## 13. NEMOB AI Gateway (`/api/ai/*`)
+
+Separat ingång för AI-assistenter med egen klientauth och scopes, aldrig
+ADMIN_TOKEN. Fullständigt kontrakt, anslutningsguide per assistent,
+kontobegränsningar och risker: `docs/NEMOB_AI_GATEWAY.md`. NEMOB OS ska
+fortsätta använda admin-rutterna server-till-server; gatewayen är för
+externa AI-klienter.
