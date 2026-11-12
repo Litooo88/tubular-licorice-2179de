@@ -208,3 +208,27 @@ Starta med `npm run nemob-os` och öppna `http://127.0.0.1:4571/unified/`. Lägg
 För mobil åtkomst kan du binda servern till datorns privata Tailscale-IP med `NEMOB_OS_HOST`, sätta en lång unik `NEMOB_OS_PIN` och begränsa tailnet-åtkomst till godkända enheter. Öppna `http://<tailscale-ip>:4571/unified/` på telefonen. PWA-installation över nätverket behöver verifieras med HTTPS på aktuella enheter. Publicera aldrig planeringsdatabasen eller servern på den publika webbplatsen.
 
 För flera användare behövs en autentiserad HTTPS-ingång och separata serverkontrollerade behörigheter för verksamhetsdata och privat planering. En proxy till loopback måste själv verifiera åtkomst: loopback kräver ingen PIN och dagens PIN-session har åtkomst till båda arbetsytorna.
+
+### Gemensam drift och AI Gateway
+
+För drift oberoende av arbetsdatorn, kör NEMOB OS som en separat Node-tjänst
+på en alltid påslagen privat värd. Placera tjänsten bakom en autentiserad
+HTTPS-ingång med individuell inloggning, MFA och serverkontrollerade roller.
+Låt enbart ingången nå appservern. Appen behöver kontrollera behörighet för
+varje privat och verksamhetsrelaterat API, med separat åtkomst och lagring
+för privat planering. Behåll admin-token i serverns hemlighetshantering.
+Verifiera behörighetsgränser, sessionsutgång och återställning av planering
+innan tjänsten öppnas för flera användare.
+
+Gateway-kontrakt att samordna med Claude Code:
+
+| Gränssnitt | Underlag som frontend behöver |
+| --- | --- |
+| AI-status | Hälsostatus, tidsstämpel, degraderade källor och tydligt fel- eller tomläge |
+| Samtals- och kundsökning | Sökparametrar, resultat-ID, paginering och behörigheter per datakälla |
+| Verkstadens tillgänglighet | Aktuell status, tidszon, nästa statusändring och senast uppdaterad |
+| Aktiv telefonrouting | Aktiv väg, giltighetstid, datakälla och tydlig skillnad mellan okänd och inaktiv |
+
+NEMOB OS använder tills vidare befintliga läs-API:er. Gateway-anrop ska
+gå via servern när kontrakten är dokumenterade. Kundutskick och beslut
+ska kräva uttrycklig åtgärd och behörighetskontroll på servern.

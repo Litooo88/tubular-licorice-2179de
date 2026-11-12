@@ -63,7 +63,7 @@ export function summarizeCases(result, now = new Date()) {
     workshopDecisions: review.map(caseRow),
     upcoming: bookings.length,
     readyUnpaid: ready.length,
-    cases: open.map(caseRow),
+    cases: open.map((item) => ({ ...caseRow(item), customer: text(item.customer?.name) })),
     decisions: decisions.slice(0, 5).map((item) => ({
       ...caseRow(item),
       reason: item.bookingRequest?.status === "pending" ? "Bokningsförfrågan" : "Verkstaden behöver besked",
@@ -104,6 +104,15 @@ export async function fetchCommunication({ env = process.env, fetchImpl = fetch 
         name: text(item.name) || "Kund utan registrerat namn",
         hours: Number.isFinite(item.waitingHours) ? Math.max(0, Math.floor(item.waitingHours)) : null,
       })),
+      history: data.contacts.flatMap((contact) => (Array.isArray(contact?.events) ? contact.events : [])
+        .filter((event) => event && !event.internal && ["sms", "call", "chat"].includes(event.channel) && Number.isFinite(event.at))
+        .map((event) => ({
+          customer: text(contact.name), at: event.at, channel: event.channel,
+          direction: event.dir === "in" ? "in" : event.dir === "out" ? "out" : "",
+          nova: event.nova === true, outcome: text(event.outcome?.label),
+          message: typeof event.text === "string" ? event.text.slice(0, 500) : "",
+        })))
+        .sort((a, b) => b.at - a.at).slice(0, 30),
       nova: { smsOut: nova.smsOut, callsIn: nova.callsIn, chats: nova.chats },
     };
   } catch {

@@ -33,7 +33,7 @@ test("communication uses authenticated GET and returns only the selected queue m
       assert.equal(options.redirect, "error");
       assert.equal(options.headers["x-admin-token"], "synthetic-token");
       return Response.json({
-        contacts: [{ name: "Testkund", waiting: true, waitingHours: 8.5, phone: "hidden" }],
+        contacts: [{ name: "Testkund", waiting: true, waitingHours: 8.5, phone: "hidden", events: [{ at: 100, channel: "sms", dir: "in", nova: true, text: "Hej" }, { at: 101, channel: "sms", internal: true, text: "hidden" }] }],
         counts: { waiting: 1 }, pending: [{ message: "Testmeddelande", sourceLabel: "Nova", to: "hidden" }],
         today: { nova: { smsOut: 0, callsIn: 0, chats: 0 } },
         sources: { elksCalls: "unreachable", elksSms: "ok" },
@@ -42,7 +42,7 @@ test("communication uses authenticated GET and returns only the selected queue m
   });
   assert.deepEqual(data, {
     status: "ok", partial: true, waiting: 1, pending: 1, queuedSms: [{ message: "Testmeddelande", source: "Nova" }], contacts: [{ name: "Testkund", hours: 8 }],
-    nova: { smsOut: 0, callsIn: 0, chats: 0 },
+    history: [{ customer: "Testkund", at: 100, channel: "sms", direction: "in", nova: true, outcome: "", message: "Hej" }], nova: { smsOut: 0, callsIn: 0, chats: 0 },
   });
   const shouldNotCall = () => assert.fail("Unexpected fetch");
   assert.deepEqual(await fetchCommunication({ env: {}, fetchImpl: shouldNotCall }), { status: "not_configured" });

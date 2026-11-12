@@ -71,7 +71,7 @@ test("admin: bekräfta annan tid skickar SMS + mejl med nya tiden och flyttar ka
   assert.equal(sms.length, 0);
 
   const res = await patch({ action: "reschedule_booking_request", preferredDate: `${day}T15:00`, operatorName: "Sebastian" });
-  assert.equal(res.status, 200);
+  assert.equal(res.status, 200, await res.clone().text());
   const out = await res.json();
   assert.equal(out.ok, true);
   assert.equal(out.case.preferredDate, `${day}T15:00`);

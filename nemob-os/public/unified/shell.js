@@ -33,6 +33,7 @@ const metrics = (entries) => '<div class="metrics">' + entries.map(([value, labe
   '<p><strong class="metric">' + escape(value) + '</strong>' + escape(label) + '</p>').join("") + '</div>';
 
 let mode = "focus";
+let caseQuery = "";
 let business = null;
 let planning = null;
 let request = null;
@@ -73,9 +74,35 @@ function automationCard() {
   [tool("Öppna Novas rapport", "/admin/nova-rapport/")]);
 }
 
+const searchText = (value) => String(value ?? "").toLocaleLowerCase("sv-SE").normalize("NFC");
+function caseSearchResults() {
+  const terms = searchText(caseQuery).trim().split(/\s+/).filter(Boolean);
+  const rows = (business?.cases?.cases || []).filter((row) => {
+    const content = searchText([row.customer, row.reference, row.title, status(row)].join(" "));
+    return terms.every((term) => content.includes(term));
+  });
+  return caseRows(rows, terms.length ? "Inga öppna ärenden matchar sökningen." : "Inga öppna ärenden.",
+    (row) => [row.customer, status(row)].filter(Boolean).join(" · "));
+}
+
+function historyCard() {
+  const channels = { sms: "SMS", call: "Samtal", chat: "Chatt" };
+  const date = new Intl.DateTimeFormat("sv-SE", { dateStyle: "short", timeStyle: "short", timeZone: "Europe/Stockholm" });
+  return card("Senaste kundkommunikationen", "communication", fromSource(business?.communication, (data) =>
+    data.history.length ? list(data.history, (row) => {
+      const heading = [channels[row.channel], row.nova && "Nova", row.customer].filter(Boolean).join(" · ");
+      const detail = [date.format(row.at), {in: "Inkommande", out: "Utgående"}[row.direction], row.outcome].filter(Boolean).join(" · ");
+      return "<strong>" + escape(heading) + "</strong><small>" + escape(detail) + "</small>" +
+        (row.message ? '<p class="message">' + escape(row.message) + "</p>" : "");
+    }) : paragraph(data.partial ? "Ingen historik från tillgängliga källor." : "Ingen kundkommunikation under perioden.")));
+}
+
 function casesCard(full = false) {
   return card("Öppna kundärenden", "cases", fromSource(business?.cases, (data) =>
-    metrics([[data.open, "Öppna ärenden"]]) + caseRows(full ? data.cases : data.cases.slice(0, 8), "Inga öppna ärenden.", status)),
+    metrics([[data.open, "Öppna ärenden"]]) + (full ? '<label for="case-query">Sök på kund, ärendenummer, fordon eller status</label>' +
+      '<input id="case-query" type="search" value="' + escape(caseQuery) + '">' +
+      '<div id="case-results" aria-live="polite">' + caseSearchResults() + '</div>' :
+      caseRows(data.cases.slice(0, 8), "Inga öppna ärenden.", status))),
   [admin(), workshop(), link("Sök i reparationskunskapen", "/knowledge.html")]);
 }
 
@@ -233,7 +260,7 @@ function render() {
     home: () => mode === "focus" ? focusCards() : [casesCard(), communicationCard(), bookingsCard(), financeCard(),
       automationCard(), card("Godkännanden", "planning", "", [link("Visa godkännanden", "#approvals")]), card("Planering", "planning", paragraph("Dina uppgifter och nästa steg i den privata arbetsytan."),
         [link("Öppna planering", "#planning")])],
-    communication: () => [communicationCard(true), automationCard()],
+    communication: () => [communicationCard(true), automationCard(), historyCard()],
     cases: () => [casesCard(true), card("Ärenden som kräver beslut", "planning", fromSource(business?.cases, (data) =>
       caseRows(data.decisions, "Inga ärenden flaggade för beslut.", (row) => row.reason)))],
     bookings: bookingCards,
@@ -273,6 +300,12 @@ async function load(force = false) {
   document.querySelector("#refresh").disabled = false;
   render();
 }
+
+document.querySelector("#content").addEventListener("input", (event) => {
+  if (event.target.id !== "case-query") return;
+  caseQuery = event.target.value;
+  document.querySelector("#case-results").innerHTML = caseSearchResults();
+});
 
 window.addEventListener("hashchange", () => {
   load();
