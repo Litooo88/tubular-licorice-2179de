@@ -11,11 +11,13 @@ import { isQuietHour, nextOptimalSendAt } from "./_shared/quiet-hours.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
 import { deleteCalendarEvent, patchCalendarEvent } from "./_shared/google-calendar.mjs";
 import { calendarWindowFor, isPendingRequest, requestConfirmedEmail, requestConfirmedSms, requestDeclinedSms, requestRescheduledSms, validateNewTime } from "./_shared/booking-request.mjs";
+import { commitCase, commitFailureResponse, etagHeaders, ifMatchSatisfied, readWithEtag } from "./_shared/case-store.mjs";
+import { hasJournalEntry, markCommitted, recordSendResult, reserveSend, sendJournaled } from "./_shared/send-journal.mjs";
 
-const json = (body, status = 200) =>
+const json = (body, status = 200, headers = {}) =>
   new Response(JSON.stringify(body), {
     status,
-    headers: { "Content-Type": "application/json; charset=utf-8" },
+    headers: { "Content-Type": "application/json; charset=utf-8", ...headers },
   });
 
 const clean = (value, max = 1200) => String(value || "").trim().slice(0, max);
@@ -317,6 +319,11 @@ const normalizeStoredCase = (item) => {
 };
 
 const loadCase = async (store, id) => normalizeStoredCase(await store.get(id, { type: "json" }));
+// Med etag, för villkorade skrivningar (PATCH) och ETag-headern (GET).
+const loadCaseVersioned = async (store, id) => {
+  const { item, etag } = await readWithEtag(store, id);
+  return { item: normalizeStoredCase(item), etag };
+};
 
 const normalizePriceRows = (rows = []) =>
   Array.isArray(rows)
@@ -381,8 +388,8 @@ export default async (request, context) => {
 
   if (request.method === "GET") {
     if (id) {
-      const item = await loadCase(store, id);
-      return item ? json(item) : json({ error: "Not found" }, 404);
+      const { item, etag } = await loadCaseVersioned(store, id);
+      return item ? json(item, 200, etagHeaders(etag)) : json({ error: "Not found" }, 404);
     }
 
     const { blobs } = await store.list();
@@ -494,15 +501,59 @@ export default async (request, context) => {
   if (request.method === "PATCH") {
     if (!id) return json({ error: "Missing case id" }, 400);
 
-    const current = await loadCase(store, id);
+    const { item: current, etag } = await loadCaseVersioned(store, id);
     if (!current) return json({ error: "Not found" }, 404);
+    // NEMOB OS 2.0: klienten kan skicka If-Match (ETag från GET) och får 412 om
+    // ärendet ändrats sedan den läste. Admin-sidorna skickar ingen header.
+    if (!ifMatchSatisfied(request, etag)) {
+      return json({ error: "Ärendet har ändrats sedan du läste det. Ladda om och försök igen.", code: "precondition_failed" }, 412);
+    }
 
     const body = await request.json().catch(() => null);
     if (!body || typeof body !== "object") return json({ error: "Ogiltig JSON i PATCH-body." }, 400);
     const now = new Date().toISOString();
     const operatorName = clean(body.operatorName, 80);
     const currentPayment = current.payment || {};
-    const currentContent = current.content || {};
+
+    // Versionerad skrivning (audit F02). `build(fresh)` är en ren funktion
+    // från ärendets FÄRSKA version till nästa; vid konflikt körs den igen på
+    // nyläst data. Sidoeffekter (SMS/mejl/kalender) sker före `save` och
+    // resultatet ligger i closuren, så inget skickas två gånger.
+    const save = (build) => commitCase(store, id, (fresh) => build(normalizeStoredCase(fresh)), { current, etag });
+
+    // Kund-SMS går via utskicksjournalen (_shared/send-journal.mjs): reservation
+    // före utskicket, leverantörens id efter, `committed` när ärendet sparats.
+    // Faller ärendeskrivningen återapplicerar comm-reconcile loggraden.
+    // Dubblettskydd: identisk text till samma ärende inom två minuter avvisas
+    // (409 duplicate_recent) om inte body.force === true. En klient-given
+    // body.idempotencyKey (NEMOB OS 2.0) gör anropet återspelningsbart utan
+    // nytt utskick.
+    const journaledSms = ({ action, to, message, apply }) => sendJournaled({
+      caseId: current.id, channel: "sms", to: normalizePhone(to), message, source: "workshop-cases", operator: operatorName, action, apply,
+      idempotencyKey: clean(body.idempotencyKey, 120), force: body.force === true,
+      send: () => postSms({ to, message, approved: true }), // manuell admin-åtgärd
+    });
+    const journalRejected = (sent) => {
+      // Återspelning (samma idempotencyKey) som redan loggats: inget skickas, inget skrivs.
+      if (sent.replayed && hasJournalEntry(current, sent.journalKey)) {
+        return json({ ok: sent.result?.status === "sent", result: sent.result, sms: sent.result, case: current, replayed: true, journalKey: sent.journalKey }, 200, etagHeaders(etag));
+      }
+      if (sent.status === "duplicate_recent") return json({ error: "Identiskt SMS skickades nyss till detta ärende (dubblettskydd). Skicka med force: true om det är avsiktligt.", code: "duplicate_recent", journalKey: sent.journalKey }, 409);
+      if (sent.status === "in_flight") return json({ error: "Samma utskick pågår redan.", code: "in_flight", journalKey: sent.journalKey }, 409);
+      if (sent.status === "unversioned") return json({ error: "Lagringen kan inte garantera versionskontroll just nu. Inget skickades.", code: "storage_unversioned", detail: sent.code || "" }, 503);
+      return null;
+    };
+    const commitJournal = async (sent, saved) => {
+      if (sent?.journalKey && !sent.replayed && saved?.ok) await markCommitted(sent.journalKey, { caseEtag: saved.etag || "" }).catch(() => {});
+    };
+    // Utskicket gick men ärendeskrivningen föll: svara 200 med resultatet och
+    // caseLogged: false (comm-reconcile lägger loggraden), så att operatören
+    // inte skickar igen. Ett 409/503 utan sms-resultat gjorde just det.
+    const sendWriteFailed = (sent, saved, payload) => {
+      if (!sent?.journalKey) return commitFailureResponse(saved, json);
+      console.warn("workshop-cases: ärendeskrivning föll efter utskick", { id, reason: saved.reason, journalKey: sent.journalKey });
+      return json({ ok: sent.result?.status === "sent", ...payload, case: current, caseLogged: false, caseError: saved.reason, journalKey: sent.journalKey }, 200, etagHeaders(etag));
+    };
 
     // Förfrågan (bokning utanför tis/tors 15-20): Sebastian bekräftar, väljer
     // en annan tid eller avböjer. Först här får kunden "tiden gäller".
@@ -532,7 +583,11 @@ export default async (request, context) => {
       const message = clean(body.message, 918) || (kind === "confirm" ? requestConfirmedSms(who)
         : kind === "reschedule" ? requestRescheduledSms(who)
         : requestDeclinedSms({ name: current.customer?.name, preferredDate: current.preferredDate, bookingUrl: `${SITE_URL}/book-online/` }));
-      const sms = await postSms({ to: current.customer?.phone, message, approved: true });
+      const smsType = `booking_request_${kind === "confirm" ? "confirmed" : kind === "reschedule" ? "rescheduled" : "declined"}`;
+      const smsSent = await journaledSms({ action: body.action, to: current.customer?.phone, message, apply: { log: "outboundMessages", type: smsType, event: `SMS till kund (${kind === "confirm" ? "tid bekräftad" : kind === "reschedule" ? "ny tid" : "tid avböjd"}) skickat.` } });
+      const rejected = journalRejected(smsSent);
+      if (rejected) return rejected;
+      const sms = smsSent.result;
       const customerEmail = clean(current.customer?.email, 240);
       let email = { status: "not_requested" };
       if (kind !== "decline" && customerEmail) {
@@ -555,7 +610,7 @@ export default async (request, context) => {
       const smsLine = `SMS till kund (${kind === "confirm" ? "tid bekräftad" : kind === "reschedule" ? "ny tid" : "tid avböjd"}) ${sms.status === "sent" ? "skickat" : `misslyckades: ${clean(sms.error || sms.status, 120)}`}.`;
       const emailLine = email.status === "sent" ? "Bekräftelsemejl skickat till kund."
         : email.status === "not_requested" ? "" : `Bekräftelsemejl ej skickat (${clean(email.error || email.status, 120)}).`;
-      const next = {
+      const saved = await save((current) => ({
         ...current,
         preferredDate: newDate,
         updatedAt: now,
@@ -569,8 +624,8 @@ export default async (request, context) => {
         },
         status: kind === "decline" ? "waiting_customer" : current.status,
         outboundMessages: [...(Array.isArray(current.outboundMessages) ? current.outboundMessages : []), {
-          at: sms.sentAt || now, type: `booking_request_${kind === "confirm" ? "confirmed" : kind === "reschedule" ? "rescheduled" : "declined"}`,
-          to: normalizePhone(current.customer?.phone), status: sms.status, provider: sms.provider || "46elks", message, caseId: current.id,
+          at: sms.sentAt || now, type: smsType,
+          to: normalizePhone(current.customer?.phone), status: sms.status, provider: sms.provider || "46elks", message, caseId: current.id, journalKey: smsSent.journalKey,
         }],
         notifications: {
           ...(current.notifications || {}),
@@ -590,15 +645,19 @@ export default async (request, context) => {
             : calendar.status === "failed" ? [{ at: now, event: `Kalendern kunde inte uppdateras: ${clean(calendar.error, 120)} - rätta manuellt.` }]
             : calendar.status === "skipped" && kind === "reschedule" ? [{ at: now, event: "Ingen kalenderhändelse fanns - lägg in den nya tiden manuellt." }] : []),
         ],
-      };
-      await store.setJSON(id, next);
-      return json({ ok: sms.status === "sent", sms, email, calendar, case: next });
+      }));
+      if (!saved.ok) return sendWriteFailed(smsSent, saved, { sms, email, calendar });
+      await commitJournal(smsSent, saved);
+      return json({ ok: sms.status === "sent", sms, email, calendar, case: saved.item, journalKey: smsSent.journalKey }, 200, etagHeaders(saved.etag));
     }
 
     if (body.action === "send_sms") {
       const message = clean(body.message, 918);
       if (!message) return json({ error: "SMS-text saknas." }, 400);
-      const result = await postSms({ to: current.customer?.phone, message, approved: true }); // manuell admin-åtgärd
+      const sent = await journaledSms({ action: "send_sms", to: current.customer?.phone, message, apply: { log: "outboundMessages", type: "manual_sms", statusFrom: ["new", "contacted"], statusTo: "waiting_customer", event: "Manuellt SMS skickat till kund." } });
+      const rejected = journalRejected(sent);
+      if (rejected) return rejected;
+      const result = sent.result;
       const entry = {
         at: result.sentAt || now,
         type: "manual_sms",
@@ -607,8 +666,9 @@ export default async (request, context) => {
         provider: result.provider || "46elks",
         message,
         caseId: current.id,
+        journalKey: sent.journalKey,
       };
-      const next = {
+      const saved = await save((current) => ({
         ...current,
         updatedAt: now,
         updatedBy: operatorName ? { name: operatorName, source: "admin", at: now } : current.updatedBy,
@@ -629,9 +689,10 @@ export default async (request, context) => {
           { at: result.sentAt || now, event: `Manuellt SMS ${result.status === "sent" ? "skickat" : "misslyckades"} till kund.` },
           ...(result.status === "sent" && ["new", "contacted"].includes(current.status) ? [{ at: result.sentAt || now, event: "Status ändrad till väntar kund efter SMS-svar." }] : []),
         ],
-      };
-      await store.setJSON(id, next);
-      return json({ ok: result.status === "sent", result, case: next });
+      }));
+      if (!saved.ok) return sendWriteFailed(sent, saved, { result });
+      await commitJournal(sent, saved);
+      return json({ ok: result.status === "sent", result, case: saved.item, journalKey: sent.journalKey }, 200, etagHeaders(saved.etag));
     }
 
     if (body.action === "send_status_link") {
@@ -646,7 +707,10 @@ export default async (request, context) => {
       const link = `${SITE_URL}/status/?service=${encodeURIComponent(serviceNumber)}`;
       const customerFirst = firstName(current.customer?.name);
       const smsText = `Hej ${customerFirst}! Viktigt besked från Nordic E-Mobility: ett tekniskt fel i vår telefonväxel har den senaste månaden stoppat många inkommande samtal. Har du försökt ringa utan att komma fram ber vi verkligen om ursäkt - felet låg hos tekniken och är nu åtgärdat.\nDitt ärende har servicenummer ${serviceNumber}. Följ reparationen live, steg för steg: ${link}\n/Nordic E-Mobility`;
-      const smsResult = await postSms({ to: current.customer?.phone, message: smsText, approved: true }); // manuell admin-åtgärd
+      const smsSent = await journaledSms({ action: "send_status_link", to: current.customer?.phone, message: smsText, apply: { log: "outboundMessages", type: "status_link_sms", event: "Servicelänk skickad till kund via SMS." } });
+      const rejected = journalRejected(smsSent);
+      if (rejected) return rejected;
+      const smsResult = smsSent.result;
       const emailResult = await resendEmail({
         to: current.customer?.email ? [current.customer.email] : [],
         subject: `Vi ber om ursäkt - och ger dig full koll. Servicenummer: ${serviceNumber}`,
@@ -666,7 +730,7 @@ export default async (request, context) => {
         idempotencyKey: `${current.id}-status-link`,
       });
       const anySent = smsResult.status === "sent" || emailResult.status === "sent";
-      const next = {
+      const saved = await save((current) => ({
         ...current,
         serviceNumber,
         updatedAt: now,
@@ -674,13 +738,17 @@ export default async (request, context) => {
           ...(current.notifications || {}),
           statusLink: { status: anySent ? "sent" : "failed", sms: smsResult.status, email: emailResult.status, at: now },
         },
+        outboundMessages: [...(Array.isArray(current.outboundMessages) ? current.outboundMessages : []), {
+          at: smsResult.sentAt || now, type: "status_link_sms", to: normalizePhone(current.customer?.phone), status: smsResult.status, provider: smsResult.provider || "46elks", message: smsText, caseId: current.id, journalKey: smsSent.journalKey,
+        }],
         timeline: [
           ...(Array.isArray(current.timeline) ? current.timeline : []),
           { at: now, event: `Servicelänk skickad till kund (SMS: ${smsResult.status}, mail: ${emailResult.status}).` },
         ],
-      };
-      await store.setJSON(id, next);
-      return json({ ok: anySent, sms: smsResult, email: emailResult, case: next });
+      }));
+      if (!saved.ok) return sendWriteFailed(smsSent, saved, { sms: smsResult, email: emailResult });
+      await commitJournal(smsSent, saved);
+      return json({ ok: anySent, sms: smsResult, email: emailResult, case: saved.item, journalKey: smsSent.journalKey }, 200, etagHeaders(saved.etag));
     }
 
     if (body.action === "send_quote_sms") {
@@ -690,7 +758,10 @@ export default async (request, context) => {
       if (!amount || amount <= 0) return json({ error: "Prisf\u00f6rslag m\u00e5ste ha belopp." }, 400);
       if (!summary) return json({ error: "\u00c5tg\u00e4rd/sammanfattning saknas." }, 400);
       const message = quoteSmsText({ caseItem: current, amount, summary, contactOwner });
-      const result = await postSms({ to: current.customer?.phone, message, approved: true }); // manuell admin-åtgärd
+      const sent = await journaledSms({ action: "send_quote_sms", to: current.customer?.phone, message, apply: { log: "outboundMessages", type: "quote_sms", statusFrom: ["new"], statusTo: "waiting_customer", event: `Prisförslag skickat via SMS: ${Math.round(amount)} kr.` } });
+      const rejected = journalRejected(sent);
+      if (rejected) return rejected;
+      const result = sent.result;
       const quote = {
         ...(current.quote || {}),
         status: result.status === "sent" ? "sent" : "failed",
@@ -710,21 +781,23 @@ export default async (request, context) => {
         message,
         caseId: current.id,
         quote: { amount, summary, contactOwner },
+        journalKey: sent.journalKey,
       };
-      const next = {
+      const saved = await save((current) => ({
         ...current,
         updatedAt: now,
         updatedBy: operatorName ? { name: operatorName, source: "admin", at: now } : current.updatedBy,
         status: current.status === "new" ? "waiting_customer" : current.status,
-        quote,
+        quote: { ...(current.quote || {}), ...quote },
         outboundMessages: [...(Array.isArray(current.outboundMessages) ? current.outboundMessages : []), entry],
         timeline: [
           ...(Array.isArray(current.timeline) ? current.timeline : []),
           { at: result.sentAt || now, event: `Prisf\u00f6rslag ${result.status === "sent" ? "skickat" : "misslyckades"} via SMS: ${Math.round(amount)} kr.` },
         ],
-      };
-      await store.setJSON(id, next);
-      return json({ ok: result.status === "sent", result, case: next });
+      }));
+      if (!saved.ok) return sendWriteFailed(sent, saved, { result });
+      await commitJournal(sent, saved);
+      return json({ ok: result.status === "sent", result, case: saved.item, journalKey: sent.journalKey }, 200, etagHeaders(saved.etag));
     }
 
     if (body.action === "send_payment_instruction") {
@@ -732,7 +805,11 @@ export default async (request, context) => {
       if (!amount || amount <= 0) return json({ error: "Belopp saknas for betalningsinstruktion." }, 400);
       const priceRows = normalizePriceRows(body.priceRows);
       const message = clean(body.message, 918) || paymentSmsText({ caseItem: current, amount });
-      const result = await postSms({ to: current.customer?.phone, message, approved: true }); // manuell admin-åtgärd
+      const sent = await journaledSms({ action: "send_payment_instruction", to: current.customer?.phone, message, apply: { log: "outboundMessages", type: "payment_instruction_sms", event: `Betalningsinstruktion skickad via SMS: ${Math.round(amount)} kr.` } });
+      const rejected = journalRejected(sent);
+      if (rejected) return rejected;
+      const result = sent.result;
+      const saved = await save((current) => {
       const nextCompletion = {
         ...(current.completion || {}),
         totalCost: amount,
@@ -759,6 +836,7 @@ export default async (request, context) => {
         provider: result.provider || "46elks",
         message,
         caseId: current.id,
+        journalKey: sent.journalKey,
       };
       const next = {
         ...current,
@@ -773,40 +851,55 @@ export default async (request, context) => {
           { at: result.sentAt || now, event: `Betalningsinstruktion ${result.status === "sent" ? "skickad" : "misslyckades"} via SMS: ${Math.round(amount)} kr.` },
         ],
       };
-      await store.setJSON(id, next);
-      return json({ ok: result.status === "sent", result, case: next });
+      return next;
+      });
+      if (!saved.ok) return sendWriteFailed(sent, saved, { result });
+      await commitJournal(sent, saved);
+      return json({ ok: result.status === "sent", result, case: saved.item, journalKey: sent.journalKey }, 200, etagHeaders(saved.etag));
     }
 
     if (body.action === "submit_workshop_log") {
-      const workshop = normalizeWorkshopState(current.workshop || {}, body.workshop || {});
-      const next = {
-        ...current,
-        updatedAt: now,
-        workshop: {
-          ...workshop,
-          submittedToSebastianAt: now,
-          needsSebastianReview: true,
-          reviewRequestedAt: workshop.reviewRequestedAt || now,
-        },
+      const withWorkshop = (current) => {
+        const workshop = normalizeWorkshopState(current.workshop || {}, body.workshop || {});
+        return {
+          ...current,
+          updatedAt: now,
+          workshop: {
+            ...workshop,
+            submittedToSebastianAt: now,
+            needsSebastianReview: true,
+            reviewRequestedAt: workshop.reviewRequestedAt || now,
+          },
+        };
       };
-      const result = await postSms({ to: env("SEBASTIAN_SMS_TO") || STAFF.sebastian.phone, message: workshopReviewSmsText(next) });
-      next.notifications = {
-        ...(current.notifications || {}),
-        workshopLogSms: {
-          status: result.status,
-          to: result.to,
-          provider: result.provider || "46elks",
-          sentAt: result.sentAt || now,
-          error: result.error || "",
-        },
-      };
-      next.timeline = [
-        ...(Array.isArray(current.timeline) ? current.timeline : []),
-        { at: result.sentAt || now, event: `Workshoplogg ${result.status === "sent" ? "skickad" : "kunde inte skickas"} till Sebastian via SMS.` },
-      ];
-      await store.setJSON(id, next);
-      return json({ ok: result.status === "sent", result, case: next });
+      const result = await postSms({ to: env("SEBASTIAN_SMS_TO") || STAFF.sebastian.phone, message: workshopReviewSmsText(withWorkshop(current)) });
+      const saved = await save((current) => {
+        const next = withWorkshop(current);
+        next.notifications = {
+          ...(current.notifications || {}),
+          workshopLogSms: {
+            status: result.status,
+            to: result.to,
+            provider: result.provider || "46elks",
+            sentAt: result.sentAt || now,
+            error: result.error || "",
+          },
+        };
+        next.timeline = [
+          ...(Array.isArray(current.timeline) ? current.timeline : []),
+          { at: result.sentAt || now, event: `Workshoplogg ${result.status === "sent" ? "skickad" : "kunde inte skickas"} till Sebastian via SMS.` },
+        ];
+        return next;
+      });
+      if (!saved.ok) return commitFailureResponse(saved, json);
+      return json({ ok: result.status === "sent", result, case: saved.item }, 200, etagHeaders(saved.etag));
     }
+
+    // Generell fältuppdatering. Ren funktion från färsk version till nästa —
+    // körs igen vid skrivkonflikt. Tackmailet (sidoeffekt) hanteras efteråt.
+    const applyGenericPatch = (current) => {
+    const currentPayment = current.payment || {};
+    const currentContent = current.content || {};
 
     const nextCompletion = {
       ...(current.completion || {}),
@@ -1048,6 +1141,10 @@ export default async (request, context) => {
     }
 
     next.timeline = timeline;
+    return next;
+    };
+
+    const next = applyGenericPatch(current);
 
     // Endast vid ÖVERGÅNGEN till done/paid — tidigare skickade varje PATCH på
     // ett redan avslutat/betalt ärende (utan skickat tackmail) om utskicket,
@@ -1056,15 +1153,20 @@ export default async (request, context) => {
     const becamePaid = next.payment?.status === "paid" && currentPayment.status !== "paid";
     const thankYouTriggered = (becameDone || becamePaid) &&
       !["sent", "suppressed"].includes(next.notifications?.thankYou?.status);
+    // Sidoeffekten (mejl/SMS/outbox) sker EN gång här; `thankYouPatch` lägger
+    // bara resultatet på ärendet och kan köras om på en färsk version.
+    let thankYouPatch = (item) => item;
+    let thankYouJournalKey = "";
+    let thankYouSkipped = false;
     if (thankYouTriggered && body.suppressThankYou === true) {
       // Tyst stängning (bekräftelserutan i admin / städning av gamla ärenden).
       // "suppressed" är avsiktligt permanent: annars skulle nästa orelaterade
       // PATCH på ärendet trigga utskicket i efterhand.
-      next.notifications = {
-        ...(next.notifications || {}),
-        thankYou: { status: "suppressed", at: now },
+      thankYouPatch = (item) => {
+        item.notifications = { ...(item.notifications || {}), thankYou: { status: "suppressed", at: now } };
+        item.timeline.push({ at: now, event: "Avslutad/betald utan tackmail (manuellt val i admin)." });
+        return item;
       };
-      next.timeline.push({ at: now, event: "Avslutad/betald utan tackmail (manuellt val i admin)." });
     } else if (thankYouTriggered && isQuietHour()) {
       // Tysta timmar (21-08 svensk tid): nattstängda ärenden ska inte skicka
       // recensionsutskick kl 03. Köa i outbox-storen — den schemalagda
@@ -1073,37 +1175,59 @@ export default async (request, context) => {
       await getStore({ name: "outbox", consistency: "strong" })
         .setJSON(`${next.id}-thank-you`, { type: "thank_you", caseId: next.id, sendAfter, queuedAt: now, thankYouVariant: thankYouVariantFor(next, clean(body.thankYouVariant, 20)) })
         .catch(() => {});
-      next.notifications = {
-        ...(next.notifications || {}),
-        thankYou: { status: "queued", sendAfter, queuedAt: now },
+      thankYouPatch = (item) => {
+        item.notifications = { ...(item.notifications || {}), thankYou: { status: "queued", sendAfter, queuedAt: now } };
+        item.timeline.push({ at: now, event: `Tackmail köat (nattstängning) — skickas ${new Date(sendAfter).toLocaleString("sv-SE", { timeZone: "Europe/Stockholm", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}.` });
+        return item;
       };
-      next.timeline.push({ at: now, event: `Tackmail köat (nattstängning) — skickas ${new Date(sendAfter).toLocaleString("sv-SE", { timeZone: "Europe/Stockholm", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit" })}.` });
     } else if (thankYouTriggered) {
       // A provider failure (Resend timeout/network) must not lose the whole
       // PATCH — the status/payment change still has to be persisted below.
+      //
+      // Reservation i utskicksjournalen (idempotencyKey = ärende-tackmail) så
+      // att två samtidiga "done"-PATCH ger ETT tackmail/recensions-SMS:
+      // förloraren får in_flight/already_sent och rör inte tackutskicket.
+      const thankYouReservation = await reserveSend({ caseId: current.id, channel: "email", to: clean(current.customer?.email || current.customer?.phone, 240), message: "tackmail + recensions-SMS", source: "workshop-cases", operator: operatorName, action: "thank_you", idempotencyKey: `${current.id}-thank-you` }).catch(() => ({ ok: false, reason: "unversioned" }));
       try {
+        if (!thankYouReservation.ok) throw Object.assign(new Error(`tackutskick ${thankYouReservation.reason}`), { skipped: true });
         const thankYou = await sendThankYou(next, clean(body.thankYouVariant, 20));
         const outcome = thankYouOutcome(thankYou);
-        next.coupon = thankYou.coupon;
-        next.notifications = {
-          ...(next.notifications || {}),
-          thankYou: { status: thankYou.email.status, ...thankYou, delivered: outcome.delivered },
+        await recordSendResult(thankYouReservation.key, { status: outcome.delivered ? "sent" : "failed", id: thankYou.email?.id || thankYou.reviewSms?.id || "", error: outcome.delivered ? "" : outcome.event }).catch(() => {});
+        thankYouJournalKey = thankYouReservation.key;
+        thankYouPatch = (item) => {
+          item.coupon = thankYou.coupon;
+          item.notifications = { ...(item.notifications || {}), thankYou: { status: thankYou.email.status, ...thankYou, delivered: outcome.delivered, journalKey: thankYouReservation.key } };
+          item.timeline.push({ at: thankYou.sentAt || now, event: outcome.event });
+          return item;
         };
-        next.timeline.push({ at: thankYou.sentAt || now, event: outcome.event });
       } catch (error) {
-        next.notifications = {
-          ...(next.notifications || {}),
-          thankYou: { status: "failed", error: clean(error?.message, 180) },
+        if (error?.skipped) {
+          // Någon annan hann skicka (eller lagringen kunde inte reservera): rör inte tackutskicket.
+          console.warn("workshop-cases: tackutskick hoppas över", { id, reason: thankYouReservation.reason });
+          thankYouPatch = (item) => item;
+          thankYouSkipped = true;
+        } else {
+        const message = clean(error?.message, 180);
+        if (thankYouReservation.ok) await recordSendResult(thankYouReservation.key, { status: "failed", error: message }).catch(() => {});
+        thankYouPatch = (item) => {
+          item.notifications = { ...(item.notifications || {}), thankYou: { status: "failed", error: message } };
+          item.timeline.push({ at: now, event: "Tackmail kunde inte skickas (provider-fel). Arendet sparades anda." });
+          return item;
         };
-        next.timeline.push({ at: now, event: "Tackmail kunde inte skickas (provider-fel). Arendet sparades anda." });
+        }
       }
     }
 
-    await store.setJSON(id, next);
+    // Tackresultatet läggs bara på om ärendets FÄRSKA version inte redan har
+    // ett (en parallell PATCH kan ha hunnit före): aldrig "sent" överskrivet.
+    const guardedThankYou = (item) => (["sent", "queued", "suppressed"].includes(item.notifications?.thankYou?.status) ? item : thankYouPatch(item));
+    const saved = await save((fresh) => guardedThankYou(applyGenericPatch(fresh)));
+    if (!saved.ok) return commitFailureResponse(saved, json);
+    if (thankYouJournalKey) await markCommitted(thankYouJournalKey, { caseEtag: saved.etag || "" }).catch(() => {});
     // Repair Intelligence: avslut med data => en rad i repair-index (idempotent,
     // fel här får aldrig fälla PATCH:en).
-    if (shouldIndex(next)) await upsertRepairIndex(next).catch(() => {});
-    return json({ ok: true, case: next });
+    if (shouldIndex(saved.item)) await upsertRepairIndex(saved.item).catch(() => {});
+    return json({ ok: true, case: saved.item, conflictRetries: saved.attempts - 1, ...(thankYouSkipped ? { thankYouSkipped: true } : {}) }, 200, etagHeaders(saved.etag));
   }
 
   if (request.method === "DELETE") {

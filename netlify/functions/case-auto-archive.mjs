@@ -7,6 +7,7 @@
 
 import { getStore } from "@netlify/blobs";
 import { AUTO_ARCHIVE_DAYS, archivedCopy, keepReason } from "./_shared/auto-archive.mjs";
+import { commitCase } from "./_shared/case-store.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json; charset=utf-8" } });
@@ -37,7 +38,13 @@ export const runAutoArchive = async ({ apply, now = Date.now() }) => {
       continue;
     }
     if (archived.length >= MAX_PER_RUN) break;
-    if (apply) await store.setJSON(blob.key, archivedCopy(item, now));
+    if (apply) {
+      // Versionerad skrivning: har ärendet hunnit få kontakt/status sedan
+      // listningen (keepReason på FÄRSK version) arkiveras det inte.
+      const saved = await commitCase(store, blob.key, (fresh) =>
+        fresh.status === "new" && keepReason(fresh, now) === null ? archivedCopy(fresh, now) : null);
+      if (!saved.ok) { kept[saved.reason === "aborted" ? "changed_meanwhile" : saved.reason] = (kept[saved.reason === "aborted" ? "changed_meanwhile" : saved.reason] || 0) + 1; continue; }
+    }
     archived.push(sammanfattning(item));
   }
   return { ok: true, apply: Boolean(apply), days: AUTO_ARCHIVE_DAYS, scannedNew: scanned, archived: archived.length, kept, items: archived };

@@ -6,6 +6,7 @@ import {
   serviceNumberForCase,
 } from "./_shared/service-number.mjs";
 import { loggedSms } from "./_shared/comm-log.mjs";
+import { commitCase } from "./_shared/case-store.mjs";
 
 // Publik statusportal för kunder. Ett separat slumpat servicenummer fungerar
 // som kapabilitetsnyckel och delas endast med kunden via bekräftelse-SMS/mail.
@@ -179,12 +180,14 @@ export default async (request, context) => {
       to: env("SEBASTIAN_SMS_TO") || env("WORKSHOP_SMS_TO"),
       message: `Statusförfrågan: ${firstNameOf(item) || "kund"} (${clean(item.vehicle?.model, 80) || "okänd modell"}), ärende ${id.replace(/^case_/, "").slice(0, 18).toUpperCase()} — senast uppdaterad för ${daysSince} dagar sedan. Öppna: https://www.nordicemobility.se/admin/?case=${encodeURIComponent(id)}&tab=overview`,
     });
-    const next = {
-      ...item,
+    // Versionerad skrivning: läser om ärendet vid konflikt så att en samtidig
+    // admin-ändring inte skrivs över av portalens tidsstämpel.
+    const saved = await commitCase(store, id, (fresh) => ({
+      ...fresh,
       statusUpdateRequestedAt: now,
-      timeline: [...(Array.isArray(item.timeline) ? item.timeline : []), { at: now, event: "Kunden begärde statusuppdatering via statusportalen." }],
-    };
-    await store.setJSON(id, next);
+      timeline: [...(Array.isArray(fresh.timeline) ? fresh.timeline : []), { at: now, event: "Kunden begärde statusuppdatering via statusportalen." }],
+    }));
+    if (!saved.ok) console.warn("case-status request_update write failed", { id, reason: saved.reason });
     if (sms.status !== "sent") console.warn("case-status request_update sms not sent", { id, smsStatus: sms.status });
     return json({ ok: true, message: "Tack! Din förfrågan är skickad — vi återkommer så snart vi kan." });
   }

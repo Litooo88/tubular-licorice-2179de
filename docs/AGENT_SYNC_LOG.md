@@ -32,6 +32,60 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-11 — Claude Code — KLAR (NEMOB OS 2.0 backend: PR #170 godkänd 2026-11-12 och mergad till main)
+
+- **Branch:** `feat/nemob-os-2-backend` i egen worktree (scratchpad), bas `origin/main` edf4f10.
+  Ingen branchväxling i den delade mappen. Codex ocommittade loggrad i den delade mappen rörs inte.
+- **Område (mitt):** `netlify/functions/**` (nya `_shared/case-store.mjs`, `sms-inbound.mjs`,
+  `workshop-cases.mjs` m.fl. skrivare mot `workshop-cases`), `tests/**`, `docs/NEMOB_OS_2_API_CONTRACTS.md`,
+  `netlify/functions/package.json` (blobs-version). Inga publika routes tas bort.
+- **Rör inte (Codex):** `nemob-os/server.mjs`, `nemob-os/lib/admin-cases.mjs`, `nemob-os/lib/unified.mjs`,
+  `nemob-os/public/index.html`, `nemob-os/public/unified/`, `nemob-os/test/unified.test.mjs`.
+  Behöver Codex ändra något för en integration beskrivs kontraktet i docs-filen i stället.
+- **Gör:** 1) kontraktsdokument för systemöversikt, inkorg, ärenden, bokningar, Nova, godkännandekö,
+  uppgifter, hälsa; 2) versionerade blob-skrivningar (etag/onlyIfMatch) med omförsök + tester;
+  3) inkommande SMS → ärendematchning + dedup på 46elks-id; 4) säkerhetsgenomgång; 5) PR, ingen merge.
+- **Produktion:** inga ändringar, inga kundutskick. Alla externa anrop mockas i tester.
+- **Resultat:** `docs/NEMOB_OS_2_API_CONTRACTS.md` (alla åtta områden, befintligt vs saknat, Codex-
+  integrationspunkter, e-post-utredning, säkerhetsläge). Ny `_shared/case-store.mjs` (etag +
+  onlyIfMatch, omförsök på färsk data) används av workshop-cases (alla PATCH-grenar), case-sms,
+  case-call, case-media, case-status, sms-draft-inbox, outbox-flush, case-auto-archive. GET /api/cases/:id
+  ger ETag, PATCH tar If-Match (412). `sms-inbound`: dedup på 46elks-id (store `sms-inbound-seen`) +
+  ärendematchning (`_shared/case-match.mjs`: bara entydigt öppet ärende kopplas). Tidssäker
+  hemlighetsjämförelse i voice-agent/nova-outbound-hook. `netlify/functions/package.json` pinnad till
+  @netlify/blobs 10.7.13 (låg på ^8.1.0 = inga villkorade skrivningar i funktionspaketet!).
+  storage-health POST rapporterar `conditionalWrites`. Nya tester: `npm run test:integrity` (17 st) i grinden.
+- **Tester:** build grön (145 tester), verify:checkout-products OK, callflow check OK. `test:comm` 6/7:
+  samma assertion som på orörd main (sms-log-nycklar med kolon fungerar inte på Windows-filsystem),
+  ej orsakat här, ej i grinden.
+- **PR:** #170 (`feat/nemob-os-2-backend` → main).
+- **Runda 2 (ChatGPT-granskning, Codex otillgänglig):** `case-store` är nu fail-closed: saknat etag, SDK utan
+  `{ modified }` eller backend som ignorerar villkor (isolerad probe mot `case-store-probe` en gång per process)
+  stoppar skrivningen med 503 `storage_unversioned`; nödventil `CASE_STORE_ALLOW_UNVERSIONED=1`. Ny
+  `_shared/send-journal.mjs` (store `send-journal`): reservation före utskick, leverantörs-id efter,
+  `committed` när ärendet sparats, dubblettskydd 2 min, `idempotencyKey`; ny schemalagd `comm-reconcile.mjs`
+  återapplicerar förlorade loggrader och kör klart avbrutna inkommande SMS. `claimJson` reserverar köposter
+  (outbox, sms-pending, sms-drafts). `sms-inbound` har beständig behandlingsstatus per 46elks-id med lease,
+  steg och omkörning. `storage-health` POST verifierar onlyIfNew OCH onlyIfMatch var för sig.
+  SDK-fynd: 10.7.13 räknar alla svar utom 412 som lyckad villkorad skrivning (dokumenterat i docs §3).
+- **Oberoende granskning (subagent) av hela diffen gav 12 fynd, alla åtgärdade:** fast idempotencyKey
+  låste utkast efter misslyckat utskick (failed/not_sent/unknown får nu försöka igen); tackmail/recensions-SMS
+  utanför journalen (reserveras nu, guard mot redan satt tackresultat); 409/503 dolde att SMS:et gått
+  (nu 200 + caseLogged:false); inbound-status som inte kunde sparas räknades som gjord (persist kastar →
+  failed/500); outbox thank_you ignorerade skrivfel (behåller köposten med resultatet, skickar inte om);
+  återspelning dubblerade loggrad; död assertion; case-sms force; claim-släpp vid in_flight; gallring/larm
+  för uttömda inbound-poster; extra försök att spara utskicksresultat; commitJson mappar nätfel till
+  `storage_error` (503) i stället för ofångat undantag.
+- **Tester runda 2:** build grön (174 tester, varav 46 i `test:integrity`: case-store 14, case-match 6,
+  cases-concurrency 3, send-journal 10, inbound-recovery 11, storage-health 1, outbox-flush 1),
+  verify:checkout-products OK, callflow check OK. `test:comm` 6/7 oförändrat – orsak och fix dokumenterad
+  i docs §12 (kolon i sms-log-nycklar + URL-kodad list i lokala servern), hålls utanför denna PR.
+- **Merge:** Sebastian godkände 2026-11-12; mergad via GitHub (merge-commit). Lokal main i den delade mappen
+  kunde inte snabbspolas av Claude eftersom Codex har ocommitterade rader i denna fil där – gör
+  `git pull --ff-only` när de är committade (behåll båda posterna vid konflikt).
+- **Kvar:** `POST storage-health` direkt efter deploy (`conditionalWrites.ok`),
+  bygga /api/approvals, /api/inbox, /api/overview enligt docs-filen; e-post-webhook (Resend Receiving).
+
 ### 2026-11-11 — Claude Code — KLAR (Git-återställning fas 2: PR #169 mergad, lokal main i synk)
 
 - **Branch:** `fix/godkannandekon-synlig` (de fyra lokala commits som saknas på origin/main:

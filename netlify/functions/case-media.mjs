@@ -1,5 +1,6 @@
 import { timingSafeEqual } from "node:crypto";
 import { getStore } from "@netlify/blobs";
+import { commitCase, commitFailureResponse } from "./_shared/case-store.mjs";
 
 const json = (body, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -138,16 +139,17 @@ export default async (request, context) => {
 
     if (!created.length) return json({ error: "Inga giltiga bildfiler hittades." }, 400);
 
-    const next = {
-      ...item,
+    // Versionerad skrivning: bildfilerna ligger redan i case-media, bara
+    // ärendets lista byggs om på färsk version vid konflikt.
+    const saved = await commitCase(cases, caseId, (fresh) => ({
+      ...fresh,
       updatedAt: uploadedAt,
-      media: [...created, ...(Array.isArray(item.media) ? item.media : [])],
-      notes: [...(item.notes || []), { at: uploadedAt, text: `Laddade upp ${created.length} bild(er) (${category}).` }],
-      timeline: [...(item.timeline || []), { at: uploadedAt, event: `Bilder uppladdade: ${created.length} st (${category})` }],
-    };
-
-    await cases.setJSON(caseId, next);
-    return json({ ok: true, media: created, case: next });
+      media: [...created, ...(Array.isArray(fresh.media) ? fresh.media : [])],
+      notes: [...(fresh.notes || []), { at: uploadedAt, text: `Laddade upp ${created.length} bild(er) (${category}).` }],
+      timeline: [...(fresh.timeline || []), { at: uploadedAt, event: `Bilder uppladdade: ${created.length} st (${category})` }],
+    }));
+    if (!saved.ok) return commitFailureResponse(saved, json);
+    return json({ ok: true, media: created, case: saved.item });
   }
 
   if (request.method === "DELETE" && mediaId) {
@@ -157,15 +159,15 @@ export default async (request, context) => {
 
     await MEDIA_STORE().delete(`${caseId}/${mediaId}`);
     const updatedAt = new Date().toISOString();
-    const next = {
-      ...item,
+    const saved = await commitCase(cases, caseId, (fresh) => ({
+      ...fresh,
       updatedAt,
-      media: currentMedia.filter((entry) => entry.id !== mediaId),
-      notes: [...(item.notes || []), { at: updatedAt, text: `Tog bort bild ${target.name || mediaId}.` }],
-      timeline: [...(item.timeline || []), { at: updatedAt, event: `Bild borttagen: ${target.name || mediaId}` }],
-    };
-    await cases.setJSON(caseId, next);
-    return json({ ok: true, case: next });
+      media: (Array.isArray(fresh.media) ? fresh.media : []).filter((entry) => entry.id !== mediaId),
+      notes: [...(fresh.notes || []), { at: updatedAt, text: `Tog bort bild ${target.name || mediaId}.` }],
+      timeline: [...(fresh.timeline || []), { at: updatedAt, event: `Bild borttagen: ${target.name || mediaId}` }],
+    }));
+    if (!saved.ok) return commitFailureResponse(saved, json);
+    return json({ ok: true, case: saved.item });
   }
 
   return json({ error: "Method not allowed" }, 405);
