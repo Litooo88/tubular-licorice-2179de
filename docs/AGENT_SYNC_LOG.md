@@ -32,6 +32,15 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — PÅGÅR (NEMOB AI Gateway: MCP/REST för AI-assistenter, läsverktyg + presence)
+
+- **Branch:** `feat/ai-gateway` i egen worktree (scratchpad), bas `origin/main` 3a22905. Delade mappen rörs inte.
+- **Område:** ny `netlify/functions/ai-gateway.mjs` (+ `_shared/ai-*.mjs`), tester `tests/ai-gateway*.test.mjs`,
+  `docs/NEMOB_AI_GATEWAY.md`. Egen klientauth med scopes (aldrig ADMIN_TOKEN utåt), revisionslogg, rate limit.
+  Verktyg: search_calls, search_customer, get_business_overview, get_presence, set_presence (routing i dry-run,
+  ingen verklig omkoppling). Rör inte `nemob-os/**`. Inga kundutskick, ingen deploy.
+
+
 ### 2026-11-12 — Claude Code — KLAR (P0 hotfix: Netlify-byggen, PR #172 godkänd av Sebastian och mergad)
 
 - **Branch:** `hotfix/netlify-build` i egen worktree (scratchpad), bas `origin/main` 507e9f4. Delade mappen rörs inte.
