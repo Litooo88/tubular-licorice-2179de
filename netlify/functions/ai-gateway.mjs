@@ -18,6 +18,8 @@
 import { authenticate, hasScope, issueToken, loadClients, SCOPES, verifyApiKey } from "./_shared/ai-auth.mjs";
 import { checkRateLimit, writeAudit } from "./_shared/ai-audit.mjs";
 import { TOOLS, toolByName, validateArgs } from "./_shared/ai-tools.mjs";
+import { authorizationServerMetadata, consentPage, exchangeCode, grantConsent, protectedResourceMetadata, refreshTokens, registerClient, validateAuthorizeRequest } from "./_shared/ai-oauth.mjs";
+import { hashIp } from "./_shared/ai-audit.mjs";
 
 const SITE_URL = () => {
   try { return (globalThis.Netlify?.env?.get?.("SITE_URL") || process.env.SITE_URL || "https://www.nordicemobility.se").replace(/\/$/, ""); } catch { return "https://www.nordicemobility.se"; }
@@ -40,6 +42,7 @@ export const runTool = async ({ name, args, principal, request, transport }) => 
   if (!tool) { await audit({ ok: false, status: 404, error: "unknown_tool" }); return { status: 404, body: { error: "unknown_tool", description: `Okänt verktyg: ${clean(name, 60)}` } }; }
   if (!hasScope(principal, tool.scope)) { await audit({ ok: false, status: 403, error: "forbidden_scope" }); return { status: 403, body: { error: "forbidden_scope", description: `Verktyget kräver scope ${tool.scope}.`, required: tool.scope } }; }
   const rate = await checkRateLimit({ client: principal.client.id, limit: principal.client.rpm });
+  if (rate.unavailable) { await audit({ ok: false, status: 503, error: "rate_limit_unavailable" }); return { status: 503, body: { error: "rate_limit_unavailable", description: "Anropsräknaren kan inte nås. Anropet nekas tills den fungerar." }, headers: { "Retry-After": "60" } }; }
   if (!rate.allowed) { await audit({ ok: false, status: 429, error: "rate_limited" }); return { status: 429, body: { error: "rate_limited", description: `Max ${rate.limit} anrop per minut.`, resetAt: rate.resetAt }, headers: { "Retry-After": "60" } }; }
   const errors = validateArgs(tool.inputSchema, args);
   if (errors.length) { await audit({ ok: false, status: 400, error: errors.join("; ") }); return { status: 400, body: { error: "invalid_arguments", description: errors.join("; ") } }; }
@@ -111,10 +114,56 @@ export default async (request) => {
   const path = url.pathname.replace(/\/+$/, "");
   const sub = path.replace(/^\/api\/ai/, "") || "/";
 
+  // OAuth-metadata på rotnivå (RFC 8414 / RFC 9728) – det MCP-klienter läser först.
+  if (request.method === "GET" && path === "/.well-known/oauth-authorization-server") return json(authorizationServerMetadata(SITE_URL()));
+  if (request.method === "GET" && path === "/.well-known/oauth-protected-resource") return json(protectedResourceMetadata(SITE_URL()));
+
+  // Dynamisk klientregistrering (RFC 7591). Publik klient, PKCE krävs, inga scopes förrän ägaren samtycker.
+  if (sub === "/oauth/register") {
+    if (request.method !== "POST") return json({ error: "invalid_request" }, 405);
+    const rate = await checkRateLimit({ client: `register_${hashIp(clientIp(request))}`, limit: 10 });
+    if (!rate.allowed) return json({ error: "rate_limited" }, 429, { "Retry-After": "60" });
+    let body = {};
+    try { body = await request.json(); } catch { return json({ error: "invalid_client_metadata" }, 400); }
+    const result = await registerClient(body);
+    if (!result.ok) return json({ error: result.error, error_description: result.description }, 400);
+    await writeAudit({ client: result.client.client_id, via: "dcr", tool: "oauth/register", args: { client_name: result.client.client_name }, ok: true, status: 201, transport: "oauth", ip: clientIp(request) });
+    return json(result.client, 201);
+  }
+
+  // Samtyckessida (ägaren godkänner klienten och väljer scopes).
+  if (sub === "/oauth/authorize") {
+    const html = (markup, status = 200) => new Response(markup, { status, headers: { "Content-Type": "text/html; charset=utf-8", "Cache-Control": "no-store" } });
+    if (request.method === "GET") {
+      const check = await validateAuthorizeRequest(url.searchParams);
+      if (!check.ok) return json({ error: check.error, error_description: check.description }, 400);
+      return html(consentPage(check));
+    }
+    if (request.method === "POST") {
+      const rate = await checkRateLimit({ client: `consent_${hashIp(clientIp(request))}`, limit: 10 });
+      if (!rate.allowed) return html("<p>För många försök. Vänta en minut.</p>", 429);
+      const params = new URLSearchParams(await request.text());
+      const form = Object.fromEntries(params);
+      form.scope = params.getAll("scope");
+      const granted = await grantConsent(form);
+      if (!granted.ok) {
+        await writeAudit({ client: clean(form.client_id, 80), via: "consent", tool: "oauth/authorize", ok: false, status: granted.status, error: granted.error, transport: "oauth", ip: clientIp(request) });
+        if (granted.status === 401 || granted.status === 400) {
+          const check = await validateAuthorizeRequest(new URLSearchParams({ client_id: form.client_id, redirect_uri: form.redirect_uri, response_type: "code", code_challenge: form.code_challenge, code_challenge_method: "S256", state: form.state || "", scope: (form.scope || []).join(" ") }));
+          if (check.ok) return html(consentPage({ ...check, error: granted.error }), granted.status);
+        }
+        return html(`<p>${granted.error}</p>`, granted.status);
+      }
+      await writeAudit({ client: clean(form.client_id, 80), via: "consent", tool: "oauth/authorize", args: { scope: granted.scopes.join(" ") }, ok: true, status: 302, transport: "oauth", ip: clientIp(request) });
+      return new Response(null, { status: 302, headers: { Location: granted.redirect, "Cache-Control": "no-store" } });
+    }
+    return json({ error: "invalid_request" }, 405);
+  }
+
   // Publika metadata (inga data, inga hemligheter).
   if (request.method === "GET" && sub === "/openapi.json") return json(openApiDocument());
   if (request.method === "GET" && sub === "/.well-known") {
-    return json({ name: SERVER_INFO.name, version: SERVER_INFO.version, mcp: { endpoint: `${SITE_URL()}/api/ai/mcp`, transport: "streamable-http", protocolVersion: PROTOCOL_VERSION, sse: false }, auth: { bearer_api_key: true, oauth_client_credentials: `${SITE_URL()}/api/ai/oauth/token`, oauth_authorization_code: false }, scopes: SCOPES, openapi: `${SITE_URL()}/api/ai/openapi.json` });
+    return json({ name: SERVER_INFO.name, version: SERVER_INFO.version, mcp: { endpoint: `${SITE_URL()}/api/ai/mcp`, transport: "streamable-http", protocolVersion: PROTOCOL_VERSION, sse: false }, auth: { bearer_api_key: true, oauth_client_credentials: `${SITE_URL()}/api/ai/oauth/token`, oauth_authorization_code: true, oauth_authorization_server: `${SITE_URL()}/.well-known/oauth-authorization-server`, dynamic_client_registration: `${SITE_URL()}/api/ai/oauth/register` }, scopes: SCOPES, openapi: `${SITE_URL()}/api/ai/openapi.json` });
   }
 
   // OAuth client credentials.
@@ -134,7 +183,19 @@ export default async (request) => {
       form.client_id = form.client_id || cid;
       form.client_secret = form.client_secret || rest.join(":");
     }
-    if (clean(form.grant_type, 40) !== "client_credentials") return json({ error: "unsupported_grant_type", error_description: "Bara client_credentials stöds." }, 400);
+    const grant = clean(form.grant_type, 40);
+    if (grant === "authorization_code") {
+      const result = await exchangeCode({ code: form.code, clientId: form.client_id, redirectUri: form.redirect_uri, codeVerifier: form.code_verifier });
+      if (!result.ok) return json({ error: result.error, error_description: result.description || "" }, result.error === "invalid_client" ? 401 : 400);
+      await writeAudit({ client: `oauth:${clean(form.client_id, 80)}`, via: "oauth_code", tool: "oauth/token", args: { scope: result.scope }, ok: true, status: 200, transport: "oauth", ip: clientIp(request) });
+      return json(result);
+    }
+    if (grant === "refresh_token") {
+      const result = await refreshTokens({ refreshToken: form.refresh_token, clientId: form.client_id });
+      if (!result.ok) return json({ error: result.error, error_description: result.description || "" }, 400);
+      return json(result);
+    }
+    if (grant !== "client_credentials") return json({ error: "unsupported_grant_type", error_description: "Stöds: authorization_code, refresh_token, client_credentials." }, 400);
     const client = verifyApiKey(registry.clients, `${clean(form.client_id, 60)}.${clean(form.client_secret, 400)}`);
     if (!client) return json({ error: "invalid_client" }, 401, { "WWW-Authenticate": "Basic" });
     const scopes = clean(form.scope, 400).split(/[\s,]+/).filter(Boolean);
@@ -147,7 +208,7 @@ export default async (request) => {
 
   // Allt nedan kräver klientauth.
   const auth = authenticate(request);
-  if (!auth.ok) return json({ error: auth.error, description: auth.description }, auth.status, auth.status === 401 ? { "WWW-Authenticate": 'Bearer realm="nemob-ai-gateway"' } : {});
+  if (!auth.ok) return json({ error: auth.error, description: auth.description }, auth.status, auth.status === 401 ? { "WWW-Authenticate": `Bearer realm="nemob-ai-gateway", resource_metadata="${SITE_URL()}/.well-known/oauth-protected-resource"` } : {});
   const { principal } = auth;
 
   if (sub === "/mcp") {
@@ -184,5 +245,5 @@ export default async (request) => {
 };
 
 export const config = {
-  path: ["/api/ai", "/api/ai/*"],
+  path: ["/api/ai", "/api/ai/*", "/.well-known/oauth-authorization-server", "/.well-known/oauth-protected-resource"],
 };

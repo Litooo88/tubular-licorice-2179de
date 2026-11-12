@@ -74,7 +74,9 @@ export const presenceView = (presence, now = Date.now()) => ({
   note: presence.note || "",
   setBy: presence.setBy || "",
   setAt: presence.setAt || "",
-  routing: { ...(presence.routing || {}), applied: Boolean(presence.routing?.applied) && routingEnabled(), dryRun: !routingEnabled() },
+  // applied = telefonisystemet har faktiskt läst statusen och satt appliedAt.
+  // Varken set_presence eller env-flaggan kan göra den sann.
+  routing: { ...(presence.routing || {}), applied: routingEnabled() && Boolean(presence.routing?.appliedAt), dryRun: !routingEnabled() },
   recentHistory: (presence.history || []).slice(-5).reverse(),
 });
 
