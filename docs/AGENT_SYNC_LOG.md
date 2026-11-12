@@ -32,6 +32,16 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — PÅGÅR (P0 hotfix: Netlify-byggen för PR #170/#171 faller, publicerad version är edf4f10)
+
+- **Branch:** `hotfix/netlify-build` i egen worktree (scratchpad), bas `origin/main` 507e9f4. Delade mappen rörs inte.
+- **Orsak (bygglogg 6af50a3e… och 6af50fc6…):** `npm run test:integrity` faller i Netlify: alla sms-inbound-tester
+  svarar tomt eftersom byggmiljön har produktionens miljövariabler (ELKS_SMS_NUMBER m.fl.) och testernas
+  mottagarnummer inte matchar. Lokalt är variablerna osatta. Reproducerat lokalt med ELKS_SMS_NUMBER satt.
+- **Åtgärd:** testerna pinnar sin egen miljö (gemensam `tests/_test-env.mjs`), inga tester inaktiveras, ingen
+  funktionskod försvagas. Inga produktionsinställningar ändras.
+
+
 ### 2026-11-12 — Claude Code — KLAR (GET /api/approvals: PR #171 godkänd av Sebastian och mergad till main)
 
 - **Branch:** `feat/api-approvals` i egen worktree (scratchpad), bas `origin/main` 78521b5 (PR #170 mergad).
