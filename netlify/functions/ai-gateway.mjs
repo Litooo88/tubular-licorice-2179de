@@ -18,7 +18,7 @@
 import { authenticate, hasScope, issueToken, loadClients, SCOPES, verifyApiKey } from "./_shared/ai-auth.mjs";
 import { checkRateLimit, writeAudit } from "./_shared/ai-audit.mjs";
 import { TOOLS, toolByName, validateArgs } from "./_shared/ai-tools.mjs";
-import { authorizationServerMetadata, consentPage, exchangeCode, grantConsent, protectedResourceMetadata, refreshTokens, registerClient, validateAuthorizeRequest } from "./_shared/ai-oauth.mjs";
+import { authorizationServerMetadata, consentPage, exchangeCode, getDynamicClient, grantConsent, listDynamicClients, protectedResourceMetadata, refreshTokens, registerClient, revokeDynamicClient, validateAuthorizeRequest } from "./_shared/ai-oauth.mjs";
 import { hashIp } from "./_shared/ai-audit.mjs";
 
 const SITE_URL = () => {
@@ -206,10 +206,38 @@ export default async (request) => {
     return json(body);
   }
 
+  // Ägarens återkallelse av dynamiska klienter (ChatGPT/claude.ai-connectors).
+  // Kräver ägar-PIN i bodyn, aldrig Bearer. GET listar (utan hemligheter).
+  if (sub === "/oauth/clients") {
+    const rate = await checkRateLimit({ client: `owner_${hashIp(clientIp(request))}`, limit: 10 });
+    if (!rate.allowed) return json({ error: "rate_limited" }, 429, { "Retry-After": "60" });
+    let body = {};
+    try { body = request.method === "GET" ? {} : await request.json(); } catch { return json({ error: "invalid_json" }, 400); }
+    if (request.method === "DELETE" || (request.method === "POST" && clean(body.action, 20) === "revoke")) {
+      const result = await revokeDynamicClient({ clientId: body.client_id, ownerPin: body.owner_pin, reason: body.reason });
+      await writeAudit({ client: clean(body.client_id, 80), via: "owner", tool: "oauth/clients.revoke", ok: result.ok, status: result.ok ? 200 : result.status, error: result.ok ? "" : result.error, transport: "oauth", ip: clientIp(request) });
+      if (!result.ok) return json({ error: result.error }, result.status);
+      return json({ ok: true, client_id: result.client.client_id, revokedAt: result.client.revokedAt });
+    }
+    if (request.method === "POST" && clean(body.action, 20) === "list") {
+      const check = await revokeDynamicClient({ clientId: "dyn_000000000000000000000000", ownerPin: body.owner_pin });
+      if (check.status === 401 || check.status === 503) return json({ error: check.error }, check.status);
+      return json({ clients: await listDynamicClients() });
+    }
+    return json({ error: "invalid_request", description: "POST { action: \"list\"|\"revoke\", owner_pin, client_id?, reason? }" }, 405);
+  }
+
   // Allt nedan kräver klientauth.
   const auth = authenticate(request);
   if (!auth.ok) return json({ error: auth.error, description: auth.description }, auth.status, auth.status === 401 ? { "WWW-Authenticate": `Bearer realm="nemob-ai-gateway", resource_metadata="${SITE_URL()}/.well-known/oauth-protected-resource"` } : {});
   const { principal } = auth;
+  // Dynamiska klienter: en återkallad klient stoppas även om åtkomsttoken
+  // (max 60 min) fortfarande är signaturmässigt giltig.
+  if (principal.via === "oauth_code") {
+    const dyn = await getDynamicClient(principal.client.id.replace(/^oauth:/, ""));
+    if (!dyn) return json({ error: "invalid_token", description: "Klienten är återkallad." }, 401, { "WWW-Authenticate": `Bearer realm="nemob-ai-gateway", error="invalid_token"` });
+    principal.client.label = dyn.client_name;
+  }
 
   if (sub === "/mcp") {
     if (request.method === "GET") return json({ error: "sse_not_supported", description: "Servern svarar bara på POST (JSON-RPC). SSE-ström stöds inte." }, 405, { Allow: "POST" });
