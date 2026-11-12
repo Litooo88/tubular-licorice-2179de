@@ -69,3 +69,7 @@ h1 { font-size: clamp(1.95rem, 4.5vw, 3.4rem); line-height: 1.08; letter-spacing
 }
 
 #case-query { display: block; width: 100%; min-height: 44px; margin-top: 6px; padding: 8px 12px; font: inherit; border: 1px solid var(--border); border-radius: 8px; }
+
+#refresh[hidden] { display: none; }
+[data-assistant] button, .assistant-query, #presence-choice { min-height: 44px; max-width: 100%; font: inherit; margin: 6px 0; }
+.assistant-query, #presence-choice { display: block; width: 100%; }

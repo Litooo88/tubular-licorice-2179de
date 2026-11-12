@@ -232,3 +232,15 @@ Gateway-kontrakt att samordna med Claude Code:
 NEMOB OS använder tills vidare befintliga läs-API:er. Gateway-anrop ska
 gå via servern när kontrakten är dokumenterade. Kundutskick och beslut
 ska kräva uttrycklig åtgärd och behörighetskontroll på servern.
+
+### AI-assistenten
+
+Lägg en separat Gateway-nyckel i serverns lokala miljö som
+`NEMOB_GATEWAY_TOKEN` (värde enligt Gatewayens format `client_id.secret`).
+Ge klienten läsbehörigheterna `cases:read`, `calls:read` och `presence:read`.
+Appen använder samma `NORDIC_SITE_URL` som övriga verksamhetskällor.
+Den lokala sessionen skyddar assistentvyn på samma sätt som övriga vyer.
+Assistentens aktivitetslista visar bara resultatstatus för anrop i den
+aktuella fliken. Gatewayens revisionslogg saknar ett dokumenterat läsverktyg
+och visas därför inte här. Statusväljaren skickar ingen ändring.
+Privata planeringsuppgifter och LVU-data skickas aldrig till Gatewayen.

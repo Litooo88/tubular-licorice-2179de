@@ -15,6 +15,7 @@ import { Store, defaultStorePath } from "./lib/store.mjs";
 import { newTask, taskPatch } from "./lib/tasks.mjs";
 import { generatePlan, summarizeDay } from "./lib/plan.mjs";
 import { fetchNordicBrief } from "./lib/nordic.mjs";
+import { readAssistant } from "./lib/assistant.mjs";
 import { readUnifiedBusiness, readUnifiedPlanning } from "./lib/unified.mjs";
 import { fetchAdminCases } from "./lib/admin-cases.mjs";
 import { openCasesPrioritized, searchCases } from "./lib/lookup.mjs";
@@ -190,6 +191,13 @@ const handleApi = async (req, res, url) => {
 
   if (path === "/api/unified/business" && req.method === "GET") {
     return json(res, await readUnifiedBusiness());
+  }
+  if (path === "/api/unified/assistant" && req.method === "POST") {
+    if (req.headers["content-type"]?.split(";")[0]?.trim() !== "application/json") {
+      return json(res, { error: "unsupported_content_type" }, 415);
+    }
+    const body = await readBody(req);
+    return json(res, await readAssistant(body?.kind, body?.query));
   }
   if (path === "/api/unified/planning" && req.method === "GET") {
     return json(res, readUnifiedPlanning(store.tasks));

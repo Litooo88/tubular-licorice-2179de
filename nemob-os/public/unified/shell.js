@@ -14,7 +14,7 @@ document.querySelectorAll("[data-icon]").forEach((node) => { node.innerHTML = ic
 
 const titles = {
   home: "Verkstadsöversikt", communication: "Kommunikation", cases: "Verkstad och kundärenden",
-  bookings: "Bokningar", approvals: "Godkännanden", finance: "Ekonomi och checkout", planning: "Privat planering",
+  bookings: "Bokningar", approvals: "Godkännanden", finance: "Ekonomi och checkout", planning: "Privat planering", assistant: "AI-assistent",
 };
 const statuses = {
   new: "Ny", contacted: "Kontaktad", checked_in: "Inlämnad", diagnosing: "Diagnos",
@@ -239,12 +239,80 @@ function planningCard() {
       paragraph(sourceMessage(planning)))];
 }
 
+function assistantCards() {
+  const form = (kind, label, type) => '<form data-assistant="' + kind + '">' +
+    (label ? '<label>' + label + '<input class="assistant-query" name="query" type="' + type + '"></label>' : "") +
+    '<button type="submit">' + (label ? "Sök" : "Hämta tillgänglighet") + '</button>' +
+    '<div class="assistant-result" aria-live="polite"></div></form>';
+  return [
+    card("Aktuell tillgänglighet", "nova", form("presence") +
+      '<label>Förhandsval för status<select id="presence-choice" disabled><option>Hämta tillgänglighet först</option></select></label>' +
+      paragraph("Förhandsvalet sparas inte. Ändring av telefonstatus är avstängd.")),
+    card("Sök kundärenden", "cases", form("customers", "Namn, ärendenummer eller modell", "search")),
+    card("Sök samtal", "communication", form("calls", "Telefonnummer (valfritt, senaste 30 dagarna)", "tel")),
+    card("Assistentens aktivitet här", "nova", '<div id="assistant-activity">' + renderAssistantActivity() + '</div>'),
+  ];
+}
+
+const assistantActivity = [];
+const assistantActions = { presence: "Tillgänglighet", customers: "Kundsökning", calls: "Samtalssökning" };
+function renderAssistantActivity() {
+  return assistantActivity.length ? list(assistantActivity, (row) => escape(row)) :
+    paragraph("Inga förfrågningar i den här webbläsarfliken.");
+}
+
+document.querySelector("#content").addEventListener("submit", async (event) => {
+  const form = event.target;
+  const kind = form.dataset.assistant;
+  if (!Object.hasOwn(assistantActions, kind)) return;
+  event.preventDefault();
+  const output = form.querySelector(".assistant-result");
+  const button = form.querySelector("button");
+  button.disabled = true;
+  output.textContent = "Hämtar …";
+  let data;
+  try {
+    const response = await fetch("/api/unified/assistant", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ kind, query: new FormData(form).get("query") }),
+      cache: "no-store",
+    });
+    data = response.ok ? await response.json() : { status: response.status === 401 ? "forbidden" : "down" };
+  } catch {
+    data = { status: "down" };
+  }
+  button.disabled = false;
+  const errors = { forbidden: "Åtkomst saknas.", not_configured: "Gatewayen är inte konfigurerad.",
+    invalid: "Kontrollera sökfältet.", rate_limited: "För många sökningar. Försök igen om en stund.",
+    down: "Gatewayen kunde inte nås." };
+  assistantActivity.unshift(assistantActions[kind] + " · " +
+    new Date().toLocaleTimeString("sv-SE", { hour: "2-digit", minute: "2-digit" }) + " · " +
+    (data.status === "ok" ? data.partial ? "Delvis svar" : "Klart" : errors[data.status] || errors.down));
+  assistantActivity.splice(8);
+  const activity = document.querySelector("#assistant-activity");
+  if (activity) activity.innerHTML = renderAssistantActivity();
+  if (!form.isConnected) return;
+  if (data.status !== "ok") {
+    output.textContent = errors[data.status] || errors.down;
+  } else if (kind === "presence") {
+    output.innerHTML = paragraph([data.label, data.until, "Routing " + data.routing].filter(Boolean).join(" · ")) +
+      (data.history.length ? list(data.history, (row) => escape(row.join(" · "))) : "");
+    const select = document.querySelector("#presence-choice");
+    select.replaceChildren(...Object.entries(data.options).map(([key, label]) => new Option(label, key, false, label === data.label)));
+    select.disabled = !select.options.length;
+  } else {
+    output.innerHTML = (data.partial ? paragraph("Visar ett begränsat resultat.") : "") +
+      (data.rows.length ? list(data.rows, (row) => escape(row.join(" · "))) : paragraph("Inga träffar."));
+  }
+});
+
 function render() {
   const page = route();
   document.querySelector("#heading").textContent = titles[page];
   document.querySelector("#date").textContent = new Intl.DateTimeFormat("sv-SE", {
     dateStyle: "full", timeZone: "Europe/Stockholm",
   }).format();
+  document.querySelector("#refresh").hidden = page === "assistant";
   document.querySelector("#modes").hidden = page !== "home";
   document.querySelectorAll("[data-mode]").forEach((button) =>
     button.setAttribute("aria-pressed", String(button.dataset.mode === mode)));
@@ -258,7 +326,7 @@ function render() {
       business ? "Lokal version · verksamhetsdata är inte tillgänglig" : "Hämtar verksamhetsdata …";
   const views = {
     home: () => mode === "focus" ? focusCards() : [casesCard(), communicationCard(), bookingsCard(), financeCard(),
-      automationCard(), card("Godkännanden", "planning", "", [link("Visa godkännanden", "#approvals")]), card("Planering", "planning", paragraph("Dina uppgifter och nästa steg i den privata arbetsytan."),
+      automationCard(), card("AI-assistent", "nova", "", [link("Öppna assistenten", "#assistant")]), card("Godkännanden", "planning", "", [link("Visa godkännanden", "#approvals")]), card("Planering", "planning", paragraph("Dina uppgifter och nästa steg i den privata arbetsytan."),
         [link("Öppna planering", "#planning")])],
     communication: () => [communicationCard(true), automationCard(), historyCard()],
     cases: () => [casesCard(true), card("Ärenden som kräver beslut", "planning", fromSource(business?.cases, (data) =>
@@ -267,6 +335,7 @@ function render() {
     approvals: approvalCards,
     finance: () => [financeCard()],
     planning: planningCard,
+    assistant: assistantCards,
   };
   document.querySelector("#content").innerHTML = '<div class="grid">' + views[page]().join("") + '</div>';
 }
@@ -274,6 +343,12 @@ function render() {
 async function load(force = false) {
   const isPrivate = route() === "planning";
   if (!isPrivate) planning = null;
+  if (route() === "assistant") {
+    request?.controller.abort();
+    request = null;
+    document.querySelector("#refresh").disabled = false;
+    return;
+  }
   const endpoint = isPrivate ? "planning" : "business";
   if (request?.endpoint === endpoint) return;
   if (!force && (isPrivate ? planning : business)) {

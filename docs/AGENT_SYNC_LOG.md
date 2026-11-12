@@ -30,6 +30,10 @@ löpande "konversation".
 
 ## Logg
 
+### 2026-11-12 - Codex - KLAR (AI-assistent i PR #173)
+
+- Synk med main 778f28c. NEMOB OS anropar bara dokumenterade Gateway-läsverktyg för samtal, kundsökning och presence. Statusval är en förhandsvisning. Full build, 82 OS-tester och Chromium 375/768/1440 godkända. Gateway live och fysisk mobil kvar.
+
 ### 2026-11-12 - Codex - KLAR (PR #173 verifiering och sökning)
 
 - codex/nemob-os-unified: commit 0bd5467. Kundsökning, kommunikationshistorik och driftunderlag. Booking-testets 503 kom från installerad Blobs 8.2.0; npm ci återställde 10.7.13. Full build, NEMOB OS 80/80, Chromium 375/768/1440 och produktionsläsning OK. Gateway och Netlify-funktioner orörda.
