@@ -53,6 +53,43 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — KLAR (AI Gateway säkerhet + OAuth: PR #175 godkänd av Sebastian och mergad)
+
+- **Branch:** `fix/ai-gateway-security` i egen worktree, bas `origin/main` 3d74d87. Delade mappen rörs inte.
+- **Område:** `netlify/functions/ai-gateway.mjs`, `_shared/ai-*.mjs`, `_shared/presence.mjs`, tester, `docs/NEMOB_AI_GATEWAY.md`.
+  Inga nya klientnycklar, inga produktionsändringar, PRESENCE_ROUTING_ENABLED förblir av. Rör inte `nemob-os/**`.
+- **Resultat:** (1) get_business_overview redigeras efter scopes – enbart overview:read ger inga kundnamn/nummer/
+  e-post/texter (`redacted`), presence bara med presence:read; (2) revisionsloggen lagrar fritext som form+hash,
+  nummer maskerade, IP som HMAC-hash med dagssalt; (3) rate limit fail-closed (503 rate_limit_unavailable);
+  (4) set_presence/get_presence kan aldrig rapportera applicerad routing utan appliedAt från telefonin;
+  (5) OAuth 2.1 authorization code + PKCE + dynamisk klientregistrering (`_shared/ai-oauth.mjs`,
+  /.well-known/oauth-authorization-server, /.well-known/oauth-protected-resource, /api/ai/oauth/register|authorize,
+  refresh token med rotation) för ChatGPT- och claude.ai-connectors; samtycke kräver ägar-PIN
+  (AI_GATEWAY_OWNER_SECRET), avstängt utan den.
+- **Tester:** test:ai 20 (nya: fail-closed rate limit, overview-redaktion, presence aldrig applied med flaggan på,
+  hela OAuth-flödet inkl. PKCE plain-avslag, engångskod, refresh-rotation). Build grön i simulerad Netlify-miljö
+  (192 tester), checkout OK, callflow OK. Docs uppdaterade (behörighetsmodell, ChatGPT-anslutning).
+- **PR:** #175, godkänd 2026-11-12 och mergad via GitHub. Aktivering kräver AI_GATEWAY_OWNER_SECRET (+ CLIENTS/SIGNING_SECRET) i Netlify – sätts av Sebastian.
+
+
+### 2026-11-12 — Claude Code — KLAR (NEMOB AI Gateway v0.1: PR #174 godkänd av Sebastian och mergad)
+
+- **Branch:** `feat/ai-gateway` i egen worktree (scratchpad), bas `origin/main` 3a22905. Delade mappen rörs inte.
+- **Område:** ny `netlify/functions/ai-gateway.mjs` (+ `_shared/ai-*.mjs`), tester `tests/ai-gateway*.test.mjs`,
+  `docs/NEMOB_AI_GATEWAY.md`. Egen klientauth med scopes (aldrig ADMIN_TOKEN utåt), revisionslogg, rate limit.
+  Verktyg: search_calls, search_customer, get_business_overview, get_presence, set_presence (routing i dry-run,
+  ingen verklig omkoppling). Rör inte `nemob-os/**`. Inga kundutskick, ingen deploy.
+- **Resultat:** `ai-gateway.mjs` (/api/ai/mcp JSON-RPC, /api/ai/tools/:name REST, /api/ai/oauth/token client
+  credentials, openapi.json, .well-known, whoami), `_shared/ai-auth.mjs` (klientregister i env med SHA-256-hash,
+  tidssäkert, HMAC-token 60 min, scopes), `_shared/ai-audit.mjs` (revisionslogg + rate limit), `_shared/elks-calls.mjs`
+  (46elks-paginering), `_shared/presence.mjs` (versionerad, sluttid, auto-reset, routing dry-run), `_shared/ai-tools.mjs`
+  (search_calls, search_customer, get_business_overview, get_presence, set_presence), `scripts/ai-gateway-client.mjs`.
+  Docs: `docs/NEMOB_AI_GATEWAY.md`. Gatewayen svarar 503 tills AI_GATEWAY_CLIENTS sätts (fail-closed).
+- **Tester:** `npm run test:ai` (16) i grinden; build grön i simulerad Netlify-miljö (188 tester), checkout OK,
+  callflow OK. Begränsning: ingen OAuth authorization code än (claude.ai/ChatGPT-connectors), se docs.
+- **PR:** #174, godkänd 2026-11-12 och mergad via GitHub. Aktivering kräver AI_GATEWAY_CLIENTS + AI_GATEWAY_SIGNING_SECRET i Netlify (sätts av Sebastian).
+
+
 ### 2026-11-12 — Claude Code — KLAR (P0 hotfix: Netlify-byggen, PR #172 godkänd av Sebastian och mergad)
 
 - **Branch:** `hotfix/netlify-build` i egen worktree (scratchpad), bas `origin/main` 507e9f4. Delade mappen rörs inte.
