@@ -21,6 +21,7 @@ import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import { claimJson, commitJson, createIfAbsent, readWithEtag, safeKey } from "./case-store.mjs";
 import { ALL_SCOPES, issueToken, SCOPES } from "./ai-auth.mjs";
+import { activeConfig } from "./ai-config-state.mjs";
 
 const env = (name) => {
   try {
@@ -38,15 +39,24 @@ const sha256 = (v) => createHash("sha256").update(String(v)).digest();
 const b64u = (buf) => Buffer.from(buf).toString("base64url");
 const hashKey = (v) => createHash("sha256").update(String(v)).digest("hex");
 
-export const ownerSecretConfigured = () => Boolean(clean(env("AI_GATEWAY_OWNER_SECRET"), 400));
+// Ägar-PIN: via env i klartext (lokalt) eller som SHA-256-hash i Blobs-konfigurationen.
+export const ownerSecretConfigured = () => { const a = activeConfig(); return Boolean(clean(a.ownerSecret, 400) || clean(a.ownerSecretHash, 80)); };
 const ownerMatches = (pin) => {
-  const expected = Buffer.from(clean(env("AI_GATEWAY_OWNER_SECRET"), 400));
-  const provided = Buffer.from(clean(pin, 400));
-  return expected.length > 0 && expected.length === provided.length && timingSafeEqual(expected, provided);
+  const a = activeConfig();
+  const provided = clean(pin, 400);
+  if (!provided) return false;
+  if (a.ownerSecretHash) {
+    const expected = Buffer.from(a.ownerSecretHash);
+    const candidate = Buffer.from(`sha256:${createHash("sha256").update(provided).digest("hex")}`);
+    return expected.length === candidate.length && timingSafeEqual(expected, candidate);
+  }
+  const expected = Buffer.from(clean(a.ownerSecret, 400));
+  const got = Buffer.from(provided);
+  return expected.length > 0 && expected.length === got.length && timingSafeEqual(expected, got);
 };
 // Scopes som dynamiska klienter högst kan få (ägaren väljer vid samtycke).
 export const allowedOauthScopes = () => {
-  const configured = clean(env("AI_GATEWAY_OAUTH_SCOPES"), 400).split(/[\s,]+/).filter((s) => ALL_SCOPES.includes(s));
+  const configured = clean(activeConfig().oauthScopes, 400).split(/[\s,]+/).filter((s) => ALL_SCOPES.includes(s));
   return configured.length ? configured : ["cases:read", "calls:read", "overview:read", "presence:read", "presence:write"];
 };
 
@@ -92,7 +102,7 @@ export const getDynamicClient = async (clientId, { includeRevoked = false } = {}
 // Ägaren återkallar en dynamisk klient (ChatGPT-connector etc.). Kräver ägar-PIN.
 // Åtkomsttoken (max 60 min) avvisas från nästa anrop, refresh nekas direkt.
 export const revokeDynamicClient = async ({ clientId, ownerPin, reason = "", now = Date.now() } = {}) => {
-  if (!ownerSecretConfigured()) return { ok: false, status: 503, error: "AI_GATEWAY_OWNER_SECRET saknas." };
+  if (!ownerSecretConfigured()) return { ok: false, status: 503, error: "Ägar-PIN är inte konfigurerad." };
   if (!ownerMatches(ownerPin)) return { ok: false, status: 401, error: "Fel ägar-PIN." };
   const id = clean(clientId, 80);
   const key = `client_${id}`;
@@ -142,7 +152,7 @@ ${error ? `<p class="err">${escapeHtml(error)}</p>` : ""}
 
 // Samtycke: verifierar ägar-PIN och utfärdar engångskod. { ok, redirect } | { ok:false, status, error }
 export const grantConsent = async (form, { now = Date.now() } = {}) => {
-  if (!ownerSecretConfigured()) return { ok: false, status: 503, error: "AI_GATEWAY_OWNER_SECRET saknas – samtycke är avstängt." };
+  if (!ownerSecretConfigured()) return { ok: false, status: 503, error: "Ägar-PIN är inte konfigurerad – samtycke är avstängt." };
   if (!ownerMatches(form.owner_pin)) return { ok: false, status: 401, error: "Fel ägar-PIN." };
   const client = await getDynamicClient(form.client_id);
   const redirectUri = clean(form.redirect_uri, 500);

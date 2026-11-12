@@ -57,6 +57,29 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — KLAR (AI Gateway: konfiguration i Blobs – PR #177 godkänd av Sebastian, mergas och aktiveras)
+
+- **Branch:** `feat/ai-gateway-config-blobs`, bas `origin/main` 17d4862. Delade mappen rörs inte.
+- **Orsak:** när AI_GATEWAY_CLIENTS/SIGNING_SECRET/OWNER_SECRET sattes i Netlify föll alla deployer i steget
+  "deploying" (HTTP 400, "Failed to upload file" för v1-funktionerna). Utan variablerna går deployen igenom.
+  Trolig orsak: AWS Lambdas 4 KB-gräns för miljövariabler (GOOGLE_PRIVATE_KEY m.fl. är hemliga och syns inte i
+  API:ts storleksberäkning). Variablerna är borttagna igen; värdena finns i `.local/ai-gateway-env.local.txt`.
+- **Åtgärd:** `_shared/ai-config.mjs`: klientregister, signeringsnyckel, ägar-PIN-hash och OAuth-scopes i storen
+  `ai-gateway-config`, skrivs via `POST /api/ai/config` med x-admin-token (Sebastian, server-side). Env fungerar
+  fortfarande som alternativ. Inga nya miljövariabler behövs.
+- **Resultat:** `_shared/ai-config-state.mjs` (aktiv konfig, env har företräde), `_shared/ai-config.mjs` (läs/skriv
+  Blobs, cache 60 s, status utan hemligheter), `GET|POST /api/ai/config` med x-admin-token. ai-auth/ai-oauth/ai-audit
+  läser via activeConfig(). Ägar-PIN lagras som SHA-256-hash, `signingSecret: "generate"`.
+- **Tester:** test:ai 22 (ny: hela Blobs-vägen – 503 utan konfig, admin-token krävs, validering, status utan
+  hemligheter, klienter/OAuth fungerar direkt, PIN-byte, env-företräde). Build grön i simulerad Netlify-miljö
+  (198 tester), checkout OK, callflow OK.
+- **PR:** #177 (feat/ai-gateway-config-blobs). Sebastian: "Ja" → mergas via REST, därefter POST /api/ai/config
+  (Claude-klient, genererad signeringsnyckel, ägar-PIN) och verifiering: GET /api/ai/config ready/oauthReady,
+  whoami 200, OAuth-metadata 200. PIN + Claude-nyckel skickas som fil till telefonen (aldrig i chatt/repo).
+- **Kvar:** delade mappens lokala main är kvar på edf4f10 (Codex ocommittade loggrader) – synkas bara på order.
+  Dynamisk probe-klient "probe" (utan scopes) finns i storen ai-oauth – kan återkallas via /api/ai/oauth/clients.
+
+
 ### 2026-11-12 — Claude Code — KLAR (AI Gateway hotfix: PR #176 godkänd av Sebastian och mergad)
 
 - **Branch:** `hotfix/ai-gateway-refresh-ratelimit`, bas `origin/main` 778f28c. Delade mappen rörs inte.

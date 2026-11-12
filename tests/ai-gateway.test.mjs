@@ -376,11 +376,12 @@ test("OAuth authorization code: DCR → samtycke med ägar-PIN och PKCE → toke
 });
 
 // Hjälpare: fullt OAuth-flöde → { client, tokens, tokenReq } (ägar-PIN satt av anroparen).
-const oauthSession = async (handler, call) => {
+const oauthSession = async (handler, call, pin = "agar-pin-1234") => {
   const { pkceChallenge } = await import("../netlify/functions/_shared/ai-oauth.mjs");
   const reg = await (await handler(new Request("https://x/api/ai/oauth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ client_name: "ChatGPT", redirect_uris: ["https://chatgpt.com/cb"] }) }))).json();
   const verifier = "v".repeat(43) + "xyz";
-  const consent = await handler(new Request("https://x/api/ai/oauth/authorize", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams([["client_id", reg.client_id], ["redirect_uri", reg.redirect_uris[0]], ["code_challenge", pkceChallenge(verifier)], ["owner_pin", "agar-pin-1234"], ["scope", "cases:read"]]).toString() }));
+  const consent = await handler(new Request("https://x/api/ai/oauth/authorize", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams([["client_id", reg.client_id], ["redirect_uri", reg.redirect_uris[0]], ["code_challenge", pkceChallenge(verifier)], ["owner_pin", pin], ["scope", "cases:read"]]).toString() }));
+  if (!consent.headers.get("location")) throw new Error(`samtycke misslyckades: ${consent.status} ${(await consent.text()).replace(/<[^>]+>/g, " ").replace(/s+/g, " ").slice(0, 200)}`);
   const code = new URL(consent.headers.get("location")).searchParams.get("code");
   const tokenReq = (body) => handler(new Request("https://x/api/ai/oauth/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(body).toString() }));
   const tokens = await (await tokenReq({ grant_type: "authorization_code", code, client_id: reg.client_id, redirect_uri: reg.redirect_uris[0], code_verifier: verifier })).json();
@@ -504,4 +505,66 @@ test("rate limit: returnerade fel (storage_error, unversioned) nekar lika hårt 
     assert.equal(r3.allowed, false);
     assert.equal(r3.reason, "threw");
   } finally { globalThis.fetch = realFetch; }
+});
+
+test("konfiguration i Blobs: utan miljövariabler sätts register, signeringsnyckel och ägar-PIN via admin-token; hemligheter läcker aldrig i status", async (t) => {
+  const { call, handler } = await setup(t);
+  const { resetConfigCache } = await import("../netlify/functions/_shared/ai-config.mjs");
+  const { hashSecret: hs } = await import("../netlify/functions/_shared/ai-auth.mjs");
+  for (const k of ["AI_GATEWAY_CLIENTS", "AI_GATEWAY_SIGNING_SECRET", "AI_GATEWAY_OWNER_SECRET", "AI_GATEWAY_OAUTH_SCOPES"]) delete process.env[k];
+  resetConfigCache();
+  const admin = (method, body) => handler(new Request("https://x/api/ai/config", { method, headers: { "x-admin-token": "adm", "Content-Type": "application/json" }, body: body === undefined ? undefined : JSON.stringify(body) }));
+
+  assert.equal((await call("/api/ai/whoami", { token: "claude.hemlig" })).status, 503, "ingen konfiguration → fail-closed");
+  assert.equal((await handler(new Request("https://x/api/ai/config"))).status, 401, "config kräver admin-token");
+  assert.equal((await handler(new Request("https://x/api/ai/config", { headers: { Authorization: `Bearer claude.${SECRET}` } }))).status, 401, "AI-nyckel duger inte för config");
+  const empty = await (await admin("GET")).json();
+  assert.equal(empty.ready, false);
+  assert.equal(empty.source, "env");
+
+  assert.equal((await admin("POST", { ownerPin: "kort" })).status, 400);
+  assert.equal((await admin("POST", { clients: [{ id: "x", secretHash: "fel", scopes: ["cases:read"] }] })).status, 400);
+  const saved = await admin("POST", {
+    clients: [{ id: "claude", label: "Claude", secretHash: hs("nyckel-1"), scopes: ["cases:read", "presence:read"] }, { id: "rapport", secret: "rapport-hemlighet", scopes: ["overview:read"] }],
+    signingSecret: "generate",
+    ownerPin: "agar-pin-1234-lang",
+    oauthScopes: ["cases:read", "overview:read"],
+  });
+  const status = await saved.json();
+  assert.equal(saved.status, 200, JSON.stringify(status));
+  assert.equal(status.ready, true);
+  assert.equal(status.oauthReady, true);
+  assert.equal(status.source, "blobs");
+  assert.deepEqual(status.clients.map((c) => c.id), ["claude", "rapport"]);
+  const text = JSON.stringify(status);
+  assert.equal(text.includes("sha256:"), false, "inga hashar i status");
+  assert.equal(text.includes("agar-pin"), false);
+  assert.equal(/signingSecret"\s*:\s*"[^"]{10,}/.test(text), false);
+  const stored = await getStore({ name: "ai-gateway-config", consistency: "strong" }).get("current", { type: "json" });
+  assert.equal(stored.ownerSecretHash, `sha256:${(await import("../netlify/functions/_shared/ai-auth.mjs")).sha256Hex("agar-pin-1234-lang")}`, "PIN lagras bara som hash");
+  assert.ok(stored.signingSecret.length >= 32);
+  assert.equal(stored.clients[1].secretHash, hs("rapport-hemlighet"), "secret i patchen blev hash i lagringen");
+
+  // Klienterna fungerar direkt (ingen deploy, ingen env).
+  const who = await (await call("/api/ai/whoami", { token: "claude.nyckel-1" })).json();
+  assert.deepEqual(who.scopes, ["cases:read", "presence:read"]);
+  assert.equal((await call("/api/ai/whoami", { token: "rapport.rapport-hemlighet" })).status, 200);
+  assert.equal((await call("/api/ai/whoami", { token: "claude.fel" })).status, 401);
+  // OAuth: client credentials-token signeras med den lagrade nyckeln, samtycke med PIN-hashen.
+  const tok = await (await handler(new Request("https://x/api/ai/oauth/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: "grant_type=client_credentials&client_id=rapport&client_secret=rapport-hemlighet" }))).json();
+  assert.equal(tok.token_type, "Bearer", JSON.stringify(tok));
+  assert.equal((await call("/api/ai/whoami", { token: tok.access_token })).status, 200);
+  const session = await oauthSession(handler, call, "agar-pin-1234-lang");
+  assert.equal(session.tokens.token_type, "Bearer", JSON.stringify(session.tokens));
+  assert.equal(session.tokens.scope, "cases:read", "scope-taket från konfigurationen");
+  // Uppdatering av enbart PIN behåller resten; fel PIN nekas.
+  assert.equal((await admin("POST", { ownerPin: "ny-pin-som-ar-lang" })).status, 200);
+  const consentOld = await handler(new Request("https://x/api/ai/oauth/authorize", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams([["client_id", session.client.client_id], ["redirect_uri", session.client.redirect_uris[0]], ["code_challenge", "a".repeat(43)], ["owner_pin", "agar-pin-1234-lang"], ["scope", "cases:read"]]).toString() }));
+  assert.equal(consentOld.status, 401);
+  assert.equal((await (await admin("GET")).json()).clients.length, 2);
+  // Miljövariabeln har företräde om den sätts.
+  process.env.AI_GATEWAY_CLIENTS = JSON.stringify([{ id: "envklient", secretHash: hs("e"), scopes: ["cases:read"] }]);
+  resetConfigCache();
+  assert.equal((await call("/api/ai/whoami", { token: "envklient.e" })).status, 200);
+  assert.equal((await call("/api/ai/whoami", { token: "claude.nyckel-1" })).status, 401);
 });

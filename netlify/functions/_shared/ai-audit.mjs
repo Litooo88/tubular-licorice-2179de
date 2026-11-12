@@ -12,6 +12,7 @@
 import { createHash, createHmac } from "node:crypto";
 import { getStore } from "@netlify/blobs";
 import { commitJson, createIfAbsent, safeKey, stampKey } from "./case-store.mjs";
+import { activeConfig } from "./ai-config-state.mjs";
 
 const env = (name) => {
   try {
@@ -38,7 +39,7 @@ export const maskPhone = (value) => {
 export const hashIp = (ip, now = Date.now()) => {
   const value = clean(ip, 64);
   if (!value) return "";
-  const salt = `${env("AI_GATEWAY_SIGNING_SECRET") || "nemob"}:${new Date(now).toISOString().slice(0, 10)}`;
+  const salt = `${activeConfig().signingSecret || env("AI_GATEWAY_SIGNING_SECRET") || "nemob"}:${new Date(now).toISOString().slice(0, 10)}`;
   return createHmac("sha256", salt).update(value).digest("hex").slice(0, 16);
 };
 
