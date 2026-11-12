@@ -57,7 +57,7 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-11-12 — Claude Code — PÅGÅR (AI Gateway: konfiguration i Blobs i stället för miljövariabler – Netlify-deployer föll)
+### 2026-11-12 — Claude Code — PR ÖPPEN, VÄNTAR GODKÄNNANDE (AI Gateway: konfiguration i Blobs – Netlify-deployer föll med env-variabler)
 
 - **Branch:** `feat/ai-gateway-config-blobs`, bas `origin/main` 17d4862. Delade mappen rörs inte.
 - **Orsak:** när AI_GATEWAY_CLIENTS/SIGNING_SECRET/OWNER_SECRET sattes i Netlify föll alla deployer i steget
@@ -67,6 +67,13 @@ löpande "konversation".
 - **Åtgärd:** `_shared/ai-config.mjs`: klientregister, signeringsnyckel, ägar-PIN-hash och OAuth-scopes i storen
   `ai-gateway-config`, skrivs via `POST /api/ai/config` med x-admin-token (Sebastian, server-side). Env fungerar
   fortfarande som alternativ. Inga nya miljövariabler behövs.
+- **Resultat:** `_shared/ai-config-state.mjs` (aktiv konfig, env har företräde), `_shared/ai-config.mjs` (läs/skriv
+  Blobs, cache 60 s, status utan hemligheter), `GET|POST /api/ai/config` med x-admin-token. ai-auth/ai-oauth/ai-audit
+  läser via activeConfig(). Ägar-PIN lagras som SHA-256-hash, `signingSecret: "generate"`.
+- **Tester:** test:ai 22 (ny: hela Blobs-vägen – 503 utan konfig, admin-token krävs, validering, status utan
+  hemligheter, klienter/OAuth fungerar direkt, PIN-byte, env-företräde). Build grön i simulerad Netlify-miljö
+  (198 tester), checkout OK, callflow OK.
+- **PR:** se nedan. Efter merge: POST /api/ai/config med värdena från .local-filen (godkänt av Sebastian).
 
 
 ### 2026-11-12 — Claude Code — KLAR (AI Gateway hotfix: PR #176 godkänd av Sebastian och mergad)

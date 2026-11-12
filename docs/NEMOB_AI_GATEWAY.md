@@ -36,7 +36,31 @@ Verktyg läser: workshop-cases (Blobs), 46elks /a1/calls (paginerat), godkännan
   härifrån. Ärendesvaren är en fältvitlista (inga anteckningar, media,
   verkstadskommentarer, kuponger).
 
-## Miljövariabler (Netlify, server-side)
+## Konfiguration (Blobs via admin-token – rekommenderat)
+
+**Varför inte miljövariabler:** när gatewayens tre variabler lades till i
+Netlify (2026-11-12) föll alla deployer i uppladdningen av de gamla
+v1-funktionerna (HTTP 400). Orsaken är Lambdas 4 KB-gräns för miljö-
+variabler; sajten ligger redan nära taket (Google-nyckel, Stripe m.m.).
+Konfigurationen lever därför i storen `ai-gateway-config` och sätts med
+företagets admin-token server-till-server (Sebastian eller NEMOB OS, aldrig
+en AI-klient):
+
+```
+GET  /api/ai/config            (x-admin-token) → status utan hemligheter: { source, clients[], ready, oauthReady, hasSigningSecret, hasOwnerSecret, oauthScopes }
+POST /api/ai/config            (x-admin-token) → { clients?, ownerPin?, signingSecret?, oauthScopes? }
+  clients:       hela listan (ersätter): [ { id, label?, secretHash | secret, scopes[], rpm?, disabled? } ]
+                 (`secret` hashas av servern; `node scripts/ai-gateway-client.mjs` ger färdiga poster)
+  ownerPin:      ägar-PIN ≥ 12 tecken, lagras bara som SHA-256-hash
+  signingSecret: "generate" (rekommenderat) eller egen sträng ≥ 32 tecken
+  oauthScopes:   tak för dynamiska klienter, standard alla fem
+```
+
+Ändringar slår igenom direkt (cache 60 s per funktionsinstans), ingen deploy
+behövs. Miljövariablerna nedan fungerar fortfarande som alternativ för lokal
+utveckling och tester och har då företräde.
+
+## Miljövariabler (alternativ, lokal utveckling)
 
 | Variabel | Innehåll |
 |---|---|
@@ -46,7 +70,7 @@ Verktyg läser: workshop-cases (Blobs), 46elks /a1/calls (paginerat), godkännan
 | `AI_GATEWAY_OWNER_SECRET` | ägar-PIN för OAuth-samtycket (bara Sebastian). Utan den är authorization-code-flödet avstängt |
 | `AI_GATEWAY_OAUTH_SCOPES` | valfritt tak för vad dynamiska klienter kan få (mellanslagsseparerat); standard alla fem |
 
-Skapa en klient lokalt (skriver inget till servern):
+Skapa en klient lokalt (skriver inget till servern; posten läggs i `POST /api/ai/config` eller i env):
 
 ```bash
 node scripts/ai-gateway-client.mjs claude "Claude Desktop" --scopes cases:read,calls:read,overview:read,presence:read,presence:write
@@ -205,7 +229,7 @@ REST: `POST /api/ai/tools/<namn>` med JSON-body och Bearer-nyckel; `GET /api/ai/
 
 ## Verifiering efter deploy (läsande, inga kunddata ändras)
 
-1. Sätt `AI_GATEWAY_CLIENTS` (minst en klient) och `AI_GATEWAY_SIGNING_SECRET` i Netlify. Före det svarar gatewayen 503 – avsiktligt.
+1. `POST /api/ai/config` med admin-token: klienter, `signingSecret: "generate"`, `ownerPin`. Före det svarar gatewayen 503 – avsiktligt. Kontrollera `GET /api/ai/config` → `ready: true`, `oauthReady: true`.
 2. `GET /api/ai/.well-known` → 200 (publik metadata). `GET /api/ai/tools` utan header → 401.
 3. `GET /api/ai/whoami` med nyckel → klient och scopes.
 4. `POST /api/ai/tools/get_presence` `{}` → `presence.status: available_workshop`, `routing.dryRun: true`.
