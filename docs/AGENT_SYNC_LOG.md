@@ -32,6 +32,12 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — PÅGÅR (AI Gateway hotfix: refresh-rotation fail-closed, klientåterkallelse, rate limit nekar alla fel)
+
+- **Branch:** `hotfix/ai-gateway-refresh-ratelimit`, bas `origin/main` 778f28c. Delade mappen rörs inte.
+- **Område:** `_shared/ai-oauth.mjs`, `_shared/ai-audit.mjs`, `ai-gateway.mjs`, tester, docs. Ingen aktivering, inga nycklar, inget i `nemob-os/**`.
+
+
 ### 2026-11-12 — Claude Code — KLAR (AI Gateway säkerhet + OAuth: PR #175 godkänd av Sebastian och mergad)
 
 - **Branch:** `fix/ai-gateway-security` i egen worktree, bas `origin/main` 3d74d87. Delade mappen rörs inte.
