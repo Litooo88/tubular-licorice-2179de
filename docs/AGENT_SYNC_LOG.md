@@ -32,6 +32,13 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — PÅGÅR (AI Gateway säkerhet: scope-redaktion, audit utan PII, rate limit fail-closed, OAuth auth code för ChatGPT)
+
+- **Branch:** `fix/ai-gateway-security` i egen worktree, bas `origin/main` 3d74d87. Delade mappen rörs inte.
+- **Område:** `netlify/functions/ai-gateway.mjs`, `_shared/ai-*.mjs`, `_shared/presence.mjs`, tester, `docs/NEMOB_AI_GATEWAY.md`.
+  Inga nya klientnycklar, inga produktionsändringar, PRESENCE_ROUTING_ENABLED förblir av. Rör inte `nemob-os/**`.
+
+
 ### 2026-11-12 — Claude Code — KLAR (NEMOB AI Gateway v0.1: PR #174 godkänd av Sebastian och mergad)
 
 - **Branch:** `feat/ai-gateway` i egen worktree (scratchpad), bas `origin/main` 3a22905. Delade mappen rörs inte.
