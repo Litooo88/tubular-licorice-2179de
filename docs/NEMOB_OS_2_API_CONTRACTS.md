@@ -553,6 +553,18 @@ Kvar (konfiguration eller separat uppdrag, i prioritetsordning):
 
 ---
 
+## 12a. Byggmiljön i Netlify har produktionens miljövariabler
+
+Testerna i `npm run build` körs i Netlify MED produktionens env (ELKS_SMS_NUMBER,
+WORKSHOP_SMS_TO, VOICE_*, SMS_FROM, SITE_URL, RESEND_API_KEY …). Ett test som
+förlitar sig på att en variabel är osatt passerar lokalt men faller där
+(hotfix 2026-11-12: sms-inbound avvisade alla testleveranser som "inte till
+oss"). Regel: varje test som kör funktionskod anropar `pinTestEnv()` i
+`tests/_test-env.mjs` (tar bort listan av påverkande variabler, sätter
+testets egna) och importerar `tests/_blobs-test-env.mjs` först när den
+lokala Blobs-servern används. Verifiera nya tester lokalt med
+`ELKS_SMS_NUMBER=+46766867131 RESEND_API_KEY=x NODE_ENV=production npm run build`.
+
 ## 12. Känt testfel: `npm run test:comm` 6/7 (ej i grinden)
 
 `tests/kommunikation.test.mjs` faller på orörd `main` på Windows:

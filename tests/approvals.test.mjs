@@ -9,6 +9,8 @@ import test from "node:test";
 import "./_blobs-test-env.mjs";
 import { getStore, setEnvironmentContext } from "@netlify/blobs";
 import { BlobsServer } from "@netlify/blobs/server";
+import { pinTestEnv } from "./_test-env.mjs";
+
 
 import { bookingRequestItem, draftItem, smsItem } from "../netlify/functions/approvals.mjs";
 
@@ -42,9 +44,8 @@ test("GET /api/approvals: slår ihop källorna, sorterar längst väntande förs
   const { port } = await server.start();
   const url = `http://localhost:${port}`;
   setEnvironmentContext({ siteID: "site", token: "mock", edgeURL: url, uncachedEdgeURL: url });
-  const oldEnv = { ...process.env };
-  process.env.ADMIN_TOKEN = "adm";
-  t.after(async () => { process.env = oldEnv; await server.stop(); await rm(dir, { recursive: true, force: true }); });
+  const restoreEnv = pinTestEnv();
+  t.after(async () => { restoreEnv(); await server.stop(); await rm(dir, { recursive: true, force: true }); });
 
   const cases = getStore({ name: "workshop-cases", consistency: "strong" });
   await cases.setJSON("case_req", { id: "case_req", serviceNumber: "NE-10", status: "new", bookingMode: "request", bookingRequest: { status: "pending", requestedAt: "2026-11-10T09:00:00.000Z" }, preferredDate: "2026-11-18T10:00", service: "Service", customer: { name: "Omar", phone: "0706666666" }, createdAt: "2026-11-10T09:00:00.000Z" });
