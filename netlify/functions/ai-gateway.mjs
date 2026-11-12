@@ -20,6 +20,8 @@ import { checkRateLimit, writeAudit } from "./_shared/ai-audit.mjs";
 import { TOOLS, toolByName, validateArgs } from "./_shared/ai-tools.mjs";
 import { authorizationServerMetadata, consentPage, exchangeCode, getDynamicClient, grantConsent, listDynamicClients, protectedResourceMetadata, refreshTokens, registerClient, revokeDynamicClient, validateAuthorizeRequest } from "./_shared/ai-oauth.mjs";
 import { hashIp } from "./_shared/ai-audit.mjs";
+import { configStatus, ensureGatewayConfig, saveGatewayConfig } from "./_shared/ai-config.mjs";
+import { requireAdminToken } from "./_shared/admin-auth.mjs";
 
 const SITE_URL = () => {
   try { return (globalThis.Netlify?.env?.get?.("SITE_URL") || process.env.SITE_URL || "https://www.nordicemobility.se").replace(/\/$/, ""); } catch { return "https://www.nordicemobility.se"; }
@@ -113,6 +115,23 @@ export default async (request) => {
   const url = new URL(request.url);
   const path = url.pathname.replace(/\/+$/, "");
   const sub = path.replace(/^\/api\/ai/, "") || "/";
+  // Konfiguration från Blobs (eller env) – måste vara laddad före allt annat.
+  await ensureGatewayConfig();
+
+  // Konfigurationsrutt för ägaren via admin-token (server-side, aldrig en AI-klient).
+  // GET: status utan hemligheter. POST: { clients?, ownerPin?, signingSecret?, oauthScopes? }.
+  if (sub === "/config") {
+    const admin = requireAdminToken(request, json, "ADMIN_TOKEN saknas i Netlify.");
+    if (!admin.ok) return admin.response;
+    if (request.method === "GET") return json(configStatus());
+    if (request.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+    let body = {};
+    try { body = await request.json(); } catch { return json({ error: "invalid_json" }, 400); }
+    const result = await saveGatewayConfig(body, { by: "admin-token" });
+    await writeAudit({ client: "admin", via: "admin_token", tool: "config", args: { fields: Object.keys(body).join(",") }, ok: result.ok, status: result.ok ? 200 : 400, error: result.ok ? "" : result.error, transport: "rest", ip: clientIp(request) });
+    if (!result.ok) return json({ error: result.error, description: result.description }, result.error === "storage" ? 503 : 400);
+    return json({ ok: true, ...result.status });
+  }
 
   // OAuth-metadata på rotnivå (RFC 8414 / RFC 9728) – det MCP-klienter läser först.
   if (request.method === "GET" && path === "/.well-known/oauth-authorization-server") return json(authorizationServerMetadata(SITE_URL()));

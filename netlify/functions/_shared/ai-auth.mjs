@@ -20,6 +20,7 @@
 // om klientens scopes (eller tokenens, som är en delmängd) innehåller verktygets.
 
 import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { activeConfig } from "./ai-config-state.mjs";
 
 const env = (name) => {
   try {
@@ -53,8 +54,8 @@ const safeEqual = (a, b) => {
 };
 
 // Läser klientregistret. { ok, clients } eller { ok: false, reason }.
-export const loadClients = (raw = env("AI_GATEWAY_CLIENTS")) => {
-  if (!clean(raw, 50000)) return { ok: false, reason: "AI_GATEWAY_CLIENTS saknas", clients: [] };
+export const loadClients = (raw = activeConfig().clientsRaw) => {
+  if (!clean(raw, 50000)) return { ok: false, reason: "klientregistret saknas (POST /api/ai/config eller AI_GATEWAY_CLIENTS)", clients: [] };
   let parsed;
   try { parsed = JSON.parse(raw); } catch { return { ok: false, reason: "AI_GATEWAY_CLIENTS är inte giltig JSON", clients: [] }; }
   if (!Array.isArray(parsed)) return { ok: false, reason: "AI_GATEWAY_CLIENTS ska vara en JSON-array", clients: [] };
@@ -84,12 +85,12 @@ export const verifyApiKey = (clients, key) => {
 };
 
 // --- OAuth 2.0 client credentials → HMAC-signerad token -------------------
-const signingSecret = () => clean(env("AI_GATEWAY_SIGNING_SECRET"), 400);
+const signingSecret = () => clean(activeConfig().signingSecret, 400);
 const b64u = (buf) => Buffer.from(buf).toString("base64url");
 const sign = (payloadB64, secret) => createHmac("sha256", secret).update(`${TOKEN_PREFIX}.${payloadB64}`).digest("base64url");
 
 export const issueToken = ({ client, scopes, now = Date.now(), ttlSeconds = TOKEN_TTL_SECONDS, secret = signingSecret() } = {}) => {
-  if (!secret) return { ok: false, error: "server_error", description: "AI_GATEWAY_SIGNING_SECRET saknas" };
+  if (!secret) return { ok: false, error: "server_error", description: "signeringsnyckel saknas (POST /api/ai/config eller AI_GATEWAY_SIGNING_SECRET)" };
   const granted = (scopes && scopes.length ? scopes : client.scopes).filter((s) => client.scopes.includes(s));
   if (!granted.length) return { ok: false, error: "invalid_scope", description: "Inget av de begärda scopen är tillåtet för klienten." };
   const payload = { sub: client.id, scp: granted, iat: Math.floor(now / 1000), exp: Math.floor(now / 1000) + ttlSeconds, jti: randomBytes(8).toString("hex") };
