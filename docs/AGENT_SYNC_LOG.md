@@ -57,6 +57,18 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — PÅGÅR (AI Gateway: konfiguration i Blobs i stället för miljövariabler – Netlify-deployer föll)
+
+- **Branch:** `feat/ai-gateway-config-blobs`, bas `origin/main` 17d4862. Delade mappen rörs inte.
+- **Orsak:** när AI_GATEWAY_CLIENTS/SIGNING_SECRET/OWNER_SECRET sattes i Netlify föll alla deployer i steget
+  "deploying" (HTTP 400, "Failed to upload file" för v1-funktionerna). Utan variablerna går deployen igenom.
+  Trolig orsak: AWS Lambdas 4 KB-gräns för miljövariabler (GOOGLE_PRIVATE_KEY m.fl. är hemliga och syns inte i
+  API:ts storleksberäkning). Variablerna är borttagna igen; värdena finns i `.local/ai-gateway-env.local.txt`.
+- **Åtgärd:** `_shared/ai-config.mjs`: klientregister, signeringsnyckel, ägar-PIN-hash och OAuth-scopes i storen
+  `ai-gateway-config`, skrivs via `POST /api/ai/config` med x-admin-token (Sebastian, server-side). Env fungerar
+  fortfarande som alternativ. Inga nya miljövariabler behövs.
+
+
 ### 2026-11-12 — Claude Code — KLAR (AI Gateway hotfix: PR #176 godkänd av Sebastian och mergad)
 
 - **Branch:** `hotfix/ai-gateway-refresh-ratelimit`, bas `origin/main` 778f28c. Delade mappen rörs inte.
