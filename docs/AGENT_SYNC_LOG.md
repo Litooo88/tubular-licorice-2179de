@@ -30,6 +30,10 @@ löpande "konversation".
 
 ## Logg
 
+### 2026-11-12 - Codex - KLAR (PR #173 verifiering och sökning)
+
+- codex/nemob-os-unified: commit 0bd5467. Kundsökning, kommunikationshistorik och driftunderlag. Booking-testets 503 kom från installerad Blobs 8.2.0; npm ci återställde 10.7.13. Full build, NEMOB OS 80/80, Chromium 375/768/1440 och produktionsläsning OK. Gateway och Netlify-funktioner orörda.
+
 ### 2026-11-12 - Codex - KLAR (approvals i NEMOB OS)
 
 - codex/nemob-os-unified: endast nemob-os. Läser /api/approvals enligt PR #171. Ombaserad på 507e9f4. Commit 2fe46ef, 80/80 OS-tester, checkout 44 och Callflow OK. Loopback EACCES kvar. Ingen ändring i Netlify-backend.
