@@ -9,6 +9,8 @@ import test from "node:test";
 import { getStore, setEnvironmentContext } from "@netlify/blobs";
 import { BlobsServer } from "@netlify/blobs/server";
 import { resetVerification, setProbeStoreFactory } from "../netlify/functions/_shared/case-store.mjs";
+import { pinTestEnv } from "./_test-env.mjs";
+
 
 test("storage-health: POST kör proben, GET är läsande, utan token 401", async (t) => {
   const dir = await mkdtemp(join(tmpdir(), "blobs-health-"));
@@ -18,10 +20,8 @@ test("storage-health: POST kör proben, GET är läsande, utan token 401", async
   setEnvironmentContext({ siteID: "site", token: "mock", edgeURL: url, uncachedEdgeURL: url });
   resetVerification();
   setProbeStoreFactory(() => getStore({ name: "case-store-probe", consistency: "strong" }));
-  const oldEnv = { ...process.env };
-  process.env.ADMIN_TOKEN = "adm";
-  delete process.env.CASE_STORE_ALLOW_UNVERSIONED;
-  t.after(async () => { process.env = oldEnv; await server.stop(); await rm(dir, { recursive: true, force: true }); });
+  const restoreEnv = pinTestEnv();
+  t.after(async () => { restoreEnv(); await server.stop(); await rm(dir, { recursive: true, force: true }); });
 
   const { default: handler } = await import("../netlify/functions/storage-health.mjs");
   assert.equal((await handler(new Request("https://x/api/storage-health"))).status, 401);

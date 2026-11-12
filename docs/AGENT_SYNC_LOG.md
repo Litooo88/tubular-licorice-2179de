@@ -49,6 +49,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — KLAR (P0 hotfix: Netlify-byggen, PR #172 godkänd av Sebastian och mergad)
+
+- **Branch:** `hotfix/netlify-build` i egen worktree (scratchpad), bas `origin/main` 507e9f4. Delade mappen rörs inte.
+- **Orsak (bygglogg 6af50a3e… och 6af50fc6…):** `npm run test:integrity` faller i Netlify: alla sms-inbound-tester
+  svarar tomt eftersom byggmiljön har produktionens miljövariabler (ELKS_SMS_NUMBER m.fl.) och testernas
+  mottagarnummer inte matchar. Lokalt är variablerna osatta. Reproducerat lokalt med ELKS_SMS_NUMBER satt.
+- **Åtgärd:** testerna pinnar sin egen miljö (gemensam `tests/_test-env.mjs`), inga tester inaktiveras, ingen
+  funktionskod försvagas. Inga produktionsinställningar ändras.
+- **Resultat:** `tests/_test-env.mjs` (pinTestEnv) i inbound-recovery, cases-concurrency, outbox-flush,
+  storage-health, approvals; `_blobs-test-env.mjs` sätter NODE_ENV=test ovillkorat. Build grön både i
+  simulerad Netlify-miljö (prod-variabler satta, NODE_ENV=production) och utan: 176 tester. checkout OK,
+  callflow OK. Docs §12a beskriver regeln. Verifieringsplan efter deploy i PR-beskrivningen.
+- **PR:** #172, godkänd 2026-11-12 och mergad via GitHub. Deploy-verifiering enligt PR-beskrivningen görs därefter.
+
+
 ### 2026-11-12 — Claude Code — KLAR (GET /api/approvals: PR #171 godkänd av Sebastian och mergad till main)
 
 - **Branch:** `feat/api-approvals` i egen worktree (scratchpad), bas `origin/main` 78521b5 (PR #170 mergad).

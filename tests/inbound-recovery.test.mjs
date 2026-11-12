@@ -12,6 +12,8 @@ import "./_blobs-test-env.mjs";
 import { getStore, setEnvironmentContext } from "@netlify/blobs";
 import { BlobsServer } from "@netlify/blobs/server";
 import { resetVerification, setProbeStoreFactory } from "../netlify/functions/_shared/case-store.mjs";
+import { pinTestEnv } from "./_test-env.mjs";
+
 
 const setup = async (t) => {
   const dir = await mkdtemp(join(tmpdir(), "blobs-inb-"));
@@ -23,9 +25,8 @@ const setup = async (t) => {
   setProbeStoreFactory(() => getStore({ name: "case-store-probe", consistency: "strong" }));
   (await import("../netlify/functions/sms-inbound.mjs")).resetNotifyCooldown();
   const realFetch = globalThis.fetch;
-  const oldEnv = { ...process.env };
-  Object.assign(process.env, { ADMIN_TOKEN: "adm", ELKS_USERNAME: "u", ELKS_PASSWORD: "p", SEBASTIAN_SMS_TO: "+46700243319", SMS_INBOUND_SECRET: "inb" });
-  delete process.env.RESEND_API_KEY;
+  // Pinnad miljö: Netlifys byggmiljö har produktionens variabler (se _test-env.mjs).
+  const restoreEnv = pinTestEnv({ SMS_INBOUND_SECRET: "inb" });
   const sent = [];
   // failPut: "store/key" eller "store/*" → antal PUT som ska kasta nätfel.
   // SDK:n gör upp till 6 försök per skrivning, så 6 = "en logisk skrivning faller".
@@ -69,7 +70,7 @@ const setup = async (t) => {
     }
     return realFetch(input, init);
   };
-  t.after(async () => { globalThis.fetch = realFetch; process.env = oldEnv; await server.stop(); await rm(dir, { recursive: true, force: true }); });
+  t.after(async () => { globalThis.fetch = realFetch; restoreEnv(); await server.stop(); await rm(dir, { recursive: true, force: true }); });
   return { sent, failPut, state };
 };
 
