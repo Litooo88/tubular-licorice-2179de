@@ -32,7 +32,7 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-11-11 — Claude Code — PR #170 UPPDATERAD EFTER GRANSKNING, VÄNTAR GODKÄNNANDE (NEMOB OS 2.0 backend)
+### 2026-11-11 — Claude Code — KLAR (NEMOB OS 2.0 backend: PR #170 godkänd 2026-11-12 och mergad till main)
 
 - **Branch:** `feat/nemob-os-2-backend` i egen worktree (scratchpad), bas `origin/main` edf4f10.
   Ingen branchväxling i den delade mappen. Codex ocommittade loggrad i den delade mappen rörs inte.
@@ -80,7 +80,10 @@ löpande "konversation".
   cases-concurrency 3, send-journal 10, inbound-recovery 11, storage-health 1, outbox-flush 1),
   verify:checkout-products OK, callflow check OK. `test:comm` 6/7 oförändrat – orsak och fix dokumenterad
   i docs §12 (kolon i sms-log-nycklar + URL-kodad list i lokala servern), hålls utanför denna PR.
-- **Kvar:** Sebastians merge-godkännande. Sedan: `POST storage-health` direkt efter deploy (`conditionalWrites.ok`),
+- **Merge:** Sebastian godkände 2026-11-12; mergad via GitHub (merge-commit). Lokal main i den delade mappen
+  kunde inte snabbspolas av Claude eftersom Codex har ocommitterade rader i denna fil där – gör
+  `git pull --ff-only` när de är committade (behåll båda posterna vid konflikt).
+- **Kvar:** `POST storage-health` direkt efter deploy (`conditionalWrites.ok`),
   bygga /api/approvals, /api/inbox, /api/overview enligt docs-filen; e-post-webhook (Resend Receiving).
 
 ### 2026-11-11 — Claude Code — KLAR (Git-återställning fas 2: PR #169 mergad, lokal main i synk)
