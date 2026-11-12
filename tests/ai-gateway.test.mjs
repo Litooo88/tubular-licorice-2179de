@@ -69,7 +69,8 @@ test("auth och metadata: 503 utan register, 401, openapi/well-known publika, who
   assert.equal(openapi.openapi, "3.1.0");
   assert.ok(openapi.paths["/api/ai/tools/search_calls"].post.operationId === "search_calls");
   const wk = await (await call("/api/ai/.well-known", { token: null })).json();
-  assert.equal(wk.auth.oauth_authorization_code, false);
+  assert.equal(wk.auth.oauth_authorization_code, true);
+  assert.ok(String(wk.auth.dynamic_client_registration).endsWith("/api/ai/oauth/register"));
   const who = await (await call("/api/ai/whoami")).json();
   assert.equal(who.client, "claude");
   assert.ok(who.tools.includes("set_presence"));
@@ -249,5 +250,127 @@ test("rate limit och revisionslogg: 429 över gränsen, varje anrop loggas utan 
   await call("/api/ai/tools/search_customer", { method: "POST", body: { query: "0701112233" }, token: "lasare.bara-las" });
   const { blobs: later } = await audit.list();
   const last = (await Promise.all(later.map((b) => audit.get(b.key, { type: "json" })))).find((r) => r?.tool === "search_customer");
-  assert.equal(last.args.query, "0701112233", "sökfrågan loggas (ingen kunddata från svaret)");
+  assert.deepEqual(Object.keys(last.args.query).sort(), ["hash", "kind", "len"], "sökfrågan lagras bara som form + hash");
+  assert.equal(last.args.query.kind, "phone");
+  assert.equal(JSON.stringify(rows).includes("0701112233"), false, "numret finns inte i loggen");
+  assert.ok(rows.every((r) => !r.ipHash || /^[0-9a-f]{16}$/.test(r.ipHash)), "ipHash är en hash, aldrig en adress");
+});
+
+test("rate limit faller STÄNGT: går räknaren inte att nå nekas anropet med 503", async (t) => {
+  const { call } = await setup(t);
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = async (input, init = {}) => { if (String(input).includes("ai-gateway-ratelimit")) throw new Error("ECONNRESET (simulerat)"); return realFetch(input, init); };
+  try {
+    const res = await call("/api/ai/tools/get_presence", { method: "POST", body: {} });
+    assert.equal(res.status, 503);
+    assert.equal((await res.json()).error, "rate_limit_unavailable");
+  } finally { globalThis.fetch = realFetch; }
+});
+
+test("overview: enbart overview:read ger lägesbild utan kunduppgifter; med cases:read fullt kundkort", async (t) => {
+  const { call } = await setup(t);
+  process.env.AI_GATEWAY_CLIENTS = JSON.stringify([
+    ...JSON.parse(process.env.AI_GATEWAY_CLIENTS),
+    { id: "rapport", secretHash: hashSecret("r"), scopes: ["overview:read"] },
+  ]);
+  const cases = getStore({ name: "workshop-cases", consistency: "strong" });
+  const soon = new Date(Date.now() + 86400000).toISOString().slice(0, 16);
+  await cases.setJSON("c1", { id: "c1", serviceNumber: "NE-7", status: "ready", customer: { name: "Hemlig Kund", phone: "0701112233", email: "hemlig@example.com" }, updatedAt: "2026-11-01" });
+  await cases.setJSON("c2", { id: "c2", status: "new", bookingMode: "request", bookingRequest: { status: "pending", requestedAt: "2026-11-11T09:00:00Z" }, preferredDate: soon, message: "Kundens egna ord", customer: { name: "Hemlig Två", phone: "0709998877" } });
+  const report = await (await call("/api/ai/tools/get_business_overview", { method: "POST", body: {}, token: "rapport.r" })).json();
+  assert.equal(report.status, "ok");
+  assert.equal(report.redacted, true);
+  assert.equal(report.presenceOmitted, true);
+  assert.equal(report.presence, null);
+  assert.equal(report.cases.readyForPickup, 1);
+  assert.equal(report.approvals.counts.booking_request, 1);
+  const text = JSON.stringify(report);
+  for (const pii of ["Hemlig", "0701112233", "0709998877", "+4670", "hemlig@example.com", "Kundens egna ord"]) assert.equal(text.includes(pii), false, "ingen kunduppgift: " + pii);
+  assert.equal(report.priorityCases.find((c) => c.id === "c1").serviceNumber, "NE-7");
+  const full = await (await call("/api/ai/tools/get_business_overview", { method: "POST", body: {} })).json();
+  assert.equal(full.redacted, false);
+  assert.equal(full.priorityCases.find((c) => c.id === "c1").customer.name, "Hemlig Kund");
+  assert.equal(full.presence.status, "available_workshop");
+});
+
+test("set_presence rapporterar aldrig applicerad routing – inte ens med PRESENCE_ROUTING_ENABLED satt", async (t) => {
+  const { call } = await setup(t);
+  process.env.PRESENCE_ROUTING_ENABLED = "1";
+  try {
+    const set = await (await call("/api/ai/tools/set_presence", { method: "POST", body: { status: "nova_only", untilMinutes: 5 } })).json();
+    assert.equal(set.routingApplied, false);
+    assert.equal(set.presence.routing.applied, false, "ingen telefonikomponent har satt appliedAt");
+    assert.equal(set.presence.routing.dryRun, false, "flaggan är på men inget har applicerats");
+    const got = await (await call("/api/ai/tools/get_presence", { method: "POST", body: {} })).json();
+    assert.equal(got.presence.routing.applied, false);
+  } finally { delete process.env.PRESENCE_ROUTING_ENABLED; }
+});
+
+test("OAuth authorization code: DCR → samtycke med ägar-PIN och PKCE → token → MCP, refresh roterar, kod är engångs", async (t) => {
+  const { call, handler } = await setup(t);
+  process.env.AI_GATEWAY_OWNER_SECRET = "agar-pin-1234";
+  process.env.AI_GATEWAY_OAUTH_SCOPES = "cases:read overview:read presence:read";
+  const { pkceChallenge } = await import("../netlify/functions/_shared/ai-oauth.mjs");
+  const meta = await (await handler(new Request("https://x/.well-known/oauth-authorization-server"))).json();
+  assert.equal(meta.registration_endpoint, "https://www.nordicemobility.se/api/ai/oauth/register");
+  assert.deepEqual(meta.code_challenge_methods_supported, ["S256"]);
+  const prm = await (await handler(new Request("https://x/.well-known/oauth-protected-resource"))).json();
+  assert.equal(prm.resource, "https://www.nordicemobility.se/api/ai/mcp");
+  const unauth = await handler(new Request("https://x/api/ai/mcp", { method: "POST", body: "{}" }));
+  assert.match(unauth.headers.get("www-authenticate"), /resource_metadata=/);
+
+  const reg = await handler(new Request("https://x/api/ai/oauth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ client_name: "ChatGPT", redirect_uris: ["https://chatgpt.com/connector_platform_oauth_redirect", "http://evil.example/x"] }) }));
+  assert.equal(reg.status, 201);
+  const client = await reg.json();
+  assert.match(client.client_id, /^dyn_/);
+  assert.deepEqual(client.redirect_uris, ["https://chatgpt.com/connector_platform_oauth_redirect"], "bara https/localhost-redirects");
+  assert.equal(client.token_endpoint_auth_method, "none");
+
+  const verifier = "v".repeat(43) + "abc";
+  const challenge = pkceChallenge(verifier);
+  const authUrl = `https://x/api/ai/oauth/authorize?response_type=code&client_id=${client.client_id}&redirect_uri=${encodeURIComponent(client.redirect_uris[0])}&code_challenge=${challenge}&code_challenge_method=S256&state=xyz&scope=cases:read%20presence:write%20overview:read`;
+  const page = await handler(new Request(authUrl));
+  assert.equal(page.status, 200);
+  const html = await page.text();
+  assert.match(html, /ChatGPT/);
+  assert.equal(html.includes("presence:write"), false, "scope utanför AI_GATEWAY_OAUTH_SCOPES erbjuds inte");
+  assert.equal((await handler(new Request(authUrl.replace("S256", "plain")))).status, 400, "PKCE plain avvisas");
+  assert.equal((await handler(new Request(authUrl.replace(encodeURIComponent(client.redirect_uris[0]), "https%3A%2F%2Fannan.example%2F")))).status, 400);
+
+  const consent = (pin, scopes = ["cases:read", "overview:read"]) => handler(new Request("https://x/api/ai/oauth/authorize", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams([["client_id", client.client_id], ["redirect_uri", client.redirect_uris[0]], ["state", "xyz"], ["code_challenge", challenge], ["owner_pin", pin], ...scopes.map((s) => ["scope", s])]).toString() }));
+  assert.equal((await consent("fel-pin")).status, 401);
+  const ok = await consent("agar-pin-1234");
+  assert.equal(ok.status, 302);
+  const location = new URL(ok.headers.get("location"));
+  assert.equal(location.origin + location.pathname, client.redirect_uris[0]);
+  assert.equal(location.searchParams.get("state"), "xyz");
+  const code = location.searchParams.get("code");
+  assert.ok(code);
+
+  const tokenReq = (body) => handler(new Request("https://x/api/ai/oauth/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(body).toString() }));
+  assert.equal((await tokenReq({ grant_type: "authorization_code", code, client_id: client.client_id, redirect_uri: client.redirect_uris[0], code_verifier: "w".repeat(50) })).status, 400, "fel verifierare");
+  // Ett misslyckat byte bränner koden (skydd mot gissning): även rätt verifierare nekas nu.
+  assert.equal((await tokenReq({ grant_type: "authorization_code", code, client_id: client.client_id, redirect_uri: client.redirect_uris[0], code_verifier: verifier })).status, 400, "koden är förbrukad efter misslyckat försök");
+  const again = await consent("agar-pin-1234");
+  const code2 = new URL(again.headers.get("location")).searchParams.get("code");
+  const tok = await (await tokenReq({ grant_type: "authorization_code", code: code2, client_id: client.client_id, redirect_uri: client.redirect_uris[0], code_verifier: verifier })).json();
+  assert.equal(tok.token_type, "Bearer", JSON.stringify(tok));
+  assert.equal(tok.scope, "cases:read overview:read");
+  assert.ok(tok.refresh_token);
+  assert.equal((await tokenReq({ grant_type: "authorization_code", code: code2, client_id: client.client_id, redirect_uri: client.redirect_uris[0], code_verifier: verifier })).status, 400, "koden är engångs");
+
+  const who = await (await call("/api/ai/whoami", { token: tok.access_token })).json();
+  assert.equal(who.via, "oauth_code");
+  assert.deepEqual(who.scopes, ["cases:read", "overview:read"]);
+  assert.deepEqual(who.tools.sort(), ["get_business_overview", "search_customer"]);
+  const list = await (await call("/api/ai/mcp", { method: "POST", body: { jsonrpc: "2.0", id: 1, method: "tools/list" }, token: tok.access_token })).json();
+  assert.equal(list.result.tools.length, 2);
+  assert.equal((await call("/api/ai/tools/get_presence", { method: "POST", body: {}, token: tok.access_token })).status, 403);
+
+  const refreshed = await (await tokenReq({ grant_type: "refresh_token", refresh_token: tok.refresh_token, client_id: client.client_id })).json();
+  assert.ok(refreshed.access_token && refreshed.refresh_token !== tok.refresh_token, "roterad");
+  assert.equal((await tokenReq({ grant_type: "refresh_token", refresh_token: tok.refresh_token, client_id: client.client_id })).status, 400, "gammal refresh är återkallad");
+  delete process.env.AI_GATEWAY_OWNER_SECRET;
+  assert.equal((await consent("agar-pin-1234")).status, 503, "utan ägar-PIN är samtycke avstängt");
+  delete process.env.AI_GATEWAY_OAUTH_SCOPES;
 });

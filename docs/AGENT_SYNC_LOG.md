@@ -32,6 +32,25 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — KLAR (AI Gateway säkerhet + OAuth: PR #175 godkänd av Sebastian och mergad)
+
+- **Branch:** `fix/ai-gateway-security` i egen worktree, bas `origin/main` 3d74d87. Delade mappen rörs inte.
+- **Område:** `netlify/functions/ai-gateway.mjs`, `_shared/ai-*.mjs`, `_shared/presence.mjs`, tester, `docs/NEMOB_AI_GATEWAY.md`.
+  Inga nya klientnycklar, inga produktionsändringar, PRESENCE_ROUTING_ENABLED förblir av. Rör inte `nemob-os/**`.
+- **Resultat:** (1) get_business_overview redigeras efter scopes – enbart overview:read ger inga kundnamn/nummer/
+  e-post/texter (`redacted`), presence bara med presence:read; (2) revisionsloggen lagrar fritext som form+hash,
+  nummer maskerade, IP som HMAC-hash med dagssalt; (3) rate limit fail-closed (503 rate_limit_unavailable);
+  (4) set_presence/get_presence kan aldrig rapportera applicerad routing utan appliedAt från telefonin;
+  (5) OAuth 2.1 authorization code + PKCE + dynamisk klientregistrering (`_shared/ai-oauth.mjs`,
+  /.well-known/oauth-authorization-server, /.well-known/oauth-protected-resource, /api/ai/oauth/register|authorize,
+  refresh token med rotation) för ChatGPT- och claude.ai-connectors; samtycke kräver ägar-PIN
+  (AI_GATEWAY_OWNER_SECRET), avstängt utan den.
+- **Tester:** test:ai 20 (nya: fail-closed rate limit, overview-redaktion, presence aldrig applied med flaggan på,
+  hela OAuth-flödet inkl. PKCE plain-avslag, engångskod, refresh-rotation). Build grön i simulerad Netlify-miljö
+  (192 tester), checkout OK, callflow OK. Docs uppdaterade (behörighetsmodell, ChatGPT-anslutning).
+- **PR:** #175, godkänd 2026-11-12 och mergad via GitHub. Aktivering kräver AI_GATEWAY_OWNER_SECRET (+ CLIENTS/SIGNING_SECRET) i Netlify – sätts av Sebastian.
+
+
 ### 2026-11-12 — Claude Code — KLAR (NEMOB AI Gateway v0.1: PR #174 godkänd av Sebastian och mergad)
 
 - **Branch:** `feat/ai-gateway` i egen worktree (scratchpad), bas `origin/main` 3a22905. Delade mappen rörs inte.

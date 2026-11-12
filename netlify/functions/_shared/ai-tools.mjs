@@ -18,6 +18,7 @@ import { OPEN_STATUSES } from "./case-match.mjs";
 import { fetchElksCalls, callRow, summarizeCalls } from "./elks-calls.mjs";
 import { buildApprovals } from "../approvals.mjs";
 import { getPresence, presenceView, setPresence, PRESENCE_STATUSES, routingEnabled } from "./presence.mjs";
+import { hasScope } from "./ai-auth.mjs";
 
 const env = (name) => {
   try {
@@ -65,6 +66,20 @@ export const customerCaseView = (item) => ({
   lastInboundAt: clean(item.lastInboundAt, 40),
   lastTimeline: (Array.isArray(item.timeline) ? item.timeline : []).slice(-3).map((e) => ({ at: clean(e?.at, 40), event: clean(e?.event, 200) })),
   createdAt: clean(item.createdAt, 40),
+  updatedAt: clean(item.updatedAt, 40),
+});
+
+// Lägesvy utan kunduppgifter (overview:read utan cases:read).
+export const overviewCaseView = (item) => ({
+  id: clean(item.id, 80),
+  serviceNumber: clean(item.serviceNumber, 40),
+  status: clean(item.status, 40),
+  open: OPEN_STATUSES.has(clean(item.status, 40)),
+  service: clean(item.service, 160),
+  vehicle: { brand: clean(item.vehicle?.brand, 80), model: clean(item.vehicle?.model, 120) },
+  bookingMode: clean(item.bookingMode, 20),
+  preferredDate: clean(item.preferredDate, 20),
+  payment: { status: clean(item.payment?.status, 30) },
   updatedAt: clean(item.updatedAt, 40),
 });
 
@@ -159,23 +174,30 @@ export const TOOLS = [
   {
     name: "get_business_overview",
     scope: "overview:read",
-    description: "Verksamhetens läge just nu: väntande godkännanden (SMS, AI-utkast, bokningsförfrågningar), pågående ärenden per status, kommande bokningar (7 dagar), ärenden som väntar på kund eller är klara för hämtning, samt Sebastians tillgänglighet.",
+    description: "Verksamhetens läge just nu: väntande godkännanden (SMS, AI-utkast, bokningsförfrågningar), pågående ärenden per status, kommande bokningar (7 dagar), ärenden som väntar på kund eller är klara för hämtning, samt Sebastians tillgänglighet. Med enbart overview:read visas antal och ärendenummer utan kunduppgifter; kundkort kräver även cases:read, tillgänglighet kräver presence:read.",
     inputSchema: { type: "object", properties: { days: { type: "integer", minimum: 1, maximum: 30, description: "Horisont för kommande bokningar (standard 7)." } }, additionalProperties: false },
     run: async (args = {}, ctx = {}) => {
       const now = ctx.now || Date.now();
       const days = Math.min(Math.max(Number(args.days) || 7, 1), 30);
+      // Behörighetsmodell: overview:read ger lägesbilden (antal, status, ärende-
+      // nummer, tider). Kunduppgifter (namn, telefon, e-post, meddelandetext)
+      // följer med bara när klienten även har cases:read; tillgänglighet bara
+      // med presence:read. En rapportklient ser alltså aldrig kundkort.
+      const canSeeCustomers = hasScope(ctx.principal, "cases:read");
+      const canSeePresence = hasScope(ctx.principal, "presence:read");
       const [approvals, cases, presence] = await Promise.all([
         buildApprovals({ now }).catch((error) => ({ error: clean(error?.message, 120), items: [], counts: {} })),
         listAllCases().catch(() => []),
-        getPresence({ now }).catch(() => ({ presence: null })),
+        canSeePresence ? getPresence({ now }).catch(() => ({ presence: null })) : Promise.resolve({ presence: null }),
       ]);
+      const view = (c) => (canSeeCustomers ? customerCaseView(c) : overviewCaseView(c));
       const open = cases.filter((c) => OPEN_STATUSES.has(clean(c.status, 40)));
       const byStatus = {};
       for (const c of open) byStatus[c.status] = (byStatus[c.status] || 0) + 1;
       const horizon = now + days * 86400000;
       const upcoming = cases
         .filter((c) => c.preferredDate && !["done", "archived"].includes(c.status))
-        .map((c) => ({ ...customerCaseView(c), when: new Date(c.preferredDate).getTime() }))
+        .map((c) => ({ ...view(c), when: new Date(c.preferredDate).getTime() }))
         .filter((c) => Number.isFinite(c.when) && c.when >= now - 3600000 && c.when <= horizon)
         .sort((a, b) => a.when - b.when)
         .map(({ when, ...rest }) => rest);
@@ -183,15 +205,19 @@ export const TOOLS = [
         .filter((c) => ["ready", "waiting_customer", "new"].includes(c.status))
         .sort((a, b) => String(a.updatedAt || "").localeCompare(String(b.updatedAt || "")))
         .slice(0, 10)
-        .map(customerCaseView);
+        .map(view);
       return {
         status: approvals.error ? "partial" : "ok",
         generatedAt: new Date(now).toISOString(),
-        approvals: { counts: approvals.counts || {}, partial: Boolean(approvals.partial || approvals.error), items: (approvals.items || []).slice(0, 15).map((i) => ({ kind: i.kind, id: i.id, caseId: i.caseId, name: i.name, to: i.to, text: clean(i.text, 160), at: i.at, inFlight: Boolean(i.inFlight) })) },
+        redacted: !canSeeCustomers,
+        approvals: { counts: approvals.counts || {}, partial: Boolean(approvals.partial || approvals.error), items: (approvals.items || []).slice(0, 15).map((i) => (canSeeCustomers
+          ? { kind: i.kind, id: i.id, caseId: i.caseId, name: i.name, to: i.to, text: clean(i.text, 160), at: i.at, inFlight: Boolean(i.inFlight) }
+          : { kind: i.kind, id: i.id, caseId: i.caseId, at: i.at, inFlight: Boolean(i.inFlight) })) },
         cases: { open: open.length, byStatus, readyForPickup: byStatus.ready || 0, waitingCustomer: byStatus.waiting_customer || 0, unanswered: byStatus.new || 0 },
         upcomingBookings: { days, count: upcoming.length, items: upcoming.slice(0, 20) },
         priorityCases: priority,
         presence: presence.presence ? presenceView(presence.presence, now) : null,
+        presenceOmitted: !canSeePresence,
         note: "Godkännanden utförs i NEMOB OS/admin, inte via den här gatewayen.",
       };
     },
