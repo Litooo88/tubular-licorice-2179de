@@ -41,6 +41,8 @@ export function summarizeCases(result, now = new Date()) {
   const bookingRow = (item) => ({
     ...caseRow(item),
     date: bookingDate(item),
+    customer: text(item.customer?.name),
+    vehicle: [text(item.vehicle?.brand), text(item.vehicle?.model)].filter(Boolean).join(" "),
     confirmed: item.bookingRequest?.status === "confirmed" || item.bookingMode === "direct",
   });
   const byDate = (a, b) => (a.date || "9999").localeCompare(b.date || "9999");
@@ -58,6 +60,7 @@ export function summarizeCases(result, now = new Date()) {
     open: open.length,
     pending: pending.length,
     review: review.length,
+    workshopDecisions: review.map(caseRow),
     upcoming: bookings.length,
     readyUnpaid: ready.length,
     cases: open.slice(0, 8).map(caseRow),
@@ -94,6 +97,9 @@ export async function fetchCommunication({ env = process.env, fetchImpl = fetch 
       partial: data.sources?.elksCalls !== "ok" || data.sources?.elksSms !== "ok",
       waiting: data.counts.waiting,
       pending: data.pending.length,
+      queuedSms: data.pending.filter((item) => item && typeof item.message === "string").map((item) => ({
+        source: text(item.sourceLabel || item.source), message: item.message.slice(0, 1600),
+      })),
       contacts: data.contacts.filter((item) => item?.waiting === true).slice(0, 3).map((item) => ({
         name: text(item.name) || "Kund utan registrerat namn",
         hours: Number.isFinite(item.waitingHours) ? Math.max(0, Math.floor(item.waitingHours)) : null,
@@ -105,13 +111,36 @@ export async function fetchCommunication({ env = process.env, fetchImpl = fetch 
   }
 }
 
+export async function fetchDrafts({ env = process.env, fetchImpl = fetch } = {}) {
+  const token = env.NORDIC_ADMIN_TOKEN?.trim();
+  if (!token) return { status: "not_configured" };
+  try {
+    const origin = resolveNordicOrigin(env);
+    if (!origin) return { status: "down" };
+    const response = await fetchImpl(new URL("/api/sms-drafts", origin), {
+      method: "GET",
+      headers: { Accept: "application/json", "x-admin-token": token },
+      redirect: "error",
+      signal: AbortSignal.timeout(12000),
+    });
+    if (!response.ok) return { status: "down" };
+    const data = await response.json();
+    if (!Array.isArray(data.drafts)) return { status: "down" };
+    return { status: "ok", drafts: data.drafts.filter((item) => item && typeof item.message === "string")
+      .map((item) => ({ customer: text(item.meta?.namn), message: item.message.slice(0, 1600) })) };
+  } catch {
+    return { status: "down" };
+  }
+}
+
 export async function readUnifiedBusiness() {
   const origin = resolveNordicOrigin();
-  const [cases, communication] = await Promise.all([
+  const [cases, communication, drafts] = await Promise.all([
     origin ? fetchAdminCases({ env: { ...process.env, NORDIC_SITE_URL: origin } }) : { status: "down" },
     fetchCommunication(),
+    fetchDrafts(),
   ]);
-  return { cases: summarizeCases(cases), communication, origin };
+  return { cases: summarizeCases(cases), communication, drafts, origin };
 }
 
 export function readUnifiedPlanning(tasks) {

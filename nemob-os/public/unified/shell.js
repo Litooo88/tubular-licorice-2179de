@@ -14,7 +14,7 @@ document.querySelectorAll("[data-icon]").forEach((node) => { node.innerHTML = ic
 
 const titles = {
   home: "Verkstadsöversikt", communication: "Kommunikation", cases: "Verkstad och kundärenden",
-  bookings: "Bokningar", finance: "Ekonomi och checkout", planning: "Privat planering",
+  bookings: "Bokningar", approvals: "Godkännanden", finance: "Ekonomi och checkout", planning: "Privat planering",
 };
 const statuses = {
   new: "Ny", contacted: "Kontaktad", checked_in: "Inlämnad", diagnosing: "Diagnos",
@@ -79,6 +79,7 @@ function casesCard() {
   [admin(), workshop(), link("Sök i reparationskunskapen", "/knowledge.html")]);
 }
 
+const bookingDetail = (row, timeLabel) => [row.customer, row.vehicle, status(row), bookingTime(row), timeLabel].filter(Boolean).join(" · ");
 const bookingTime = (row) => row.date ? row.date.replace("T", " kl. ") : "Önskad tid saknas";
 
 function bookingsCard() {
@@ -90,11 +91,28 @@ function bookingsCard() {
 function bookingCards() {
   return [
     card("Väntar på besked", "bookings", fromSource(business?.cases, (data) =>
-      caseRows(data.bookingQueue, "Inga obesvarade bokningsförfrågningar.", bookingTime, "contact")), [admin()]),
+      caseRows(data.bookingQueue, "Inga obesvarade bokningsförfrågningar.", (row) => bookingDetail(row, "Väntar på besked"), "contact")), [admin()]),
     card("Kommande webbokningar", "bookings", fromSource(business?.cases, (data) =>
       caseRows(data.bookings, "Inga kommande webbokningar registrerade.", (row) =>
-        bookingTime(row) + (row.confirmed ? " · Bekräftad tid" : " · Önskad tid"), "contact")),
+        bookingDetail(row, row.confirmed ? "Bekräftad tid" : "Önskad tid"), "contact")),
     [tool("Öppna webbokningen", "/book-online/")]),
+  ];
+}
+
+function approvalCards() {
+  const messages = (rows, empty, label) => rows.length ? list(rows, (row) =>
+    '<strong>' + escape(label(row)) + '</strong><p class="message">' + escape(row.message) + '</p>') : paragraph(empty);
+  return [
+    card("SMS som väntar på godkännande", "communication", fromSource(business?.communication, (data) =>
+      messages(data.queuedSms, data.pending ? "Meddelandetext saknas i källan." : "Inga SMS väntar.",
+        (row) => row.source || "Kund-SMS")), [comm()]),
+    card("Svarsutkast", "planning", fromSource(business?.drafts, (data) =>
+      messages(data.drafts, "Inga svarsutkast väntar.", (row) => row.customer || "Kundutkast")), [admin()]),
+    card("Bokningsförfrågningar", "bookings", fromSource(business?.cases, (data) =>
+      caseRows(data.bookingQueue, "Inga bokningsförfrågningar väntar.",
+        (row) => bookingDetail(row, "Väntar på besked"), "contact")), [link("Visa bokningar", "#bookings")]),
+    card("Verkstadsbeslut", "cases", fromSource(business?.cases, (data) =>
+      caseRows(data.workshopDecisions, "Inga verkstadsärenden flaggade för beslut.", status)), [admin()]),
   ];
 }
 
@@ -112,7 +130,8 @@ function priorities() {
   return [
     [cases?.pending, "Granska bokningsförfrågningar", "#bookings"],
     [communication?.waiting, "Följ upp kunder som väntar på svar", "#communication"],
-    [communication?.pending, "Granska SMS för godkännande", "#communication"],
+    [communication?.pending, "Granska SMS för godkännande", "#approvals"],
+    [business?.drafts?.drafts?.length, "Granska svarsutkast", "#approvals"],
     [cases?.review, "Följ upp verkstadsbeslut", "#cases"],
     [cases?.readyUnpaid, "Följ upp betalning för klara ärenden", "#finance"],
   ].filter(([present]) => present).slice(0, 3);
@@ -120,7 +139,7 @@ function priorities() {
 
 function focusCards() {
   const items = priorities();
-  const complete = business?.cases?.status === "ok" && business?.communication?.status === "ok" && !business.communication.partial;
+  const complete = business?.cases?.status === "ok" && business?.communication?.status === "ok" && !business.communication.partial && business?.drafts?.status === "ok";
   const decisions = fromSource(business?.cases, (data) =>
     caseRows(data.decisions, "Inga boknings- eller verkstadsbeslut flaggade.", (row) => row.reason));
   return [
@@ -164,12 +183,13 @@ function render() {
       business ? "Lokal version · verksamhetsdata är inte tillgänglig" : "Hämtar verksamhetsdata …";
   const views = {
     home: () => mode === "focus" ? focusCards() : [casesCard(), communicationCard(), bookingsCard(), financeCard(),
-      automationCard(), card("Planering", "planning", paragraph("Dina uppgifter och nästa steg i den privata arbetsytan."),
+      automationCard(), card("Godkännanden", "planning", "", [link("Visa godkännanden", "#approvals")]), card("Planering", "planning", paragraph("Dina uppgifter och nästa steg i den privata arbetsytan."),
         [link("Öppna planering", "#planning")])],
     communication: () => [communicationCard(), automationCard()],
     cases: () => [casesCard(), card("Ärenden som kräver beslut", "planning", fromSource(business?.cases, (data) =>
       caseRows(data.decisions, "Inga ärenden flaggade för beslut.", (row) => row.reason)))],
     bookings: bookingCards,
+    approvals: approvalCards,
     finance: () => [financeCard()],
     planning: planningCard,
   };
