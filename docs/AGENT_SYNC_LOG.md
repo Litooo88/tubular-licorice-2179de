@@ -13,7 +13,11 @@ löpande "konversation".
 
 1. **Vid start av ett pass:** `git fetch origin`, stå på `main`,
    `git pull --ff-only`, läs de senaste posterna nedan.
-2. **När du börjar en uppgift:** lägg en NY post högst upp i `## Logg` med
+2. **När du börjar en uppgift:** lägg en NY post högst upp i `## Logg
+
+### 2026-11-12 — Codex — PÅGÅR (ringlista och dagsplanering)
+
+- Branch: codex/nemob-os-ring-plan. Äger endast gränssnittet under nemob-os/public/unified/. Befintliga planerings-API återanvänds. Backend ägs av Claude Code.` med
    status `PÅGÅR` — säg vilken branch och vilka filer/områden du tar.
 3. **När du är klar / lämnar över:** uppdatera posten till `KLAR` (eller lägg en
    ny) med resultat, testkörningar och ev. risker.
@@ -29,6 +33,10 @@ löpande "konversation".
 7. **Format på en post:** se mallen längst ned.
 
 ## Logg
+
+### 2026-11-12 — Codex — PÅGÅR (ringlista och dagsplanering)
+
+- Branch: codex/nemob-os-ring-plan. Äger endast gränssnittet under nemob-os/public/unified/. Befintliga planerings-API återanvänds. Backend ägs av Claude Code.
 
 ### 2026-11-12 - Codex - KLAR (AI-assistent i PR #173)
 
