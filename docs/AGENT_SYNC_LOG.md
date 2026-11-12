@@ -32,6 +32,24 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — KLAR (NEMOB AI Gateway v0.1: PR #174 godkänd av Sebastian och mergad)
+
+- **Branch:** `feat/ai-gateway` i egen worktree (scratchpad), bas `origin/main` 3a22905. Delade mappen rörs inte.
+- **Område:** ny `netlify/functions/ai-gateway.mjs` (+ `_shared/ai-*.mjs`), tester `tests/ai-gateway*.test.mjs`,
+  `docs/NEMOB_AI_GATEWAY.md`. Egen klientauth med scopes (aldrig ADMIN_TOKEN utåt), revisionslogg, rate limit.
+  Verktyg: search_calls, search_customer, get_business_overview, get_presence, set_presence (routing i dry-run,
+  ingen verklig omkoppling). Rör inte `nemob-os/**`. Inga kundutskick, ingen deploy.
+- **Resultat:** `ai-gateway.mjs` (/api/ai/mcp JSON-RPC, /api/ai/tools/:name REST, /api/ai/oauth/token client
+  credentials, openapi.json, .well-known, whoami), `_shared/ai-auth.mjs` (klientregister i env med SHA-256-hash,
+  tidssäkert, HMAC-token 60 min, scopes), `_shared/ai-audit.mjs` (revisionslogg + rate limit), `_shared/elks-calls.mjs`
+  (46elks-paginering), `_shared/presence.mjs` (versionerad, sluttid, auto-reset, routing dry-run), `_shared/ai-tools.mjs`
+  (search_calls, search_customer, get_business_overview, get_presence, set_presence), `scripts/ai-gateway-client.mjs`.
+  Docs: `docs/NEMOB_AI_GATEWAY.md`. Gatewayen svarar 503 tills AI_GATEWAY_CLIENTS sätts (fail-closed).
+- **Tester:** `npm run test:ai` (16) i grinden; build grön i simulerad Netlify-miljö (188 tester), checkout OK,
+  callflow OK. Begränsning: ingen OAuth authorization code än (claude.ai/ChatGPT-connectors), se docs.
+- **PR:** #174, godkänd 2026-11-12 och mergad via GitHub. Aktivering kräver AI_GATEWAY_CLIENTS + AI_GATEWAY_SIGNING_SECRET i Netlify (sätts av Sebastian).
+
+
 ### 2026-11-12 — Claude Code — KLAR (P0 hotfix: Netlify-byggen, PR #172 godkänd av Sebastian och mergad)
 
 - **Branch:** `hotfix/netlify-build` i egen worktree (scratchpad), bas `origin/main` 507e9f4. Delade mappen rörs inte.
