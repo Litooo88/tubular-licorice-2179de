@@ -27,9 +27,11 @@ Verktyg läser: workshop-cases (Blobs), 46elks /a1/calls (paginerat), godkännan
   `{ kind, len, hash }`, och IP lagras som HMAC-hash med dagssalt
   (`ipHash`), aldrig som adress. Aldrig hemligheter, aldrig kunddata ur svaren.
 - **Rate limit** per klient och minut (`rpm` i klientposten, standard 60).
-  **Fail-closed:** går räknaren inte att nå nekas anropet med
+  **Fail-closed:** går räknaren inte att nå, eller ger den versionerade
+  uppdateringen ett misslyckat resultat (`storage_error`, `unversioned`,
+  `conflict` efter omförsök, overifierat skapande), nekas anropet med
   `503 rate_limit_unavailable` – en externt nåbar gateway med kunddata får
-  aldrig bli obegränsad.
+  aldrig bli obegränsad. Svaret bär `reason` i loggen.
 - **Privat/LVU-material** finns inte i Netlify-lagringen och nås aldrig
   härifrån. Ärendesvaren är en fältvitlista (inga anteckningar, media,
   verkstadskommentarer, kuponger).
@@ -99,8 +101,16 @@ inbyggda MCP-connectors kräver:
    per IP-hash (10/min).
 4. `POST /api/ai/oauth/token` med `grant_type=authorization_code` +
    `code_verifier` → åtkomsttoken (60 min) + refresh token (30 dagar,
-   roteras vid varje användning, gammal återkallas). Koden är engångs och
-   bränns även vid ett misslyckat byte. `grant_type=refresh_token` förnyar.
+   roteras vid varje användning, gammal återkallas). Koden förbrukas
+   versionerat FÖRE utfärdande och bränns även vid ett misslyckat byte; går
+   markeringen inte att spara utfärdas inget. `grant_type=refresh_token`
+   förnyar i fail-closed-ordning: den gamla tokenen återkallas versionerat
+   först, sedan skapas den nya, sedan utfärdas åtkomsttoken. Ett lagringsfel
+   kan därför aldrig lämna en återanvändbar refresh token (hotfix 2026-11-12).
+6. **Återkallelse:** `POST /api/ai/oauth/clients` med
+   `{ action: "list" | "revoke", owner_pin, client_id?, reason? }` (ägar-PIN,
+   aldrig Bearer). En återkallad klient nekas refresh och nya koder direkt,
+   och dess åtkomsttoken avvisas vid nästa anrop (401) trots giltig signatur.
 5. Tokenens `sub` är `oauth:<client_id>`; scopes är de ägaren godkände.
    Revisionsloggen visar `via: oauth_code`.
 
