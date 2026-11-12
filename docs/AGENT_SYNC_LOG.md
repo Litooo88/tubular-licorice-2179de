@@ -57,6 +57,18 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — PÅGÅR (NEMOB OS 2.0: AI-driven uppgiftsinkorg – backend)
+
+- **Branch:** `feat/task-inbox`, bas `origin/main` 44b5800, egen worktree. `nemob-os/**` rörs inte.
+- **Område:** ny store `task-inbox` + `_shared/task-inbox.mjs` (datamodell, dedup, prioritet, tidsuppskattning),
+  `_shared/time-phrase.mjs` (svenska tidsuttryck → absolut Europe/Stockholm eller flagga för kontroll),
+  `netlify/functions/tasks.mjs` (`/api/tasks`: lista/synka, välj, avvisa, slutför, ringlista med beständiga
+  arbetsstatusar). Källor: Nova-samtal/möten/meddelanden, ringlistan + RING-svar, verkstadsärenden,
+  bokningsförfrågningar, manuella uppgifter; e-post som `not_configured`. Privata planeringsuppgifter
+  (nemob-os lokal server) läses aldrig.
+- **Kontrakt:** dokumenteras i `docs/NEMOB_OS_2_API_CONTRACTS.md` §7 (Codex anpassar `nemob-os/**`).
+- Inga kundutskick, inga bekräftade bokningar, ingen merge utan godkännande.
+
 ### 2026-11-12 — Claude Code — KLAR (AI Gateway: konfiguration i Blobs – PR #177 godkänd av Sebastian, mergas och aktiveras)
 
 - **Branch:** `feat/ai-gateway-config-blobs`, bas `origin/main` 17d4862. Delade mappen rörs inte.
