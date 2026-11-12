@@ -32,7 +32,7 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-11-12 — Claude Code — PR ÖPPEN, VÄNTAR GODKÄNNANDE (P0 hotfix: Netlify-byggen för PR #170/#171)
+### 2026-11-12 — Claude Code — KLAR (P0 hotfix: Netlify-byggen, PR #172 godkänd av Sebastian och mergad)
 
 - **Branch:** `hotfix/netlify-build` i egen worktree (scratchpad), bas `origin/main` 507e9f4. Delade mappen rörs inte.
 - **Orsak (bygglogg 6af50a3e… och 6af50fc6…):** `npm run test:integrity` faller i Netlify: alla sms-inbound-tester
@@ -44,7 +44,7 @@ löpande "konversation".
   storage-health, approvals; `_blobs-test-env.mjs` sätter NODE_ENV=test ovillkorat. Build grön både i
   simulerad Netlify-miljö (prod-variabler satta, NODE_ENV=production) och utan: 176 tester. checkout OK,
   callflow OK. Docs §12a beskriver regeln. Verifieringsplan efter deploy i PR-beskrivningen.
-- **PR:** se nedan. Merga inte utan Sebastians godkännande.
+- **PR:** #172, godkänd 2026-11-12 och mergad via GitHub. Deploy-verifiering enligt PR-beskrivningen görs därefter.
 
 
 ### 2026-11-12 — Claude Code — KLAR (GET /api/approvals: PR #171 godkänd av Sebastian och mergad till main)
