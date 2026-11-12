@@ -32,7 +32,7 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-11-12 — Claude Code — PR ÖPPEN, VÄNTAR GODKÄNNANDE (NEMOB AI Gateway v0.1)
+### 2026-11-12 — Claude Code — KLAR (NEMOB AI Gateway v0.1: PR #174 godkänd av Sebastian och mergad)
 
 - **Branch:** `feat/ai-gateway` i egen worktree (scratchpad), bas `origin/main` 3a22905. Delade mappen rörs inte.
 - **Område:** ny `netlify/functions/ai-gateway.mjs` (+ `_shared/ai-*.mjs`), tester `tests/ai-gateway*.test.mjs`,
@@ -47,7 +47,7 @@ löpande "konversation".
   Docs: `docs/NEMOB_AI_GATEWAY.md`. Gatewayen svarar 503 tills AI_GATEWAY_CLIENTS sätts (fail-closed).
 - **Tester:** `npm run test:ai` (16) i grinden; build grön i simulerad Netlify-miljö (188 tester), checkout OK,
   callflow OK. Begränsning: ingen OAuth authorization code än (claude.ai/ChatGPT-connectors), se docs.
-- **PR:** se nedan. Merga inte utan Sebastians godkännande.
+- **PR:** #174, godkänd 2026-11-12 och mergad via GitHub. Aktivering kräver AI_GATEWAY_CLIENTS + AI_GATEWAY_SIGNING_SECRET i Netlify (sätts av Sebastian).
 
 
 ### 2026-11-12 — Claude Code — KLAR (P0 hotfix: Netlify-byggen, PR #172 godkänd av Sebastian och mergad)
