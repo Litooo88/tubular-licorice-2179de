@@ -197,12 +197,16 @@ const monthPrefixes = (sinceMs, now = Date.now()) => {
   return out;
 };
 
+// Nycklarna här innehåller kolon (ISO-tid). Netlifys lokala Blobs-server
+// returnerar dem URL-kodade i list-svaret ("%3A"), produktionen råa; avkoda
+// så att get() och tidsfiltren träffar i båda miljöerna.
+const decodeKey = (key) => { try { return decodeURIComponent(String(key ?? "")); } catch { return String(key ?? ""); } };
 const listKeys = async (store, prefix) => {
   const keys = [];
   let cursor;
   do {
     const page = await store.list({ prefix, ...(cursor ? { cursor } : {}) }).catch(() => ({ blobs: [] }));
-    keys.push(...(page.blobs || []).map((b) => b.key));
+    keys.push(...(page.blobs || []).map((b) => decodeKey(b.key)));
     cursor = page.cursor;
   } while (cursor);
   return keys;
