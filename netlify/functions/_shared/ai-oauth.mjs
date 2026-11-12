@@ -19,7 +19,7 @@
 
 import { createHash, randomBytes, timingSafeEqual } from "node:crypto";
 import { getStore } from "@netlify/blobs";
-import { claimJson, createIfAbsent, readWithEtag, safeKey } from "./case-store.mjs";
+import { claimJson, commitJson, createIfAbsent, readWithEtag, safeKey } from "./case-store.mjs";
 import { ALL_SCOPES, issueToken, SCOPES } from "./ai-auth.mjs";
 
 const env = (name) => {
@@ -78,10 +78,36 @@ export const registerClient = async (body = {}) => {
   return { ok: true, client };
 };
 
-export const getDynamicClient = async (clientId) => {
+// Återkallade klienter räknas som obefintliga: inga nya koder, inga refresh,
+// och gatewayen avvisar deras åtkomsttoken vid nästa anrop.
+export const getDynamicClient = async (clientId, { includeRevoked = false } = {}) => {
   const id = clean(clientId, 80);
   if (!/^dyn_[0-9a-f]{24}$/.test(id)) return null;
-  return (await readWithEtag(store(), `client_${id}`, { allowMissingEtag: true })).item;
+  const item = (await readWithEtag(store(), `client_${id}`, { allowMissingEtag: true })).item;
+  if (!item) return null;
+  if (item.revoked && !includeRevoked) return null;
+  return item;
+};
+
+// Ägaren återkallar en dynamisk klient (ChatGPT-connector etc.). Kräver ägar-PIN.
+// Åtkomsttoken (max 60 min) avvisas från nästa anrop, refresh nekas direkt.
+export const revokeDynamicClient = async ({ clientId, ownerPin, reason = "", now = Date.now() } = {}) => {
+  if (!ownerSecretConfigured()) return { ok: false, status: 503, error: "AI_GATEWAY_OWNER_SECRET saknas." };
+  if (!ownerMatches(ownerPin)) return { ok: false, status: 401, error: "Fel ägar-PIN." };
+  const id = clean(clientId, 80);
+  const key = `client_${id}`;
+  const existing = await readWithEtag(store(), key, { allowMissingEtag: true });
+  if (!existing.item) return { ok: false, status: 404, error: "Okänd klient." };
+  const saved = await commitJson(store(), key, (row) => ({ ...row, revoked: true, revokedAt: new Date(now).toISOString(), revokeReason: clean(reason, 120) }), { current: existing.item, etag: existing.etag });
+  if (!saved.ok) return { ok: false, status: 503, error: "Återkallelsen kunde inte sparas säkert." };
+  return { ok: true, client: saved.item };
+};
+
+export const listDynamicClients = async () => {
+  const s = store();
+  const { blobs } = await s.list({ prefix: "client_" }).catch(() => ({ blobs: [] }));
+  const rows = await Promise.all((blobs || []).map((b) => s.get(b.key, { type: "json" }).catch(() => null)));
+  return rows.filter(Boolean).map((c) => ({ client_id: c.client_id, client_name: c.client_name, created_at: c.created_at, revoked: Boolean(c.revoked), revokedAt: c.revokedAt || "" }));
 };
 
 // Validerar en authorize-förfrågan. { ok, client, redirectUri, scopes, state, challenge } | { ok:false, error, description }
@@ -146,8 +172,12 @@ export const exchangeCode = async ({ code, clientId, redirectUri, codeVerifier, 
   if (row.used || Number(row.exp) <= now) return { ok: false, error: "invalid_grant", description: "Koden har gått ut eller är använd." };
   if (row.clientId !== clean(clientId, 80) || row.redirectUri !== clean(redirectUri, 500)) return { ok: false, error: "invalid_grant", description: "client_id eller redirect_uri matchar inte koden." };
   const verifier = clean(codeVerifier, 200);
-  if (!/^[A-Za-z0-9_.~-]{43,128}$/.test(verifier) || b64u(sha256(verifier)) !== row.challenge) return { ok: false, error: "invalid_grant", description: "PKCE-verifieraren matchar inte." };
-  await store().setJSON(key, { ...row, used: true, usedAt: new Date(now).toISOString() }).catch(() => {});
+  const verified = /^[A-Za-z0-9_.~-]{43,128}$/.test(verifier) && b64u(sha256(verifier)) === row.challenge;
+  // Koden förbrukas VERSIONERAT och FÖRE utfärdande, även vid fel verifierare
+  // (skydd mot gissning). Går markeringen inte att spara utfärdas inget.
+  const consumed = await commitJson(store(), key, (fresh) => ({ ...fresh, used: true, usedAt: new Date(now).toISOString(), verified }), { current: row, etag: claim.etag });
+  if (!consumed.ok) return { ok: false, error: "temporarily_unavailable", description: "Koden kunde inte förbrukas säkert. Inget utfärdades." };
+  if (!verified) return { ok: false, error: "invalid_grant", description: "PKCE-verifieraren matchar inte." };
   const client = await getDynamicClient(row.clientId);
   if (!client) return { ok: false, error: "invalid_client" };
   const issued = issueToken({ client: dynamicPrincipalClient(client, row.scopes), scopes: row.scopes, now });
@@ -165,12 +195,22 @@ export const refreshTokens = async ({ refreshToken, clientId, now = Date.now() }
   const row = claim.item;
   if (row.revoked || Number(row.exp) <= now || row.clientId !== clean(clientId, 80)) return { ok: false, error: "invalid_grant", description: "Refresh token är ogiltig." };
   const client = await getDynamicClient(row.clientId);
-  if (!client) return { ok: false, error: "invalid_client" };
+  if (!client) return { ok: false, error: "invalid_grant", description: "Klienten är återkallad eller okänd." };
+  // Ordning (fail-closed): 1) återkalla den gamla tokenen VERSIONERAT, 2) skapa
+  // den nya, 3) utfärda. Misslyckas steg 1 utfärdas inget och den gamla
+  // tokenen är fortfarande reserverad – ett lagringsfel kan aldrig lämna en
+  // återanvändbar refresh token. Misslyckas steg 2/3 är den gamla redan
+  // återkallad: klienten får gå via samtycket igen (säkert, inte dubbelt).
+  const revoked = await commitJson(store(), key, (fresh) => (fresh.revoked ? null : { ...fresh, revoked: true, revokedAt: new Date(now).toISOString(), rotating: true }), { current: row, etag: claim.etag });
+  if (!revoked.ok) {
+    console.error("ai-oauth: refresh-återkallelse misslyckades", { reason: revoked.reason });
+    return { ok: false, error: "temporarily_unavailable", description: "Refresh token kunde inte roteras säkert. Försök igen." };
+  }
+  const next = randomBytes(32).toString("base64url");
+  const created = await createIfAbsent(store(), `refresh_${hashKey(next)}`, { clientId: client.client_id, scopes: row.scopes, exp: now + REFRESH_TTL_MS, rotatedFrom: key }).catch(() => ({ created: false }));
+  if (!created.created) return { ok: false, error: "temporarily_unavailable", description: "Ny refresh token kunde inte sparas. Den gamla är återkallad – gör om samtycket." };
   const issued = issueToken({ client: dynamicPrincipalClient(client, row.scopes), scopes: row.scopes, now });
   if (!issued.ok) return issued;
-  const next = randomBytes(32).toString("base64url");
-  await createIfAbsent(store(), `refresh_${hashKey(next)}`, { clientId: client.client_id, scopes: row.scopes, exp: now + REFRESH_TTL_MS, rotatedFrom: key });
-  await store().setJSON(key, { ...row, revoked: true, revokedAt: new Date(now).toISOString() }).catch(() => {});
   const { ok, ...tokens } = issued;
   return { ok: true, ...tokens, refresh_token: next };
 };

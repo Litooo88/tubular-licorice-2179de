@@ -57,6 +57,21 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — KLAR (AI Gateway hotfix: PR #176 godkänd av Sebastian och mergad)
+
+- **Branch:** `hotfix/ai-gateway-refresh-ratelimit`, bas `origin/main` 778f28c. Delade mappen rörs inte.
+- **Område:** `_shared/ai-oauth.mjs`, `_shared/ai-audit.mjs`, `ai-gateway.mjs`, tester, docs. Ingen aktivering, inga nycklar, inget i `nemob-os/**`.
+- **Resultat:** refreshTokens återkallar den gamla tokenen versionerat FÖRE utfärdande (misslyckas det utfärdas inget;
+  tokenen kan aldrig återanvändas efter reservationsfönstret); engångskoden förbrukas versionerat före utfärdande;
+  ny ägar-rutt POST /api/ai/oauth/clients (list/revoke med ägar-PIN) – återkallad klient nekas refresh/koder och dess
+  åtkomsttoken avvisas direkt; checkRateLimit nekar vid ALLA misslyckade räknarresultat (kast, storage_error,
+  unversioned, conflict, overifierat skapande).
+- **Tester:** test:ai 21 (5 nya: parallell refresh, lagringsfel vid återkallelse + återspelning, engångskod vid
+  lagringsfel, klientåterkallelse, rate limit med returnerade fel och kast). Build grön i simulerad Netlify-miljö
+  (197 tester), checkout OK, callflow OK.
+- **PR:** #176, godkänd 2026-11-12 och mergad via GitHub. Gatewayen är redo att aktiveras när Sebastian sätter AI_GATEWAY_CLIENTS, AI_GATEWAY_SIGNING_SECRET och AI_GATEWAY_OWNER_SECRET.
+
+
 ### 2026-11-12 — Claude Code — KLAR (AI Gateway säkerhet + OAuth: PR #175 godkänd av Sebastian och mergad)
 
 - **Branch:** `fix/ai-gateway-security` i egen worktree, bas `origin/main` 3d74d87. Delade mappen rörs inte.

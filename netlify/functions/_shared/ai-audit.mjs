@@ -96,12 +96,19 @@ export const checkRateLimit = async ({ client, limit = 60, now = Date.now() } = 
     const store = getStore({ name: RATE_STORE, consistency: "strong" });
     const created = await createIfAbsent(store, key, { client, minute, count: 1 });
     if (created.created) return { allowed: true, remaining: limit - 1, limit, resetAt };
+    if (!created.verified) return { allowed: false, remaining: 0, limit, resetAt, unavailable: true, reason: "unverified_create" };
     const bumped = await commitJson(store, key, (row) => ({ ...row, count: (Number(row.count) || 0) + 1 }), { current: created.item, etag: created.etag });
-    const count = bumped.ok ? bumped.item.count : (Number(created.item?.count) || 0) + 1;
+    // Varje misslyckat resultat (conflict efter omförsök, storage_error,
+    // unversioned, not_found) nekar: utan verifierad räkning finns ingen gräns.
+    if (!bumped.ok) {
+      console.error("ai-gateway ratelimit counter failed", { reason: bumped.reason });
+      return { allowed: false, remaining: 0, limit, resetAt, unavailable: true, reason: bumped.reason };
+    }
+    const count = Number(bumped.item.count) || 0;
     return { allowed: count <= limit, remaining: Math.max(0, limit - count), limit, resetAt };
   } catch (error) {
     console.error("ai-gateway ratelimit unavailable", { error: clean(error?.message, 120) });
-    return { allowed: false, remaining: 0, limit, resetAt, unavailable: true };
+    return { allowed: false, remaining: 0, limit, resetAt, unavailable: true, reason: "threw" };
   }
 };
 
