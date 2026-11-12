@@ -105,9 +105,17 @@ export const verifyToken = (token, { clients, now = Date.now(), secret = signing
   let payload;
   try { payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8")); } catch { return null; }
   if (!payload || typeof payload !== "object" || Number(payload.exp) * 1000 <= now) return null;
-  const client = findClient(clients, clean(payload.sub, 60));
+  const sub = clean(payload.sub, 80);
+  const tokenScopes = (Array.isArray(payload.scp) ? payload.scp : []).filter((s) => ALL_SCOPES.includes(s));
+  // Dynamiskt registrerad OAuth-klient (authorization code): identiteten och
+  // scopen bärs av den signerade tokenen, som ägaren godkände vid samtycket.
+  if (sub.startsWith("oauth:")) {
+    if (!tokenScopes.length) return null;
+    return { client: { id: sub, label: "OAuth-klient", scopes: tokenScopes, rpm: 60 }, scopes: tokenScopes, exp: Number(payload.exp), jti: clean(payload.jti, 32), via: "oauth_code" };
+  }
+  const client = findClient(clients, sub);
   if (!client) return null;
-  const scopes = (Array.isArray(payload.scp) ? payload.scp : []).filter((s) => client.scopes.includes(s));
+  const scopes = tokenScopes.filter((s) => client.scopes.includes(s));
   return { client, scopes, exp: Number(payload.exp), jti: clean(payload.jti, 32), via: "oauth_token" };
 };
 
