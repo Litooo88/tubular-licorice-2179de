@@ -15,9 +15,11 @@ löpande "konversation".
    `git pull --ff-only`, läs de senaste posterna nedan.
 2. **När du börjar en uppgift:** lägg en NY post högst upp i `## Logg
 
-### 2026-11-12 — Codex — PÅGÅR (ringlista och dagsplanering)
+### 2026-11-12 — Codex — KLAR (ringlista och dagsplanering)
 
-- Branch: codex/nemob-os-ring-plan. Äger endast gränssnittet under nemob-os/public/unified/. Befintliga planerings-API återanvänds. Backend ägs av Claude Code.` med
+- Branch: codex/nemob-os-ring-plan. Äger endast gränssnittet under nemob-os/public/unified/. Befintliga planerings-API återanvänds. Backend ägs av Claude Code.
+- Ringlista och förslag använder märkta fiktiva data. Dagsplan och kompletteringar använder befintliga lokala API.
+- Full build, OS 82/82, kommunikation 7/7, kunskap 6/6, checkout 44 och Callflow check godkända. Chromium 375/430/768/1440 godkänt. Fysisk mobil och skarpa ringliste-/förslagskontrakt kvar.` med
    status `PÅGÅR` — säg vilken branch och vilka filer/områden du tar.
 3. **När du är klar / lämnar över:** uppdatera posten till `KLAR` (eller lägg en
    ny) med resultat, testkörningar och ev. risker.
@@ -34,9 +36,11 @@ löpande "konversation".
 
 ## Logg
 
-### 2026-11-12 — Codex — PÅGÅR (ringlista och dagsplanering)
+### 2026-11-12 — Codex — KLAR (ringlista och dagsplanering)
 
 - Branch: codex/nemob-os-ring-plan. Äger endast gränssnittet under nemob-os/public/unified/. Befintliga planerings-API återanvänds. Backend ägs av Claude Code.
+- Ringlista och förslag använder märkta fiktiva data. Dagsplan och kompletteringar använder befintliga lokala API.
+- Full build, OS 82/82, kommunikation 7/7, kunskap 6/6, checkout 44 och Callflow check godkända. Chromium 375/430/768/1440 godkänt. Fysisk mobil och skarpa ringliste-/förslagskontrakt kvar.
 
 ### 2026-11-12 - Codex - KLAR (AI-assistent i PR #173)
 
