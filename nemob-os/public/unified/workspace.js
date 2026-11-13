@@ -170,7 +170,7 @@ async function loadRing(sync = false) {
   if (active !== "ringlist") return;
   const selected = ringRow();
   if (selected && ring.detail && !sync) renderRing();
-  else if (selected || innerWidth > 760) await openContact(selected?.id || ringRows()[0]?.id || "");
+  else if (selected || innerWidth > 1000) await openContact(selected?.id || ringRows()[0]?.id || "");
   else {
     ring.selected = "";
     renderRing();
@@ -378,10 +378,10 @@ export function attachWorkspace(content, origin) {
     if (action === "tab") {
       ring.tab = target.dataset.tab;
       if (ringRow()) renderRing();
-      else openContact(innerWidth > 760 ? ringRows()[0]?.id || "" : "");
+      else openContact(innerWidth > 1000 ? ringRows()[0]?.id || "" : "");
     }
     if (action === "contact") {
-      if (innerWidth <= 760 && ring.selected === target.dataset.id) {
+      if (innerWidth <= 1000 && ring.selected === target.dataset.id) {
         openContact("");
         root.querySelector('[data-work="contact"][data-id="' + target.dataset.id + '"]')?.focus();
       } else openContact(target.dataset.id, true);

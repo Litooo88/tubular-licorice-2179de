@@ -555,7 +555,7 @@ server.listen(PORT, AUTH.host, () => {
   const repairStatus = knowledgeSource.status();
   // OBS: endast om variablerna finns — aldrig deras värden.
   console.log(
-    `NEMOB OS kör på http://${AUTH.host}:${PORT} ` +
+    `NEMOB OS kör på http://${AUTH.host}:${server.address().port} ` +
     `(Nordic-källa: ${configured ? "konfigurerad" : "ej konfigurerad"}, ` +
     `åtkomstskydd: ${AUTH.required ? "PIN aktiv" : "endast lokalt"}, ` +
     `Repair Intelligence: ${repairStatus.status}` +
