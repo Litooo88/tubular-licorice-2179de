@@ -104,7 +104,7 @@ function renderRing() {
       (!ring.checked.size || ring.working ? ' disabled' : "") + '>Lägg till i min ringlista</button>' : "") + '</div>' +
     table + (ring.list?.total > ring.list?.rows?.length ? errorText("Visar " + ring.list.rows.length + " av " + ring.list.total + " öppna uppgifter.") : "") +
     (ring.list?.partial ? errorText("Delvis underlag. Vissa källor kunde inte hämtas.") : "") +
-    (ring.tab === "mine" && rows.length > 1 ? '<p class="work-hint">Ordningen gäller i den här fliken.</p>' : "") +
+    (ring.tab === "mine" && rows.length > 1 ? '<p class="work-hint">Ordningen sparas i NEMOB OS.</p>' : "") +
     (ring.message ? errorText(ring.message) : "") + '</section><section id="ring-contact" class="ring-contact" aria-label="Kundkort">' +
     renderContact() + '</section></div>';
 }
@@ -165,11 +165,12 @@ async function loadRing(sync = false) {
   const list = await request("ringlist" + (sync ? "/refresh" : ""), sync ? {} : undefined);
   ring.loading = false;
   ring.list = list;
+  if (Array.isArray(list.order)) ring.order = list.order;
   ring.checked = new Set([...ring.checked].filter((id) => list.rows?.some((row) => row.id === id && !row.selected)));
   if (active !== "ringlist") return;
   const selected = ringRow();
   if (selected && ring.detail && !sync) renderRing();
-  else if (selected || innerWidth > 760) await openContact(selected?.id || ringRows()[0]?.id || "");
+  else if (selected || innerWidth > 1000) await openContact(selected?.id || ringRows()[0]?.id || "");
   else {
     ring.selected = "";
     renderRing();
@@ -365,7 +366,7 @@ function dictate() {
 export function attachWorkspace(content, origin) {
   root = content;
   getOrigin = origin;
-  root.addEventListener("click", (event) => {
+  root.addEventListener("click", async (event) => {
     const target = event.target.closest("[data-work]");
     if (!target) return;
     const action = target.dataset.work;
@@ -377,10 +378,10 @@ export function attachWorkspace(content, origin) {
     if (action === "tab") {
       ring.tab = target.dataset.tab;
       if (ringRow()) renderRing();
-      else openContact(innerWidth > 760 ? ringRows()[0]?.id || "" : "");
+      else openContact(innerWidth > 1000 ? ringRows()[0]?.id || "" : "");
     }
     if (action === "contact") {
-      if (innerWidth <= 760 && ring.selected === target.dataset.id) {
+      if (innerWidth <= 1000 && ring.selected === target.dataset.id) {
         openContact("");
         root.querySelector('[data-work="contact"][data-id="' + target.dataset.id + '"]')?.focus();
       } else openContact(target.dataset.id, true);
@@ -389,11 +390,18 @@ export function attachWorkspace(content, origin) {
     if (action === "add-current") changeRing([ring.selected], "select");
     if (Object.hasOwn(callLabels, action)) changeRing([ring.selected], action);
     if (action === "move") {
+      if (ring.working) return;
       const ids = ringRows().map((row) => row.id);
       const from = ids.indexOf(target.dataset.id);
       const to = from + (target.dataset.dir === "up" ? -1 : 1);
+      if (from < 0 || to < 0 || to >= ids.length) return;
       [ids[from], ids[to]] = [ids[to], ids[from]];
-      ring.order = ids;
+      ring.working = true;
+      const saved = await request("ringlist/order", { ids });
+      ring.working = false;
+      if (saved.status === "ok") ring.order = ids;
+      ring.message = saved.status === "ok" ? "Ordningen är sparad." : statusText(saved);
+      if (active !== "ringlist") return;
       renderRing();
       root.querySelector('[data-work="move"][data-id="' + target.dataset.id + '"]:not(:disabled)')?.focus();
     }

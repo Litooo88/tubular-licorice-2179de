@@ -155,7 +155,7 @@ body[data-page="ringlist"] #refresh { min-height: 34px; }
   body[data-page="ringlist"] .sidebar { align-items: flex-start; gap: 8px; flex-direction: column; }
   .ring-contact { padding-right: 16px; padding-left: 16px; }
 }
-@media (max-width: 760px) {
+@media (max-width: 1000px) {
   body[data-page="ringlist"] .sidebar { padding: 11px 13px; }
   body[data-page="ringlist"] nav a { padding: 7px 8px; }
   body[data-page="ringlist"] .topline { padding: 7px 12px; }

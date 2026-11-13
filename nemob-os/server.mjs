@@ -15,6 +15,7 @@ import { Store, defaultStorePath } from "./lib/store.mjs";
 import { newTask, taskPatch } from "./lib/tasks.mjs";
 import { generatePlan, summarizeDay } from "./lib/plan.mjs";
 import { fetchNordicBrief } from "./lib/nordic.mjs";
+import { inboxRequest, inboxRow } from "./lib/inbox.mjs";
 import { readAssistant } from "./lib/assistant.mjs";
 import { readUnifiedBusiness, readUnifiedPlanning } from "./lib/unified.mjs";
 import { fetchAdminCases } from "./lib/admin-cases.mjs";
@@ -202,26 +203,85 @@ const handleApi = async (req, res, url) => {
     const body = await readBody(req);
     return json(res, await readAssistant(body?.kind, body?.query));
   }
+  if (path === "/api/unified/inbox" && req.method === "GET") {
+    const result = await inboxRequest("?status=open&limit=100");
+    if (result.status !== "ok") return json(res, { status: result.status });
+    const data = result.data;
+    if (!Array.isArray(data?.items)) return json(res, { status: "down" });
+    return json(res, { status: "ok", items: data.items.filter((item) => !store.taskById("inbox_" + item.id)).map(inboxRow),
+      partial: data.partial === true || Boolean(data.sources?.ringList && data.sources.ringList !== "ok"),
+      email: data.sources?.email === "not_configured" ? "not_configured" : null });
+  }
+  if (path === "/api/unified/inbox" && req.method === "POST") {
+    if (req.headers["content-type"]?.split(";")[0]?.trim() !== "application/json") {
+      return json(res, { error: "unsupported_content_type" }, 415);
+    }
+    const body = await readBody(req);
+    const id = body?.id;
+    const action = body?.action;
+    if (typeof id !== "string" || !/^[a-zA-Z0-9_-]{1,60}$/.test(id) ||
+        !["plan", "reject", "snooze"].includes(action)) {
+      return json(res, { status: "invalid" }, 400);
+    }
+    const localId = "inbox_" + id;
+    if (action === "plan" && store.taskById(localId)) return json(res, { status: "ok" });
+    const current = await inboxRequest("/" + id);
+    if (current.status !== "ok" || !current.etag) return json(res, { status: current.status === "ok" ? "down" : current.status });
+    const prepared = action === "plan" ? newTask({
+      title: typeof body.title === "string" ? body.title : current.data.title,
+      estimatedMinutes: current.data.estimatedMinutes, status: "planerad",
+      nextStep: current.data.serviceNumber || "",
+    }) : null;
+    if (prepared?.error) return json(res, { status: "invalid" }, 400);
+    if (action !== "plan" || !["selected", "in_progress"].includes(current.data.status)) {
+      const payload = action === "snooze" ? { until: body.until } : {};
+      const result = await inboxRequest("/" + id + "/" + (action === "plan" ? "select" : action), payload, { etag: current.etag });
+      if (result.status !== "ok" || result.data?.ok !== true) return json(res, {
+        status: result.status === "ok" ? "down" : result.status,
+      });
+    }
+    if (prepared && !store.taskById(localId)) {
+      const task = { ...prepared.task, id: localId };
+      try {
+        store.addPlannedTask(task, generatePlan([...store.tasks, task]));
+      } catch {
+        return json(res, { status: "planning_failed" });
+      }
+    }
+    return json(res, { status: "ok" });
+  }
   if (path === "/api/unified/planning" && req.method === "GET") {
-    return json(res, readUnifiedPlanning(store.tasks));
+    return json(res, { ...readUnifiedPlanning(store.tasks), day: generatePlan(store.tasks), summary: summarizeDay(store.tasks) });
   }
   const ringContact = path.match(/^\/api\/unified\/ringlist\/(t_[a-f0-9]{20})$/);
   const reportCase = path.match(/^\/api\/unified\/workshop-report\/case\/([a-zA-Z0-9_:-]{4,120})$/);
   if (req.method === "GET") {
-    if (path === "/api/unified/ringlist") return json(res, await readRingList());
+    if (path === "/api/unified/ringlist") return json(res, { ...await readRingList(), order: store.ringOrder });
     if (ringContact) return json(res, await readRingContact(ringContact[1]));
     if (reportCase) return json(res, await readReportCase(reportCase[1]));
   }
   if (req.method === "POST" && (
-    ringContact || path === "/api/unified/ringlist/refresh" ||
+    ringContact || path === "/api/unified/ringlist/order" || path === "/api/unified/ringlist/refresh" ||
     path === "/api/unified/workshop-report/review" || path === "/api/unified/workshop-report/save"
   )) {
     if (req.headers["content-type"]?.split(";")[0]?.trim() !== "application/json") {
       return json(res, { error: "unsupported_content_type" }, 415);
     }
     const body = await readBody(req);
+    if (path === "/api/unified/ringlist/order") {
+      const ids = body?.ids;
+      if (!Array.isArray(ids) || ids.length > 100 || ids.some((id) => typeof id !== "string" || !/^t_[a-f0-9]{20}$/.test(id))) {
+        return json(res, { status: "invalid" }, 400);
+      }
+      try {
+        store.setRingOrder([...new Set(ids)]);
+        return json(res, { status: "ok" });
+      } catch {
+        return json(res, { status: "down" });
+      }
+    }
     if (ringContact) return json(res, await updateRingContact(ringContact[1], body));
-    if (path.endsWith("/refresh")) return json(res, await readRingList({ sync: true }));
+    if (path.endsWith("/refresh")) return json(res, { ...await readRingList({ sync: true }), order: store.ringOrder });
     if (path.endsWith("/review")) return json(res, await reviewWorkshopReport(body?.report));
     return json(res, await saveReportCase(body));
   }
@@ -495,7 +555,7 @@ server.listen(PORT, AUTH.host, () => {
   const repairStatus = knowledgeSource.status();
   // OBS: endast om variablerna finns — aldrig deras värden.
   console.log(
-    `NEMOB OS kör på http://${AUTH.host}:${PORT} ` +
+    `NEMOB OS kör på http://${AUTH.host}:${server.address().port} ` +
     `(Nordic-källa: ${configured ? "konfigurerad" : "ej konfigurerad"}, ` +
     `åtkomstskydd: ${AUTH.required ? "PIN aktiv" : "endast lokalt"}, ` +
     `Repair Intelligence: ${repairStatus.status}` +

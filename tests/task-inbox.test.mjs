@@ -440,3 +440,63 @@ test("samtidighet: parallell synk skapar en uppgift, parallella övergångar bev
   const list = buildCallList(await listTasks(store), [entry], { now: NOW });
   assert.equal(list.items.length, 0, "avslutad uppgift ingår inte");
 });
+
+test("NEMOB OS: Nova proposal, ring status and recoverable daily plan through the real task inbox", async (t) => {
+  const { handler } = await setup(t);
+  const { createServer } = await import("node:http");
+  const { spawn } = await import("node:child_process");
+  const { once } = await import("node:events");
+  const { mkdir, rename } = await import("node:fs/promises");
+  const temp = await mkdtemp(join(tmpdir(), "nemob-inbox-flow-"));
+  const dataDir = join(temp, "data");
+  await mkdir(dataDir);
+  const phone = "+46701111111";
+  const now = new Date().toISOString();
+  await getStore({ name: "voice-agent-meetings", consistency: "strong" }).setJSON("test-meeting", {
+    id: "test-meeting", at: now, phone, name: "Synthetic", topic: "Test",
+  });
+  const bridge = createServer(async (req, res) => {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const url = new URL(req.url, "http://localhost");
+    try {
+      const response = url.pathname === "/api/cases" ? Response.json({ cases: [] })
+        : url.pathname === "/api/nova" ? Response.json({ calls: [{ phone, kind: "inbound", transcript: "Synthetic transcript", at: now }] })
+        : url.pathname.startsWith("/api/task-inbox") ? await handler(new Request(url, {
+          method: req.method, headers: req.headers, body: chunks.length ? Buffer.concat(chunks) : undefined,
+        })) : new Response(null, { status: 404 });
+      res.writeHead(response.status, Object.fromEntries(response.headers));
+      res.end(await response.text());
+    } catch {
+      res.writeHead(500).end();
+    }
+  });
+  bridge.listen(0, "127.0.0.1");
+  await once(bridge, "listening");
+  t.after(() => bridge.close());
+  const child = spawn(process.execPath, ["nemob-os/server.mjs"], {
+    env: { ...process.env, NEMOB_OS_HOST: "127.0.0.1", NEMOB_OS_PORT: "0", NORDIC_ADMIN_TOKEN: "adm",
+      NEMOB_OS_STORE_PATH: join(dataDir, "state.json"), NORDIC_SITE_URL: "http://127.0.0.1:" + bridge.address().port },
+  });
+  t.after(async () => { if (child.exitCode === null) { const closed = once(child, "exit"); child.kill(); await closed; } await rm(temp, { recursive: true, force: true }); });
+  const [line] = await once(child.stdout, "data");
+  const port = String(line).match(/127\.0\.0\.1:(\d+)/)?.[1];
+  assert.ok(port);
+  const app = async (path, body) => (await fetch("http://127.0.0.1:" + port + "/api/unified/" + path,
+    body ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) } : undefined)).json();
+  const { items } = await app("inbox");
+  const item = items.find((row) => row.phone === phone);
+  assert.ok(item);
+  assert.equal((await app("ringlist/" + item.id)).calls[0].transcript, "Synthetic transcript");
+  assert.equal((await app("ringlist/" + item.id, { action: "select" })).status, "ok");
+  assert.equal((await app("ringlist/" + item.id, { action: "called_no_answer" })).status, "ok");
+  assert.equal((await app("ringlist")).rows[0].work.status, "called_no_answer");
+  const plan = { action: "plan", id: item.id, title: "Testplan" };
+  await rename(dataDir, dataDir + "-offline");
+  assert.equal((await app("inbox", plan)).status, "planning_failed");
+  assert.equal((await app("planning")).tasks.length, 0);
+  await rename(dataDir + "-offline", dataDir);
+  assert.equal((await app("inbox", plan)).status, "ok");
+  assert.equal((await app("inbox", plan)).status, "ok");
+  assert.equal((await app("planning")).tasks.filter((row) => row.title === "Testplan").length, 1);
+});

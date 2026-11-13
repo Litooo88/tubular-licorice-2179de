@@ -30,6 +30,9 @@ löpande "konversation".
 
 ## Logg
 
+### 2026-11-13 - Codex - Ringlista och dagsplanering
+
+- Frontend i codex/nemob-os-unified använder kontraktet från PR #179. Netlify-backend ändrades inte. Förslag överförs till befintlig lokal planeringsmotor med stabilt uppgifts-ID.
 ### 2026-11-13 — Codex — KLAR FÖR GRANSKNING (Ringlista och verkstadsrapport)
 
 - Branch `codex/nemob-os-ringlista-verkstadsrapport`. NEMOB OS-vyer och lokala adaptrar för dokumenterade admin-API:er. Claude Code äger Netlify-backend och Gateway-kontrakt.
