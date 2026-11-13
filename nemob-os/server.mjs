@@ -4,8 +4,8 @@
 // Konfig: nemob-os/.env  (se .env.example) eller vanliga miljövariabler.
 //
 // Servern serverar dashboarden (nemob-os/public) och ett litet JSON-API.
-// All data sparas i nemob-os/data/ (gitignorerad). Nordic-källan används
-// enbart read-only via lib/nordic.mjs.
+// Privata uppgifter sparas lokalt i nemob-os/data/. Företagets ringstatus och
+// verkstadsändringar sparas via Nordic-admin av autentiserade NEMOB OS-användare.
 
 import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
@@ -22,6 +22,9 @@ import { fetchAdminCases } from "./lib/admin-cases.mjs";
 import { openCasesPrioritized, searchCases } from "./lib/lookup.mjs";
 import { adviseTask } from "./lib/advice.mjs";
 import { runAdminAction } from "./lib/admin-actions.mjs";
+import {
+  readRingList, readRingContact, updateRingContact, reviewWorkshopReport, readReportCase, saveReportCase,
+} from "./lib/workspace-actions.mjs";
 import { banner as batterirefBanner, beslutsstod, loadBatteriref, searchRows } from "./lib/batteriref.mjs";
 import {
   CanonicalKnowledgeSource,
@@ -201,12 +204,11 @@ const handleApi = async (req, res, url) => {
     return json(res, await readAssistant(body?.kind, body?.query));
   }
   if (path === "/api/unified/inbox" && req.method === "GET") {
-    const calls = url.searchParams.get("view") === "calls";
-    const result = await inboxRequest(calls ? "/call-list?max=100" : "?status=open&limit=100");
+    const result = await inboxRequest("?status=open&limit=100");
     if (result.status !== "ok") return json(res, { status: result.status });
     const data = result.data;
     if (!Array.isArray(data?.items)) return json(res, { status: "down" });
-    return json(res, { status: "ok", items: data.items.filter((item) => calls || !store.taskById("inbox_" + item.id)).map(inboxRow),
+    return json(res, { status: "ok", items: data.items.filter((item) => !store.taskById("inbox_" + item.id)).map(inboxRow),
       partial: data.partial === true || Boolean(data.sources?.ringList && data.sources.ringList !== "ok"),
       email: data.sources?.email === "not_configured" ? "not_configured" : null });
   }
@@ -218,41 +220,70 @@ const handleApi = async (req, res, url) => {
     const id = body?.id;
     const action = body?.action;
     if (typeof id !== "string" || !/^[a-zA-Z0-9_-]{1,60}$/.test(id) ||
-        !["select", "plan", "done", "reject", "snooze"].includes(action)) {
+        !["plan", "reject", "snooze"].includes(action)) {
       return json(res, { status: "invalid" }, 400);
     }
     const localId = "inbox_" + id;
     if (action === "plan" && store.taskById(localId)) return json(res, { status: "ok" });
     const current = await inboxRequest("/" + id);
     if (current.status !== "ok" || !current.etag) return json(res, { status: current.status === "ok" ? "down" : current.status });
-    if (action === "done" && !["callback", "meeting_call"].includes(current.data?.kind)) {
-      return json(res, { status: "invalid" }, 400);
-    }
     const prepared = action === "plan" ? newTask({
       title: typeof body.title === "string" ? body.title : current.data.title,
       estimatedMinutes: current.data.estimatedMinutes, status: "planerad",
       nextStep: current.data.serviceNumber || "",
     }) : null;
     if (prepared?.error) return json(res, { status: "invalid" }, 400);
-    const phone = current.data.customer?.phone;
-    if (action === "done" && (typeof phone !== "string" || !/^\+[0-9]+$/.test(phone))) {
-      return json(res, { status: "invalid" }, 400);
+    if (action !== "plan" || !["selected", "in_progress"].includes(current.data.status)) {
+      const payload = action === "snooze" ? { until: body.until } : {};
+      const result = await inboxRequest("/" + id + "/" + (action === "plan" ? "select" : action), payload, { etag: current.etag });
+      if (result.status !== "ok" || result.data?.ok !== true) return json(res, {
+        status: result.status === "ok" ? "down" : result.status,
+      });
     }
-    const target = action === "done" ? "/call-list/" + encodeURIComponent(phone) + "/status"
-      : "/" + id + "/" + (action === "plan" ? "select" : action);
-    const payload = action === "done" ? { status: "handled_other", taskId: id }
-      : action === "snooze" ? { until: body.until } : {};
-    const result = await inboxRequest(target, payload, { etag: action === "done" ? undefined : current.etag });
-    if (result.status !== "ok") return json(res, { status: result.status });
     if (prepared && !store.taskById(localId)) {
-      store.addTask({ ...prepared.task, id: localId });
-      const plan = generatePlan(store.tasks);
-      store.setPlan(plan.date, plan);
+      const task = { ...prepared.task, id: localId };
+      try {
+        store.addPlannedTask(task, generatePlan([...store.tasks, task]));
+      } catch {
+        return json(res, { status: "planning_failed" });
+      }
     }
     return json(res, { status: "ok" });
   }
   if (path === "/api/unified/planning" && req.method === "GET") {
     return json(res, { ...readUnifiedPlanning(store.tasks), day: generatePlan(store.tasks), summary: summarizeDay(store.tasks) });
+  }
+  const ringContact = path.match(/^\/api\/unified\/ringlist\/(t_[a-f0-9]{20})$/);
+  const reportCase = path.match(/^\/api\/unified\/workshop-report\/case\/([a-zA-Z0-9_:-]{4,120})$/);
+  if (req.method === "GET") {
+    if (path === "/api/unified/ringlist") return json(res, { ...await readRingList(), order: store.ringOrder });
+    if (ringContact) return json(res, await readRingContact(ringContact[1]));
+    if (reportCase) return json(res, await readReportCase(reportCase[1]));
+  }
+  if (req.method === "POST" && (
+    ringContact || path === "/api/unified/ringlist/order" || path === "/api/unified/ringlist/refresh" ||
+    path === "/api/unified/workshop-report/review" || path === "/api/unified/workshop-report/save"
+  )) {
+    if (req.headers["content-type"]?.split(";")[0]?.trim() !== "application/json") {
+      return json(res, { error: "unsupported_content_type" }, 415);
+    }
+    const body = await readBody(req);
+    if (path === "/api/unified/ringlist/order") {
+      const ids = body?.ids;
+      if (!Array.isArray(ids) || ids.length > 100 || ids.some((id) => typeof id !== "string" || !/^t_[a-f0-9]{20}$/.test(id))) {
+        return json(res, { status: "invalid" }, 400);
+      }
+      try {
+        store.setRingOrder([...new Set(ids)]);
+        return json(res, { status: "ok" });
+      } catch {
+        return json(res, { status: "down" });
+      }
+    }
+    if (ringContact) return json(res, await updateRingContact(ringContact[1], body));
+    if (path.endsWith("/refresh")) return json(res, { ...await readRingList({ sync: true }), order: store.ringOrder });
+    if (path.endsWith("/review")) return json(res, await reviewWorkshopReport(body?.report));
+    return json(res, await saveReportCase(body));
   }
 
   if (path === "/api/meta" && req.method === "GET") {
@@ -351,7 +382,7 @@ const handleApi = async (req, res, url) => {
   }
 
   // Kundkontakt från ärendet: ring (click-to-call via växeln) eller SMS.
-  // Enda skrivvägarna mot admin — whitelistade i lib/admin-actions.mjs.
+  // Kontaktåtgärderna är whitelistade i lib/admin-actions.mjs.
   const actionMatch = path.match(/^\/api\/lookup\/([^/]+)\/(call|sms)$/);
   if (actionMatch && req.method === "POST") {
     const body = await readBody(req);

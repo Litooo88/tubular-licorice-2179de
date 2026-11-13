@@ -1,4 +1,5 @@
 import { taskInbox } from "./inbox.js";
+import { attachWorkspace, showWorkspace, refreshRing } from "./workspace.js";
 
 const icons = {
   home: '<path d="M3 10l9-7 9 7v10H3zM9 20v-6h6v6"/>',
@@ -16,7 +17,8 @@ document.querySelectorAll("[data-icon]").forEach((node) => { node.innerHTML = ic
 
 const titles = {
   home: "Verkstadsöversikt", communication: "Kommunikation", cases: "Verkstad och kundärenden",
-  bookings: "Bokningar", approvals: "Godkännanden", finance: "Ekonomi och checkout", planning: "Privat planering", assistant: "AI-assistent", calls: "Ringlista", proposals: "Förslag att planera",
+  bookings: "Bokningar", approvals: "Godkännanden", finance: "Ekonomi och checkout", planning: "Privat planering", assistant: "AI-assistent",
+  ringlist: "Ringlista", report: "Verkstadsrapport", proposals: "Förslag att planera",
 };
 const statuses = {
   new: "Ny", contacted: "Kontaktad", checked_in: "Inlämnad", diagnosing: "Diagnos",
@@ -39,8 +41,10 @@ let caseQuery = "";
 let business = null;
 let planning = null;
 let request = null;
+if (location.hash === "#calls") history.replaceState(null, "", "#ringlist");
 const route = () => Object.hasOwn(titles, location.hash.slice(1)) ? location.hash.slice(1) : "home";
 const origin = () => business?.origin || "https://www.nordicemobility.se";
+attachWorkspace(document.querySelector("#content"), origin);
 const tool = (label, path) => link(label, new URL(path, origin()).href);
 const caseLink = (row, tab = "overview") => tool(
   [row.reference, row.title].filter(Boolean).join(" · "), "/admin/?case=" + encodeURIComponent(row.id) + "&tab=" + tab);
@@ -222,7 +226,7 @@ function focusCards() {
   return [
     card("Dagens prioriteringar", "planning", items.length ? list(items, ([, label, href]) => link(label, href)) :
       paragraph(complete ? "Inga prioriteringar i de anslutna köerna." : "Dagens prioriteringar visas när underlag finns."),
-    [link("Visa privat planering", "#planning"), link("Förslag att planera", "#proposals")], true),
+    [link("Öppna ringlistan", "#ringlist"), link("Skriv verkstadsrapport", "#report"), link("Förslag att planera", "#proposals"), link("Visa privat planering", "#planning")], true),
     communicationCard(),
     card("Ärenden som kräver beslut", "cases", decisions, [admin()]),
     automationCard(),
@@ -320,11 +324,12 @@ const inbox = taskInbox({ card, escape, paragraph, tool, render, route });
 
 function render() {
   const page = route();
+  document.body.dataset.page = page;
   document.querySelector("#heading").textContent = titles[page];
   document.querySelector("#date").textContent = new Intl.DateTimeFormat("sv-SE", {
     dateStyle: "full", timeZone: "Europe/Stockholm",
   }).format();
-  document.querySelector("#refresh").hidden = page === "assistant";
+  document.querySelector("#refresh").hidden = page === "assistant" || page === "report";
   document.querySelector("#modes").hidden = page !== "home";
   document.querySelectorAll("[data-mode]").forEach((button) =>
     button.setAttribute("aria-pressed", String(button.dataset.mode === mode)));
@@ -332,13 +337,14 @@ function render() {
     if (anchor.hash === "#" + page) anchor.setAttribute("aria-current", "page");
     else anchor.removeAttribute("aria-current");
   });
+  if (showWorkspace(page)) return;
   const connection = document.querySelector("#connection");
   connection.textContent = page === "planning" ? "Lokal planering · privat arbetsyta" :
     business?.cases?.status === "ok" || business?.communication?.status === "ok" ? "Anslutna verksamhetskällor" :
       business ? "Lokal version · verksamhetsdata är inte tillgänglig" : "Hämtar verksamhetsdata …";
   const views = {
     home: () => mode === "focus" ? focusCards() : [casesCard(), communicationCard(), bookingsCard(), financeCard(),
-      automationCard(), card("Ringlista och uppgifter", "planning", "", [link("Öppna ringlistan", "#calls"), link("Förslag att planera", "#proposals")]), card("AI-assistent", "nova", "", [link("Öppna assistenten", "#assistant")]), card("Godkännanden", "planning", "", [link("Visa godkännanden", "#approvals")]), card("Planering", "planning", paragraph("Dina uppgifter och nästa steg i den privata arbetsytan."),
+      automationCard(), card("Ringlista och uppgifter", "planning", "", [link("Öppna ringlistan", "#ringlist"), link("Förslag att planera", "#proposals")]), card("AI-assistent", "nova", "", [link("Öppna assistenten", "#assistant")]), card("Godkännanden", "planning", "", [link("Visa godkännanden", "#approvals")]), card("Planering", "planning", paragraph("Dina uppgifter och nästa steg i den privata arbetsytan."),
         [link("Öppna planering", "#planning")])],
     communication: () => [communicationCard(true), automationCard(), historyCard()],
     cases: () => [casesCard(true), card("Ärenden som kräver beslut", "planning", fromSource(business?.cases, (data) =>
@@ -348,16 +354,21 @@ function render() {
     finance: () => [financeCard()],
     planning: planningCard,
     assistant: assistantCards,
-    calls: () => inbox.cards("calls"),
     proposals: () => inbox.cards("proposals"),
   };
   document.querySelector("#content").innerHTML = '<div class="grid">' + views[page]().join("") + '</div>';
 }
 
 async function load(force = false) {
+  if (route() === "ringlist" || route() === "report") {
+    request?.controller.abort();
+    request = null;
+    document.querySelector("#refresh").disabled = false;
+    return;
+  }
   const isPrivate = route() === "planning";
   if (!isPrivate) planning = null;
-  if (["assistant", "calls", "proposals"].includes(route())) {
+  if (["assistant", "proposals"].includes(route())) {
     request?.controller.abort();
     request = null;
     document.querySelector("#refresh").disabled = false;
@@ -400,9 +411,14 @@ document.querySelector("#content").addEventListener("input", (event) => {
 window.addEventListener("hashchange", () => {
   load();
   render();
-  document.querySelector("#heading").focus();
+  (document.querySelector("#ring-title") || document.querySelector("#heading")).focus();
 });
-document.querySelector("#refresh").addEventListener("click", () => load(true));
+document.querySelector("#refresh").addEventListener("click", async (event) => {
+  if (route() !== "ringlist") return load(true);
+  const control = event.currentTarget;
+  control.disabled = true;
+  try { await refreshRing(); } finally { control.disabled = false; }
+});
 document.querySelector("#modes").addEventListener("click", (event) => {
   const next = event.target.closest("[data-mode]")?.dataset.mode;
   if (next) {

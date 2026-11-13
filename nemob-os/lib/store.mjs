@@ -22,6 +22,7 @@ export class Store {
       return {
         version: 1,
         tasks: Array.isArray(parsed.tasks) ? parsed.tasks : [],
+        ringOrder: Array.isArray(parsed.ringOrder) ? parsed.ringOrder : [],
         days: parsed.days && typeof parsed.days === "object" ? parsed.days : {},
       };
     } catch {
@@ -60,6 +61,31 @@ export class Store {
   day(date) {
     if (!this.state.days[date]) this.state.days[date] = { plan: null, checkins: {} };
     return this.state.days[date];
+  }
+
+  get ringOrder() {
+    return this.state.ringOrder || [];
+  }
+
+  setRingOrder(ids) {
+    this.#commit({ ...this.state, ringOrder: ids });
+  }
+
+  addPlannedTask(task, plan) {
+    const day = this.state.days[plan.date] || { checkins: {} };
+    this.#commit({ ...this.state, tasks: [...this.tasks, task],
+      days: { ...this.state.days, [plan.date]: { ...day, plan } } });
+  }
+
+  #commit(next) {
+    const previous = this.state;
+    this.state = next;
+    try {
+      this.save();
+    } catch (error) {
+      this.state = previous;
+      throw error;
+    }
   }
 
   setPlan(date, plan) {

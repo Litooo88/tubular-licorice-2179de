@@ -33,6 +33,11 @@ löpande "konversation".
 ### 2026-11-13 - Codex - Ringlista och dagsplanering
 
 - Frontend i codex/nemob-os-unified använder kontraktet från PR #179. Netlify-backend ändrades inte. Förslag överförs till befintlig lokal planeringsmotor med stabilt uppgifts-ID.
+### 2026-11-13 — Codex — KLAR FÖR GRANSKNING (Ringlista och verkstadsrapport)
+
+- Branch `codex/nemob-os-ringlista-verkstadsrapport`. NEMOB OS-vyer och lokala adaptrar för dokumenterade admin-API:er. Claude Code äger Netlify-backend och Gateway-kontrakt.
+- Ringlista via `/api/task-inbox`, kundkort med Nova-transkript via `/api/nova` och versionskontrollerad sparning av intern anteckning/verkstadsstatus via `/api/cases/:id`. Inga ändringar i Netlify eller gatewayen.
+- 87 OS-tester, full build, checkout (44), Callflow och lokal HTTP-verifiering med fiktiva uppgifter godkända. Webbläsarreläet svarade med anslutningsfel. Visuell QA, riktig adminverifiering och gateway-verktyg för ärendeskrivning återstår.
 
 ### 2026-11-12 - Codex - KLAR (AI-assistent i PR #173)
 
@@ -61,7 +66,7 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
-### 2026-11-12 — Claude Code — PR ÖPPEN, VÄNTAR GODKÄNNANDE (NEMOB OS 2.0: uppgiftsinkorg `/api/task-inbox` – backend)
+### 2026-11-12 — Claude Code — KLAR (NEMOB OS 2.0: uppgiftsinkorg `/api/task-inbox` – backend; PR #179 godkänd av Sebastian 2026-11-13 och mergad)
 
 - **Branch:** `feat/task-inbox`, bas `origin/main` 44b5800, egen worktree. `nemob-os/**` rörs inte.
 - **Område:** ny store `task-inbox` + `_shared/task-inbox.mjs` (datamodell, dedup, prioritet, tidsuppskattning),
@@ -83,7 +88,12 @@ löpande "konversation".
 - **Tester:** `npm run test:tasks` 9 (datum/DST, dedup, återkommande kund, övergångar, If-Match, snooze→väckning,
   ringstatusar, fallerande 46elks + trasig ärendestore → partial, parallell synk/övergångar på etag-store). I build-grinden.
   Full build grön: **207 tester**, checkout 44 OK, callflow check OK.
-- **PR:** se nedan. Merga inte utan godkännande.
+- **PR #179 mergad** 2026-11-13 (merge cf6f63c, head d4b15d1, bas 44b5800) efter "Ja, merga". Produktionsdeploy ready.
+- **Verifierat i produktion** (admin-token via `x-admin-token`, inget utskrivet): utan token 401; `GET /api/task-inbox`
+  200, `partial: false`, alla källor ok (e-post `not_configured`), första synk 92 förslag (40 callback, 42 case_followup,
+  8 meeting_call, 2 booking_decision; 5 needsReview), andra synk `created: 0, unchanged: 92` (idempotent).
+  `GET /api/task-inbox/call-list?max=5` 200, totalOpen 48.
+- **Nästa (Codex):** koppla fokusläget till `GET /api/task-inbox` server-side enligt kontrakt §7b. Inga utskick görs av inkorgen.
 
 ### 2026-11-12 — Claude Code — KLAR (AI Gateway: konfiguration i Blobs – PR #177 godkänd av Sebastian, mergas och aktiveras)
 
