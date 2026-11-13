@@ -57,6 +57,30 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — PR ÖPPEN, VÄNTAR GODKÄNNANDE (NEMOB OS 2.0: uppgiftsinkorg `/api/task-inbox` – backend)
+
+- **Branch:** `feat/task-inbox`, bas `origin/main` 44b5800, egen worktree. `nemob-os/**` rörs inte.
+- **Område:** ny store `task-inbox` + `_shared/task-inbox.mjs` (datamodell, dedup, prioritet, tidsuppskattning),
+  `_shared/time-phrase.mjs` (svenska tidsuttryck → absolut Europe/Stockholm eller flagga för kontroll),
+  `netlify/functions/tasks.mjs` (`/api/tasks`: lista/synka, välj, avvisa, slutför, ringlista med beständiga
+  arbetsstatusar). Källor: Nova-samtal/möten/meddelanden, ringlistan + RING-svar, verkstadsärenden,
+  bokningsförfrågningar, manuella uppgifter; e-post som `not_configured`. Privata planeringsuppgifter
+  (nemob-os lokal server) läses aldrig.
+- **Kontrakt:** dokumenteras i `docs/NEMOB_OS_2_API_CONTRACTS.md` §7 (Codex anpassar `nemob-os/**`).
+- Inga kundutskick, inga bekräftade bokningar, ingen merge utan godkännande.
+- **Resultat:** route `/api/task-inbox` (inte `/api/tasks` – det är NEMOB OS privata lokala API). Lista/synk,
+  manuell uppgift (idempotencyKey), övergångar select/start/done/reject/snooze/reopen/assign/note (If-Match, idempotenta),
+  personlig ringlista + `build`, beständiga ringstatusar (väntar, uppringd/svar, uppringd/inget svar, SMS, hanterad
+  på annat sätt, återkom senare) i ring-list-posten (`work`), speglade på uppgiften. Dedup: käll-id → id, behovsnyckel
+  (callback/meeting/sms_reply per nummer, booking/case per ärende) medan öppen, ny uppgift när kunden återkommer efter
+  avslut. Nova: mottagen/önskad/bekräftad tid separerade, `time-phrase` tolkar svenska tidsuttryck i Europe/Stockholm
+  och flaggar allt otydligt (`needsReview`), hittar aldrig på. E-post = källa `not_configured`.
+- **Kontrakt:** `docs/NEMOB_OS_2_API_CONTRACTS.md` §7b (Codex: läs server-side med admin-token, visa needsReview/partial).
+- **Tester:** `npm run test:tasks` 9 (datum/DST, dedup, återkommande kund, övergångar, If-Match, snooze→väckning,
+  ringstatusar, fallerande 46elks + trasig ärendestore → partial, parallell synk/övergångar på etag-store). I build-grinden.
+  Full build grön: **207 tester**, checkout 44 OK, callflow check OK.
+- **PR:** se nedan. Merga inte utan godkännande.
+
 ### 2026-11-12 — Claude Code — KLAR (AI Gateway: konfiguration i Blobs – PR #177 godkänd av Sebastian, mergas och aktiveras)
 
 - **Branch:** `feat/ai-gateway-config-blobs`, bas `origin/main` 17d4862. Delade mappen rörs inte.
