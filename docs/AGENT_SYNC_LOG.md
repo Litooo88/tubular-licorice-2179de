@@ -30,6 +30,10 @@ löpande "konversation".
 
 ## Logg
 
+### 2026-11-13 — Codex — PÅGÅR (Ringlista och verkstadsrapport)
+
+- Branch `codex/nemob-os-ringlista-verkstadsrapport`. NEMOB OS-vyer och lokala adaptrar för dokumenterade admin-API:er. Claude Code äger Netlify-backend och Gateway-kontrakt.
+
 ### 2026-11-12 - Codex - KLAR (AI-assistent i PR #173)
 
 - Synk med main 778f28c. NEMOB OS anropar bara dokumenterade Gateway-läsverktyg för samtal, kundsökning och presence. Statusval är en förhandsvisning. Full build, 82 OS-tester och Chromium 375/768/1440 godkända. Gateway live och fysisk mobil kvar.
