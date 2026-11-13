@@ -30,6 +30,12 @@ löpande "konversation".
 
 ## Logg
 
+### 2026-11-13 — Codex — KLAR FÖR GRANSKNING (Ringlista och verkstadsrapport)
+
+- Branch `codex/nemob-os-ringlista-verkstadsrapport`. NEMOB OS-vyer och lokala adaptrar för dokumenterade admin-API:er. Claude Code äger Netlify-backend och Gateway-kontrakt.
+- Ringlista via `/api/task-inbox`, kundkort med Nova-transkript via `/api/nova` och versionskontrollerad sparning av intern anteckning/verkstadsstatus via `/api/cases/:id`. Inga ändringar i Netlify eller gatewayen.
+- 87 OS-tester, full build, checkout (44), Callflow och lokal HTTP-verifiering med fiktiva uppgifter godkända. Webbläsarreläet svarade med anslutningsfel. Visuell QA, riktig adminverifiering och gateway-verktyg för ärendeskrivning återstår.
+
 ### 2026-11-12 - Codex - KLAR (AI-assistent i PR #173)
 
 - Synk med main 778f28c. NEMOB OS anropar bara dokumenterade Gateway-läsverktyg för samtal, kundsökning och presence. Statusval är en förhandsvisning. Full build, 82 OS-tester och Chromium 375/768/1440 godkända. Gateway live och fysisk mobil kvar.

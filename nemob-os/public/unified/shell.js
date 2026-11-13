@@ -1,3 +1,5 @@
+import { attachWorkspace, showWorkspace, refreshRing } from "./workspace.js";
+
 const icons = {
   home: '<path d="M3 10l9-7 9 7v10H3zM9 20v-6h6v6"/>',
   communication: '<path d="M20 15a3 3 0 0 1-3 3H9l-5 3v-6a3 3 0 0 1-1-2V7a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3zM7 9h9M7 13h6"/>',
@@ -15,6 +17,7 @@ document.querySelectorAll("[data-icon]").forEach((node) => { node.innerHTML = ic
 const titles = {
   home: "Verkstadsöversikt", communication: "Kommunikation", cases: "Verkstad och kundärenden",
   bookings: "Bokningar", approvals: "Godkännanden", finance: "Ekonomi och checkout", planning: "Privat planering", assistant: "AI-assistent",
+  ringlist: "Ringlista", report: "Verkstadsrapport",
 };
 const statuses = {
   new: "Ny", contacted: "Kontaktad", checked_in: "Inlämnad", diagnosing: "Diagnos",
@@ -39,6 +42,7 @@ let planning = null;
 let request = null;
 const route = () => Object.hasOwn(titles, location.hash.slice(1)) ? location.hash.slice(1) : "home";
 const origin = () => business?.origin || "https://www.nordicemobility.se";
+attachWorkspace(document.querySelector("#content"), origin);
 const tool = (label, path) => link(label, new URL(path, origin()).href);
 const caseLink = (row, tab = "overview") => tool(
   [row.reference, row.title].filter(Boolean).join(" · "), "/admin/?case=" + encodeURIComponent(row.id) + "&tab=" + tab);
@@ -220,7 +224,7 @@ function focusCards() {
   return [
     card("Dagens prioriteringar", "planning", items.length ? list(items, ([, label, href]) => link(label, href)) :
       paragraph(complete ? "Inga prioriteringar i de anslutna köerna." : "Dagens prioriteringar visas när underlag finns."),
-    [link("Visa privat planering", "#planning")], true),
+    [link("Öppna ringlistan", "#ringlist"), link("Skriv verkstadsrapport", "#report"), link("Visa privat planering", "#planning")], true),
     communicationCard(),
     card("Ärenden som kräver beslut", "cases", decisions, [admin()]),
     automationCard(),
@@ -308,11 +312,12 @@ document.querySelector("#content").addEventListener("submit", async (event) => {
 
 function render() {
   const page = route();
+  document.body.dataset.page = page;
   document.querySelector("#heading").textContent = titles[page];
   document.querySelector("#date").textContent = new Intl.DateTimeFormat("sv-SE", {
     dateStyle: "full", timeZone: "Europe/Stockholm",
   }).format();
-  document.querySelector("#refresh").hidden = page === "assistant";
+  document.querySelector("#refresh").hidden = page === "assistant" || page === "report";
   document.querySelector("#modes").hidden = page !== "home";
   document.querySelectorAll("[data-mode]").forEach((button) =>
     button.setAttribute("aria-pressed", String(button.dataset.mode === mode)));
@@ -320,6 +325,7 @@ function render() {
     if (anchor.hash === "#" + page) anchor.setAttribute("aria-current", "page");
     else anchor.removeAttribute("aria-current");
   });
+  if (showWorkspace(page)) return;
   const connection = document.querySelector("#connection");
   connection.textContent = page === "planning" ? "Lokal planering · privat arbetsyta" :
     business?.cases?.status === "ok" || business?.communication?.status === "ok" ? "Anslutna verksamhetskällor" :
@@ -341,6 +347,12 @@ function render() {
 }
 
 async function load(force = false) {
+  if (route() === "ringlist" || route() === "report") {
+    request?.controller.abort();
+    request = null;
+    document.querySelector("#refresh").disabled = false;
+    return;
+  }
   const isPrivate = route() === "planning";
   if (!isPrivate) planning = null;
   if (route() === "assistant") {
@@ -385,9 +397,14 @@ document.querySelector("#content").addEventListener("input", (event) => {
 window.addEventListener("hashchange", () => {
   load();
   render();
-  document.querySelector("#heading").focus();
+  (document.querySelector("#ring-title") || document.querySelector("#heading")).focus();
 });
-document.querySelector("#refresh").addEventListener("click", () => load(true));
+document.querySelector("#refresh").addEventListener("click", async (event) => {
+  if (route() !== "ringlist") return load(true);
+  const control = event.currentTarget;
+  control.disabled = true;
+  try { await refreshRing(); } finally { control.disabled = false; }
+});
 document.querySelector("#modes").addEventListener("click", (event) => {
   const next = event.target.closest("[data-mode]")?.dataset.mode;
   if (next) {
