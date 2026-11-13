@@ -244,3 +244,29 @@ Assistentens aktivitetslista visar bara resultatstatus för anrop i den
 aktuella fliken. Gatewayens revisionslogg saknar ett dokumenterat läsverktyg
 och visas därför inte här. Statusväljaren skickar ingen ändring.
 Privata planeringsuppgifter och LVU-data skickas aldrig till Gatewayen.
+
+## Ringlista och verkstadsrapport i det gemensamma skalet
+
+Öppna **Ringlista** från `/unified/`. **Inkomna** visar öppna
+återuppringningsuppgifter. Lägg valda kontakter i **Min ringlista** och
+flytta dem upp eller ner vid behov. Val och hanteringsstatus sparas via
+uppgiftsinkorgen. Den manuella ordningen gäller i den öppna fliken.
+Telefonnumret öppnar kundkortet. **Ring** öppnar enhetens telefonapp.
+**Samtal med Nova** visar transkript från de senaste 60 dagarna för det
+valda numret när de finns. En exakt samtalskoppling går före övriga
+samtal som matchar numret.
+
+Öppna **Verkstadsrapport**, skriv eller diktera med enheten och välj
+**Granska rapport**. Beskriv ett ärende per rad om rapporten innehåller
+flera ärenden. Ange gärna ärendenummer eller modell. Välj kundkort där
+flera träffar finns och kontrollera anteckningen och statusen före
+**Spara valda ändringar**. Sparning stöder interna anteckningar och
+verkstadsstatus på befintliga öppna ärenden. Kvittot visar vilka
+kundärenden som uppdaterades. Det här arbetsflödet skickar inga
+kundmeddelanden och ändrar inga bokningar eller betalningar.
+
+Båda vyerna använder den lokala servern och befintlig
+`NORDIC_ADMIN_TOKEN` server-till-server. Externa assistenter använder
+fortfarande sina egna AI Gateway-verktyg. Stöd för att låta en extern
+assistent föreslå och verkställa ärendeändringar kräver ett eget
+Gateway-kontrakt.

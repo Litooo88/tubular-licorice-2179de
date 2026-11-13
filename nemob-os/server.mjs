@@ -4,8 +4,8 @@
 // Konfig: nemob-os/.env  (se .env.example) eller vanliga miljövariabler.
 //
 // Servern serverar dashboarden (nemob-os/public) och ett litet JSON-API.
-// All data sparas i nemob-os/data/ (gitignorerad). Nordic-källan används
-// enbart read-only via lib/nordic.mjs.
+// Privata uppgifter sparas lokalt i nemob-os/data/. Företagets ringstatus och
+// verkstadsändringar sparas via Nordic-admin av autentiserade NEMOB OS-användare.
 
 import { createServer } from "node:http";
 import { readFileSync, existsSync } from "node:fs";
@@ -21,6 +21,9 @@ import { fetchAdminCases } from "./lib/admin-cases.mjs";
 import { openCasesPrioritized, searchCases } from "./lib/lookup.mjs";
 import { adviseTask } from "./lib/advice.mjs";
 import { runAdminAction } from "./lib/admin-actions.mjs";
+import {
+  readRingList, readRingContact, updateRingContact, reviewWorkshopReport, readReportCase, saveReportCase,
+} from "./lib/workspace-actions.mjs";
 import { banner as batterirefBanner, beslutsstod, loadBatteriref, searchRows } from "./lib/batteriref.mjs";
 import {
   CanonicalKnowledgeSource,
@@ -202,6 +205,26 @@ const handleApi = async (req, res, url) => {
   if (path === "/api/unified/planning" && req.method === "GET") {
     return json(res, readUnifiedPlanning(store.tasks));
   }
+  const ringContact = path.match(/^\/api\/unified\/ringlist\/(t_[a-f0-9]{20})$/);
+  const reportCase = path.match(/^\/api\/unified\/workshop-report\/case\/([a-zA-Z0-9_:-]{4,120})$/);
+  if (req.method === "GET") {
+    if (path === "/api/unified/ringlist") return json(res, await readRingList());
+    if (ringContact) return json(res, await readRingContact(ringContact[1]));
+    if (reportCase) return json(res, await readReportCase(reportCase[1]));
+  }
+  if (req.method === "POST" && (
+    ringContact || path === "/api/unified/ringlist/refresh" ||
+    path === "/api/unified/workshop-report/review" || path === "/api/unified/workshop-report/save"
+  )) {
+    if (req.headers["content-type"]?.split(";")[0]?.trim() !== "application/json") {
+      return json(res, { error: "unsupported_content_type" }, 415);
+    }
+    const body = await readBody(req);
+    if (ringContact) return json(res, await updateRingContact(ringContact[1], body));
+    if (path.endsWith("/refresh")) return json(res, await readRingList({ sync: true }));
+    if (path.endsWith("/review")) return json(res, await reviewWorkshopReport(body?.report));
+    return json(res, await saveReportCase(body));
+  }
 
   if (path === "/api/meta" && req.method === "GET") {
     return json(res, { areas: AREAS, statuses: STATUSES, riskLevels: RISK_LEVELS });
@@ -299,7 +322,7 @@ const handleApi = async (req, res, url) => {
   }
 
   // Kundkontakt från ärendet: ring (click-to-call via växeln) eller SMS.
-  // Enda skrivvägarna mot admin — whitelistade i lib/admin-actions.mjs.
+  // Kontaktåtgärderna är whitelistade i lib/admin-actions.mjs.
   const actionMatch = path.match(/^\/api\/lookup\/([^/]+)\/(call|sms)$/);
   if (actionMatch && req.method === "POST") {
     const body = await readBody(req);
