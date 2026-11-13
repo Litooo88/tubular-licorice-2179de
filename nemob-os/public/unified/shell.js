@@ -1,3 +1,5 @@
+import { taskInbox } from "./inbox.js";
+
 const icons = {
   home: '<path d="M3 10l9-7 9 7v10H3zM9 20v-6h6v6"/>',
   communication: '<path d="M20 15a3 3 0 0 1-3 3H9l-5 3v-6a3 3 0 0 1-1-2V7a3 3 0 0 1 3-3h11a3 3 0 0 1 3 3zM7 9h9M7 13h6"/>',
@@ -14,7 +16,7 @@ document.querySelectorAll("[data-icon]").forEach((node) => { node.innerHTML = ic
 
 const titles = {
   home: "Verkstadsöversikt", communication: "Kommunikation", cases: "Verkstad och kundärenden",
-  bookings: "Bokningar", approvals: "Godkännanden", finance: "Ekonomi och checkout", planning: "Privat planering", assistant: "AI-assistent",
+  bookings: "Bokningar", approvals: "Godkännanden", finance: "Ekonomi och checkout", planning: "Privat planering", assistant: "AI-assistent", calls: "Ringlista", proposals: "Förslag att planera",
 };
 const statuses = {
   new: "Ny", contacted: "Kontaktad", checked_in: "Inlämnad", diagnosing: "Diagnos",
@@ -220,7 +222,7 @@ function focusCards() {
   return [
     card("Dagens prioriteringar", "planning", items.length ? list(items, ([, label, href]) => link(label, href)) :
       paragraph(complete ? "Inga prioriteringar i de anslutna köerna." : "Dagens prioriteringar visas när underlag finns."),
-    [link("Visa privat planering", "#planning")], true),
+    [link("Visa privat planering", "#planning"), link("Förslag att planera", "#proposals")], true),
     communicationCard(),
     card("Ärenden som kräver beslut", "cases", decisions, [admin()]),
     automationCard(),
@@ -234,9 +236,17 @@ function planningCard() {
   const renderTasks = (rows) => rows.length ? list(rows, (row) => '<strong>' + escape(row.title) + '</strong><small>' +
     escape(row.next || row.reason || row.status) + '</small>') : paragraph("Inga uppgifter att visa.");
   const body = planning?.status === "ok" ? renderTasks(planning.priorities) : paragraph(sourceMessage(planning));
-  return [card("Dina tre viktigaste uppgifter", "planning", body, [link("Hantera uppgifter och dagsplan", "/")], true),
+  const detail = (title, content) => '<details class="inbox-row"><summary>' + title + '</summary>' + content + '</details>';
+  const brief = planning?.day;
+  const summary = planning?.summary;
+  const checkins = brief && summary ?
+    detail("Morgonbrief", paragraph(brief.morningBrief.first || "Inga prioriterade uppgifter ännu.")) +
+    detail("Mittdagskontroll", paragraph(summary.stillOpenCount + " öppna uppgifter · " + summary.blocked.length + " blockerade")) +
+    detail("Kvällssammanfattning", paragraph(summary.doneToday.length + " klara · " + summary.movedToday.length + " flyttade idag") +
+      (summary.doneToday.length ? list(summary.doneToday, (title) => escape(title)) : "")) : "";
+  return [card("Dina tre viktigaste uppgifter", "planning", body, [link("Förslag att planera", "#proposals")], true),
     card("Alla lokala uppgifter", "planning", planning?.status === "ok" ? renderTasks(planning.tasks) :
-      paragraph(sourceMessage(planning)))];
+      paragraph(sourceMessage(planning))), card("Dagens avstämningar", "planning", checkins || paragraph(sourceMessage(planning)))];
 }
 
 function assistantCards() {
@@ -306,6 +316,8 @@ document.querySelector("#content").addEventListener("submit", async (event) => {
   }
 });
 
+const inbox = taskInbox({ card, escape, paragraph, tool, render, route });
+
 function render() {
   const page = route();
   document.querySelector("#heading").textContent = titles[page];
@@ -326,7 +338,7 @@ function render() {
       business ? "Lokal version · verksamhetsdata är inte tillgänglig" : "Hämtar verksamhetsdata …";
   const views = {
     home: () => mode === "focus" ? focusCards() : [casesCard(), communicationCard(), bookingsCard(), financeCard(),
-      automationCard(), card("AI-assistent", "nova", "", [link("Öppna assistenten", "#assistant")]), card("Godkännanden", "planning", "", [link("Visa godkännanden", "#approvals")]), card("Planering", "planning", paragraph("Dina uppgifter och nästa steg i den privata arbetsytan."),
+      automationCard(), card("Ringlista och uppgifter", "planning", "", [link("Öppna ringlistan", "#calls"), link("Förslag att planera", "#proposals")]), card("AI-assistent", "nova", "", [link("Öppna assistenten", "#assistant")]), card("Godkännanden", "planning", "", [link("Visa godkännanden", "#approvals")]), card("Planering", "planning", paragraph("Dina uppgifter och nästa steg i den privata arbetsytan."),
         [link("Öppna planering", "#planning")])],
     communication: () => [communicationCard(true), automationCard(), historyCard()],
     cases: () => [casesCard(true), card("Ärenden som kräver beslut", "planning", fromSource(business?.cases, (data) =>
@@ -336,6 +348,8 @@ function render() {
     finance: () => [financeCard()],
     planning: planningCard,
     assistant: assistantCards,
+    calls: () => inbox.cards("calls"),
+    proposals: () => inbox.cards("proposals"),
   };
   document.querySelector("#content").innerHTML = '<div class="grid">' + views[page]().join("") + '</div>';
 }
@@ -343,10 +357,11 @@ function render() {
 async function load(force = false) {
   const isPrivate = route() === "planning";
   if (!isPrivate) planning = null;
-  if (route() === "assistant") {
+  if (["assistant", "calls", "proposals"].includes(route())) {
     request?.controller.abort();
     request = null;
     document.querySelector("#refresh").disabled = false;
+    if (route() !== "assistant") await inbox.load(route());
     return;
   }
   const endpoint = isPrivate ? "planning" : "business";

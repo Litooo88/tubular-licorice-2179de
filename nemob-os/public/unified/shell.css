@@ -73,3 +73,13 @@ h1 { font-size: clamp(1.95rem, 4.5vw, 3.4rem); line-height: 1.08; letter-spacing
 #refresh[hidden] { display: none; }
 [data-assistant] button, .assistant-query, #presence-choice { min-height: 44px; max-width: 100%; font: inherit; margin: 6px 0; }
 .assistant-query, #presence-choice { display: block; width: 100%; }
+
+.inbox-row { border-top: 1px solid var(--border); overflow-wrap: anywhere; }
+.inbox-row summary, .inbox-actions button, .inbox-actions input { min-height:44px; font:inherit; }
+.inbox-row summary { padding:12px 0; cursor:pointer; font-weight:650; }
+.inbox-row summary small, .inbox-actions label { display:block; }
+.inbox-row dl { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:10px; }
+.inbox-row dt { font-weight:650; }
+.inbox-row dd { margin:3px 0 0; }
+.inbox-actions input { display:block; width:100%; }
+.inbox-actions button { padding:6px 10px; }

@@ -15,6 +15,7 @@ import { Store, defaultStorePath } from "./lib/store.mjs";
 import { newTask, taskPatch } from "./lib/tasks.mjs";
 import { generatePlan, summarizeDay } from "./lib/plan.mjs";
 import { fetchNordicBrief } from "./lib/nordic.mjs";
+import { inboxRequest, inboxRow } from "./lib/inbox.mjs";
 import { readAssistant } from "./lib/assistant.mjs";
 import { readUnifiedBusiness, readUnifiedPlanning } from "./lib/unified.mjs";
 import { fetchAdminCases } from "./lib/admin-cases.mjs";
@@ -199,8 +200,59 @@ const handleApi = async (req, res, url) => {
     const body = await readBody(req);
     return json(res, await readAssistant(body?.kind, body?.query));
   }
+  if (path === "/api/unified/inbox" && req.method === "GET") {
+    const calls = url.searchParams.get("view") === "calls";
+    const result = await inboxRequest(calls ? "/call-list?max=100" : "?status=open&limit=100");
+    if (result.status !== "ok") return json(res, { status: result.status });
+    const data = result.data;
+    if (!Array.isArray(data?.items)) return json(res, { status: "down" });
+    return json(res, { status: "ok", items: data.items.filter((item) => calls || !store.taskById("inbox_" + item.id)).map(inboxRow),
+      partial: data.partial === true || Boolean(data.sources?.ringList && data.sources.ringList !== "ok"),
+      email: data.sources?.email === "not_configured" ? "not_configured" : null });
+  }
+  if (path === "/api/unified/inbox" && req.method === "POST") {
+    if (req.headers["content-type"]?.split(";")[0]?.trim() !== "application/json") {
+      return json(res, { error: "unsupported_content_type" }, 415);
+    }
+    const body = await readBody(req);
+    const id = body?.id;
+    const action = body?.action;
+    if (typeof id !== "string" || !/^[a-zA-Z0-9_-]{1,60}$/.test(id) ||
+        !["select", "plan", "done", "reject", "snooze"].includes(action)) {
+      return json(res, { status: "invalid" }, 400);
+    }
+    const localId = "inbox_" + id;
+    if (action === "plan" && store.taskById(localId)) return json(res, { status: "ok" });
+    const current = await inboxRequest("/" + id);
+    if (current.status !== "ok" || !current.etag) return json(res, { status: current.status === "ok" ? "down" : current.status });
+    if (action === "done" && !["callback", "meeting_call"].includes(current.data?.kind)) {
+      return json(res, { status: "invalid" }, 400);
+    }
+    const prepared = action === "plan" ? newTask({
+      title: typeof body.title === "string" ? body.title : current.data.title,
+      estimatedMinutes: current.data.estimatedMinutes, status: "planerad",
+      nextStep: current.data.serviceNumber || "",
+    }) : null;
+    if (prepared?.error) return json(res, { status: "invalid" }, 400);
+    const phone = current.data.customer?.phone;
+    if (action === "done" && (typeof phone !== "string" || !/^\+[0-9]+$/.test(phone))) {
+      return json(res, { status: "invalid" }, 400);
+    }
+    const target = action === "done" ? "/call-list/" + encodeURIComponent(phone) + "/status"
+      : "/" + id + "/" + (action === "plan" ? "select" : action);
+    const payload = action === "done" ? { status: "handled_other", taskId: id }
+      : action === "snooze" ? { until: body.until } : {};
+    const result = await inboxRequest(target, payload, { etag: action === "done" ? undefined : current.etag });
+    if (result.status !== "ok") return json(res, { status: result.status });
+    if (prepared && !store.taskById(localId)) {
+      store.addTask({ ...prepared.task, id: localId });
+      const plan = generatePlan(store.tasks);
+      store.setPlan(plan.date, plan);
+    }
+    return json(res, { status: "ok" });
+  }
   if (path === "/api/unified/planning" && req.method === "GET") {
-    return json(res, readUnifiedPlanning(store.tasks));
+    return json(res, { ...readUnifiedPlanning(store.tasks), day: generatePlan(store.tasks), summary: summarizeDay(store.tasks) });
   }
 
   if (path === "/api/meta" && req.method === "GET") {

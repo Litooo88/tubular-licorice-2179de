@@ -30,6 +30,10 @@ löpande "konversation".
 
 ## Logg
 
+### 2026-11-13 - Codex - Ringlista och dagsplanering
+
+- Frontend i codex/nemob-os-unified använder kontraktet från PR #179. Netlify-backend ändrades inte. Förslag överförs till befintlig lokal planeringsmotor med stabilt uppgifts-ID.
+
 ### 2026-11-12 - Codex - KLAR (AI-assistent i PR #173)
 
 - Synk med main 778f28c. NEMOB OS anropar bara dokumenterade Gateway-läsverktyg för samtal, kundsökning och presence. Statusval är en förhandsvisning. Full build, 82 OS-tester och Chromium 375/768/1440 godkända. Gateway live och fysisk mobil kvar.
