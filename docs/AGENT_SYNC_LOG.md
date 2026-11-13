@@ -57,6 +57,68 @@ löpande "konversation".
 
 <!-- Nyaste posten överst. Lägg nya poster direkt under denna rad. -->
 
+### 2026-11-12 — Claude Code — PR ÖPPEN, VÄNTAR GODKÄNNANDE (NEMOB OS 2.0: uppgiftsinkorg `/api/task-inbox` – backend)
+
+- **Branch:** `feat/task-inbox`, bas `origin/main` 44b5800, egen worktree. `nemob-os/**` rörs inte.
+- **Område:** ny store `task-inbox` + `_shared/task-inbox.mjs` (datamodell, dedup, prioritet, tidsuppskattning),
+  `_shared/time-phrase.mjs` (svenska tidsuttryck → absolut Europe/Stockholm eller flagga för kontroll),
+  `netlify/functions/tasks.mjs` (`/api/tasks`: lista/synka, välj, avvisa, slutför, ringlista med beständiga
+  arbetsstatusar). Källor: Nova-samtal/möten/meddelanden, ringlistan + RING-svar, verkstadsärenden,
+  bokningsförfrågningar, manuella uppgifter; e-post som `not_configured`. Privata planeringsuppgifter
+  (nemob-os lokal server) läses aldrig.
+- **Kontrakt:** dokumenteras i `docs/NEMOB_OS_2_API_CONTRACTS.md` §7 (Codex anpassar `nemob-os/**`).
+- Inga kundutskick, inga bekräftade bokningar, ingen merge utan godkännande.
+- **Resultat:** route `/api/task-inbox` (inte `/api/tasks` – det är NEMOB OS privata lokala API). Lista/synk,
+  manuell uppgift (idempotencyKey), övergångar select/start/done/reject/snooze/reopen/assign/note (If-Match, idempotenta),
+  personlig ringlista + `build`, beständiga ringstatusar (väntar, uppringd/svar, uppringd/inget svar, SMS, hanterad
+  på annat sätt, återkom senare) i ring-list-posten (`work`), speglade på uppgiften. Dedup: käll-id → id, behovsnyckel
+  (callback/meeting/sms_reply per nummer, booking/case per ärende) medan öppen, ny uppgift när kunden återkommer efter
+  avslut. Nova: mottagen/önskad/bekräftad tid separerade, `time-phrase` tolkar svenska tidsuttryck i Europe/Stockholm
+  och flaggar allt otydligt (`needsReview`), hittar aldrig på. E-post = källa `not_configured`.
+- **Kontrakt:** `docs/NEMOB_OS_2_API_CONTRACTS.md` §7b (Codex: läs server-side med admin-token, visa needsReview/partial).
+- **Tester:** `npm run test:tasks` 9 (datum/DST, dedup, återkommande kund, övergångar, If-Match, snooze→väckning,
+  ringstatusar, fallerande 46elks + trasig ärendestore → partial, parallell synk/övergångar på etag-store). I build-grinden.
+  Full build grön: **207 tester**, checkout 44 OK, callflow check OK.
+- **PR:** se nedan. Merga inte utan godkännande.
+
+### 2026-11-12 — Claude Code — KLAR (AI Gateway: konfiguration i Blobs – PR #177 godkänd av Sebastian, mergas och aktiveras)
+
+- **Branch:** `feat/ai-gateway-config-blobs`, bas `origin/main` 17d4862. Delade mappen rörs inte.
+- **Orsak:** när AI_GATEWAY_CLIENTS/SIGNING_SECRET/OWNER_SECRET sattes i Netlify föll alla deployer i steget
+  "deploying" (HTTP 400, "Failed to upload file" för v1-funktionerna). Utan variablerna går deployen igenom.
+  Trolig orsak: AWS Lambdas 4 KB-gräns för miljövariabler (GOOGLE_PRIVATE_KEY m.fl. är hemliga och syns inte i
+  API:ts storleksberäkning). Variablerna är borttagna igen; värdena finns i `.local/ai-gateway-env.local.txt`.
+- **Åtgärd:** `_shared/ai-config.mjs`: klientregister, signeringsnyckel, ägar-PIN-hash och OAuth-scopes i storen
+  `ai-gateway-config`, skrivs via `POST /api/ai/config` med x-admin-token (Sebastian, server-side). Env fungerar
+  fortfarande som alternativ. Inga nya miljövariabler behövs.
+- **Resultat:** `_shared/ai-config-state.mjs` (aktiv konfig, env har företräde), `_shared/ai-config.mjs` (läs/skriv
+  Blobs, cache 60 s, status utan hemligheter), `GET|POST /api/ai/config` med x-admin-token. ai-auth/ai-oauth/ai-audit
+  läser via activeConfig(). Ägar-PIN lagras som SHA-256-hash, `signingSecret: "generate"`.
+- **Tester:** test:ai 22 (ny: hela Blobs-vägen – 503 utan konfig, admin-token krävs, validering, status utan
+  hemligheter, klienter/OAuth fungerar direkt, PIN-byte, env-företräde). Build grön i simulerad Netlify-miljö
+  (198 tester), checkout OK, callflow OK.
+- **PR:** #177 (feat/ai-gateway-config-blobs). Sebastian: "Ja" → mergas via REST, därefter POST /api/ai/config
+  (Claude-klient, genererad signeringsnyckel, ägar-PIN) och verifiering: GET /api/ai/config ready/oauthReady,
+  whoami 200, OAuth-metadata 200. PIN + Claude-nyckel skickas som fil till telefonen (aldrig i chatt/repo).
+- **Kvar:** delade mappens lokala main är kvar på edf4f10 (Codex ocommittade loggrader) – synkas bara på order.
+  Dynamisk probe-klient "probe" (utan scopes) finns i storen ai-oauth – kan återkallas via /api/ai/oauth/clients.
+
+
+### 2026-11-12 — Claude Code — KLAR (AI Gateway hotfix: PR #176 godkänd av Sebastian och mergad)
+
+- **Branch:** `hotfix/ai-gateway-refresh-ratelimit`, bas `origin/main` 778f28c. Delade mappen rörs inte.
+- **Område:** `_shared/ai-oauth.mjs`, `_shared/ai-audit.mjs`, `ai-gateway.mjs`, tester, docs. Ingen aktivering, inga nycklar, inget i `nemob-os/**`.
+- **Resultat:** refreshTokens återkallar den gamla tokenen versionerat FÖRE utfärdande (misslyckas det utfärdas inget;
+  tokenen kan aldrig återanvändas efter reservationsfönstret); engångskoden förbrukas versionerat före utfärdande;
+  ny ägar-rutt POST /api/ai/oauth/clients (list/revoke med ägar-PIN) – återkallad klient nekas refresh/koder och dess
+  åtkomsttoken avvisas direkt; checkRateLimit nekar vid ALLA misslyckade räknarresultat (kast, storage_error,
+  unversioned, conflict, overifierat skapande).
+- **Tester:** test:ai 21 (5 nya: parallell refresh, lagringsfel vid återkallelse + återspelning, engångskod vid
+  lagringsfel, klientåterkallelse, rate limit med returnerade fel och kast). Build grön i simulerad Netlify-miljö
+  (197 tester), checkout OK, callflow OK.
+- **PR:** #176, godkänd 2026-11-12 och mergad via GitHub. Gatewayen är redo att aktiveras när Sebastian sätter AI_GATEWAY_CLIENTS, AI_GATEWAY_SIGNING_SECRET och AI_GATEWAY_OWNER_SECRET.
+
+
 ### 2026-11-12 — Claude Code — KLAR (AI Gateway säkerhet + OAuth: PR #175 godkänd av Sebastian och mergad)
 
 - **Branch:** `fix/ai-gateway-security` i egen worktree, bas `origin/main` 3d74d87. Delade mappen rörs inte.
