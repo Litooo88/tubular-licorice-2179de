@@ -568,3 +568,28 @@ test("konfiguration i Blobs: utan miljövariabler sätts register, signeringsnyc
   assert.equal((await call("/api/ai/whoami", { token: "envklient.e" })).status, 200);
   assert.equal((await call("/api/ai/whoami", { token: "claude.nyckel-1" })).status, 401);
 });
+
+test("journalåtkomst är separat och skrivning kräver kortets aktuella version", async (t) => {
+  const { call } = await setup(t);
+  const id = "case_journal_test";
+  const store = getStore({ name: "workshop-cases", consistency: "strong" });
+  await store.setJSON(id, { id, customer: { name: "Test" }, workshop: { workDone: "Motorbytet klart" }, estimatedValue: 349 });
+  const post = (tool, body, token = "journal.test") => call("/api/ai/tools/" + tool, { method: "POST", body, token });
+  process.env.AI_GATEWAY_CLIENTS = JSON.stringify([...JSON.parse(process.env.AI_GATEWAY_CLIENTS), {
+    id: "journal", secretHash: hashSecret("test"), scopes: ["journal:read","journal:append","customer:name"],
+  }]);
+  assert.equal((await post("get_workshop_record", { id }, "lasare.bara-las")).status, 403);
+  const record = await (await post("get_workshop_record", { id })).json();
+  assert.equal(record.paymentAmount, null);
+  assert.equal(record.workDone, "Motorbytet klart");
+  const update = { id, version: record.version, note: "Intern provnotering" };
+  assert.equal((await post("append_workshop_note", update, "lasare.bara-las")).status, 403);
+  const saved = await (await post("append_workshop_note", update)).json();
+  assert.equal(saved.status, "ok");
+  assert.equal((await (await post("append_workshop_note", update)).json()).status, "rejected");
+  const rename = await (await post("correct_customer_name", { id, version: saved.version, name: "Testkund" })).json();
+  assert.equal(rename.status, "ok");
+  const stored = await store.get(id, { type: "json" });
+  assert.equal(stored.customer.name, "Testkund");
+  assert.equal(stored.notes.length, 1);
+});

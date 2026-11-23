@@ -32,6 +32,9 @@ const env = (name) => {
 const clean = (value, max = 200) => String(value ?? "").trim().slice(0, max);
 
 export const SCOPES = Object.freeze({
+  "journal:read": "Läsa verkstadsjournal och separata belopp.",
+  "journal:append": "Lägga till en intern notering.",
+  "customer:name": "Rätta kundnamnet på ett ärende.",
   "cases:read": "Läsa kundärenden (behöriga fält).",
   "calls:read": "Läsa 46elks samtalshistorik.",
   "overview:read": "Läsa verksamhetsöversikt och godkännandekö.",
@@ -93,7 +96,8 @@ export const issueToken = ({ client, scopes, now = Date.now(), ttlSeconds = TOKE
   if (!secret) return { ok: false, error: "server_error", description: "signeringsnyckel saknas (POST /api/ai/config eller AI_GATEWAY_SIGNING_SECRET)" };
   const granted = (scopes && scopes.length ? scopes : client.scopes).filter((s) => client.scopes.includes(s));
   if (!granted.length) return { ok: false, error: "invalid_scope", description: "Inget av de begärda scopen är tillåtet för klienten." };
-  const payload = { sub: client.id, scp: granted, iat: Math.floor(now / 1000), exp: Math.floor(now / 1000) + ttlSeconds, jti: randomBytes(8).toString("hex") };
+  const issuer = (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
+  const payload = { iss: issuer, aud: issuer + "/api/ai/mcp", sub: client.id, scp: granted, iat: Math.floor(now / 1000), exp: Math.floor(now / 1000) + ttlSeconds, jti: randomBytes(8).toString("hex") };
   const payloadB64 = b64u(JSON.stringify(payload));
   return { ok: true, access_token: `${TOKEN_PREFIX}.${payloadB64}.${sign(payloadB64, secret)}`, token_type: "Bearer", expires_in: ttlSeconds, scope: granted.join(" ") };
 };
@@ -106,6 +110,8 @@ export const verifyToken = (token, { clients, now = Date.now(), secret = signing
   let payload;
   try { payload = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8")); } catch { return null; }
   if (!payload || typeof payload !== "object" || Number(payload.exp) * 1000 <= now) return null;
+  const issuer = (env("SITE_URL") || "https://www.nordicemobility.se").replace(/\/$/, "");
+  if (payload.iss !== issuer || payload.aud !== issuer + "/api/ai/mcp") return null;
   const sub = clean(payload.sub, 80);
   const tokenScopes = (Array.isArray(payload.scp) ? payload.scp : []).filter((s) => ALL_SCOPES.includes(s));
   // Dynamiskt registrerad OAuth-klient (authorization code): identiteten och

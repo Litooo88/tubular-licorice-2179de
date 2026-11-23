@@ -12,6 +12,7 @@
 //   - Inga kundutskick, inga godkännanden: get_business_overview visar kön,
 //     besluten tas i NEMOB OS/admin.
 
+import { workshopTools } from "./ai-workshop-tools.mjs";
 import { caseStore } from "./case-store.mjs";
 import { normalizePhone } from "./sms.mjs";
 import { OPEN_STATUSES } from "./case-match.mjs";
@@ -103,6 +104,7 @@ const parseDate = (value, fallback) => {
 };
 
 export const TOOLS = [
+  ...workshopTools,
   {
     name: "search_calls",
     scope: "calls:read",
