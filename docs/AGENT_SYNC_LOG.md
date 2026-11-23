@@ -30,6 +30,8 @@ löpande "konversation".
 
 ## Logg
 
+2026-11-23 KLAR – codex/verkstadsatkomst: journal och avgränsad kundkortsskrivning. 23 gatewaytester, build, produktkontroll och callflow-check godkända. Ägaren väljer scopes vid samtycke.
+
 ### 2026-11-13 - Codex - Ringlista och dagsplanering
 
 - Frontend i codex/nemob-os-unified använder kontraktet från PR #179. Netlify-backend ändrades inte. Förslag överförs till befintlig lokal planeringsmotor med stabilt uppgifts-ID.
