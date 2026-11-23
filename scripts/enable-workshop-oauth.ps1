@@ -2,7 +2,7 @@
 $ErrorActionPreference = 'Stop'
 $endpoint = 'https://www.nordicemobility.se/api/ai/config'
 $metadata = Invoke-RestMethod 'https://www.nordicemobility.se/api/ai/.well-known'
-$additional = @('journal:read','journal:append','customer:name')
+$additional = @('cases:read','journal:read','journal:append','customer:name')
 foreach ($scope in $additional) {
     if ($scope -notin $metadata.scopes.PSObject.Properties.Name) { throw "Publicera gatewayändringen först: $scope saknas." }
 }
