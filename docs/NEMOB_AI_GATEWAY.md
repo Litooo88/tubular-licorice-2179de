@@ -248,3 +248,6 @@ REST: `POST /api/ai/tools/<namn>` med JSON-body och Bearer-nyckel; `GET /api/ai/
 - **Rate limit-räknaren** faller stängt vid lagringsfel (503 `rate_limit_unavailable`). Konsekvens: ett Blobs-avbrott stoppar AI-klienterna, inte verksamheten (admin/NEMOB OS berörs inte).
 - **`set_presence` rapporterar aldrig applicerad routing.** `routing.applied` blir sant först när telefonikomponenten (framtida uppdrag) skriver `appliedAt`; env-flaggan ensam räcker inte. Verifierat i test med `PRESENCE_ROUTING_ENABLED=1`.
 - Gatewayen gör aldrig kundutskick och utför aldrig godkännanden.
+
+### Intern verkstadsjournal
+Nya OAuth-scopes kräver uttryckligt tillägg i gatewayens oauthScopes och nytt samtycke. Behåll tidigare tillåtna scopes när listan uppdateras. journal:read ger get_workshop_record med ärende-id från search_customer. Läs uppskattning, slutkostnad och registrerat betalbelopp separat. journal:append ger append_workshop_note med id, version och note. customer:name ger correct_customer_name med id, version och name. Använd bara skrivverktygen efter uttrycklig begäran. Vid versionskonflikt, läs om kortet och granska den önskade ändringen. Äldre åtkomsttoken behöver förnyas efter uppdateringen av iss/aud.

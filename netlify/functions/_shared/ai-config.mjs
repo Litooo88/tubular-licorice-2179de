@@ -57,7 +57,7 @@ export const configStatus = () => {
     clientsOk: registry.ok,
     hasSigningSecret: Boolean(a.signingSecret),
     hasOwnerSecret: Boolean(a.ownerSecret || a.ownerSecretHash),
-    oauthScopes: a.oauthScopes ? a.oauthScopes.split(/[\s,]+/).filter(Boolean) : ALL_SCOPES.filter((s) => s !== "admin:propose"),
+    oauthScopes: a.oauthScopes ? a.oauthScopes.split(/[\s,]+/).filter(Boolean) : ["cases:read", "calls:read", "overview:read", "presence:read", "presence:write"],
     updatedAt: a.updatedAt || "",
     ready: registry.ok && Boolean(a.signingSecret),
     oauthReady: Boolean(a.signingSecret) && Boolean(a.ownerSecret || a.ownerSecretHash),
