@@ -144,7 +144,7 @@ export const consentPage = ({ client, redirectUri, scopes, state, challenge, err
 ${error ? `<p class="err">${escapeHtml(error)}</p>` : ""}
 <form method="post">
 <input type="hidden" name="client_id" value="${escapeHtml(client.client_id)}"><input type="hidden" name="redirect_uri" value="${escapeHtml(redirectUri)}"><input type="hidden" name="state" value="${escapeHtml(state)}"><input type="hidden" name="code_challenge" value="${escapeHtml(challenge)}">
-<fieldset><legend>Behörigheter</legend>${scopes.map((s) => `<label><input type="checkbox" name="scope" value="${escapeHtml(s)}" checked> <code>${escapeHtml(s)}</code> – ${escapeHtml(SCOPES[s] || "")}</label>`).join("")}</fieldset>
+<fieldset><legend>Behörigheter</legend>${scopes.map((s) => `<label><input type="checkbox" name="scope" value="${escapeHtml(s)}" ${["journal:read", "journal:append", "customer:name"].includes(s) ? "" : "checked"}> <code>${escapeHtml(s)}</code> – ${escapeHtml(SCOPES[s] || "")}</label>`).join("")}</fieldset>
 <label>Ägar-PIN<input type="password" name="owner_pin" autocomplete="one-time-code" required></label>
 <p><button type="submit">Godkänn</button></p>
 <p class="muted">Redirect: <code>${escapeHtml(redirectUri)}</code></p>
