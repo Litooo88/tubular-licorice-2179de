@@ -29,6 +29,7 @@
   "@type": "AutomotiveBusiness",
   "name": "Nordic E-Mobility",
   "image": "https://www.nordicemobility.se/assets/workshop/workshop-hero.jpg",
+  "logo": "https://www.nordicemobility.se/brand/logo-1200.png",
   "@id": "https://www.nordicemobility.se",
   "url": "https://www.nordicemobility.se",
   "telephone": "+46101385498",
@@ -362,8 +363,12 @@ body{font-family:'Inter','Inter Fallback',sans-serif;background:#000;color:#fff;
 
 /* HEADER */
 header{position:fixed;top:0;left:0;right:0;z-index:100;background:rgba(0,0,0,.92);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.08)}
-header .container{display:flex;align-items:center;justify-content:space-between;height:72px}
-.logo-img{height:52px;width:auto}
+header .container{display:flex;align-items:center;justify-content:space-between;height:84px}
+.logo-img{display:block;height:64px;width:64px;border-radius:14px;box-shadow:0 0 0 1.5px rgba(232,226,205,.6);flex:none}
+.brand-home{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none;font-weight:900;font-size:17px;letter-spacing:.02em;white-space:nowrap}
+.brand-home:hover{text-decoration:none}
+@media(min-width:901px){.brand-home span{display:none}}
+.footer-logo{display:block;width:160px;height:160px;border-radius:22px;box-shadow:0 0 0 1.5px rgba(232,226,205,.6);margin-bottom:14px}
 nav{display:flex;gap:28px;align-items:center}
 nav a{color:#ccc;text-decoration:none;font-size:14px;font-weight:500;transition:color .2s}
 nav a:hover{color:#fff}
@@ -623,6 +628,8 @@ footer{padding:52px 0 28px;background:#050505;border-top:1px solid #1a1a1a}
 .sticky-cta .btn-primary,.sticky-cta .btn-secondary{flex:1;justify-content:center;padding:13px 12px;font-size:14px}
 
 @media(max-width:900px){
+  header .container{height:72px}
+  .logo-img{height:48px;width:48px;border-radius:11px}
   .hero h1{font-size:32px}
   .hero{padding:110px 0 60px}
   .service-status-card,.repair-tracking-inner{grid-template-columns:1fr}
@@ -712,7 +719,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 <!-- HEADER -->
 <header>
 <div class="container">
-  <img src="/nordic_logo_transparent.png" alt="Nordic E-Mobility" class="logo-img" onerror="this.outerHTML='<div style=&quot;font-size:18px;font-weight:800&quot;>NORDIC <span style=&quot;color:#00C853&quot;>E-MOBILITY</span></div>'">
+  <a class="brand-home" href="/"><img src="/brand/logo.webp" alt="Nordic E-Mobility" class="logo-img" width="64" height="64" decoding="async"><span>Nordic E-Mobility</span></a>
   <nav>
     <a href="/elscooter-reparation-orebro/">Service</a>
     <a href="/priser/">Prislista</a>
@@ -1547,7 +1554,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 <div class="container">
   <div class="f-grid">
     <div>
-      <img src="/logo.png" alt="Nordic E-Mobility" class="logo-img" style="height:48px;margin-bottom:6px" onerror="this.outerHTML='<div style=&quot;font-size:18px;font-weight:800;margin-bottom:6px&quot;>NORDIC <span style=&quot;color:#00C853&quot;>E-MOBILITY</span></div>'">
+      <img src="/brand/logo.webp" alt="Nordic E-Mobility" class="footer-logo" width="160" height="160" loading="lazy" decoding="async">
       <p class="f-brand">Specialistverkstad för mikromobilitet och lithiumbatterier i Örebro.</p>
       <p style="color:#555;font-size:12px;margin-top:12px">Nordic E-Mobility &mdash; Pistolv&auml;gen 6, 702 21 &Ouml;rebro<br>Org.nr: 880809-6658</p>
     </div>

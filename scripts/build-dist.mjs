@@ -19,6 +19,7 @@ const PUBLIC_DIRS = [
   "audio", // används av 46elks-röstflödet (voice-simple.mjs)
   "batterireparation-elscooter",
   "book-online",
+  "brand",
   "elcykel-service-orebro",
   "elscooter-reparation-linkoping",
   "elscooter-reparation-orebro",

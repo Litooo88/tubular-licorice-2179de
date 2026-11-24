@@ -20,6 +20,7 @@
   "@type": "AutomotiveBusiness",
   "name": "Nordic E-Mobility",
   "image": "https://www.nordicemobility.se/assets/workshop/workshop-hero.jpg",
+  "logo": "https://www.nordicemobility.se/brand/logo-1200.png",
   "@id": "https://www.nordicemobility.se",
   "url": "https://www.nordicemobility.se",
   "telephone": "+46101385498",
@@ -56,8 +57,11 @@ a{color:var(--green);text-decoration:none}
 a:hover{text-decoration:underline}
 .container{max-width:1180px;margin:0 auto;padding:0 24px}
 header{background:#050605;border-bottom:1px solid rgba(255,255,255,.09)}
-header .container{height:72px;display:flex;align-items:center;justify-content:space-between;gap:20px}
-.logo-img{height:52px;width:auto}
+header .container{height:84px;display:flex;align-items:center;justify-content:space-between;gap:20px}
+.logo-img{display:block;height:64px;width:64px;border-radius:14px;box-shadow:0 0 0 1.5px rgba(232,226,205,.6);flex:none}
+.brand-home{display:flex;align-items:center;gap:12px;color:#fff;text-decoration:none;font-weight:900;font-size:17px;letter-spacing:.02em;white-space:nowrap}
+.brand-home:hover{text-decoration:none}
+@media(max-width:560px){.brand-home span{display:none}}
 .back-link{color:#c2cac4;font-size:14px;font-weight:900}
 .header-actions{display:flex;align-items:center;gap:18px}
 .header-actions a:first-child{color:#8ff5ae}
@@ -180,7 +184,7 @@ textarea{min-height:120px;resize:vertical}
 .person-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:4px}
 .person-actions a{border:1px solid #263029;border-radius:8px;padding:9px;text-align:center}
 footer{border-top:1px solid #1f2621;background:#050605;padding:28px 0;text-align:center;color:#8d948f;font-size:13px}
-@media(max-width:940px){.hero-grid,.booking-grid,.hero-proof,.service-grid,.form-grid,.role-grid,.addon-grid,.hours-grid,.problem-strip{grid-template-columns:1fr}.side{position:static}.container{padding:0 18px}.hero{padding-top:34px}.booking-panel{padding:18px}.panel-title{display:block}.tag{margin-top:14px}.addon-title{display:block}.addon-title span{text-align:left;margin-top:4px}.partner-strip{justify-content:flex-start}.service-box{min-height:132px}.header-actions{gap:12px}.header-actions a{font-size:12px}}
+@media(max-width:940px){.hero-grid,.booking-grid,.hero-proof,.service-grid,.form-grid,.role-grid,.addon-grid,.hours-grid,.problem-strip{grid-template-columns:1fr}.side{position:static}.container{padding:0 18px}.hero{padding-top:34px}.booking-panel{padding:18px}.panel-title{display:block}.tag{margin-top:14px}.addon-title{display:block}.addon-title span{text-align:left;margin-top:4px}.partner-strip{justify-content:flex-start}.service-box{min-height:132px}.header-actions{gap:12px}.header-actions a{font-size:12px}header .container{height:72px}.logo-img{height:48px;width:48px;border-radius:11px}}
 </style>
 <link rel="stylesheet" href="/assets/newsletter-popup.css">
 <meta name="twitter:card" content="summary_large_image">
@@ -215,7 +219,7 @@ window.NORDIC_ANALYTICS={ga4MeasurementId:"G-WR90F2DZ4S",gtmContainerId:"",debug
 <body>
 <header>
 <div class="container">
-  <a href="/"><img src="/nordic_logo_transparent.png" alt="Nordic E-Mobility" class="logo-img" onerror="this.outerHTML='<strong>NORDIC E-MOBILITY</strong>'"></a>
+  <a class="brand-home" href="/"><img src="/brand/logo.webp" alt="Nordic E-Mobility" class="logo-img" width="64" height="64" decoding="async"><span>Nordic E-Mobility</span></a>
   <div class="header-actions"><a href="/status/" class="back-link">F&ouml;lj reparation</a><a href="/" class="back-link">Till startsidan</a></div>
 </div>
 </header>
