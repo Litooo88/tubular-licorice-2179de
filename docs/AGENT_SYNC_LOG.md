@@ -30,13 +30,23 @@ löpande "konversation".
 
 ## Logg
 
-### 2026-11-24 — Claude Code (Drift & tillväxt) — PÅGÅR (Logotyp tydlig i header/footer – Google Ads "Logo prominence")
+### 2026-11-24 — Claude Code (Drift & tillväxt) — KLAR (Logotyp tydlig i header/footer – Google Ads "Logo prominence")
 
-- **Branch:** `worktree-logo-prominence` (egen worktree, bas origin/main b07b329).
-- **Tar:** header-/footer-logotypen på de publika sidorna (img-taggen + liten CSS), nya
-  `brand/logo-1200.png` + sajtlogga från högupplöst original, Organization JSON-LD `logo`.
-  Rör inte admin, `nemob-os/**`, Netlify-funktioner eller sidornas övriga innehåll.
-- **Ingen merge/deploy** förrän Sebastian godkänt före/efter-skärmdumpar.
+- **Branch:** `worktree-logo-prominence`, commit f0da008, fast-forwardad till main efter att
+  Sebastian godkänt före/efter-skärmdumpar.
+- **Gjorde:** en gemensam loggfil `/brand/logo.webp` (400 px) på alla 80 publika sidor: 64 px
+  desktop, 48 px mobil, rundad platta med ljus ram. Footer-logga 160 px (klass `footer-logo`).
+  `brand/logo-1200.png` för Google Ads + `logo` i AutomotiveBusiness JSON-LD (4 sidor).
+  Storleken styrs i `assets/seo.css` (`.brand img`) för 75 sidor och inline på index,
+  book-online, nya-elscootrar, priser, status. `scripts/generate-products.mjs` uppdaterad.
+- **Källa:** ingen vektorfil finns. Original 824 px i `docs/brand/`, byggs om med
+  `python scripts/build-brand-logo.py`. `brand` tillagd i `PUBLIC_DIRS`.
+- **Gamla `/logo.png` och `/nordic_logo_transparent.png` ligger kvar** (mejl och admin-manifest
+  använder dem). Använd `/brand/logo.webp` i nya publika sidor.
+- **Tester:** build:dist, verify:checkout-products (44), public-copy 6/6, test:orders 9/9.
+  Hela `npm run build` stannar i worktree på booking-reschedule (`storage_unversioned`,
+  Blobs-versionen i delade node_modules) – fanns före ändringen.
+- **Fanns före, orört:** horisontell scroll på nya-elscootrar vid 375 px.
 
 2026-11-23 KLAR – codex/verkstadsatkomst: journal och avgränsad kundkortsskrivning. 23 gatewaytester, build, produktkontroll och callflow-check godkända. Ägaren väljer scopes vid samtycke.
 
