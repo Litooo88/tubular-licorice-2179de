@@ -30,6 +30,14 @@ löpande "konversation".
 
 ## Logg
 
+### 2026-11-24 — Claude Code (Drift & tillväxt) — PÅGÅR (Logotyp tydlig i header/footer – Google Ads "Logo prominence")
+
+- **Branch:** `worktree-logo-prominence` (egen worktree, bas origin/main b07b329).
+- **Tar:** header-/footer-logotypen på de publika sidorna (img-taggen + liten CSS), nya
+  `brand/logo-1200.png` + sajtlogga från högupplöst original, Organization JSON-LD `logo`.
+  Rör inte admin, `nemob-os/**`, Netlify-funktioner eller sidornas övriga innehåll.
+- **Ingen merge/deploy** förrän Sebastian godkänt före/efter-skärmdumpar.
+
 2026-11-23 KLAR – codex/verkstadsatkomst: journal och avgränsad kundkortsskrivning. 23 gatewaytester, build, produktkontroll och callflow-check godkända. Ägaren väljer scopes vid samtycke.
 
 ### 2026-11-13 - Codex - Ringlista och dagsplanering
