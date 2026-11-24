@@ -30,9 +30,10 @@ löpande "konversation".
 
 ## Logg
 
-### 2026-11-24 — Codex — PÅGÅR (KuKirin G2 i prisguiden)
+### 2026-11-24 — Codex — KLAR (KuKirin G2 i prisguiden)
 
-- Branch `main`. Rättar däcktyp för G2 och skiljer G2 Masters modellversioner i `priser/index.html`.
+- `main`, `priser/index.html`, commit `1d9054f`. G2 och 2025 års G2 Master har en egen rad för tubeless. Slangpriserna gäller 2024 års G2 Master med innerslang.
+- Båda modellkorten verifierade. `npm run build`, `npm run verify:checkout-products` (44 produkter) och `npm run check` i `nemob-callflow` godkända.
 
 ### 2026-11-24 — Claude Code (Drift & tillväxt) — KLAR (Logotyp tydlig i header/footer – Google Ads "Logo prominence")
 
