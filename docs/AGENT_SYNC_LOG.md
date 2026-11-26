@@ -30,9 +30,11 @@ löpande "konversation".
 
 ## Logg
 
-### 2026-11-26 — ChatGPT — PÅGÅR (NEMOB CARE 12)
+### 2026-11-26 — ChatGPT — KLAR FÖR GRANSKNING (NEMOB CARE 12)
 
-- **Branch:** `codex/nemob-care12-2026`. Publik kampanj, villkor och prisinformation. Ingen ändring av produktpris/checkout, kunddata eller telefoniflöde. Kontrollera innan merge.
+- **Branch:** `codex/nemob-care12-2026`, PR #183. Kampanj på startsida, katalog och genererade produktsidor, villkor kvar efter kampanjslut, grunddiagnos 495 kr förtydligad. Ingen ändring av produktpris/checkout, kunddata eller telefoniflöde.
+- **Verifiering:** kontroll av innehåll, ankare och JS/MJS-syntax godkänd. Netlify preview `6b08773cb4ff4c5966cd2b80` stoppade bygget (exit code 2; full bygglogg ej tillgänglig i anslutningen). Lokala npm-tester och visuell kontroll ej körda.
+- **Nästa:** läs Netlify-byggloggen, åtgärda grundorsak utan att kringgå tester, verifiera full build/checkout/callflow och publicera. Ingen merge ännu.
 
 ### 2026-11-24 — Codex — KLAR (KuKirin G2 i prisguiden)
 
