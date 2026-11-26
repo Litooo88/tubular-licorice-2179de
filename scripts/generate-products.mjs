@@ -1227,6 +1227,7 @@ body:has(.pp-buybar){padding-bottom:76px}}
       <a class="btn btn-secondary" href="${escapeAttr(bookingHref(item))}">Fråga verkstaden</a>
     </div>
     ${item.checkout ? paymentStrip() : ""}
+    ${products.some(product => product.id === item.id) && !item.hidden ? `<div data-nemob-care12 hidden style="margin:16px 0;padding:14px;border:1px solid #3a6148;border-radius:8px;background:#102619;color:#f1f9f3"><strong style="color:#65e994">NEMOB CARE 12 · 12 månaders service ingår</strong><p style="margin-top:6px">Fyra planerade servicetillfällen vid köp av ny elscooter t.o.m. 31 december 2026. <a href="/villkor/#nemob-care-12" style="color:#82eca8;text-decoration:underline">Se villkor</a>.</p></div><script src="/assets/nemob-care12.js" defer></script>` : ""}
     <p class="pp-meta">Service, garanti och reservdelar hanteras i vår verkstad i Örebro. <a href="/garanti/">Garanti &amp; 3 års reklamationsrätt</a> · <a href="/villkor/#returer">14 dagars ångerrätt</a> · <a href="/regler-elscooter/">Regelguiden</a></p>
   </div>
 </div>
