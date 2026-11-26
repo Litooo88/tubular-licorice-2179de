@@ -43,3 +43,17 @@ for (const path of ['index.html', 'book-online/index.html', 'om-oss/index.html']
     }
   });
 }
+
+
+test('CARE 12: campaign surfaces, expiry and terms are linked', () => {
+  for (const path of ['index.html', 'nya-elscootrar/index.html', 'scripts/generate-products.mjs']) {
+    assert.match(read(path), /data-nemob-care12 hidden/);
+    assert.match(read(path), /\/villkor\/#nemob-care-12/);
+    assert.match(read(path), /\/assets\/nemob-care12\.js/);
+  }
+  assert.match(read('villkor/index.html'), /id="nemob-care-12"/);
+  assert.match(read('villkor/index.html'), /minst tre kalendermånader/);
+  assert.match(read('assets/nemob-care12.js'), /2027-01-01T00:00:00\+01:00/);
+  new Script(read('assets/nemob-care12.js'));
+  assert.match(read('priser/index.html'), /Vanlig felsökning \/ grunddiagnos[^<]*<\/strong><b>495 kr/);
+});
