@@ -30,6 +30,10 @@ löpande "konversation".
 
 ## Logg
 
+### 2026-11-26 — ChatGPT — PÅGÅR (NEMOB CARE 12)
+
+- **Branch:** `codex/nemob-care12-2026`. Publik kampanj, villkor och prisinformation. Ingen ändring av produktpris/checkout, kunddata eller telefoniflöde. Kontrollera innan merge.
+
 ### 2026-11-24 — Codex — KLAR (KuKirin G2 i prisguiden)
 
 - `main`, `priser/index.html`, commit `1d9054f`. G2 och 2025 års G2 Master har en egen rad för tubeless. Slangpriserna gäller 2024 års G2 Master med innerslang.
