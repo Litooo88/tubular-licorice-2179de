@@ -56,3 +56,7 @@ npm run check
 ```
 
 Dokumentera ändrade filer, testresultat och kvarvarande risker i handoffen.
+
+## Kundärenden och synkronisering
+
+Följ [kundärendesynken i AGENTS.md](AGENTS.md#kundärenden-och-synkronisering). Läs aktuellt kundkort och senaste kommunikation, utför uppdraget, spara intern journal och relevant kundtext, registrera nästa arbetsmoment och kundlöften och verifiera genom återläsning. Ett fokusbyte avslutar aldrig ärendet. Bevara status, nästa steg och deadline på kortet och följ upp synkkön. Visa högst tre prioriterade uppgifter åt gången.

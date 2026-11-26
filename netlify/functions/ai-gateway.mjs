@@ -40,14 +40,17 @@ const publicTool = (t) => ({ name: t.name, description: t.description, inputSche
 export const runTool = async ({ name, args, principal, request, transport }) => {
   const started = Date.now();
   const tool = toolByName(name);
-  const audit = (extra) => writeAudit({ client: principal.client.id, via: principal.via, tool: clean(name, 60), args, transport, ip: clientIp(request), durationMs: Date.now() - started, ...extra });
+  const audit = (extra) => writeAudit({ client: principal.client.id, via: principal.via, tool: clean(name, 60), args: tool?.privateArgs ? {} : args, transport, ip: clientIp(request), durationMs: Date.now() - started, ...extra });
   if (!tool) { await audit({ ok: false, status: 404, error: "unknown_tool" }); return { status: 404, body: { error: "unknown_tool", description: `Okänt verktyg: ${clean(name, 60)}` } }; }
   if (!hasScope(principal, tool.scope)) { await audit({ ok: false, status: 403, error: "forbidden_scope" }); return { status: 403, body: { error: "forbidden_scope", description: `Verktyget kräver scope ${tool.scope}.`, required: tool.scope } }; }
   const rate = await checkRateLimit({ client: principal.client.id, limit: principal.client.rpm });
   if (rate.unavailable) { await audit({ ok: false, status: 503, error: "rate_limit_unavailable" }); return { status: 503, body: { error: "rate_limit_unavailable", description: "Anropsräknaren kan inte nås. Anropet nekas tills den fungerar." }, headers: { "Retry-After": "60" } }; }
   if (!rate.allowed) { await audit({ ok: false, status: 429, error: "rate_limited" }); return { status: 429, body: { error: "rate_limited", description: `Max ${rate.limit} anrop per minut.`, resetAt: rate.resetAt }, headers: { "Retry-After": "60" } }; }
   const errors = validateArgs(tool.inputSchema, args);
-  if (errors.length) { await audit({ ok: false, status: 400, error: errors.join("; ") }); return { status: 400, body: { error: "invalid_arguments", description: errors.join("; ") } }; }
+  if (tool.privateArgs && args && (typeof args !== "object" || Array.isArray(args) || Object.values(args).some((value) => value === null))) {
+    errors.push("Ange ett objekt med giltiga fältvärden.");
+  }
+  if (errors.length) { await audit({ ok: false, status: 400, error: tool.privateArgs ? "invalid_arguments" : errors.join("; ") }); return { status: 400, body: { error: "invalid_arguments", description: errors.join("; ") } }; }
   try {
     const result = await tool.run(args || {}, { principal, request, now: Date.now() });
     const count = Array.isArray(result?.calls) ? result.calls.length : Array.isArray(result?.cases) ? result.cases.length : null;
@@ -55,8 +58,9 @@ export const runTool = async ({ name, args, principal, request, transport }) => 
     await audit({ ok, status: ok ? 200 : 422, count, error: ok ? "" : clean(result?.error, 120) });
     return { status: 200, body: result, headers: { "X-RateLimit-Remaining": String(rate.remaining) } };
   } catch (error) {
-    await audit({ ok: false, status: 500, error: clean(error?.message, 160) });
-    console.error("ai-gateway tool failed", { tool: name, error: clean(error?.message, 160) });
+    const detail = tool.privateArgs ? "storage_or_tool_error" : clean(error?.message, 160);
+    await audit({ ok: false, status: 500, error: detail });
+    console.error("ai-gateway tool failed", { tool: name, error: detail });
     return { status: 500, body: { error: "tool_failed", description: "Verktyget kunde inte köras. Felet är loggat." } };
   }
 };
@@ -71,14 +75,14 @@ export const handleRpc = async (message, { principal, request }) => {
   const isNotification = id === undefined;
   switch (method) {
     case "initialize":
-      return rpcResult(id, { protocolVersion: PROTOCOL_VERSION, capabilities: { tools: { listChanged: false } }, serverInfo: SERVER_INFO, instructions: "NEMOB AI Gateway: läs samtal, kundärenden och verksamhetsläge, sätt tillgänglighet. Godkännanden och kundutskick görs aldrig här." });
+      return rpcResult(id, { protocolVersion: PROTOCOL_VERSION, capabilities: { tools: { listChanged: false } }, serverInfo: SERVER_INFO, instructions: "NEMOB AI Gateway. Läs aktuellt kundkort och tidigare arbete före ändringar. Bekräfta begärda uppgifter, invänta granskning av kundtext och läs tillbaka kortet. Följ upp köade ändringar och versionskonflikter. Godkännanden och kundutskick hanteras separat." });
     case "notifications/initialized":
     case "notifications/cancelled":
       return null;
     case "ping":
       return rpcResult(id, {});
     case "tools/list":
-      return rpcResult(id, { tools: TOOLS.filter((t) => hasScope(principal, t.scope)).map(({ name, description, inputSchema }) => ({ name, description, inputSchema })) });
+      return rpcResult(id, { tools: TOOLS.filter((t) => hasScope(principal, t.scope)).map(({ name, description, inputSchema, annotations }) => ({ name, description, inputSchema, ...(annotations ? { annotations } : {}) })) });
     case "tools/call": {
       const name = clean(params?.name, 60);
       const outcome = await runTool({ name, args: params?.arguments || {}, principal, request, transport: "mcp" });

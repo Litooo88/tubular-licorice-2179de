@@ -203,6 +203,22 @@ const handleApi = async (req, res, url) => {
     const body = await readBody(req);
     return json(res, await readAssistant(body?.kind, body?.query));
   }
+  const caseSync = path.match(/^\/api\/unified\/case-sync\/([a-f0-9]{64})(?:\/(approve|retry|reject))?$/);
+  if (caseSync) {
+    const [, id, action] = caseSync;
+    const endpoint = "/case-sync/" + id;
+    if (req.method === "GET" && !action) {
+      const result = await inboxRequest(endpoint);
+      return json(res, { status: result.status, entry: result.data, version: result.etag });
+    }
+    if (req.method !== "POST" || !action || req.headers["content-type"]?.split(";")[0]?.trim() !== "application/json") {
+      return json(res, { status: "invalid" }, 400);
+    }
+    const body = await readBody(req);
+    if (typeof body?.version !== "string" || !body.version || body.version.length > 200) return json(res, { status: "invalid" }, 400);
+    const result = await inboxRequest(endpoint + "/" + action, {}, { etag: body.version });
+    return json(res, { status: result.status === "ok" && !result.data?.ok ? "down" : result.status });
+  }
   if (path === "/api/unified/inbox" && req.method === "GET") {
     const result = await inboxRequest("?status=open&limit=100");
     if (result.status !== "ok") return json(res, { status: result.status });
@@ -229,7 +245,7 @@ const handleApi = async (req, res, url) => {
     if (current.status !== "ok" || !current.etag) return json(res, { status: current.status === "ok" ? "down" : current.status });
     const prepared = action === "plan" ? newTask({
       title: typeof body.title === "string" ? body.title : current.data.title,
-      estimatedMinutes: current.data.estimatedMinutes, status: "planerad",
+      estimatedMinutes: current.data.estimatedMinutes, status: "planerad", deadline: current.data.dueLocal,
       nextStep: current.data.serviceNumber || "",
     }) : null;
     if (prepared?.error) return json(res, { status: "invalid" }, 400);

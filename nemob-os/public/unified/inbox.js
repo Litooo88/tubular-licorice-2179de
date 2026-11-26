@@ -11,6 +11,10 @@ export function taskInbox({ card, escape, paragraph, tool, render, route }) {
   let message = "";
   const action = (name, label) => '<button type="submit" name="action" value="' + name + '">' + label + '</button>';
   function row(item) {
+    if (item.syncState) {
+      return '<details class="inbox-row" data-case-sync="' + escape(item.id) + '"><summary>' + escape(item.title) + '</summary>' +
+        paragraph(item.description) + '<div data-sync-content></div></details>';
+    }
     return '<details class="inbox-row"><summary>' + escape(item.title) + '</summary>' +
       paragraph(item.description || item.title) + paragraph([item.source, item.reason].filter(Boolean).join(" · ")) +
       (item.needsReview ? paragraph("Kontrollera tiden innan du planerar.") : "") +
@@ -49,7 +53,61 @@ export function taskInbox({ card, escape, paragraph, tool, render, route }) {
     data = next;
     if (route() === "proposals") render();
   }
-  document.querySelector("#content").addEventListener("submit", async (event) => {
+  const content = document.querySelector("#content");
+  const syncFields = { customerUpdate: "Kundtext", note: "Intern journal", status: "Verkstadsstatus",
+    nextAction: "Nästa arbetsmoment", followupDeadline: "Utlovad återkoppling", workDone: "Genomfört arbete", blockers: "Blockerare" };
+  content.addEventListener("toggle", async (event) => {
+    const details = event.target;
+    if (!details.open || !details.dataset?.caseSync) return;
+    const area = details.querySelector("[data-sync-content]");
+    area.textContent = "Hämtar ändringen …";
+    try {
+      const response = await fetch("/api/unified/case-sync/" + encodeURIComponent(details.dataset.caseSync), { cache: "no-store" });
+      const { status, entry, version } = await response.json();
+      if (status !== "ok" || !entry?.changes || !version) {
+        area.textContent = "Ändringen kunde inte hämtas. Uppdatera listan.";
+        return;
+      }
+      const values = Object.entries(entry.changes).map(([key, value]) => paragraph((syncFields[key] || key) + " · " + value)).join("");
+      const review = entry.changes.customerUpdate && !entry.approvedBy && entry.syncState !== "conflict";
+      const apply = !review && entry.syncState !== "conflict";
+      area.innerHTML = values + '<form data-sync-version="' + escape(version) + '"><div class="actions">' +
+        tool("Öppna kundkort", "/admin/?case=" + encodeURIComponent(entry.id) + "&tab=overview") +
+        (review ? action("approve", "Godkänn ändringen") : "") +
+        (apply ? action("retry", "Spara och verifiera") : "") +
+        action("reject", "Avvisa ändringen") + '</div></form>';
+    } catch {
+      area.textContent = "Ändringen kunde inte hämtas.";
+    }
+  }, true);
+  content.addEventListener("submit", async (event) => {
+    const form = event.target;
+    if (!form.dataset.syncVersion) return;
+    event.preventDefault();
+    if (operation) return;
+    const command = event.submitter?.value;
+    const id = form.closest("[data-case-sync]").dataset.caseSync;
+    if (!["approve", "retry", "reject"].includes(command)) return;
+    operation = true;
+    form.querySelectorAll("button").forEach((button) => { button.disabled = true; });
+    try {
+      const response = await fetch("/api/unified/case-sync/" + encodeURIComponent(id) + "/" + command, {
+        method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ version: form.dataset.syncVersion }),
+      });
+      const result = await response.json();
+      message = result.status === "conflict" ? "Kundkortet eller ändringen har ändrats. Läs om kortet." :
+        result.status !== "ok" ? "Ändringen kunde inte hanteras. Kontrollera synkstatus." :
+        command === "approve" ? "Godkänd. Be assistenten synkronisera igen, eller välj Spara och verifiera." :
+        command === "reject" ? "Ändringen är avvisad." : "Ändringen är sparad och verifierad.";
+      await load();
+    } catch {
+      message = "Anslutningen bröts. Uppdatera och kontrollera resultatet.";
+      if (route() === "proposals") render();
+    } finally {
+      operation = false;
+    }
+  });
+  content.addEventListener("submit", async (event) => {
     const form = event.target;
     const id = form.dataset.inboxId;
     if (!id) return;

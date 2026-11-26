@@ -212,8 +212,8 @@ test("GET /api/task-inbox: synkar källorna idempotent, dedupar per kundbehov, s
   for (const c of cases()) await cs.setJSON(c.id, c.id === "case_fresh" ? { ...c, createdAt: new Date(Date.now() - 3600000).toISOString(), updatedAt: new Date(Date.now() - 3600000).toISOString() } : c);
   const ring = getStore({ name: "ring-list", consistency: "strong" });
   await ring.setJSON("+46701111111", { phone: "+46701111111", name: "Anna Ask", status: "new", attempts: 2, lastCustomerCallAt: "2026-11-11T12:00:00.000Z", reason: "Ringde om batteriet" });
-  await getStore({ name: "sms-inbound", consistency: "strong" }).setJSON("2026-11-12T08-00-00-000Z_46701111111", { phone: "+46701111111", message: "RING", type: "ring", at: "2026-11-12T08:00:00.000Z" });
-  await getStore({ name: "voice-agent-meetings", consistency: "strong" }).setJSON("m1", { id: "m1", at: "2026-11-12T09:30:00.000Z", phone: "0702222222", name: "Erik Ek", topic: "Punktering", preferredTime: "imorgon kl 14" });
+  await getStore({ name: "sms-inbound", consistency: "strong" }).setJSON("2026-11-12T08-00-00-000Z_46701111111", { phone: "+46701111111", message: "RING", type: "ring", at: new Date(Date.now() - 2 * 3600000).toISOString() });
+  await getStore({ name: "voice-agent-meetings", consistency: "strong" }).setJSON("m1", { id: "m1", at: new Date(Date.now() - 3600000).toISOString(), phone: "0702222222", name: "Erik Ek", topic: "Punktering", preferredTime: "imorgon kl 14" });
   net.elks.data = [{ id: "c1", direction: "incoming", from: "+46701111111", to: "+46101385498", created: new Date(Date.now() - 3600000).toISOString().replace(/\.\d+Z$/, ""), legs: [] }];
 
   const first = await call("/api/task-inbox");
@@ -326,9 +326,9 @@ test("manuella uppgifter och övergångar: idempotent skapande, idempotenta done
 test("ringlistan: personlig lista, build väljer topp-N, arbetsstatusar är beständiga och speglas på uppgiften", async (t) => {
   const { call } = await setup(t);
   const ring = getStore({ name: "ring-list", consistency: "strong" });
-  await ring.setJSON("+46701111111", { phone: "+46701111111", name: "Anna", status: "new", attempts: 3, lastCustomerCallAt: "2026-11-10T12:00:00.000Z" });
-  await ring.setJSON("+46702222222", { phone: "+46702222222", name: "Bo", status: "new", attempts: 1, lastCustomerCallAt: "2026-11-12T06:00:00.000Z" });
-  await getStore({ name: "voice-agent-meetings", consistency: "strong" }).setJSON("m1", { id: "m1", at: "2026-11-12T09:30:00.000Z", phone: "0703333333", name: "Cia", topic: "Service", preferredTime: "oklart" });
+  await ring.setJSON("+46701111111", { phone: "+46701111111", name: "Anna", status: "new", attempts: 3, lastCustomerCallAt: new Date(Date.now() - 48 * 3600000).toISOString() });
+  await ring.setJSON("+46702222222", { phone: "+46702222222", name: "Bo", status: "new", attempts: 1, lastCustomerCallAt: new Date(Date.now() - 4 * 3600000).toISOString() });
+  await getStore({ name: "voice-agent-meetings", consistency: "strong" }).setJSON("m1", { id: "m1", at: new Date(Date.now() - 30 * 3600000).toISOString(), phone: "0703333333", name: "Cia", topic: "Service", preferredTime: "oklart" });
   await call("/api/task-inbox"); // synk
   const list = await (await call("/api/task-inbox/call-list?max=2")).json();
   assert.equal(list.totalOpen, 3);

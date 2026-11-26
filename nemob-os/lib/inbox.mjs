@@ -33,5 +33,6 @@ export function inboxRow(item) {
     work: item.work?.label, lastContact: item.work?.at,
     callbackAt: item.work?.callbackAt, needsReview: item.needsReview,
     source: item.sourceLabel, reason: item.priority?.reason,
+    ...(item.syncState ? { syncState: item.syncState, syncReview: item.syncReview } : {}),
   };
 }

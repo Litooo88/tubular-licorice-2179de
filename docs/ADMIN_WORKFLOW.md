@@ -92,3 +92,9 @@ att ingen bekräftelse skickats. Importen tar inga pengar och gör inga inköp.
 Framtida verifierade produktköp får kort automatiskt via webhooken; de ligger
 under Kontakt / offert tills personalen uppdaterar dem. Leveransval och
 leverantörsbeställning måste fortfarande bekräftas separat.
+
+## Kundkortssynk i NEMOB OS
+
+Under **Förslag** visas väntande synkar, lagringsfel och versionskonflikter. Öppna raden och kundkortet för att granska hela ändringen. **Godkänn ändringen** ger tillstånd för det exakta förslaget. Assistenten kan sedan upprepa verktygsanropet med samma nyckel, eller välj **Spara och verifiera**. Vid konflikt läser du om kortet, jämför med väntande förslag och lämnar ett nytt förslag för den nya versionen. **Avvisa ändringen** tar bort förslaget från arbetsplaneringen och registrerar beslutet.
+
+Uppgiftsinkorgen hämtar nästa steg och utlovad återkoppling från kundkortets arbetsplan. Datum och tid följer med när du lägger uppgiften i dagsplanen. Administrativt avslut kräver att relevant information har sparats och lästs tillbaka.

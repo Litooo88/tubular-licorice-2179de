@@ -149,3 +149,15 @@ Varje handoff ska dokumentera:
 - beteendeförändringar
 - körda testkommandon och resultat
 - kvarvarande risker eller manuella verifieringar
+
+## Kundärenden och synkronisering
+
+1. Hämta aktuellt kundkort med entydigt ärende-ID eller servicenummer och aktuell version.
+2. Gå igenom senaste kundkommunikation, intern journal och genomförda arbetsmoment.
+3. Utför den efterfrågade uppgiften inom givna godkännanden.
+4. Spara relevanta fakta i den interna journalen.
+5. Förbered saklig kundtext för publicering enligt säkerhetsreglerna och följ upp granskningen.
+6. Spara nästa konkreta arbetsmoment och exakt tid för eventuella utlovade återkopplingar.
+7. Läs tillbaka journal, kunduppdatering och arbetsplan. Markera ärendet administrativt färdighanterat först efter verifiering.
+
+Använd samma idempotensnyckel vid omförsök. Läs om kortet vid versionskonflikt och jämför med förslaget innan en ny ändring lämnas. När Sebastian byter ämne ska föregående ärende behålla aktuell status, nästa arbetsmoment och deadline. En väntande synk ligger kvar i uppgiftsinkorgen tills den har verifierats eller en operatör har avvisat den. Visa högst tre prioriterade uppgifter åt gången.

@@ -32,6 +32,14 @@ const env = (name) => {
 const clean = (value, max = 200) => String(value ?? "").trim().slice(0, max);
 
 export const SCOPES = Object.freeze({
+  "case_updates:read": "Läsa publicerade kunduppdateringar.",
+  "case_updates:append": "Förbereda publicering av kundtext för operatörens granskning.",
+  "case_status:write": "Spara pågående verkstadsstatus.",
+  "case_followup:write": "Spara utlovad återkopplingstid.",
+  "case_next_action:write": "Spara nästa arbetsmoment och blockerare.",
+  "case_details:read": "Läsa ett ärendes version och arbetsplan.",
+  "case_sync:read": "Läsa kön för kundkortssynk.",
+  "case_sync:write": "Samordna kundkortssynk med behörighet per fält.",
   "journal:read": "Läsa verkstadsjournal och separata belopp.",
   "journal:append": "Lägga till en intern notering.",
   "customer:name": "Rätta kundnamnet på ett ärende.",

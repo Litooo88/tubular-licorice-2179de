@@ -376,11 +376,11 @@ test("OAuth authorization code: DCR → samtycke med ägar-PIN och PKCE → toke
 });
 
 // Hjälpare: fullt OAuth-flöde → { client, tokens, tokenReq } (ägar-PIN satt av anroparen).
-const oauthSession = async (handler, call, pin = "agar-pin-1234") => {
+const oauthSession = async (handler, call, pin = "agar-pin-1234", scopes = ["cases:read"]) => {
   const { pkceChallenge } = await import("../netlify/functions/_shared/ai-oauth.mjs");
   const reg = await (await handler(new Request("https://x/api/ai/oauth/register", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ client_name: "ChatGPT", redirect_uris: ["https://chatgpt.com/cb"] }) }))).json();
   const verifier = "v".repeat(43) + "xyz";
-  const consent = await handler(new Request("https://x/api/ai/oauth/authorize", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams([["client_id", reg.client_id], ["redirect_uri", reg.redirect_uris[0]], ["code_challenge", pkceChallenge(verifier)], ["owner_pin", pin], ["scope", "cases:read"]]).toString() }));
+  const consent = await handler(new Request("https://x/api/ai/oauth/authorize", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams([["client_id", reg.client_id], ["redirect_uri", reg.redirect_uris[0]], ["code_challenge", pkceChallenge(verifier)], ["owner_pin", pin], ...scopes.map((scope) => ["scope", scope])]).toString() }));
   if (!consent.headers.get("location")) throw new Error(`samtycke misslyckades: ${consent.status} ${(await consent.text()).replace(/<[^>]+>/g, " ").replace(/s+/g, " ").slice(0, 200)}`);
   const code = new URL(consent.headers.get("location")).searchParams.get("code");
   const tokenReq = (body) => handler(new Request("https://x/api/ai/oauth/token", { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: new URLSearchParams(body).toString() }));
@@ -592,4 +592,111 @@ test("journalåtkomst är separat och skrivning kräver kortets aktuella version
   const stored = await store.get(id, { type: "json" });
   assert.equal(stored.customer.name, "Testkund");
   assert.equal(stored.notes.length, 1);
+});
+
+test("kundkortssynk via OAuth och MCP: granskning, atomär skrivning, portal, arbetsplan och dubblettskydd", async (t) => {
+  const { call, handler, rpc } = await setup(t);
+  const scopes = ["cases:read", "journal:append", "case_updates:read", "case_updates:append", "case_status:write",
+    "case_followup:write", "case_next_action:write", "case_details:read", "case_sync:read", "case_sync:write"];
+  const restore = pinTestEnv({ AI_GATEWAY_OWNER_SECRET: "agar-pin-1234", AI_GATEWAY_OAUTH_SCOPES: scopes.join(" "), ADMIN_TOKEN: "test-admin-sync" });
+  t.after(restore);
+  const { caseStore, readWithEtag } = await import("../netlify/functions/_shared/case-store.mjs");
+  const { default: portal } = await import("../netlify/functions/case-status.mjs");
+  const { default: inbox } = await import("../netlify/functions/task-inbox.mjs");
+  const { deriveFromCases } = await import("../netlify/functions/_shared/task-inbox.mjs");
+  const store = caseStore();
+  const id = "case_sync_isolated";
+  const serviceNumber = "NEM-000A-CAFE-0012";
+  const payment = { status: "unpaid", amount: 123, provider: "test" };
+  const seed = { id, serviceNumber, status: "checked_in", customer: { name: "Kund Test" }, payment,
+    workshop: { issuesFound: "Intern diagnos" }, notes: [{ text: "Tidigare intern anteckning" }] };
+  await store.setJSON(id, seed);
+  const { client, tokens, tokenReq } = await oauthSession(handler, call, "agar-pin-1234", scopes);
+  const refreshed = await (await tokenReq({ grant_type: "refresh_token", client_id: client.client_id, refresh_token: tokens.refresh_token })).json();
+  assert.ok(refreshed.access_token);
+  assert.deepEqual(refreshed.scope.split(" ").sort(), [...scopes].sort());
+  const send = async (name, args) => {
+    const response = await rpc({ jsonrpc: "2.0", id: 11, method: "tools/call", params: { name, arguments: args } }, refreshed.access_token);
+    return (await response.json()).result.structuredContent;
+  };
+  const list = await (await rpc({ jsonrpc: "2.0", id: 1, method: "tools/list" }, refreshed.access_token)).json();
+  assert.equal(list.result.tools.find((row) => row.name === "sync_customer_case").annotations.readOnlyHint, false);
+  assert.equal(list.result.tools.find((row) => row.name === "get_case_details").annotations.readOnlyHint, true);
+  const detail = await send("get_case_details", { serviceNumber });
+  assert.equal(detail.id, id);
+  assert.ok(detail.version);
+  assert.equal((await send("get_case_details", { id: "case_nonexistent" })).error, "case_not_found");
+  await store.setJSON("case_other", { id: "case_other", serviceNumber });
+  assert.equal((await send("get_case_details", { serviceNumber })).error, "ambiguous_service_number");
+  await store.delete("case_other");
+
+  const draft = { id, version: detail.version, idempotencyKey: "isolated-e2e-001", status: "diagnosing",
+    customerUpdate: "Vi undersöker fordonet.", note: "Intern testanteckning.", nextAction: "Mät upp laddkretsen",
+    followupDeadline: "2026-11-27T16:00:00+01:00", workDone: "Fordonet mottaget", blockers: "Invänta intern mätning" };
+  const rest = (token) => call("/api/ai/tools/sync_customer_case", { method: "POST", body: draft, token });
+  assert.equal((await rest(null)).status, 401);
+  assert.equal((await rest("lasare.bara-las")).status, 403);
+  const limited = await oauthSession(handler, call, "agar-pin-1234", ["case_sync:write", "case_details:read"]);
+  const denied = await (await rest(limited.tokens.access_token)).json();
+  assert.equal(denied.error, "forbidden_scope");
+  assert.equal(denied.required, "case_updates:append");
+  assert.equal((await send("sync_customer_case", { ...draft, dryRun: true })).dryRun, true);
+  assert.equal((await send("get_unsynced_cases", {})).total, 0);
+  const pending = await send("sync_customer_case", draft);
+  assert.equal(pending.syncState, "pending");
+  assert.equal(pending.requiresApproval, true);
+  assert.deepEqual((await readWithEtag(store, id)).item, seed);
+
+  const path = "/api/task-inbox/case-sync/" + pending.syncId;
+  const admin = (route, { method = "GET", etag, token = "test-admin-sync" } = {}) => inbox(new Request("https://x" + route,
+    { method, headers: { "x-admin-token": token, ...(etag ? { "if-match": etag } : {}) } }));
+  const inboxBody = await (await admin("/api/task-inbox?sync=0")).json();
+  assert.ok(inboxBody.items.some((row) => row.id === pending.syncId && row.syncState === "pending"));
+  assert.equal((await admin(path, { token: "" })).status, 401);
+  const review = await admin(path);
+  assert.equal((await review.json()).changes.customerUpdate, draft.customerUpdate);
+  assert.equal((await admin(path + "/approve", { method: "POST", etag: "stale" })).status, 409);
+  assert.equal((await admin(path + "/approve", { method: "POST", etag: review.headers.get("etag") })).status, 200);
+  assert.deepEqual((await readWithEtag(store, id)).item, seed);
+
+  const results = await Promise.all([send("sync_customer_case", draft), send("sync_customer_case", draft)]);
+  assert.ok(results.some((row) => row.verified));
+  const saved = (await readWithEtag(store, id)).item;
+  assert.deepEqual(saved.payment, payment);
+  assert.equal(saved.customerUpdates.length, 1);
+  assert.equal(saved.notes.length, 2);
+  assert.equal(saved.status, "diagnosing");
+  assert.match(saved.caseSyncReceipts[pending.syncId].actor, /^oauth:/);
+  assert.equal(saved.caseSyncReceipts[pending.syncId].approvedBy, "admin");
+  assert.equal((await send("sync_customer_case", draft)).verified, true);
+  assert.equal((await send("sync_customer_case", { ...draft, note: "Bytt innehåll" })).error, "idempotency_conflict");
+  assert.equal((await send("get_unsynced_cases", {})).total, 0);
+  const readAgain = await send("get_case_details", { id });
+  assert.equal(readAgain.followupDeadline, "2026-11-27T15:00:00.000Z");
+  assert.equal(readAgain.nextAction, draft.nextAction);
+  assert.equal(deriveFromCases([saved])[0].dueAt, readAgain.followupDeadline);
+  assert.equal((await send("get_customer_updates", { id })).customerUpdates[0].text, draft.customerUpdate);
+  const status = await (await portal(new Request("https://x/api/status/" + id), { params: { id } })).json();
+  assert.equal(status.updates[0].text, draft.customerUpdate);
+  for (const privateText of [draft.note, draft.nextAction, draft.blockers, seed.workshop.issuesFound]) {
+    assert.ok(!JSON.stringify(status).includes(privateText));
+  }
+  const stale = await send("set_next_action", { id, version: detail.version, idempotencyKey: "isolated-stale", nextAction: "Gammal åtgärd" });
+  assert.equal(stale.syncState, "conflict");
+  assert.equal((await send("get_case_details", { id })).nextAction, draft.nextAction);
+  const stalePath = "/api/task-inbox/case-sync/" + stale.syncId;
+  const staleReview = await admin(stalePath);
+  assert.equal((await admin(stalePath + "/reject", { method: "POST", etag: staleReview.headers.get("etag") })).status, 200);
+
+  const latest = await send("get_case_details", { id });
+  const retry = { id, version: latest.version, idempotencyKey: "isolated-failure", nextAction: "Kontrollera resultatet" };
+  const realFetch = globalThis.fetch;
+  globalThis.fetch = putFailer(realFetch, "workshop-cases/" + id, 1);
+  let failed;
+  try { failed = await send("set_next_action", retry); } finally { globalThis.fetch = realFetch; }
+  assert.equal(failed.syncState, "failed");
+  assert.ok((await send("get_unsynced_cases", {})).cases.some((row) => row.syncId === failed.syncId && row.syncState === "failed"));
+  assert.equal((await send("set_next_action", retry)).verified, true);
+  assert.equal((await send("get_case_details", { id })).nextAction, retry.nextAction);
+  assert.deepEqual((await readWithEtag(store, id)).item.payment, payment);
 });
