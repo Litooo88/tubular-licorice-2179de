@@ -30,6 +30,10 @@ löpande "konversation".
 
 ## Logg
 
+### 2026-11-26 — Codex — PÅGÅR (P0 kundkortssynk)
+
+- Branch `codex/nemob-case-sync` från `main` vid merge av PR #183. Arbetar med AI Gateway, kundkortssynk, arbetsplanering, OAuth och verifiering.
+
 ### 2026-11-26 — ChatGPT — KLAR FÖR GRANSKNING (NEMOB CARE 12)
 
 - **Branch:** `codex/nemob-care12-2026`, PR #183. Kampanj på startsida, katalog och genererade produktsidor, villkor kvar efter kampanjslut, grunddiagnos 495 kr förtydligad. Ingen ändring av produktpris/checkout, kunddata eller telefoniflöde.
