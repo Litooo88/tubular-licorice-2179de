@@ -13,12 +13,7 @@ löpande "konversation".
 
 1. **Vid start av ett pass:** `git fetch origin`, stå på `main`,
    `git pull --ff-only`, läs de senaste posterna nedan.
-2. **När du börjar en uppgift:** lägg en NY post högst upp i `## Logg
-
-### 2026-11-26 — Codex — PÅGÅR — P0 kundkortssynk
-
-- **Branch:** `codex/p0-customer-case-sync` i `F:/nemob-p0-customer-case-sync`, bas `e22fa0d`.
-- **Område:** AI Gateway, kundkortsuppdateringar, uppgiftsinkorg, OAuth och verifiering. CARE 12 ligger redan i main och dess kod berörs inte.` med
+2. **När du börjar en uppgift:** lägg en NY post högst upp i `## Logg` med
    status `PÅGÅR` — säg vilken branch och vilka filer/områden du tar.
 3. **När du är klar / lämnar över:** uppdatera posten till `KLAR` (eller lägg en
    ny) med resultat, testkörningar och ev. risker.
@@ -35,10 +30,14 @@ löpande "konversation".
 
 ## Logg
 
-### 2026-11-26 — Codex — PÅGÅR — P0 kundkortssynk
+### 2026-11-26 — Codex — KLAR (produktion live, ChatGPT-samtycke återstår)
 
-- **Branch:** `codex/p0-customer-case-sync` i `F:/nemob-p0-customer-case-sync`, bas `e22fa0d`.
-- **Område:** AI Gateway, kundkortsuppdateringar, uppgiftsinkorg, OAuth och verifiering. CARE 12 ligger redan i main och dess kod berörs inte.
+- **Branch:** PR #184, mergad till main som `bd90146`. Netlify produktion `6b0898afbf6b8d27ae20b303` ready. CARE 12-filerna från #183 finns kvar.
+- **Ändrat:** AI Gateway med åtta kundkortsverktyg och separata scopes, versionerad och idempotent synk, beständig granskningskö, NEMOB OS Förslag och arbetsplan, OAuth-aktivering samt AGENTS.md, CLAUDE.md och API-/datamodellsdokumentation.
+- **Verifierat:** full build (211 tester, 24 gateway, 10 inkorg), checkout 44 produkter, Callflow tsc, 87 NEMOB OS-tester och ändrad syntax. Netlify-preview och produktion gröna. Isolerat lokalt OAuth/MCP-test verifierade publicering, återläsning, betalningsfält, dubblettskydd, konflikt, kö och intern information.
+- **Produktion:** OAuth-discovery, DCR (201), PKCE S256-samtyckessida (200), plain (400), oautentiserat MCP (401), admininkorgens synkkälla och alla åtta verktyg i metadata verifierade. Tidigare klienter och scopes bevarade. OAuth annonserar 16 scopes.
+- **Överlämning:** Ägaren behöver ansluta ChatGPT och ge nytt samtycke. Isolerat produktionsärende `NEM-BE47-6372-8E25` skapat utan kontaktuppgifter och verifierat i statusportalen inför autentiserat test. Faktiska kundkort ännu opublicerade. Ingen verklig kundkommunikation skickad.
+
 
 ### 2026-11-26 — ChatGPT — KLAR FÖR GRANSKNING (NEMOB CARE 12)
 
