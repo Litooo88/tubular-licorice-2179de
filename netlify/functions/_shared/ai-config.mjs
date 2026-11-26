@@ -17,6 +17,7 @@ import { activeConfig, envConfig, setActiveConfig } from "./ai-config-state.mjs"
 export const CONFIG_STORE = "ai-gateway-config";
 export const CONFIG_KEY = "current";
 export const CACHE_MS = 60 * 1000;
+const defaults = ["cases:read", "calls:read", "overview:read", "presence:read", "presence:write"];
 const clean = (value, max = 400) => String(value ?? "").trim().slice(0, max);
 const store = () => getStore({ name: CONFIG_STORE, consistency: "strong" });
 let cache = { at: 0 };
@@ -57,7 +58,7 @@ export const configStatus = () => {
     clientsOk: registry.ok,
     hasSigningSecret: Boolean(a.signingSecret),
     hasOwnerSecret: Boolean(a.ownerSecret || a.ownerSecretHash),
-    oauthScopes: a.oauthScopes ? a.oauthScopes.split(/[\s,]+/).filter(Boolean) : ["cases:read", "calls:read", "overview:read", "presence:read", "presence:write"],
+    oauthScopes: a.oauthScopes ? a.oauthScopes.split(/[\s,]+/).filter(Boolean) : defaults,
     updatedAt: a.updatedAt || "",
     ready: registry.ok && Boolean(a.signingSecret),
     oauthReady: Boolean(a.signingSecret) && Boolean(a.ownerSecret || a.ownerSecretHash),
@@ -97,10 +98,20 @@ export const saveGatewayConfig = async (patch = {}, { by = "admin", now = Date.n
     if (!scopes.length) return { ok: false, error: "invalid_scopes", description: `Tillåtna: ${ALL_SCOPES.join(", ")}` };
     next.oauthScopes = scopes;
   }
-  if (!Object.keys(next).length) return { ok: false, error: "empty_patch", description: "Inget att spara." };
+  let addOauthScopes = [];
+  if (patch.addOauthScopes !== undefined) {
+    if (next.oauthScopes || !Array.isArray(patch.addOauthScopes) || !patch.addOauthScopes.length ||
+      patch.addOauthScopes.some((scope) => !ALL_SCOPES.includes(scope))) {
+      return { ok: false, error: "invalid_scopes", description: "addOauthScopes kräver kända scopes och används separat från oauthScopes." };
+    }
+    addOauthScopes = patch.addOauthScopes;
+  }
+  if (!Object.keys(next).length && !addOauthScopes.length) return { ok: false, error: "empty_patch", description: "Inget att spara." };
   const s = store();
   const existing = await readWithEtag(s, CONFIG_KEY, { allowMissingEtag: true });
-  const build = (cur) => ({ ...(cur || {}), ...next, updatedAt: new Date(now).toISOString(), updatedBy: clean(by, 60) });
+  const build = (cur) => ({ ...(cur || {}), ...next,
+    ...(addOauthScopes.length ? { oauthScopes: [...new Set([...(cur?.oauthScopes?.length ? cur.oauthScopes : defaults), ...addOauthScopes])] } : {}),
+    updatedAt: new Date(now).toISOString(), updatedBy: clean(by, 60) });
   let saved;
   if (!existing.item) {
     const created = await createIfAbsent(s, CONFIG_KEY, build({}));

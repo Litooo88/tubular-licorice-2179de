@@ -251,3 +251,31 @@ REST: `POST /api/ai/tools/<namn>` med JSON-body och Bearer-nyckel; `GET /api/ai/
 
 ### Intern verkstadsjournal
 Nya OAuth-scopes kräver uttryckligt tillägg i gatewayens oauthScopes och nytt samtycke. Behåll tidigare tillåtna scopes när listan uppdateras. journal:read ger get_workshop_record med ärende-id från search_customer. Läs uppskattning, slutkostnad och registrerat betalbelopp separat. journal:append ger append_workshop_note med id, version och note. customer:name ger correct_customer_name med id, version och name. Använd bara skrivverktygen efter uttrycklig begäran. Vid versionskonflikt, läs om kortet och granska den önskade ändringen. Äldre åtkomsttoken behöver förnyas efter uppdateringen av iss/aud.
+
+## Kundkortssynk
+
+| Verktyg | OAuth-scope | Fält utöver identifierare och gemensamma skrivfält |
+|---|---|---|
+| `get_customer_updates` | `case_updates:read` | Publicerade kunduppdateringar |
+| `append_customer_update` | `case_updates:append` | `customerUpdate` |
+| `update_case_status` | `case_status:write` | `status` |
+| `set_followup_deadline` | `case_followup:write` | `followupDeadline` |
+| `set_next_action` | `case_next_action:write` | `nextAction` |
+| `get_case_details` | `case_details:read` | Aktuell version, verkstadsstatus, fordon och intern arbetsplan |
+| `get_unsynced_cases` | `case_sync:read` | `limit` (standard 3, max 50), `offset` |
+| `sync_customer_case` | `case_sync:write` och varje berört fälts scope | Alla skrivfält ovan, dessutom `note` och `workDone` (`journal:append`) samt `blockers` (`case_next_action:write`) |
+
+Ange exakt ett `id` eller `serviceNumber`. Skrivverktygen kräver `version` från en färsk läsning och `idempotencyKey` (8–120 bokstäver, siffror, bindestreck eller understreck). `dryRun: true` visar fält och granskningskrav utan att skriva. `followupDeadline` måste innehålla datum, klockslag och offset. `workDone` är hela den uppdaterade sammanfattningen. Läs den tidigare sammanfattningen före ändring.
+
+Tillåtna statusar för uppdatering är `diagnosing`, `repairing`, `waiting_parts` och `waiting_customer`, från `checked_in` eller något av dessa steg. Hantera övriga övergångar i admin. Journaltext, blockerare och arbetsplan är interna. Godkänd kundtext publiceras i statusportalen via befintliga kunduppdateringar. Hantera prisgodkännande, betalning, reklamationer, SMS och e-post i respektive ordinarie flöde.
+
+När kundtext ingår behöver operatören godkänna det exakta förslaget i NEMOB OS → Förslag. Upprepa sedan det ursprungliga anropet. Hela ändringen sparas i en skrivning på kundkortet. `synced` och `verified: true` betyder att skrivningen har lästs tillbaka. `pending`, `failed` och `conflict` ligger kvar i uppgiftsinkorgen. `applied: null` betyder okänd utgång tills ny återläsning. Vid nät- eller lagringsfel, försök igen med samma nyckel och samma argument. Vid versionskonflikt, läs om kortet, granska den föreslagna ändringen, avvisa det inaktuella förslaget och använd en ny nyckel för den nya versionen.
+
+### Aktivera och testa ChatGPT efter publicering
+
+1. Kör `powershell -File scripts/enable-workshop-oauth.ps1` lokalt eller `pwsh -File scripts/enable-workshop-oauth.ps1`. Ange adminnyckeln i Windows-inmatningen. Skriptet lägger till nya scopes i Blobs-konfigurationen och bevarar tidigare behörigheter. Om gatewayen använder env, lägg till samma scopes i befintlig `AI_GATEWAY_OAUTH_SCOPES` i Netlify.
+2. Öppna ChatGPT på webben i rätt arbetsyta. Under **Plugins** välj **+ → Add custom MCP server**, ange namnet **NEMOB**, URL `https://www.nordicemobility.se/api/ai/mcp` och OAuth. Om den gamla kopplingen har en token med tidigare scopes, koppla från den och anslut igen för att få samtyckessidan. Förnya metadata med **Refresh** på appens detaljsida.
+3. Ange ägar-PIN på NEMOB:s samtyckessida. För grundflödet välj `cases:read`, `journal:read`, `journal:append`, `case_details:read`, `case_updates:read`, `case_updates:append`, `case_followup:write`, `case_next_action:write`, `case_sync:read` och `case_sync:write`. Välj `case_status:write` om assistenten ska ändra verkstadsstatus och behåll övriga behörigheter som behövs.
+4. I en ny chatt välj **@NEMOB**. Använd ett isolerat testärende som skapats i admin med testuppgifter som du själv kontrollerar. Be assistenten läsa kortet och versionen, köa en kundtext, ett nästa arbetsmoment och en återkopplingstid. Granska och godkänn i NEMOB OS, upprepa anropet med samma nyckel och be assistenten visa återläst version och fälten. Öppna statusportalen för samma testärende och bekräfta att kundtexten visas. Kontrollera kvittot på kortet och att verktygsanropen finns i gatewayens revisionslogg. Upprepa anropet med samma nyckel och kontrollera att det finns en uppdatering.
+
+[OpenAI om anslutning och verktygsuppdatering](https://developers.openai.com/plugins/deploy/connect-chatgpt)

@@ -13,7 +13,12 @@ löpande "konversation".
 
 1. **Vid start av ett pass:** `git fetch origin`, stå på `main`,
    `git pull --ff-only`, läs de senaste posterna nedan.
-2. **När du börjar en uppgift:** lägg en NY post högst upp i `## Logg` med
+2. **När du börjar en uppgift:** lägg en NY post högst upp i `## Logg
+
+### 2026-11-26 — Codex — PÅGÅR — P0 kundkortssynk
+
+- **Branch:** `codex/p0-customer-case-sync` i `F:/nemob-p0-customer-case-sync`, bas `e22fa0d`.
+- **Område:** AI Gateway, kundkortsuppdateringar, uppgiftsinkorg, OAuth och verifiering. CARE 12 ligger redan i main och dess kod berörs inte.` med
    status `PÅGÅR` — säg vilken branch och vilka filer/områden du tar.
 3. **När du är klar / lämnar över:** uppdatera posten till `KLAR` (eller lägg en
    ny) med resultat, testkörningar och ev. risker.
@@ -29,6 +34,11 @@ löpande "konversation".
 7. **Format på en post:** se mallen längst ned.
 
 ## Logg
+
+### 2026-11-26 — Codex — PÅGÅR — P0 kundkortssynk
+
+- **Branch:** `codex/p0-customer-case-sync` i `F:/nemob-p0-customer-case-sync`, bas `e22fa0d`.
+- **Område:** AI Gateway, kundkortsuppdateringar, uppgiftsinkorg, OAuth och verifiering. CARE 12 ligger redan i main och dess kod berörs inte.
 
 ### 2026-11-26 — ChatGPT — KLAR FÖR GRANSKNING (NEMOB CARE 12)
 

@@ -20,6 +20,7 @@
 // Källfel fäller inte anropet: `sources.<namn>` bär feltexten (partial: true).
 // E-post är en registrerad källa med status not_configured tills integrationen finns.
 
+import { approveSyncEntry, listUnsyncedCases, readSyncEntry, reviewSyncEntry, syncEntryView } from "./_shared/customer-case-sync.mjs";
 import { getStore } from "@netlify/blobs";
 import { requireAdminToken } from "./_shared/admin-auth.mjs";
 import { CASE_STORE, etagHeaders } from "./_shared/case-store.mjs";
@@ -28,12 +29,13 @@ import { listBlockedNumbers } from "./_shared/call-blocklist.mjs";
 import { ownNovaNumbers } from "./_shared/nova.mjs";
 import { normalizePhone } from "./_shared/sms.mjs";
 import {
-  ACTIONS, buildCallList, CALL_STATUS_TASK_ACTION, CALL_WORK_STATUSES, createManualTask, deriveFromCases, deriveFromInboundSms, deriveFromMissedCalls, deriveFromNova,
+  ACTIONS, buildCallList, buildTask, CALL_STATUS_TASK_ACTION, CALL_WORK_STATUSES, createManualTask, deriveFromCases, deriveFromInboundSms, deriveFromMissedCalls, deriveFromNova,
   deriveFromRingList, getTask, KINDS, listTasks, OPEN_STATUSES, setCallWorkStatus, sortTasks, STATUSES, syncProposals, TASK_STORE, transitionTask, wakeSnoozed,
 } from "./_shared/task-inbox.mjs";
 
 const env = (n) => { try { return globalThis.Netlify?.env?.get?.(n) || process.env[n] || ""; } catch { return process.env[n] || ""; } };
 const json = (body, status = 200, headers = {}) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json; charset=utf-8", ...headers } });
+const noStore = { "Cache-Control": "no-store" };
 const clean = (v, max = 300) => String(v ?? "").trim().slice(0, max);
 const HOUR = 3600000;
 const taskStore = () => getStore({ name: TASK_STORE, consistency: "strong" });
@@ -56,6 +58,23 @@ const readAll = async (name) => {
   return items;
 };
 const attempt = async (fn) => { try { return { items: await fn(), error: "" }; } catch (e) { return { items: [], error: clean(e?.message, 160) || "fel" }; } };
+
+const syncStateLabels = {
+  pending: "Väntar på synkronisering", failed: "Synkronisering misslyckades", conflict: "Versionskonflikt",
+};
+
+function syncTask(entry, now) {
+  const review = entry.changes?.customerUpdate && !entry.approvedBy;
+  const label = syncStateLabels[entry.state];
+  const task = buildTask({
+    id: entry.id, source: "case-sync", sourceId: entry.id, kind: KINDS.case_followup,
+    title: `${label} · ${entry.serviceNumber || entry.caseId}`,
+    description: review ? "Granska kundtexten och hela ändringen." : "Kontrollera kundkortet och hantera väntande ändring.",
+    caseId: entry.caseId, serviceNumber: entry.serviceNumber, caseActive: true, receivedAt: entry.createdAt,
+    dueAt: entry.changes?.followupDeadline, signals: [{ key: "case_sync", label: "Kundkort väntar på synk", points: 50 }],
+  }, { now });
+  return { ...task, syncState: entry.state, syncReview: Boolean(review), syncApproved: Boolean(entry.approvedBy) };
+}
 
 // Läser alla källor (tolerant) och härleder förslag. Exporterad för tester.
 export const collectProposals = async ({ now = Date.now(), fetchImpl = fetch } = {}) => {
@@ -105,6 +124,31 @@ export default async (request, context) => {
   const store = taskStore();
   const body = request.method === "POST" ? await request.json().catch(() => ({})) : {};
   const by = clean(body.by || request.headers.get("x-operator") || "admin", 60);
+
+  if (parts[0] === "case-sync") {
+    try {
+      if (!/^[a-f0-9]{64}$/.test(parts[1] || "")) return json({ error: "not_found" }, 404, noStore);
+      const { item, etag } = await readSyncEntry(parts[1]);
+      if (!item) return json({ error: "not_found" }, 404, noStore);
+      if (parts.length === 2 && request.method === "GET") {
+        return json({ ...syncEntryView(item), changes: item.changes, approvedBy: item.approvedBy || null,
+          baseVersion: item.baseVersion }, 200, { ...noStore, ...etagHeaders(etag) });
+      }
+      const verb = parts[2];
+      if (request.method !== "POST" || parts.length !== 3 || !["approve", "retry", "reject"].includes(verb)) {
+        return json({ error: "not_found" }, 404, noStore);
+      }
+      if (!etag || request.headers.get("if-match") !== etag) return json({ error: "version_conflict" }, 409, noStore);
+      const result = verb === "approve"
+        ? await approveSyncEntry(item, etag, by, now)
+        : await reviewSyncEntry(item, { operator: by, reject: verb === "reject", now });
+      const ok = verb === "reject" ? result.syncState === "rejected" : result.status === "ok" ||
+        (result.status === "pending" && !result.requiresApproval);
+      return json({ ...result, ok }, ok ? 200 : result.error === "version_conflict" ? 409 : result.status === "failed" ? 503 : 422, noStore);
+    } catch {
+      return json({ error: "case_sync_unavailable" }, 503, noStore);
+    }
+  }
 
   // ---- Ringlistan -------------------------------------------------------
   if (parts[0] === "call-list") {
@@ -194,6 +238,10 @@ export default async (request, context) => {
   const kinds = clean(url.searchParams.get("kind"), 200).split(",").map((s) => s.trim()).filter(Boolean);
   if (kinds.some((k) => !KINDS[k])) return json({ error: "invalid_kind", kinds: Object.keys(KINDS) }, 400);
   if (status !== "open" && status !== "all" && !STATUSES.includes(status)) return json({ error: "invalid_status", statuses: ["open", "all", ...STATUSES] }, 400);
+  const caseSync = await attempt(listUnsyncedCases);
+  sources = { ...sources, caseSync: caseSync.error ? "unavailable" : "ok" };
+  partial ||= Boolean(caseSync.error);
+  tasks.push(...caseSync.items.map((entry) => syncTask(entry, now)));
   const limit = Math.min(Math.max(Number(url.searchParams.get("limit")) || 200, 1), 1000);
   const filtered = sortTasks(tasks.filter((t) => (status === "all" || (status === "open" ? OPEN_STATUSES.has(t.status) : t.status === status)) && (!kinds.length || kinds.includes(t.kind))));
   return json({

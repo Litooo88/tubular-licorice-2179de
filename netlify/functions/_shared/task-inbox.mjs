@@ -43,10 +43,10 @@ export const KIND_LABELS = Object.freeze({
 });
 export const STATUSES = Object.freeze(["proposed", "selected", "in_progress", "snoozed", "done", "rejected"]);
 export const OPEN_STATUSES = new Set(["proposed", "selected", "in_progress", "snoozed"]);
-export const SOURCES = Object.freeze(["nova-call", "nova-meeting", "nova-message", "sms-ring", "sms-inbound", "ring-list", "elks-missed", "booking-request", "case", "email", "manual"]);
+export const SOURCES = Object.freeze(["nova-call", "nova-meeting", "nova-message", "sms-ring", "sms-inbound", "ring-list", "elks-missed", "booking-request", "case", "case-sync", "case-plan", "email", "manual"]);
 export const SOURCE_LABELS = Object.freeze({
   "nova-call": "Nova-samtal", "nova-meeting": "Nova-möte", "nova-message": "Nova-meddelande", "sms-ring": "RING-svar", "sms-inbound": "Inkommande SMS",
-  "ring-list": "Ringlistan", "elks-missed": "Missat samtal", "booking-request": "Bokningsförfrågan", case: "Verkstadsärende", email: "E-post", manual: "Manuell",
+  "ring-list": "Ringlistan", "elks-missed": "Missat samtal", "booking-request": "Bokningsförfrågan", case: "Verkstadsärende", "case-sync": "Kundkortssynk", "case-plan": "Arbetsplan på kundkort", email: "E-post", manual: "Manuell",
 });
 // Standardtid per uppgiftstyp (minuter) – justeras av ämnet för ärenden.
 export const DEFAULT_MINUTES = Object.freeze({ callback: 10, meeting_call: 20, booking_decision: 5, case_followup: 15, sms_reply: 5, email: 10, manual: 15 });
@@ -278,6 +278,16 @@ export const deriveFromCases = (cases = [], { now = Date.now() } = {}) => {
       }));
       continue;
     }
+    if (c.casePlan?.updatedAt && (c.workshop?.nextAction || c.casePlan.followupDeadline)) {
+      out.push(base({
+        source: "case-plan", sourceId: `${id}:${c.casePlan.updatedAt}`, kind: KINDS.case_followup,
+        title: clean(c.workshop?.nextAction, 140) || `Återkoppla till ${firstName(name) || sn || id}`,
+        description: clean(c.casePlan.blockers, 400), customer: { phone, name }, caseId: id, serviceNumber: sn,
+        caseActive: true, receivedAt: c.casePlan.updatedAt, dueAt: c.casePlan.followupDeadline || "",
+        attempts: 1, estimatedMinutes: DEFAULT_MINUTES.case_followup, needKey: needKeyFor("case-plan", id),
+      }));
+      continue;
+    }
     const staleH = STALE_HOURS[c.status];
     if (!staleH) continue;
     const since = clean(c.updatedAt || c.createdAt, 40);
@@ -344,6 +354,10 @@ export const buildTask = (p, { now = Date.now(), by = "system" } = {}) => {
 // Fält som synken får uppdatera på en befintlig öppen uppgift (aldrig status/historik/manuella fält).
 const refreshFields = (task, p, now) => {
   const next = { ...task };
+  if (p.source === "case-plan" && task.source === "case-plan") {
+    next.title = clean(p.title, 140);
+    next.description = clean(p.description, 400);
+  }
   next.attempts = Math.max(Number(task.attempts) || 0, Number(p.attempts) || 0);
   next.dueAt = p.dueAt || task.dueAt; next.dueLocal = next.dueAt ? isoToLocal(next.dueAt) : "";
   next.timing = p.timing || task.timing; next.needsReview = Boolean(next.timing?.needsReview);
@@ -354,7 +368,7 @@ const refreshFields = (task, p, now) => {
   const known = new Set((task.sources || []).map((s) => s.id));
   next.sources = [...(task.sources || []), ...(p.sources || []).filter((s) => !known.has(s.id))];
   next.priority = prioritize({ ...p, attempts: next.attempts, sources: next.sources }, now);
-  const changed = JSON.stringify({ a: next.attempts, d: next.dueAt, t: next.timing, s: next.signals, c: next.caseId, n: next.customer, src: next.sources.length, p: next.priority.score, ac: next.action })
+  const changed = next.title !== task.title || next.description !== task.description || JSON.stringify({ a: next.attempts, d: next.dueAt, t: next.timing, s: next.signals, c: next.caseId, n: next.customer, src: next.sources.length, p: next.priority.score, ac: next.action })
     !== JSON.stringify({ a: task.attempts, d: task.dueAt, t: task.timing, s: task.signals, c: task.caseId, n: task.customer, src: (task.sources || []).length, p: task.priority?.score, ac: task.action });
   if (!changed) return null;
   next.updatedAt = iso(now);

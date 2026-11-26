@@ -1,3 +1,4 @@
+import { appendCustomerUpdate } from "./_shared/customer-updates.mjs";
 import { getStore } from "@netlify/blobs";
 import { readEnv } from "./_shared/env.mjs";
 import internalCases from "./_shared/internal-case.js";
@@ -1077,7 +1078,7 @@ export default async (request, context) => {
     // statusportalen. Det här fältet är det ENDA som exponeras där.
     const customerUpdate = clean(body.customerUpdate, 1200);
     if (customerUpdate) {
-      next.customerUpdates = [...(Array.isArray(current.customerUpdates) ? current.customerUpdates : []), { at: now, text: customerUpdate }].slice(-20);
+      next.customerUpdates = appendCustomerUpdate(current, customerUpdate, now);
     }
 
     const timeline = [...(current.timeline || [])];

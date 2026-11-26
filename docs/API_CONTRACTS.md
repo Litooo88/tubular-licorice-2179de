@@ -210,3 +210,7 @@ bekräftas före arbete.
   Äldre `payments.notifications` läses som fallback. Saknad logg = okänd status.
 - Alla ovanstående admin-svar är privata (`Cache-Control: no-store` för nya
   product-orders-routen). Kunduppgifter finns endast server-side.
+
+## Kundkortssynk via AI Gateway
+
+[Verktyg, scopes, fel och körordning](NEMOB_AI_GATEWAY.md#kundkortssynk). Adminskyddad granskning använder `GET /api/task-inbox/case-sync/:syncId` följt av `POST /api/task-inbox/case-sync/:syncId/approve|retry|reject` med svarshuvudet `ETag` som `If-Match`. Endast GET för den enskilda kön läser förslagstexterna. Listningen från `GET /api/task-inbox` innehåller metadata och synktillstånd. Konflikt ger 409 och kan bara lösas genom granskning mot den nya kortversionen. Den publika statusportalen fortsätter läsa befintliga `customerUpdates`.

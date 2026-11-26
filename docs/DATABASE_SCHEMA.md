@@ -176,3 +176,11 @@ ett befintligt kort. Kunddata får aldrig ligga i git eller localStorage.
 nya optional-fält. Efter återgång försvinner create-if-absent-skyddet för nya
 Stripe-importer; pausa sådan import tills fixen är återinförd. Kör inte gamla
 webhook-event på nytt för att återställa data.
+
+## Kundkortssynk (additiv migrering)
+
+Befintlig `customerUpdates` (20 senaste), `notes` och `workshop.nextAction` återanvänds. Vid första synk skapas vid behov `casePlan` med `updatedAt`, valfri `followupDeadline` (UTC) och interna `blockers`. `caseSyncReceipts` är en karta med kvitton per synk-ID och innehåller status, tid, aktörer och ändrade fält. Kvittot skrivs med ändringen i samma ETag-skyddade operation. Äldre kort saknar fälten och läses med tomma värden.
+
+Privata Blobs-storen `customer-case-sync` lagrar oföränderliga förslag per hash av ärende-ID och idempotensnyckel, med versionskrav, fingeravtryck, tillstånd och aktör. Godkännande binds till förslaget. När förslaget har sparats eller avvisats rensas förslagstexten från kön och kvittot behålls för dubblettskydd. Oklar utgång kontrolleras mot kortets kvitto.
+
+Ingen backfill eller ändring av verkstadsstatusvärden krävs. Vid återställning av kodversion, lämna Blobs och fälten intakta. Stäng först av nya scopes och dra tillbaka berörda OAuth-klienter vid behov. Äldre läsare kan fortsätta använda befintliga fält. Publicerade texter och olösta köposter finns kvar för fortsatt manuell hantering.
